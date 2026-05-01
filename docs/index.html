@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GSBGEN390 — Persona Pipeline Dashboard</title>
+<title>GSBGEN390 — AI Persona Fidelity & Survey Feature Importance</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
@@ -11,58 +11,107 @@
 
 <header>
   <div class="container">
-    <h1>GSBGEN390 — Mini-Replication of Park et al. (2024)</h1>
-    <p class="subtitle">AI Persona Fidelity & Survey Feature Importance · Joyce Yu · Stanford GSB · Spring 2026</p>
-    <p class="status-line" id="status-banner">Status: <strong>Pilot data collected (N=2 interview + N=1 survey). Pipeline ready.</strong></p>
+    <h1>AI Persona Fidelity &amp; Survey Feature Importance</h1>
+    <p class="subtitle">GSBGEN390 Independent Research · Joyce Yu · Prof. Mohsen Bayati · Stanford GSB Spring 2026</p>
+    <p class="status-line" id="status-banner">Status: <strong>Pilot complete (N=2 interview + N=1 survey via Cookiy). Two-phase thesis plan drafted, awaiting advisor sign-off.</strong></p>
   </div>
 </header>
 
 <nav>
   <div class="container">
-    <a href="#intro">0. Intro</a>
-    <a href="#pipeline">1. Pipeline</a>
-    <a href="#data">2. Data</a>
-    <a href="#conditions">3. Conditions</a>
-    <a href="#results">4. Results</a>
-    <a href="#leakage">4.5 Robustness</a>
-    <a href="#loo">5. Feature Importance</a>
-    <a href="#drilldown">6. Drilldown</a>
-    <a href="#limitations">7. Limitations</a>
-    <a href="#next">8. Next Steps</a>
+    <a href="#objective">Objective</a>
+    <a href="#background">Background</a>
+    <a href="#pilot-pipeline">Pipeline</a>
+    <a href="#pilot-data">Data</a>
+    <a href="#pilot-conditions">Conditions</a>
+    <a href="#pilot-results">Results</a>
+    <a href="#robustness">Robustness</a>
+    <a href="#limitations">Limitations</a>
+    <a href="#phase1">Phase 1</a>
+    <a href="#phase2">Phase 2</a>
+    <a href="#decisions">Decisions</a>
   </div>
 </nav>
 
 <main class="container">
 
-<!-- =================== SECTION 0: INTRO =================== -->
-<section id="intro">
-  <h2>0. What is this project?</h2>
-  <div class="two-col">
-    <div>
-      <h3>The big question</h3>
-      <p><strong>Can an LLM faithfully simulate a specific real person's responses on a held-out battery of survey questions?</strong> Park et al. (2024) showed yes — at 83% of test-retest reliability on GSS attitude items — using 2-hour deep interviews with 1,052 real people.</p>
-      <p>This pilot reproduces the architecture at small scale (<strong>N=2 interview + N=1 survey</strong>) and adds an outcome-stratified feature-importance ablation Park did not run, designed to seed the thesis-stage replication.</p>
+<!-- =================== SECTION 0: OBJECTIVE =================== -->
+<section id="objective">
+  <h2>0. Research Objective</h2>
+  <div class="objective-grid">
+    <div class="objective-question">
+      <h3>The thesis question</h3>
+      <p class="big-q"><strong>Which survey-collectible feature categories most predict LLM-persona fidelity, and on which outcome dimensions?</strong></p>
+      <p>Park et al. (2024) showed that LLM personas built from 2-hour interviews can predict a specific real person's held-out responses at ~83% of two-week test-retest reliability on GSS attitude items. Park's v2 paper also reports — but does not analyze — that the <strong>interview-vs-survey gap differs sharply by outcome</strong>: 0 on GSS attitudes, 0.15 on BFI personality, 0.28 on behavioral economic games.</p>
+      <p>The thesis fills the question Park's v2 raises but does not answer: <em>which feature categories close which parts of those gaps on which outcomes?</em></p>
     </div>
-    <div>
-      <h3>Park et al.'s headline results <span style="font-size: 0.7em; opacity: 0.6;">(arXiv v2)</span></h3>
-      <table class="park-table">
-        <thead><tr><th>Construction</th><th>GSS accuracy<br>(% of test-retest)</th></tr></thead>
+    <div class="objective-matrix">
+      <h3>The headline artifact</h3>
+      <table class="thesis-matrix">
+        <thead>
+          <tr><th></th><th>BFI Δ</th><th>Games Δ</th><th>GSS Δ</th></tr>
+        </thead>
         <tbody>
-          <tr><td>Demographics only</td><td>74%</td></tr>
-          <tr><td>Interview only</td><td>83%</td></tr>
-          <tr class="highlight"><td>Surveys only</td><td>82%</td></tr>
-          <tr><td>Interview + surveys</td><td>86%</td></tr>
+          <tr><td>Drop demographic</td><td>?</td><td>?</td><td>?</td></tr>
+          <tr><td>Drop behavioral</td><td>?</td><td>?</td><td>?</td></tr>
+          <tr><td>Drop psychological</td><td>?</td><td>?</td><td>?</td></tr>
+          <tr><td>Drop attitudinal</td><td>?</td><td>?</td><td>?</td></tr>
         </tbody>
       </table>
-      <p class="caption"><strong>Surveys ≈ interview only on GSS attitudes.</strong> v2 also reports surveys lagging interviews by 0.15 on BFI-44 personality (0.65 vs 0.80) and by 0.28 on behavioral economic games (0.38 vs 0.66). The thesis question is therefore outcome-stratified: <em>which survey-collectible feature categories close which parts of that gap on which outcome dimensions?</em></p>
+      <p class="caption">A 4 (feature category) × 3 (outcome dimension) feature-importance matrix. Filled by Phase 1 (GSS public-data, N≈1,500) + Phase 2 (Prolific N=20-30 with modular interviews). Park v2 implies this matrix but does not produce it.</p>
     </div>
+  </div>
+  <div class="why-matters">
+    <h3>Why this matters</h3>
+    <p>Synthetic-respondent platforms — <strong>Simile</strong> (Stanford spinout, $100M raised), <strong>Aaru</strong> ($1B valuation), <strong>Synthetic Users</strong>, <strong>Evidenza</strong>, <strong>Listen Labs</strong> — are betting on which input data drives persona fidelity. No published work tells them <em>which feature categories actually do the work, on which outcome dimensions</em>. The thesis fills that gap with a pre-registered, OSF-locked LOO ablation across two phases that span the full 4×3 matrix in a single semester at ~$2,000 total.</p>
+    <p class="roadmap-line"><strong>Roadmap:</strong> Pilot ✅ (this dashboard) → Phase 1 GSS public data (1-4 weeks, ~$400) → Phase 2 interview-decomposed Prolific study (7-9 weeks, ~$1,600) → 4×3 matrix + writeup</p>
   </div>
 </section>
 
-<!-- =================== SECTION 1: PIPELINE =================== -->
-<section id="pipeline">
-  <h2>1. Pipeline architecture</h2>
-  <p>Eight stages from raw transcript to final metrics. Each stage is independently testable; eval ground truth never enters persona prompts (no leakage).</p>
+<!-- =================== SECTION 1: BACKGROUND =================== -->
+<section id="background">
+  <h2>1. Background — Park et al. (2024)</h2>
+  <p><strong>arXiv:2411.10109</strong> · v1: <em>Generative Agent Simulations of 1,000 People</em> · v2 (current): <em>LLM Agents Grounded in Self-Reports Enable General-Purpose Simulation of Individuals</em>. Foundational paper for Stanford spinout Simile.</p>
+
+  <h3>What Park did</h3>
+  <ol>
+    <li>Recruited 1,052 stratified U.S. adults via market-research panel (Bovitz Inc.).</li>
+    <li>Conducted ~2-hour AVP-protocol interviews using a <strong>custom voice-to-voice AI moderator</strong> (not human) with adaptive follow-ups; avg 6,491 words/transcript.</li>
+    <li>Constructed an LLM persona for each respondent by feeding the verbatim transcript into GPT-4o as a system prompt — <strong>no fine-tuning, in-context only</strong>.</li>
+    <li>Asked each persona to answer the same held-out battery the real respondent had answered: GSS attitudes, BFI-44 personality, 5 behavioral economic games, 5 social-science experiments.</li>
+    <li>Compared persona-predicted vs. self-reported responses, normalized against participants' own 2-week test-retest reliability.</li>
+  </ol>
+
+  <h3>v1 → v2 — key reframing this sprint surfaced</h3>
+  <p>The proposal cited v1's "85%" headline. v2 reorganized conditions and added per-outcome breakdowns that change the interpretation. Both versions live at the same arXiv ID; v2 is the current canonical citation.</p>
+  <table class="park-v2-table">
+    <thead>
+      <tr><th>Outcome</th><th>Interview-only</th><th>Surveys-only</th><th>Gap (interview − surveys)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>GSS attitudes (norm. accuracy)</td><td>0.83</td><td>0.82</td><td><span class="tie">≈ tie</span></td></tr>
+      <tr><td>BFI-44 personality (norm. corr.)</td><td>0.80</td><td>0.65</td><td><span class="gap">+0.15</span></td></tr>
+      <tr><td>Behavioral econ games (norm. corr.)</td><td>0.66</td><td>0.38</td><td><span class="gap-large">+0.28</span></td></tr>
+    </tbody>
+  </table>
+  <p class="caption">"Surveys ≈ interview" only holds on GSS attitudes. The thesis question is therefore <strong>outcome-stratified</strong>: which feature category closes which part of that gap on which outcome? This is the analysis Park v2 implies but does not run — and it's the thesis novelty.</p>
+
+  <h3>GSS attitude row — full headline numbers</h3>
+  <table class="park-table">
+    <thead><tr><th>Construction condition</th><th>GSS accuracy<br>(% of test-retest)</th></tr></thead>
+    <tbody>
+      <tr><td>Demographics only</td><td>74%</td></tr>
+      <tr><td>Interview only</td><td>83%</td></tr>
+      <tr class="highlight"><td>Surveys only</td><td>82%</td></tr>
+      <tr><td>Interview + surveys (combined)</td><td>86%</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- =================== SECTION 2: PILOT PIPELINE =================== -->
+<section id="pilot-pipeline">
+  <h2>2. Pilot — Pipeline architecture</h2>
+  <p>The pilot reproduced Park's architecture at small scale (N=2 interview + N=1 survey via Cookiy AI moderator). Eight stages from raw transcript to final metrics. Each stage is independently testable; eval ground truth never enters persona prompts (verified zero leakage via stem-anchored splitter).</p>
   <div class="pipeline-flow">
     <div class="stage" data-stage="1"><div class="stage-num">1</div><div class="stage-name">Battery</div><div class="stage-desc">15 eval items + 18 construction items</div></div>
     <div class="arrow">→</div>
@@ -83,9 +132,9 @@
   </div>
 </section>
 
-<!-- =================== SECTION 2: DATA =================== -->
-<section id="data">
-  <h2>2. The data</h2>
+<!-- =================== SECTION 3: PILOT DATA =================== -->
+<section id="pilot-data">
+  <h2>3. Pilot — The data</h2>
   <div class="three-col">
     <div class="card">
       <h3>Cookiy sessions</h3>
@@ -118,14 +167,14 @@
   </div>
 </section>
 
-<!-- =================== SECTION 3: CONDITIONS =================== -->
-<section id="conditions">
-  <h2>3. Persona-construction conditions</h2>
+<!-- =================== SECTION 4: PILOT CONDITIONS =================== -->
+<section id="pilot-conditions">
+  <h2>4. Pilot — Persona-construction conditions</h2>
   <p>Each condition feeds a different "richness" of material into the persona prompt. The LLM then answers the same 15 eval items.</p>
   <div class="conditions-grid">
     <div class="condition-card">
       <h4>A · Demographics only</h4>
-      <p class="arms">Studies 1 & 2</p>
+      <p class="arms">Studies 1 &amp; 2</p>
       <p>Age, gender, education, region. Information floor.</p>
     </div>
     <div class="condition-card">
@@ -144,61 +193,41 @@
       <p>All 18 construction items as structured Q&amp;A.</p>
     </div>
     <div class="condition-card loo">
-      <h4>D – LOO ablation × 4</h4>
+      <h4>D − LOO ablation × 4</h4>
       <p class="arms">Study 2</p>
       <p>D minus each of {demographic, behavioral, psychological, attitudinal} — feature-importance via subtraction.</p>
     </div>
   </div>
 </section>
 
-<!-- =================== SECTION 4: RESULTS =================== -->
-<section id="results">
-  <h2>4. Headline results</h2>
-  <p id="results-intro">Per-condition Likert MAE, lower = persona is closer to the real person. Numbers below are <em>placeholder mock data</em> until pipeline run completes — they will auto-update once <code>metrics_per_respondent.json</code> is dropped into <code>docs/data/</code>.</p>
+<!-- =================== SECTION 5: PILOT RESULTS =================== -->
+<section id="pilot-results">
+  <h2>5. Pilot — Results</h2>
+  <div class="callout">
+    <strong>How to read MAE:</strong> Mean Absolute Error on a 1-5 Likert scale. Lower = persona's predictions are closer to the real person's answers. <strong>0 = perfect match on every item</strong>; 1.0 ≈ off by ~1 step on average per item; theoretical max = 4.
+  </div>
+  <h3>Likert MAE per condition (lower = better)</h3>
   <div class="chart-wrapper">
     <canvas id="chart-mae"></canvas>
   </div>
+  <h3>Categorical exact-match accuracy</h3>
   <div class="chart-wrapper">
     <canvas id="chart-categorical"></canvas>
   </div>
+  <h3>Self-consistency (same item asked twice at temp 0.7)</h3>
   <div class="chart-wrapper">
     <canvas id="chart-self-consistency"></canvas>
   </div>
-</section>
-
-<!-- =================== SECTION 4.5: LEAKAGE AUDIT (added 2026-04-30) =================== -->
-<section id="leakage">
-  <h2>4.5 Robustness check: does Condition C win because of leakage?</h2>
-  <p>The pilot's eval is administered <em>in the same Cookiy session</em> as the interview, not 2 weeks later as in Park's protocol. This means some eval items have their answer effectively pre-stated in the interview content fed to the persona prompt — e.g., P1 disclosed political ideology in the open-interview portion, then minutes later was asked to self-place on the 1–7 liberal–conservative scale. So we expect Condition C (interview-conditioned) to look artificially strong.</p>
-  <p><strong>Audit method:</strong> for each respondent × each of 15 eval items, manually tag as <strong>STRONG</strong> (construct directly stated or moderator paraphrased it), <strong>SOFT</strong> (semantically related), or <strong>CLEAN</strong> (no detectable mention). Then re-score each condition under three filters: keep all 15 items, drop STRONG only (strict-clean), or drop STRONG and SOFT (broad-clean). If C's win comes from leakage, it should collapse on the strict-clean / broad-clean columns.</p>
-  <div class="chart-wrapper">
-    <canvas id="chart-leakage"></canvas>
-  </div>
-  <div class="callout success">
-    <strong>Finding: C's interview-conditioning advantage survives leakage filtering.</strong> Even after dropping the 3 STRONG-leaked items per respondent (<code>bfi_c</code>, <code>polviews</code>, <code>happy</code>/<code>satjob</code>), Condition C still substantially outperforms A and B. The persona prompt apparently encodes enough personality structure that the LLM predicts uncovered items by inference, not regex.
-  </div>
-  <div class="callout warning">
-    <strong>Caveat: broad-clean has very few items left</strong> (P2 down to 4). MAE = 0.00 in those cells should be read as "consistent with no error at small N", not "perfect prediction." The honest headline is the strict-clean column.
-  </div>
-  <p>Tag rationale and evidence quotes are kept locally in <code>leakage_audit.json</code> (not committed to this repo because the quotes contain identifying transcript content).</p>
-</section>
-
-<!-- =================== SECTION 5: LOO IMPORTANCE =================== -->
-<section id="loo">
-  <h2>5. Feature-importance: leave-one-out ablation</h2>
+  <h3>Feature-importance LOO (Study 2)</h3>
   <p>For Study 2's full-survey persona (Condition D), drop one feature category at a time. Larger Δ MAE means that category, when removed, hurt accuracy more — i.e., it was more predictive.</p>
   <div class="chart-wrapper">
     <canvas id="chart-loo"></canvas>
   </div>
   <div class="callout warning">
-    <strong>N=1 caveat:</strong> with one Study 2 respondent, each Δ MAE is a single point estimate. Treat as <em>directional signal</em>, not as causal evidence. The LOO design itself is the methodological contribution; the thesis-stage replication will reproduce it at N≥30 with confidence intervals.
+    <strong>N=1 caveat:</strong> with one Study 2 respondent, each Δ MAE is a single point estimate. Treat as <em>directional signal</em>, not as causal evidence. The LOO design itself is the methodological contribution; Phase 1 reproduces it at N≈1,500 with confidence intervals.
   </div>
-</section>
-
-<!-- =================== SECTION 6: DRILLDOWN =================== -->
-<section id="drilldown">
-  <h2>6. Per-item drill-down</h2>
-  <p>For each eval item, see what each persona-condition LLM answered vs. the participant's ground truth. Pick a respondent below.</p>
+  <h3>Per-item drill-down</h3>
+  <p>For each eval item, see what each persona-condition LLM answered vs. the participant's ground truth.</p>
   <div class="drilldown-controls">
     <label>Respondent: <select id="drilldown-respondent"><option>Study 1 R1</option><option>Study 1 R2</option><option>Study 2 R1</option></select></label>
   </div>
@@ -208,59 +237,261 @@
         <tr><th>Item</th><th>Truth</th><th>A</th><th>B</th><th>C / D</th></tr>
       </thead>
       <tbody>
-        <!-- populated by app.js -->
       </tbody>
     </table>
   </div>
 </section>
 
+<!-- =================== SECTION 6: ROBUSTNESS =================== -->
+<section id="robustness">
+  <h2>6. Robustness — does Condition C win because of leakage?</h2>
+  <p>The pilot's eval is administered <em>in the same Cookiy session</em> as the interview, not 2 weeks later as in Park's protocol. So some eval items have their answer effectively pre-stated in the interview content fed to the persona prompt — e.g., P1 disclosed political ideology in the open-interview portion, then minutes later was asked to self-place on the 1–7 liberal–conservative scale. So we expect Condition C (interview-conditioned) to look artificially strong.</p>
+  <p><strong>Audit method:</strong> for each respondent × each of 15 eval items, manually tag as <strong>STRONG</strong> (construct directly stated or moderator paraphrased it), <strong>SOFT</strong> (semantically related), or <strong>CLEAN</strong> (no detectable mention). Then re-score each condition under three filters: keep all 15 items, drop STRONG only (strict-clean), or drop STRONG + SOFT (broad-clean). If C's win comes from leakage, it should collapse on the strict-clean / broad-clean columns.</p>
+  <div class="chart-wrapper">
+    <canvas id="chart-leakage"></canvas>
+  </div>
+  <div class="callout success">
+    <strong>Finding: C's interview-conditioning advantage survives leakage filtering.</strong> Even after dropping the 3 STRONG-leaked items per respondent (<code>bfi_c</code>, <code>polviews</code>, <code>happy</code>/<code>satjob</code>), Condition C still substantially outperforms A and B. The persona prompt apparently encodes enough personality structure that the LLM predicts uncovered items by inference, not regex.
+  </div>
+  <div class="callout warning">
+    <strong>Caveat:</strong> broad-clean has very few items left (P2 down to 4). MAE = 0.00 in those cells should be read as "consistent with no error at small N", not "perfect prediction." The honest headline is the strict-clean column.
+  </div>
+</section>
+
 <!-- =================== SECTION 7: LIMITATIONS =================== -->
 <section id="limitations">
-  <h2>7. Limitations (Park deviations and pilot caveats)</h2>
+  <h2>7. Pilot limitations (each is addressed by Phase 1 or Phase 2)</h2>
   <div class="limitations-grid">
     <div class="lim-card">
       <h4>In-session priming</h4>
-      <p>Park separated interview from eval by 2 weeks. We do them in one 15-min session. Likely inflates absolute accuracy. Acceptable as v1; thesis must adopt 2-week separation or constrain probes to disjoint constructs.</p>
+      <p>Park separated interview from eval by 2 weeks. We did them in one 15-min session — likely inflates absolute accuracy. <strong>Resolved in Phase 2 (2-week separation).</strong></p>
     </div>
     <div class="lim-card">
       <h4>No test-retest baseline</h4>
-      <p>Park's 83% is % of test-retest reliability. We have no retest data, so our raw % cannot be cited side-by-side with Park's 83%. Decide: collect retest at thesis stage, or use only relative comparisons.</p>
+      <p>Park's 83% is % of test-retest reliability. We have no retest data. <strong>Resolved in Phase 1</strong> (within-person panel structure provides the denominator).</p>
     </div>
     <div class="lim-card">
       <h4>BFI-10 instead of BFI-44</h4>
-      <p>2 items per trait makes BFI trait scores statistically noisy. For thesis trait-level metrics to be defensible, upgrade to BFI-44.</p>
+      <p>2 items per trait makes BFI trait scores statistically noisy. <strong>Resolved in Phase 2 (full BFI-44 in Wave 2).</strong></p>
     </div>
     <div class="lim-card">
-      <h4>Cookiy interview depth</h4>
-      <p>15-min cap = ~10% of Park's 2-hour AVP. This is a different measurement instrument, not a sampling difference. Expect lower Condition C accuracy than Park; not evidence against the architecture.</p>
+      <h4>Cookiy 15-min cap</h4>
+      <p>~10% of Park's 2-hour AVP. <strong>Resolved in Phase 2 (Prolific + self-hosted AI moderator on OpenAI Realtime API, no time cap).</strong></p>
     </div>
     <div class="lim-card">
       <h4>Panel respondent quality</h4>
-      <p>One respondent gave one-word answers and asked "which AI are you?" mid-eval. Real-world deployment realism, but sets a ceiling on persona-conditioning quality.</p>
+      <p>One respondent gave one-word answers and asked "which AI are you?" mid-eval. Real-world deployment realism. Phase 2 adds attention checks + Prolific's vetted pool.</p>
     </div>
     <div class="lim-card">
       <h4>N=2 + N=1</h4>
-      <p>Pilot is feasibility-only. No statistical inference. All numbers should be read as "the pipeline works and produces interpretable values," not "X is better than Y."</p>
+      <p>Pilot is feasibility-only. No statistical inference. Phase 1 brings N≈1,500; Phase 2 brings N=20-30 with bootstrap CIs.</p>
     </div>
   </div>
 </section>
 
-<!-- =================== SECTION 8: NEXT STEPS =================== -->
-<section id="next">
-  <h2>8. What's next (thesis roadmap)</h2>
-  <ol class="roadmap">
-    <li><strong>Lock the methodology.</strong> Pre-register on OSF before scaling. Switch to BFI-44, decide on retest baseline, decide on 2-week separation.</li>
-    <li><strong>Recruit so each respondent does both arms.</strong> Each person completes a 15-min interview <em>and</em> the 18-item survey. Enables Park's "Combined" condition (E) — the strongest in his paper.</li>
-    <li><strong>Scale to N≥30 per arm.</strong> Put error bars on LOO contributions. Statistical inference becomes possible.</li>
-    <li><strong>Item-level LOO inside the strongest category.</strong> If the pilot shows e.g. attitudinal matters most, run leave-one-item-out on the 4–8 attitudinal items to find which specific items drive the signal.</li>
-    <li><strong>Cross-model robustness.</strong> Run on Claude Sonnet 4.6 alongside GPT-4o; report how stable feature-importance ranking is across models.</li>
-    <li><strong>Publishable contribution.</strong> Park's framework × explicit feature taxonomy × cost/fidelity analysis — a clean extension positioned for a CHI / AAAI / marketing-science venue.</li>
+<!-- =================== SECTION 8: PHASE 1 =================== -->
+<section id="phase1">
+  <h2>8. Phase 1 — GSS Public-Data Feature-Importance Analysis</h2>
+  <div class="phase-meta-bar">
+    <span class="meta-pill">Budget: ~$300-500</span>
+    <span class="meta-pill">Timeline: 1-4 weeks</span>
+    <span class="meta-pill">N ≈ 1,500</span>
+    <span class="meta-pill">Covers: GSS-attitudes outcome row</span>
+  </div>
+
+  <h3>Research question</h3>
+  <p><em>Within the GSS-attitudes outcome dimension</em> — the row of Park's outcome matrix where <strong>surveys ≈ interview (0.82 vs 0.83)</strong> — which of four survey-collectible feature categories (demographic / behavioral / psychological / attitudinal) most contribute to LLM-persona predictive fidelity?</p>
+
+  <h3>Why GSS public data first (the ROI argument)</h3>
+  <table class="comparison-table">
+    <thead><tr><th>Dimension</th><th>Cookiy collection (pilot)</th><th>GSS public data (Phase 1)</th></tr></thead>
+    <tbody>
+      <tr><td>N</td><td>3 (pilot) → 30+ (thesis)</td><td>1,500+ (panel) or 70,000+ (cumulative)</td></tr>
+      <tr><td>Cost per respondent</td><td>~$10 platform + ~$1 LLM</td><td>$0 platform + ~$0.10 LLM</td></tr>
+      <tr><td>Time to data-in-hand</td><td>days to weeks</td><td>minutes (already collected)</td></tr>
+      <tr><td>In-session priming</td><td>yes (open methodological liability)</td><td>none</td></tr>
+      <tr><td>Test-retest baseline</td><td>not available</td><td><strong>available</strong> via wave-1↔wave-3 panel</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Data source</h3>
+  <ul>
+    <li><strong>Primary:</strong> GSS Three-Wave Panel 2010-2014 (NORC), N≈2,000 in wave 1, ~1,500 surviving wave 3 after attrition. Same respondents answered ~70 items per wave with substantial item overlap → built-in within-person test-retest.</li>
+    <li><strong>Backup:</strong> GSS 1972-2022 Cumulative Cross-Section (N≈72,000) for items not covered by the panel.</li>
+    <li>Both freely available at <a href="https://gss.norc.org/" target="_blank" rel="noopener">gss.norc.org</a> (registration required, no fee).</li>
+  </ul>
+
+  <h3>Method (Park's framework, adapted)</h3>
+  <ol>
+    <li><strong>Split features into four pre-registered categories</strong> (full mapping in <code>gss_feature_taxonomy.json</code>):
+      <ul>
+        <li><strong>Demographic (~8 items):</strong> age, sex, race, region, education, income, marital status, employment</li>
+        <li><strong>Behavioral (~10 items):</strong> voting, religious attendance, prayer, news consumption, hours worked</li>
+        <li><strong>Psychological (~6 items, GSS-thin):</strong> happiness, life satisfaction, anomia subscale</li>
+        <li><strong>Attitudinal (~30 items):</strong> polviews, abortion battery, racial attitudes, gender role, institutional trust</li>
+      </ul>
+    </li>
+    <li><strong>Construct persona prompt</strong> from wave-1 items in the included feature categories.</li>
+    <li><strong>Predict held-out wave-3 responses</strong> via LLM persona (GPT-4o, temp 0.7, N=2 samples — same pipeline as pilot).</li>
+    <li><strong>Score:</strong> Likert MAE, % within ±1, categorical exact-match.</li>
+    <li><strong>Normalize</strong> against test-retest baseline: within-person wave-1↔wave-3 agreement = denominator. Final headline = persona accuracy ÷ test-retest reliability — <strong>directly comparable to Park's 0.82-0.83 normalized accuracy</strong>.</li>
   </ol>
+
+  <h3>LOO ablation</h3>
+  <p>5 conditions per respondent: full (all 4 bins) + 4 LOO (drop demographic / drop behavioral / drop psychological / drop attitudinal). With N≈1,500, every category-importance estimate gets a real <strong>bootstrap 95% confidence interval</strong>.</p>
+
+  <h3>What Phase 1 produces</h3>
+  <ul>
+    <li>Confidence-intervaled feature-importance ranking on the GSS-attitudes outcome</li>
+    <li><strong>First direct comparison of normalized accuracy to Park's 0.82-0.83 at comparable N</strong></li>
+    <li>Pre-registered feature taxonomy → standardized vocabulary for the rest of the thesis</li>
+    <li>Reusable codebase that runs against any panel survey dataset</li>
+  </ul>
+
+  <h3>Phase 1 limitations</h3>
+  <ul>
+    <li>GSS-attitudes outcome only — Phase 2's job to cover BFI and games rows</li>
+    <li>2-year retest interval is longer than Park's 2-week (conservative bias on the denominator — our normalized accuracy reads as a lower bound)</li>
+    <li>GSS panel attrition is non-random; apply panel weights or report sensitivity bounds</li>
+    <li>GSS is thin on psychological items (no BFI), strong on attitudinal — psychological-bin estimates will be weak</li>
+  </ul>
+</section>
+
+<!-- =================== SECTION 9: PHASE 2 =================== -->
+<section id="phase2">
+  <h2>9. Phase 2 — Interview-Decomposed Feature-Importance Study</h2>
+  <div class="phase-meta-bar">
+    <span class="meta-pill">Budget: ~$1,500-1,750</span>
+    <span class="meta-pill">Timeline: 7-9 weeks</span>
+    <span class="meta-pill">N = 20-30</span>
+    <span class="meta-pill">Covers: BFI + games + GSS rows</span>
+  </div>
+
+  <h3>Research question</h3>
+  <p><strong>Within an LLM persona built from a long interview transcript, which content categories of that interview most predict held-out responses on which outcome dimensions?</strong></p>
+  <p>This is the <em>non-attitudinal</em> half of the thesis matrix — the rows where Park v2 found <strong>interview &gt; surveys</strong> by 0.15 (BFI-44) and 0.28 (games). Park's gaps are reported as <em>aggregate</em> differences between "interview" and "surveys" persona conditions. Phase 2 asks <strong>which interview-content category</strong> carries the predictive signal that closes those gaps — i.e., decomposes Park's monolithic "interview" condition into pre-registered content bins.</p>
+
+  <h3>Why this design (vs. paired-survey alternative)</h3>
+  <table class="comparison-table">
+    <thead><tr><th>Alternative</th><th>Why it doesn't answer the question</th></tr></thead>
+    <tbody>
+      <tr><td>GSS public data only</td><td>No interviews, no BFI, no games. Cannot observe BFI/games gap.</td></tr>
+      <tr><td>Paired structured survey at higher N</td><td>Tests "which survey features close the gap" — but Park's gap is defined as interview-vs-surveys. Surveys-only ablation cannot explain why interviews win.</td></tr>
+      <tr><td>Scaling pilot's 9-min Cookiy interview</td><td>9 minutes is too thin to support meaningful within-transcript ablation. Depth-domain coverage already audited as inadequate at that length.</td></tr>
+    </tbody>
+  </table>
+  <p>Phase 2 is the unique research move that <strong>directly decomposes Park's "interview-only" condition</strong>.</p>
+
+  <h3>Recruitment &amp; platform pivot</h3>
+  <p><strong>N = 20-30 panel respondents via Prolific</strong> (not Cookiy). Reasons:</p>
+  <ul>
+    <li>Cookiy caps interviews at 15 minutes — incompatible with 30-45 min modular interview</li>
+    <li>Cookiy panel cannot be re-contacted across studies → no Wave-1 / Wave-2 separation</li>
+    <li>Prolific supports custom-script studies with same-respondent re-invitation across waves; ID-traceable vetted pool</li>
+  </ul>
+  <p><strong>Moderator:</strong> self-hosted AI agent built on OpenAI Realtime API. The pilot's Cookiy moderator script is the seed — port to a stand-alone AI agent that the team controls. <strong>The deployment recipe itself becomes a methodological contribution</strong> ("Park-comparable AI-moderated long interview at academic budget").</p>
+
+  <h3>Wave 1 — Modular interview (30-45 min)</h3>
+  <p>The interview is structured as <strong>four content modules each mapped 1:1 to a feature category</strong>. The modular structure is what enables clean transcript decomposition for the LOO ablation.</p>
+  <table class="modules-table">
+    <thead>
+      <tr><th>Module</th><th>Time</th><th>Feature category</th><th>Content</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>M1 — Life basics</strong></td><td>5 min</td><td>Demographic</td><td>Age, family, work, education, region, income — stated facts</td></tr>
+      <tr><td><strong>M2 — Daily behaviors</strong></td><td>10 min</td><td>Behavioral</td><td>Weekly routine, consumption, exercise, social, media, voting</td></tr>
+      <tr><td><strong>M3 — Inner self</strong></td><td>10 min</td><td>Psychological</td><td>Childhood, relationships, stressors, motivations, regrets, peak/valley moments</td></tr>
+      <tr><td><strong>M4 — Values &amp; attitudes</strong></td><td>10 min</td><td>Attitudinal</td><td>Politics, social/policy, life philosophy, institutional trust, traditionalism</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2-week separation</h3>
+  <p>Park's protocol. Resolves the pilot's largest methodological liability (in-session priming).</p>
+
+  <h3>Wave 2 — Outcome battery (~25 min)</h3>
+  <ul>
+    <li><strong>BFI-44</strong> (44 items, 1-5 Likert) → BFI personality outcome row</li>
+    <li><strong>5 behavioral-game survey vignettes</strong> (dictator, ultimatum, trust, public goods, donation) → games outcome row</li>
+    <li><strong>15 GSS attitudinal items</strong> → cross-validates Phase 1's GSS-row finding</li>
+    <li>3 attention/manipulation checks → quality control</li>
+  </ul>
+
+  <h3>Transcript decomposition (LLM-assisted, human-validated)</h3>
+  <ol>
+    <li><strong>Stage A — module-boundary segmentation:</strong> cut transcript at moderator's verbal markers ("OK, let's move to the next part…"). First-pass clean: ~95% of content lands in the correct bin.</li>
+    <li><strong>Stage B — cross-content reassignment:</strong> pass each utterance through GPT-4o classifier prompt to detect cross-module content (e.g., M3 stress story spilling into M2 exercise). Reassign as needed.</li>
+    <li><strong>Quality control:</strong> 10% sample human-coded; agreement rate between LLM coder and human coder reported. With N=30 and ~30-min transcripts (~4000 words each), full human coding is feasible if needed (~10 min/transcript).</li>
+  </ol>
+  <p><strong>Output:</strong> 4 cleaned content tracks per respondent (one per module), plus a "shared/cross" residual track that goes into all LOO conditions.</p>
+
+  <h3>LOO ablation — at the interview-content level (the structural innovation)</h3>
+  <p>This is the structural innovation. The LOO doesn't drop survey items — it <strong>drops chunks of the interview transcript itself</strong>:</p>
+  <table class="loo-conditions">
+    <thead><tr><th>Condition</th><th>Persona prompt content</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Full</strong></td><td>M1 + M2 + M3 + M4 + shared/cross</td></tr>
+      <tr><td><strong>LOO_M1</strong></td><td>(Full minus M1 content)</td></tr>
+      <tr><td><strong>LOO_M2</strong></td><td>(Full minus M2 content)</td></tr>
+      <tr><td><strong>LOO_M3</strong></td><td>(Full minus M3 content)</td></tr>
+      <tr><td><strong>LOO_M4</strong></td><td>(Full minus M4 content)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Why N=20-30 is enough</h3>
+  <ol>
+    <li>Park's gaps are large effects (0.15, 0.28 on outcomes scaled 0-1). Detecting LOO effects of similar magnitude does not require Park's N=1052.</li>
+    <li>BFI is item-rich: 30 respondents × 44 items = 1,320 paired observations per condition.</li>
+    <li>Phase 2 is <strong>confirmatory after Phase 1</strong> — Phase 1's results give priors on which categories matter most on attitudes; Phase 2 tests whether those priors hold cross-outcome. Confirmatory designs need less power than exploratory.</li>
+  </ol>
+
+  <h3>What Phase 2 produces</h3>
+  <ul>
+    <li><strong>Headline:</strong> the first published feature × outcome 2D feature-importance map for LLM personas — covering the rows where Park identified the largest interview-vs-surveys gap (BFI 0.15, games 0.28).</li>
+    <li><strong>Methodological:</strong> modular interview design as a tool for content-level ablation; LLM-assisted transcript decomposition protocol with human-coded validation; "Park-comparable AI-moderated long interview at academic budget" deployment recipe.</li>
+    <li><strong>Theoretical:</strong> mechanism for Park v2's BFI/games gap (which interview content does the work); cross-outcome transferability of feature-category importance; direct response to Bisbee/Hullman "synthetic-sample sloppiness" critique via cross-outcome paired-data design.</li>
+  </ul>
+</section>
+
+<!-- =================== SECTION 10: DECISIONS =================== -->
+<section id="decisions">
+  <h2>10. Composed thesis output + decisions for the meeting</h2>
+
+  <h3>The 4 × 3 feature-importance matrix (the headline artifact)</h3>
+  <table class="thesis-matrix-large">
+    <thead>
+      <tr><th></th><th>BFI MAE Δ</th><th>Games MAE Δ</th><th>GSS MAE Δ</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Drop demographic</td><td><span class="phase-tag p2">Phase 2</span></td><td><span class="phase-tag p2">Phase 2</span></td><td><span class="phase-tag p1">Phase 1</span> + <span class="phase-tag p2">Phase 2</span></td></tr>
+      <tr><td>Drop behavioral</td><td><span class="phase-tag p2">Phase 2</span></td><td><span class="phase-tag p2">Phase 2</span></td><td><span class="phase-tag p1">Phase 1</span> + <span class="phase-tag p2">Phase 2</span></td></tr>
+      <tr><td>Drop psychological</td><td><span class="phase-tag p2">Phase 2</span></td><td><span class="phase-tag p2">Phase 2</span></td><td><span class="phase-tag p1">Phase 1</span> + <span class="phase-tag p2">Phase 2</span></td></tr>
+      <tr><td>Drop attitudinal</td><td><span class="phase-tag p2">Phase 2</span></td><td><span class="phase-tag p2">Phase 2</span></td><td><span class="phase-tag p1">Phase 1</span> + <span class="phase-tag p2">Phase 2</span></td></tr>
+    </tbody>
+  </table>
+  <p class="caption">Each cell will hold the average increase in MAE when that feature category is dropped from the persona prompt, on that outcome dimension. Phase 1 fills the GSS column at high N; Phase 2 fills the BFI and games columns at smaller N (and cross-validates the GSS column). <strong>Park v2 implies this matrix but does not produce it.</strong></p>
+
+  <h3>Decisions I'd love your input on tomorrow</h3>
+  <ol class="decisions-list">
+    <li><strong>Confirm or reframe the thesis question</strong> in light of Park v2's outcome-stratified findings (surveys ≈ interview on GSS only; lag by 0.15 BFI / 0.28 games).</li>
+    <li><strong>Endorse the two-phase plan</strong> — Phase 1 (GSS public-data) + Phase 2 (interview-decomposed Prolific study) — vs. an alternative direction.</li>
+    <li><strong>Endorse the platform pivot for Phase 2</strong> — Cookiy → Prolific + self-hosted OpenAI Realtime API moderator. Required because Cookiy's 15-min cap blocks the long modular interview design.</li>
+    <li><strong>Confirm 4-bin granularity</strong> for the feature taxonomy (or argue for SCOPE-style finer subdivision, Bao et al. 2026).</li>
+    <li><strong>Pre-registration commitment</strong> — agree to OSF pre-registration before Phase 1 launches.</li>
+  </ol>
+  <p>Plus one open question: is the pilot's leakage-audit defense sufficient for a 3-5 page pilot writeup, or should the pilot be re-collected at proper 2-week separation before scaling to Phase 1?</p>
+
+  <h3>Methodological commitments before launching either phase</h3>
+  <ul>
+    <li>OSF pre-registration of feature taxonomy, exclusion rules, primary metric, and LOO design</li>
+    <li>BFI-10 → BFI-44 upgrade for Phase 2</li>
+    <li>2-week separation enforced for Phase 2 (resolves pilot's largest methodological liability)</li>
+    <li>Cross-model robustness check (GPT-4o + Claude Sonnet 4.6) on a sample of Phase 2 respondents</li>
+  </ul>
 </section>
 
 <footer>
   <div class="container">
-    <p>Last updated <span id="last-updated">—</span> · Source repo: <a href="https://github.com/joyceyu/GSBGEN390" target="_blank">github.com/joyceyu/GSBGEN390</a> · Faculty advisor: Prof. Mohsen Bayati</p>
+    <p>Last updated <span id="last-updated">2026-04-30</span> · Source repo: <a href="https://github.com/Joyceqx/gsbgen390-persona-pipeline" target="_blank" rel="noopener">github.com/Joyceqx/gsbgen390-persona-pipeline</a> · Faculty advisor: Prof. Mohsen Bayati · Lead: Joyce Yu</p>
   </div>
 </footer>
 

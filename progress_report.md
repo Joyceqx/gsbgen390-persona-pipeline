@@ -85,3 +85,15 @@ First, whether to run a two-week self-retest with the same panel respondents to 
 ## 7. Bottom line
 
 In 1.5 days, the sprint moved from "we should replicate Park" to "we have a working pipeline, three real Cookiy transcripts, parsed eval truth, and a complete results table with leakage-robustness audit." The pivots along the way produced a cleaner design than the original proposal contemplated, and the smart-parser approach to eval extraction is a reusable methodological piece that scales beyond this pilot. Park v2's outcome-stratified findings turned out to be the most important context: surveys-only matches interview-only on GSS attitudes but lags by 0.15 on personality and by 0.28 on behavioral games. That outcome-dependence transforms the thesis question from "can surveys substitute for interviews?" (answer: it depends what you're predicting) into *"which survey-collectible feature categories close which parts of that gap on which outcomes?"* — a two-way analysis that is sharper, more publishable, and directly supported by the LOO infrastructure built in this pilot.
+
+---
+
+## 8. What's next: two-phase thesis plan
+
+The pilot's role in the larger arc is to establish the architecture; the thesis carries it to publishable scale via two complementary phases.
+
+**Phase 1** ([`gss_phase1_design.md`](gss_phase1_design.md)) uses GSS Three-Wave Panel 2010-2014 public data (N≈1,500) to attack the GSS-attitudes outcome row at high N — the row where Park found surveys ≈ interview. Same persona-in-context method as the pilot, but with wave-1 inputs predicting wave-3 outcomes. The within-person wave-1↔wave-3 agreement supplies a real test-retest baseline, so for the first time we can report normalized accuracy directly comparable to Park's 0.82-0.83 figure. ~$400 budget, ~1-4 weeks.
+
+**Phase 2** ([`thesis_phase2_design.md`](thesis_phase2_design.md)) attacks the BFI and economic-game outcome rows — the rows where Park found the largest interview-vs-surveys gaps (0.15 and 0.28). Phase 2 is a new collection: N=20-30 panel respondents recruited via Prolific (Cookiy's 15-min cap is incompatible with the design), 30-45 min modular AVP-style interviews (the moderator script is structured into 4 modules, each mapped 1:1 to a feature category), 2-week separation, then a Wave 2 outcome battery of BFI-44 + behavioral-game survey vignettes + GSS items. The LOO ablation operates at the **interview-content level**, directly decomposing Park's monolithic "interview-only" condition into pre-registered content bins. ~$1,600 budget, ~7-9 weeks.
+
+Composed, the two phases produce the full **4 (feature category) × 3 (outcome dimension) feature-importance matrix** — the artifact Park v2 implies but does not produce. Pre-registration on OSF before each phase launches.

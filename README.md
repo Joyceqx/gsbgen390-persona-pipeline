@@ -13,10 +13,13 @@ The pilot is the first step of a larger thesis question: **which survey-collecti
 If you (or future-Claude) walked in cold, read these in order:
 
 1. [`README.md`](README.md) — this file
-2. [`STATUS.md`](STATUS.md) — current project state, what's done vs. pending, file inventory
-3. [`replication_scoping.md`](replication_scoping.md) — full design rationale, Park's actual numbers, what we are and aren't replicating
-4. [`cookiy_brief.md`](cookiy_brief.md) — Study 1 (interview arm) brief
-5. [`cookiy_brief_study2.md`](cookiy_brief_study2.md) — Study 2 (survey arm) brief
+2. [`MEETING_HANDOUT.md`](MEETING_HANDOUT.md) — comprehensive bilingual project brief (English + 中文) — best single read for full context
+3. [`STATUS.md`](STATUS.md) — current project state, what's done vs. pending, file inventory
+4. [`replication_scoping.md`](replication_scoping.md) — full design rationale, Park's actual numbers, what we are and aren't replicating
+5. [`gss_phase1_design.md`](gss_phase1_design.md) — **thesis Phase 1**: GSS public-data feature-importance analysis (proposal)
+6. [`thesis_phase2_design.md`](thesis_phase2_design.md) — **thesis Phase 2**: interview-decomposed feature-importance study (proposal)
+7. [`cookiy_brief.md`](cookiy_brief.md) — Study 1 (interview arm) brief
+8. [`cookiy_brief_study2.md`](cookiy_brief_study2.md) — Study 2 (survey arm) brief
 
 ## How to run the pipeline
 
@@ -44,12 +47,14 @@ python3 make_robustness_chart.py         # → chart_robustness.png
 
 ## Project goal
 
-Two interlocking research contributions for the eventual thesis paper (this pilot establishes the foundation for both):
+The eventual thesis fills a 4 (feature category) × 3 (outcome dimension) feature-importance matrix that Park v2 implies but does not produce. The pilot establishes the architecture; **two phases** carry it to publishable scale:
 
-1. **Evaluation framework** for AI persona quality — unifying scattered metrics (Eval4Sim, SCOPE, RL-consistency) into a coherent system covering behavioral fidelity, predictive validity, internal consistency, and calibration.
-2. **Empirical feature taxonomy** showing which survey-collectible feature categories (demographic / behavioral / psychological / attitudinal) most predict persona quality.
+- **Phase 1 — GSS public-data analysis** ([`gss_phase1_design.md`](gss_phase1_design.md)). N≈1,500 same respondents from the GSS Three-Wave Panel 2010-2014; Park-comparable normalized accuracy via within-person retest baseline. Covers the GSS-attitudes outcome row only. Budget ~$300-500, ~1-4 weeks.
+- **Phase 2 — Interview-decomposed study** ([`thesis_phase2_design.md`](thesis_phase2_design.md)). N=20-30 Prolific respondents, 30-45 min modular long interview (4 modules ↔ 4 feature bins) with 2-week separation, BFI-44 + behavioral-game vignettes + GSS held-out outcomes. LOO ablation operates at the **interview-content level** — directly decomposes Park's "interview-only" condition. Budget ~$1,500-1,750, ~7-9 weeks.
 
-The pilot delivers the smallest end-to-end version of (1) — a working pipeline that takes a Cookiy interview or survey, builds a persona from it, asks held-out eval questions, and scores the result.
+**Composed thesis output**: the full feature × outcome feature-importance matrix in one semester, ~$2,000 total.
+
+The pilot delivers the smallest end-to-end version of the architecture (Cookiy interview/survey → transcript → persona → held-out eval → metrics) plus the leakage-audit methodology that makes the architecture defensible at small N.
 
 ## Repo conventions
 

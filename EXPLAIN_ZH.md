@@ -148,7 +148,19 @@ LLM 就是那个演员。Transcript 就是档案。
 
 > 我们要研究 AI 能多好地"扮演"一个具体的真人。Park 2024 证明了用 2 小时访谈 transcript 喂给 LLM，在 GSS 态度题上能做到真人 83% 的水平。但 Park 也报告了：surveys-only 在 GSS 上几乎追平 interview（82% vs 83%），却在 BFI 人格题上落后 0.15、在行为游戏上落后 0.28。**这意味着 thesis 真正的研究问题是 outcome-stratified 的："哪类 survey feature 能在哪类 outcome 上补上 interview 的 gap？"** 我们想把这个方法在小规模上重现，并且加一个 Park 没做的实验：把 persona 的输入材料按四类（人口/行为/心理/态度）逐一删除，看哪一类信息最重要。
 >
-> 数据收集已经完成（3 个 Cookiy session），ground truth 已经提取（15 题 × 3 人），pipeline 代码写完且验证零泄漏。**剩最后一步**：让 GPT-4o 扮演这三个人，回答同样的 15 道题，然后比对一致率，画图，写报告。这一步今晚跑完，数字就出来了。
+> 数据收集已经完成（3 个 Cookiy session），ground truth 已经提取（15 题 × 3 人），pipeline 代码跑通了，结果出来了，leakage robustness 审计也做了。
+
+---
+
+## 七、Pilot 之后的两阶段 thesis 计划
+
+Pilot 证明架构跑通；thesis 用两个互补的 phase 把它推到 publishable 规模。
+
+**Phase 1（[`gss_phase1_design.md`](gss_phase1_design.md)）—— GSS 公开数据，1-4 周，~$400。** 用 NORC 的 GSS Three-Wave Panel 2010-2014 跑大 N=1,500 的 LOO ablation，专攻 outcome 矩阵的 GSS 态度行（Park 矩阵里 surveys ≈ interview 的那一行）。GSS panel 的同人多波结构提供 test-retest baseline，**首次能给出直接对标 Park 0.82-0.83 的 normalized accuracy**。
+
+**Phase 2（[`thesis_phase2_design.md`](thesis_phase2_design.md)）—— Interview-decomposed 研究，7-9 周，~$1,600。** Prolific 招 N=20-30，做 30-45 分钟模块化长访谈（主持人 script 分成 4 个模块，每个模块对应一个 feature 类别），2 周后 follow-up 收 BFI-44 + 行为博弈 + GSS。LOO ablation **在 interview 内容层面**操作（去掉 M1 / M2 / M3 / M4），**直接拆解 Park 的 "interview-only" condition**。覆盖 BFI 行 + games 行（Park interview-vs-surveys gap 最大的两行）。
+
+**两阶段组合产出 thesis 核心 artifact：完整的 4（feature 类别）× 3（outcome 维度）feature-importance 矩阵——Park v2 暗示但没产出的那张表。** 一学期搞定，总预算 ~$2,000。每阶段启动前 OSF 预注册。
 
 ---
 

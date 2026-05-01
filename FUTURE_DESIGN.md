@@ -22,6 +22,22 @@ Everything in the pilot has pivoted on the fly — design changed five times in 
 
 ---
 
+## Group 1.5 — Two-phase thesis plan
+
+Standalone proposals: [`gss_phase1_design.md`](gss_phase1_design.md) + [`thesis_phase2_design.md`](thesis_phase2_design.md). Abbreviated logic for the meeting:
+
+The thesis question is two-way (feature category × outcome dimension). Park v2 makes clear that *what* you can answer depends on *which outcome* you're predicting:
+
+- **Phase 1 — GSS public-data, GSS-attitudes row only** (surveys ≈ interview at 0.82 vs 0.83). The GSS Three-Wave Panel 2010-2014 provides N≈1,500 paired respondents with a built-in test-retest baseline — first comparison of our normalized accuracy directly to Park's 0.82-0.83. No priming, no recruitment cost, no Cookiy cap. Budget ~$300-500. Covers attitudinal outcome row at high N.
+
+- **Phase 2 — Interview-decomposed study, BFI + games + GSS rows.** GSS contains no BFI items, no economic games, and no interviews — so it cannot answer the rows where the *interview > survey* gap actually exists (BFI 0.15, games 0.28). Phase 2 collects new paired-wave data via Prolific (N=20-30, 2-week separation), runs **30-45 min modular AVP-style interviews** (4 modules each mapped 1:1 to a feature category), and ablates **at the interview-content level** — directly decomposing Park's monolithic "interview-only" condition into pre-registered content bins. Wave 2 = BFI-44 + behavioral-game vignettes + GSS subset. Budget ~$1,500-1,750. Requires platform pivot off Cookiy (15-min cap incompatible with modular long interview).
+
+The two phases compose into the full 4 (feature category) × 3 (outcome dimension) feature-importance matrix that Park's v2 implies but doesn't produce.
+
+**Decisions for the meeting:** (i) endorse two-phase plan vs. straight-to-larger-N-Cookiy; (ii) endorse Prolific + self-hosted OpenAI Realtime API moderator for Phase 2; (iii) endorse N=20-30 for Phase 2's confirmatory design.
+
+---
+
 ## Group 2 — Survey-design implications
 
 **2.1 Outcome-stratified leave-one-category-out is the actual thesis novelty.**
@@ -55,7 +71,8 @@ Use it as a **defensive shield**, not a weakness. Walking in saying "I know abou
 
 1. Lead with the pilot results (`MEETING_HANDOUT.md`).
 2. When the prof asks about limitations or methodology, pivot to **Group 1.1** (eval leakage) — it's the most material methodological concern and you have an answer (Park-style 2-week protocol or disjoint-construct probes).
-3. Use **Group 2.1** (LOO-ablation × N) as the natural pivot from "pilot showed direction" to "thesis study design." This is where Bayati's expertise actually matters most.
-4. Group 3 stays in your back pocket unless directly asked — these are caveats, not central design choices.
+3. **Pitch Group 1.5 (the phase split)** as the natural pivot from "pilot showed direction" to "thesis study design." GSS-first then targeted Cookiy is concrete, has a budget, has a timeline, and directly leverages the v2 outcome-stratified framing. This is the highest-information question for Bayati to answer.
+4. Use **Group 2.1** (outcome-stratified LOO × N) as the supporting design conversation underneath the phase split.
+5. Group 3 stays in your back pocket unless directly asked — these are caveats, not central design choices.
 
 The prof will likely have additions to all three groups. That's the point — this is the *agenda* for the design conversation, not the answer.
