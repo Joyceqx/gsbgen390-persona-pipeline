@@ -15,9 +15,11 @@ responses_s2/
 
 # Same content embedded inside LLM prompts:
 persona_answers_full.json
+outputs/persona_answers_full.json
 
 # Run logs may have re-quoted prompt content:
 run_*.log
+outputs/logs/
 
 # Quote-bearing methodology audits — keep local; aggregate findings are
 # already published in MEETING_HANDOUT.md and the website without quotes.

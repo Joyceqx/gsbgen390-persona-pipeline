@@ -18,9 +18,13 @@ from pathlib import Path
 from statistics import mean
 
 WORK = Path("/Users/joyce/Documents/GSBGEN390")
+OUTPUTS = WORK / "outputs"
+OUTPUTS.mkdir(exist_ok=True)
 
 # ----- Load inputs -----
-results = json.loads((WORK / "persona_answers_full.json").read_text())
+# persona_answers_full.json is a pipeline-output artifact (kept gitignored under outputs/).
+# leakage_audit.json is a manual-tagging input (gitignored at root because it has quotes).
+results = json.loads((OUTPUTS / "persona_answers_full.json").read_text())
 audit = json.loads((WORK / "leakage_audit.json").read_text())["per_respondent"]
 
 truth = {}
@@ -114,7 +118,7 @@ for r in results:
         })
 
 # ----- Write CSV -----
-out_path = WORK / "metrics_with_leakage_audit.csv"
+out_path = OUTPUTS / "metrics_with_leakage_audit.csv"
 fieldnames = ["arm","respondent","condition","filter","n_likert_used","likert_mae",
               "likert_within1_pct","n_cat_used","cat_acc_pct","n_strong_dropped","n_soft_dropped"]
 with open(out_path, "w", newline="") as f:

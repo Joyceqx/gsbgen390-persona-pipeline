@@ -67,7 +67,7 @@ per_resp = normalize_for_site(per_resp_raw)
 print(f"wrote {len(per_resp)} rows to docs/data/metrics_per_respondent.json")
 
 # ---------- metrics_with_leakage_audit.json ----------
-audit_raw = csv_to_jsonable_rows(WORK / "metrics_with_leakage_audit.csv")
+audit_raw = csv_to_jsonable_rows(WORK / "outputs" / "metrics_with_leakage_audit.csv")
 audit = normalize_for_site(audit_raw)
 (DATA / "metrics_with_leakage_audit.json").write_text(json.dumps(audit, indent=2))
 print(f"wrote {len(audit)} rows to docs/data/metrics_with_leakage_audit.json")

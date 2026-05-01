@@ -6,10 +6,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 WORK = Path("/Users/joyce/Documents/GSBGEN390")
+OUTPUTS = WORK / "outputs"
 
 # Load both metric tables
 audit_rows = []
-with open(WORK / "metrics_with_leakage_audit.csv") as f:
+with open(OUTPUTS / "metrics_with_leakage_audit.csv") as f:
     for row in csv.DictReader(f):
         audit_rows.append(row)
 
@@ -53,6 +54,6 @@ plot_panel(axes[1], study2, "Study 2 (survey arm) — Likert MAE under three vie
 fig.suptitle("Leakage-robustness audit: does Condition C's win survive removal of leak-suspect eval items?",
              y=1.00, fontsize=12, fontweight="bold")
 plt.tight_layout()
-out = WORK / "chart_robustness.png"
+out = OUTPUTS / "chart_robustness.png"
 plt.savefig(out, dpi=140, bbox_inches="tight")
 print(f"saved {out.name}")

@@ -100,7 +100,9 @@ print("\n========== DONE ==========")
 
 # Persist RESULTS (per-item primary + samples for each condition) so we can
 # re-score offline (e.g., on a leak-free subset of eval items).
-results_path = WORK / "persona_answers_full.json"
+outputs_dir = WORK / "outputs"
+outputs_dir.mkdir(exist_ok=True)
+results_path = outputs_dir / "persona_answers_full.json"
 results = ns.get("RESULTS", [])
 def _safe(v):
     if isinstance(v, dict):

@@ -1,6 +1,6 @@
 # Project Status — GSBGEN390 Mini-Replication
 
-**Last updated:** 2026-04-30 (post-pipeline-run + leakage audit)
+**Last updated:** 2026-04-30 evening (post-tidy: outputs/ + archive/ created; GitHub repo + Pages deployed)
 **Maintained by:** Joyce Yu + collaborating Claude session
 
 This document is the single-source-of-truth for what's done, what's pending, and how to pick up the project in a fresh terminal, Claude Code CLI, or Claude Cowork session.
@@ -80,57 +80,99 @@ Pilot replication of Park et al. (2024) *Generative Agent Simulations of 1,000 P
 
 ---
 
-## File inventory
+## Current work tree (post-tidy 2026-04-30 evening)
 
-### Inputs and design
-- `README.md` — front door
-- `STATUS.md` — this file
-- `replication_scoping.md` — full design doc (Park = AI interviewer corrected)
-- `cookiy_brief.md`, `cookiy_brief_study2.md` — Study 1 + Study 2 briefs
-- `eval_battery.json` — 15-item eval with anchors
-- `Openai_api.txt` — API key (delete/rotate when project ends; 165 chars)
+```
+GSBGEN390/
+├── README.md                          ← front door
+├── STATUS.md                          ← this file (single-source-of-truth)
+├── PRIMER.md                          ← 1-2 page Joyce self-intro (audience-tunable)
+├── MEETING_HANDOUT.md                 ← one-page brief for Bayati meeting
+├── WRITEUP.md                         ← 3-5 page formal pilot write-up
+├── progress_report.md                 ← full sprint narrative
+├── replication_scoping.md             ← design rationale + Park's actual numbers
+├── FUTURE_DESIGN.md                   ← open design questions for the thesis-stage study
+├── BUSINESS_LANDSCAPE.md              ← market scan: AI persona simulation + AI-moderated research
+├── LIT_REVIEW.md                      ← academic literature review
+├── EXPLAIN_ZH.md                      ← Chinese-language project explanation
+├── CODE_WALKTHROUGH_ZH.md             ← Chinese walkthrough of persona_pipeline.py
+├── COLAB_RUN_GUIDE.md                 ← Colab fallback instructions
+│
+├── cookiy_brief.md                    ← Study 1 brief (interview arm)
+├── cookiy_brief_study2.md             ← Study 2 brief (survey arm)
+├── cookiy_guide_session1.md           ← Cookiy's auto-generated discussion guide (S1)
+├── cookiy_guide_session2.md           ← Cookiy's auto-generated discussion guide (S2)
+│
+├── eval_battery.json                  ← 15-item held-out eval, with regex anchors
+├── eval_answers_extracted.csv         ← parsed truth: 15 items × 3 respondents (GOLD)
+├── construction_answers_extracted.csv ← parsed truth: 18 construction items × 1 respondent
+├── metrics_per_respondent.csv         ← notebook scoring: 12 conditions × full eval metrics
+│
+├── persona_pipeline.py                ← script-style pipeline (uses responses/ layout)
+├── persona_pipeline.ipynb             ← CANONICAL pipeline (31 cells, includes LOO)
+├── run_notebook_local.py              ← runner: executes the notebook outside Colab
+├── parse_eval_answers.py              ← smart parser using moderator confirmations as gold
+├── parse_construction_answers.py      ← parser for Study 2 construction items
+├── rescore_with_leakage_audit.py      ← post-hoc rescoring under STRONG/SOFT/CLEAN filters
+├── make_robustness_chart.py           ← chart generator for the leakage audit
+├── build_site_data.py                 ← CSV→JSON for docs/data/ with naming normalization
+├── build_notebook.py                  ← (Cowork-built — assembles persona_pipeline.ipynb)
+│
+├── interview_quality_audit.md         ← Study 1 transcript quality audit (GITIGNORED — quotes)
+├── survey_quality_audit.md            ← Study 2 transcript quality audit (GITIGNORED — quotes)
+├── leakage_audit.json                 ← per-item leakage tags + evidence (GITIGNORED — quotes)
+├── Openai_api.txt                     ← API key (GITIGNORED)
+│
+├── cookiy_transcripts/                ← raw Cookiy outputs (GITIGNORED — verbatim PII)
+│   ├── study1_interview_p{1,2}.{txt,json}
+│   ├── study2_survey_p1.{txt,json}
+│   └── study{1,2}_report.{md,json}    ← Cookiy auto-generated qual/quant reports
+│
+├── responses/        R{1,2}/{transcript.txt,demographics.json}    ← script-pipeline layout (GITIGNORED)
+├── responses_s2/     R1/{transcript.txt,demographics.json}        ← (GITIGNORED)
+│
+├── outputs/                           ← all pipeline-derivative artifacts
+│   ├── metrics_with_leakage_audit.csv ← 36 rows: 12 conditions × 3 filter views
+│   ├── chart_robustness.png           ← 2-panel leakage robustness chart
+│   ├── persona_answers_full.json      ← per-condition primary+samples (GITIGNORED — embeds prompts)
+│   └── logs/                          ← run_*.log timestamped runner logs (GITIGNORED)
+│
+├── docs/                              ← static GitHub Pages dashboard
+│   ├── index.html, style.css, app.js, README.md
+│   └── data/                          ← JSON inputs the site fetches (built by build_site_data.py)
+│       ├── metrics_per_respondent.json
+│       ├── metrics_with_leakage_audit.json
+│       ├── metrics_aggregate.json
+│       └── eval_answers_extracted.json
+│
+├── archive/                           ← stale pre-pivot files, kept for history
+│   ├── eval_joyce_truth.md
+│   ├── eval_joyce_truth_FORM.md
+│   ├── persona_demographics.json
+│   ├── persona_description.md
+│   └── claude_moderator_prompt.md
+│
+├── test/                              ← synthetic transcript fixtures for smoke testing
+│   ├── synthetic_s1_transcript.txt
+│   └── synthetic_s2_transcript.txt
+│
+└── (gitignored at root: GSBGEN390_Application_*.docx, __pycache__/)
+```
 
-### Cookiy outputs
-- `cookiy_transcripts/study1_interview_p{1,2}.{txt,json}` — Study 1 transcripts
-- `cookiy_transcripts/study2_survey_p1.{txt,json}` — Study 2 transcript
-- `cookiy_transcripts/study{1,2}_report.{md,json}` — Cookiy's auto-generated reports
+### Where each file is read from / written to
 
-### Pipeline + parsers
-- `parse_eval_answers.py` — smart parser, moderator-confirmation gold signal
-- `eval_answers_extracted.csv` — 15 truth × 3 respondents (gold)
-- `parse_construction_answers.py` — Study 2 construction-item parser
-- `construction_answers_extracted.csv` — 18 construction items × 1 respondent
-- `persona_pipeline.py` — script version (still uses `responses/R*/` layout; canonical path is now the notebook)
-- `persona_pipeline.ipynb` — **canonical pipeline**, 31 cells covering everything end-to-end including LOO
-
-### Run artifacts (post-pipeline-run, 2026-04-30)
-- `run_notebook_local.py` — local runner for the notebook (works around Colab dependencies, adds retry/backoff)
-- `metrics_per_respondent.csv` — 12 rows × full eval metrics
-- `persona_answers_full.json` — per-condition primary + samples for every item (raw LLM output)
-- `metrics_with_leakage_audit.csv` — 36 rows = 12 conditions × 3 filter views
-- `leakage_audit.json` — per-respondent item tags + evidence quotes
-- `rescore_with_leakage_audit.py` — leakage rescoring script
-- `make_robustness_chart.py` — chart generator
-- `chart_robustness.png` — 2-panel robustness chart for the meeting
-- `run_*.log` — timestamped run logs from `run_notebook_local.py`
-
-### Quality audits
-- `interview_quality_audit.md` — Study 1 transcript quality audit
-- `survey_quality_audit.md` — Study 2 transcript quality audit
-- `FUTURE_DESIGN.md` — open design questions for the actual thesis study
-
-### Meeting + handoff
-- `MEETING_HANDOUT.md` — one-page brief for Prof. Bayati (updated with results + leakage audit section)
-- `progress_report.md` — full sprint narrative
-- `EXPLAIN_ZH.md` — Chinese-language explanation of the project end-to-end (Park = AI interviewer corrected)
-- `CODE_WALKTHROUGH_ZH.md` — Chinese code walkthrough of `persona_pipeline.py` for understanding what each pipeline section does
-- `COLAB_RUN_GUIDE.md` — Colab fallback instructions
-- `docs/` — static web frontend (HTML/CSS/JS) — purpose unclear from this session; may be a dashboard or proposal site, check separately
-
-### Stale / superseded (safe to ignore)
-- `eval_joyce_truth_FORM.md`, `eval_joyce_truth.md` — pre-pivot single-participant design
-- `persona_demographics.json`, `persona_description.md` — pre-pivot single-participant design
-- `responses/`, `responses_s2/` — folder layout used by the script version of the pipeline; transcripts have been copied here for compatibility. The notebook reads directly from `cookiy_transcripts/`.
+| File | Read by | Written by |
+|---|---|---|
+| `eval_battery.json` | notebook, `persona_pipeline.py` | (manual) |
+| `eval_answers_extracted.csv` | `rescore_with_leakage_audit.py`, `build_site_data.py` | `parse_eval_answers.py` |
+| `construction_answers_extracted.csv` | (reference) | `parse_construction_answers.py` |
+| `metrics_per_respondent.csv` | `build_site_data.py` | notebook cell 30 |
+| `outputs/metrics_with_leakage_audit.csv` | `make_robustness_chart.py`, `build_site_data.py` | `rescore_with_leakage_audit.py` |
+| `outputs/persona_answers_full.json` | `rescore_with_leakage_audit.py` | `run_notebook_local.py` (end-of-run) |
+| `outputs/chart_robustness.png` | (visual) | `make_robustness_chart.py` |
+| `outputs/logs/run_*.log` | (manual review) | shell `tee` from `run_notebook_local.py` |
+| `leakage_audit.json` | `rescore_with_leakage_audit.py` | (manual tagging — Joyce + Claude) |
+| `docs/data/*.json` | `docs/app.js` (browser fetch) | `build_site_data.py` |
 
 ---
 
@@ -152,21 +194,23 @@ cd ~/Documents/GSBGEN390
 cd ~/Documents/GSBGEN390
 export OPENAI_API_KEY=$(cat Openai_api.txt)
 # Note: pandas, openai, matplotlib must be installed (already are on Joyce's laptop)
-python3 -u run_notebook_local.py 2>&1 | tee run_$(date +%Y%m%d_%H%M).log
+python3 -u run_notebook_local.py 2>&1 | tee outputs/logs/run_$(date +%Y%m%d_%H%M).log
 ```
 
-This produces `metrics_per_respondent.csv` + `persona_answers_full.json`. Then:
+This produces `metrics_per_respondent.csv` (at root) + `outputs/persona_answers_full.json`. Then:
 
 ```bash
-python3 rescore_with_leakage_audit.py    # → metrics_with_leakage_audit.csv
-python3 make_robustness_chart.py         # → chart_robustness.png
+python3 rescore_with_leakage_audit.py    # → outputs/metrics_with_leakage_audit.csv
+python3 make_robustness_chart.py         # → outputs/chart_robustness.png
+python3 build_site_data.py               # → docs/data/*.json (refreshes the website)
 ```
 
 ### To re-run only the rescoring (no API calls, ~1 second):
-If `persona_answers_full.json` exists from a previous run:
+If `outputs/persona_answers_full.json` exists from a previous run:
 ```bash
 python3 rescore_with_leakage_audit.py
 python3 make_robustness_chart.py
+python3 build_site_data.py
 ```
 
 ### Known runtime gotchas
@@ -209,3 +253,4 @@ python3 make_robustness_chart.py
 - **2026-04-29**: In-session eval priming acknowledged as known deviation; absolute accuracy may be inflated.
 - **2026-04-30 morning**: Cookiy delivered all 3 transcripts. Smart parser → 15/15 × 3.
 - **2026-04-30 evening**: 6 pre-flight fixes applied (paths, demographics, anchors, CSV truth, TypeError, splitter). Pipeline ran end-to-end on laptop with retry/backoff. Leakage audit + robustness chart produced. **Park-was-AI-not-human correction propagated through 5 docs.**
+- **2026-04-30 late evening**: GitHub repo created at `Joyceqx/gsbgen390-persona-pipeline` and pushed; GitHub Pages enabled on `/docs`. Project folder tidied: derivative outputs moved into `outputs/` (logs to `outputs/logs/`); pre-pivot stale files moved into `archive/`; code paths in `rescore_with_leakage_audit.py`, `make_robustness_chart.py`, `build_site_data.py`, `run_notebook_local.py` updated for new locations and verified by re-running the post-pipeline rescore + chart + site-build pipeline end-to-end.
