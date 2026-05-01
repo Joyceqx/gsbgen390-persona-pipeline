@@ -40,11 +40,11 @@
   <div class="two-col">
     <div>
       <h3>The big question</h3>
-      <p><strong>Can an LLM faithfully simulate a specific real person's responses on a held-out battery of survey questions?</strong> Park et al. (2024) showed yes — at 83% of test-retest reliability — using 2-hour deep interviews with 1,052 real people.</p>
-      <p>This pilot reproduces the architecture at small scale (<strong>N=2 interview + N=1 survey</strong>) and adds a feature-importance ablation Park did not run, designed to seed the thesis-stage replication.</p>
+      <p><strong>Can an LLM faithfully simulate a specific real person's responses on a held-out battery of survey questions?</strong> Park et al. (2024) showed yes — at 83% of test-retest reliability on GSS attitude items — using 2-hour deep interviews with 1,052 real people.</p>
+      <p>This pilot reproduces the architecture at small scale (<strong>N=2 interview + N=1 survey</strong>) and adds an outcome-stratified feature-importance ablation Park did not run, designed to seed the thesis-stage replication.</p>
     </div>
     <div>
-      <h3>Park et al.'s headline results</h3>
+      <h3>Park et al.'s headline results <span style="font-size: 0.7em; opacity: 0.6;">(arXiv v2)</span></h3>
       <table class="park-table">
         <thead><tr><th>Construction</th><th>GSS accuracy<br>(% of test-retest)</th></tr></thead>
         <tbody>
@@ -54,7 +54,7 @@
           <tr><td>Interview + surveys</td><td>86%</td></tr>
         </tbody>
       </table>
-      <p class="caption">Highlight: surveys-only (82%) ≈ interview-only (83%). Surveys are the cheaper, more scalable methodology — the central motivation of this thesis.</p>
+      <p class="caption"><strong>Surveys ≈ interview only on GSS attitudes.</strong> v2 also reports surveys lagging interviews by 0.15 on BFI-44 personality (0.65 vs 0.80) and by 0.28 on behavioral economic games (0.38 vs 0.66). The thesis question is therefore outcome-stratified: <em>which survey-collectible feature categories close which parts of that gap on which outcome dimensions?</em></p>
     </div>
   </div>
 </section>

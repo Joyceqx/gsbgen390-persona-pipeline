@@ -24,8 +24,8 @@ Everything in the pilot has pivoted on the fly — design changed five times in 
 
 ## Group 2 — Survey-design implications
 
-**2.1 Leave-one-category-out is the actual thesis novelty.**
-Pilot bundles all 4 categories (demographic / behavioral / psychological / attitudinal) into Condition D. The real thesis result requires LOO ablations × meaningful N (≥30 per arm), with confidence intervals on each category's contribution to persona accuracy. **This is the actual design conversation to have at the meeting** — what's the right N, what's the right ablation grain, and how do we power the comparisons.
+**2.1 Outcome-stratified leave-one-category-out is the actual thesis novelty.**
+Pilot bundles all 4 categories (demographic / behavioral / psychological / attitudinal) into Condition D and reports a single Likert MAE per condition. Park v2 makes clear that the interview→surveys gap is **not uniform across outcomes** — 0.01 on GSS attitudes, 0.15 on BFI personality, 0.28 on behavioral economic games. So the real thesis result is a **two-way analysis**: feature category × outcome dimension. Drop-attitudinal probably hurts most on GSS items but barely on games; drop-behavioral probably does the opposite. The thesis-stage design needs (a) LOO ablations × (b) ≥30 per arm × (c) eval batteries that span all three outcome types (attitudes / personality / behavior), with confidence intervals on each cell of the category × outcome matrix. **This is the actual design conversation to have at the meeting** — what's the right N, what's the right ablation grain, what's the eval expansion (full BFI-44 + game-style behavioral items), and how do we power the cross-cut comparisons.
 
 **2.2 Demographic-baseline standardization.**
 Right now Condition A uses whatever surfaces in the open interview, which is ad-hoc and varies across respondents. Real study needs a fixed demographics schema (age, gender, race, region, education, political ideology — Park's set) collected uniformly via a screening survey, in BOTH the interview arm and the survey arm. This makes Condition A a real apples-to-apples baseline rather than a mush of unequal information.

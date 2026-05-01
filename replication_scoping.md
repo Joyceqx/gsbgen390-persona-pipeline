@@ -16,7 +16,7 @@ In *Generative Agent Simulations of 1,000 People* (arXiv:2411.10109), Park, Bern
 3. **Construct an agent** by feeding the verbatim interview transcript into an LLM (GPT-4o) as part of an extended system prompt. Each question is answered "in character" as the participant.
 4. **Evaluate.** Two weeks after the interview, the same participants completed a battery of GSS attitudinal items, the Big Five (BFI-44), five canonical behavioral economic games, and five published social science experiments.
 
-**Headline numbers (corrected from the proposal v2 draft):** held-out GSS accuracy as a fraction of participants' own two-week test-retest reliability:
+**Headline numbers (per arXiv v2, retitled *"LLM Agents Grounded in Self-Reports..."*):** held-out GSS accuracy as a fraction of participants' own two-week test-retest reliability:
 
 | Construction condition | GSS accuracy (% of test-retest) |
 |---|---|
@@ -25,7 +25,17 @@ In *Generative Agent Simulations of 1,000 People* (arXiv:2411.10109), Park, Bern
 | Surveys only | 82% |
 | Interview + surveys combined | 86% |
 
-**Note for the writeup:** the surveys-only condition (82%) is *nearly indistinguishable from interview-only* (83%) on this benchmark. This is directly relevant to the survey-feature-importance thesis question — it's evidence in the literature that survey-collectible features can approach interview-quality fidelity, motivating the deeper feature-importance analysis the thesis aims to provide.
+**Important caveat — "surveys ≈ interview" is a GSS-specific finding.** v2 reports per-outcome breakdowns and the picture changes substantially outside attitudinal items:
+
+| Outcome | Interview | Surveys-only | Gap |
+|---|---|---|---|
+| GSS attitudes (normalized accuracy) | 0.83 | 0.82 | tie |
+| BFI-44 personality (normalized correlation) | 0.80 | 0.65 | surveys lag by 0.15 |
+| Behavioral economic games (normalized correlation) | 0.66 | 0.38 | surveys lag by 0.28 |
+
+**Implication for the thesis:** the right framing is not *"can surveys substitute for interviews?"* but *"which survey-collectible feature categories close which parts of the gap on which outcome dimensions?"* The interview→surveys delta is small for attitudes, moderate for personality, and large for behavioral games — that pattern itself motivates an outcome-stratified feature-importance analysis. This is exactly the analysis Park did not run.
+
+**Note on v1 vs v2.** The proposal cited v1's "85%" headline number (interview-only normalized accuracy ≈ 0.85 in the original abstract). v2 reorganized the conditions and reports the four numbers above. Both are at the same arXiv ID; we use v2 framing throughout this document because it's the live version of the paper.
 
 ---
 
@@ -41,12 +51,13 @@ In *Generative Agent Simulations of 1,000 People* (arXiv:2411.10109), Park, Bern
 ### NOT replicating (and we say so explicitly)
 | Park et al. | This pilot |
 |---|---|
-| n = 1,052 stratified U.S. adults | n = 1 (Joyce) |
+| n = 1,052 stratified U.S. adults | N=2 (Study 1, interview arm) + N=1 (Study 2, survey arm) |
 | 2-hour AI-administered AVP-protocol interview (Park's custom voice-to-voice agent with adaptive follow-ups; avg 6,491 words/transcript) | ~9 min Cookiy AI-moderated AVP-style interview (general-purpose product, no adaptive depth probes) |
 | GSS + BFI-44 + 5 econ games + 5 experiments | Subset: BFI-10, ~15 GSS items, 8 consumer/decision-making items, 5 free-response |
-| Self test-retest baseline at 2 weeks | We will *not* retake the eval at 2 weeks — single-shot only |
+| Self test-retest baseline at 2 weeks | Single-shot eval administered in the same session (priming risk audited via leakage filter) |
 | GPT-4o (closed-source baseline) | GPT-4o-2024-08-06 by default; pipeline supports model swap to Claude |
-| Surveys-only and interview+surveys conditions | Not in pilot — left for the survey-collection phase of the thesis |
+| Surveys-only construction = full GSS battery + full BFI-44 (standardized instruments) | Study 2 surveys-only construction = 18 items spanning four pre-registered categories (demographic / behavioral / psychological / attitudinal). **This is a deliberate methodological deviation**: Park's surveys-only is a "kitchen-sink standardized battery"; ours is a leaner theory-driven taxonomy whose viability vs. Park's saturated input is part of the thesis novelty. |
+| One coarse "surveys" bucket | Four-category LOO ablation (drop each of {demographic, behavioral, psychological, attitudinal}) — a finer-grained feature-importance analysis Park did not run |
 
 This is a **proof-of-concept replication**, not a generalization. Its goal is (a) to prove the pipeline runs end-to-end on accessible tooling and (b) to surface the engineering and methodological choices that the later survey-based study (the actual thesis novelty) will inherit.
 
@@ -141,7 +152,7 @@ Prof. Bayati offered three directions: (i) replicate Park et al., (ii) literatur
 - **Surfaces the eval design** the survey-based study will need (the eval battery is invariant to how the persona was constructed).
 - **Forces decisions** on persona-prompt construction, model choice, scoring, and consistency metrics — all required for the thesis anyway.
 - **Demonstrates execution capability** in a way that pure-paper or pure-design progress cannot.
-- **Confirms the methodological motivation:** Park's surveys-only number (82%) being so close to interview-only (83%) is itself evidence that survey-feature-importance is a productive research direction.
+- **Refines the methodological motivation:** Park's surveys-only (0.82) ≈ interview-only (0.83) on GSS, but lags by 0.15 on BFI-44 and by 0.28 on economic games. The thesis's productive question is therefore **outcome-stratified**: *which feature categories close the gap on which dimensions?* The pilot infrastructure supports running that analysis once eval batteries are extended beyond GSS-style attitudes.
 
 The lit/market scan and survey-instrument design follow naturally — and with the pipeline already running, both will be easier to scope tightly.
 
@@ -152,5 +163,6 @@ The lit/market scan and survey-instrument design follow naturally — and with t
 1. Park et al. used self test-retest as their accuracy denominator. We don't have that here. Should we run a self-retest in the next 2 weeks to recover the baseline, so our absolute numbers become comparable?
 2. Both Park and our pilot use AI moderators, but Park built a custom voice-to-voice agent specifically for the AVP protocol with adaptive follow-ups, while Cookiy is a general-purpose product with fixed probes and no depth-probing behavior. Does this difference (custom protocol-specific vs. general platform) systematically thin certain content domains (e.g., emotional/relational depth)? The interview-quality audit ([`interview_quality_audit.md`](interview_quality_audit.md)) provides direct evidence.
 3. For the *survey-based* version of the thesis, do we keep the same eval battery, or do we co-evolve eval and instrument?
-4. What's the right N for the actual thesis study, given the cost-per-interview vs. cost-per-survey tradeoff? (Park's surveys-only result suggests survey-only might be more cost-effective per unit of fidelity.)
+4. What's the right N for the actual thesis study, given the cost-per-interview vs. cost-per-survey tradeoff? Park's GSS-attitudes result suggests survey-only could be cost-effective for *attitudinal* outcomes, but the BFI 0.15 / games 0.28 gaps imply interviews still earn their keep on personality and behavioral dimensions — so N planning needs to be outcome-conditioned.
 5. How do we operationalize the **construction question** beyond a four-bin taxonomy? Park's "surveys-only" condition is a single coarse bucket — your thesis subdivides "surveys" into demographic / behavioral / psychological / attitudinal. Does the pilot's three-condition architecture extend cleanly to that finer grid?
+6. **Eval battery extension.** The pilot uses a GSS-heavy 38-item battery (BFI-10, ~15 GSS items, 8 consumer items, 5 free-response). To detect the BFI/games-style gaps Park found, the thesis-stage battery needs full BFI-44 + at least 2–3 behavioral-game-style items. What's the right scope expansion?

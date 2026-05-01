@@ -140,13 +140,13 @@ LLM 就是那个演员。Transcript 就是档案。
 1. **证明架构跑通了。**整套 pipeline（采集 → 切分 → parse → 合成 persona → 答题 → 评分）端到端工作，跑在真实 Cookiy 数据上不是 toy demo。
 2. **暴露了思考层面的问题。**比如 in-session priming，比如 Cookiy 平台限制，比如 panel 受访者质量参差 —— 这些都是 thesis 阶段必须先解决的设计问题。
 3. **给出了 first directional signal**关于哪类 feature 重要。LOO ablation 在 N=1 上当然没有统计意义，但能告诉我们："去掉态度项后准确率掉了 0.4，去掉人口统计项后只掉 0.05" —— 这就是探索方向。
-4. **复现了 Park 最核心的发现的方向**。Park 论文里有一个非常关键、但容易被忽略的数字：survey-only condition 的准确率（82%）跟 interview-only（83%）几乎一样。这正是 thesis 的核心论点 —— **survey 这种廉价、可扩展的方法，可以达到 interview 同等的 persona fidelity**。我们的 pilot 在 small scale 上重现这个 between-method 比较的能力。
+4. **重现了 Park 最关键的 between-method 对比能力，并暴露了它的边界**。Park 论文里有一个容易被简化的数字：survey-only（82%）≈ interview-only（83%）—— 但这只在 **GSS 态度题**上成立。v2 的更细分结果是：BFI-44 人格题上 surveys 0.65 vs interview 0.80（差 0.15），行为经济学游戏上 surveys 0.38 vs interview 0.66（差 0.28）。**所以 thesis 真正要回答的不是"survey 能不能取代 interview"，而是"对哪类 outcome、用哪类 survey feature 能补上多少 gap"**。我们的 pilot 在 small scale 上重现了 between-method 对比的方法学骨架，为这个 outcome-stratified 的扩展铺好了路。
 
 ---
 
 ## 六、整体的逻辑链 / TL;DR
 
-> 我们要研究 AI 能多好地"扮演"一个具体的真人。Park 2024 证明了用 2 小时访谈 transcript 喂给 LLM，可以做到真人 83% 的水平。我们想把这个方法在小规模上重现一下，并且加一个 Park 没做的实验：把 persona 的"输入材料"按特征类别（人口/行为/心理/态度）逐一删除，看哪一类信息最重要 —— 这正是 thesis 想回答的问题。
+> 我们要研究 AI 能多好地"扮演"一个具体的真人。Park 2024 证明了用 2 小时访谈 transcript 喂给 LLM，在 GSS 态度题上能做到真人 83% 的水平。但 Park 也报告了：surveys-only 在 GSS 上几乎追平 interview（82% vs 83%），却在 BFI 人格题上落后 0.15、在行为游戏上落后 0.28。**这意味着 thesis 真正的研究问题是 outcome-stratified 的："哪类 survey feature 能在哪类 outcome 上补上 interview 的 gap？"** 我们想把这个方法在小规模上重现，并且加一个 Park 没做的实验：把 persona 的输入材料按四类（人口/行为/心理/态度）逐一删除，看哪一类信息最重要。
 >
 > 数据收集已经完成（3 个 Cookiy session），ground truth 已经提取（15 题 × 3 人），pipeline 代码写完且验证零泄漏。**剩最后一步**：让 GPT-4o 扮演这三个人，回答同样的 15 道题，然后比对一致率，画图，写报告。这一步今晚跑完，数字就出来了。
 
@@ -154,4 +154,4 @@ LLM 就是那个演员。Transcript 就是档案。
 
 ## 跟教授可以说的版本（30 秒）
 
-> 我做了 Park 2024 那篇论文的小型复现：用 Cookiy 平台采集了 2 个访谈 + 1 个问卷，通过 LLM 的 in-context persona 方法，让 GPT-4o 基于每个被访者的资料"扮演"他们去回答 15 道 held-out 测试题，然后比对一致率。除了 Park 的三种 condition 之外，我额外做了一个 leave-one-feature-out 的 ablation 实验，看哪类 feature（人口/行为/心理/态度）最影响 persona 的预测准确度 —— 这是 thesis 真正要回答的问题。Pilot 是为了把架构跑通、暴露设计问题、给后续大样本研究打地基。
+> 我做了 Park 2024 那篇论文的小型复现：用 Cookiy 平台采集了 2 个访谈 + 1 个问卷，通过 LLM 的 in-context persona 方法，让 GPT-4o 基于每个被访者的资料"扮演"他们去回答 15 道 held-out 测试题，然后比对一致率。Park v2 报告了一个关键但容易被忽略的细节：surveys-only 在 GSS 上跟 interview-only 几乎打平，但在 BFI 和行为游戏上分别落后 0.15 和 0.28 —— 所以我额外做了一个 leave-one-feature-out 的 ablation 实验，看哪类 feature（人口/行为/心理/态度）在哪类 outcome 上最影响 persona 的预测准确度。这是 thesis 真正要回答的 outcome-stratified 问题。Pilot 是为了把架构跑通、暴露设计问题、给后续大样本研究打地基。

@@ -21,15 +21,27 @@ A working end-to-end pipeline that mirrors **Park et al. 2024 ("Generative Agent
 - Smart parser uses the moderator's confirmation utterance as gold signal — robust against participant multi-attempt answers.
 - Pipeline now achieves **100% parse rate** (15/15 eval × 3 respondents; 18/18 construction × 1 respondent).
 
-## Important correction to the proposal
+## Park v2 numbers — the framing my thesis is actually building on
 
-Park's headline numbers (% of test-retest reliability on held-out GSS items):
+Park 2024 has been updated since first release. The current version on arXiv (v2, retitled *"LLM Agents Grounded in Self-Reports..."*) reorganized the conditions and reports the four numbers below. The proposal v2's "85%" came from the v1 abstract headline; the v2 per-condition breakdown is more granular.
+
+**On held-out GSS items (% of two-week test-retest consistency):**
 - **Demographics only: 74%**
 - **Interview only: 83%**
 - **Surveys only: 82%**
-- **Interview + surveys: 86%**
+- **Interview + surveys combined: 86%**
 
-The proposal v2 cited "85%" for the interview condition — actual is 83%. **More importantly: surveys-only (82%) is one percentage point off interview-only (83%).** This is direct prior evidence that survey-collectible features can approach interview-quality fidelity, and it transforms the thesis question from *"can surveys substitute for interviews?"* (largely yes) to *"which survey features account for the substitution?"* (the deeper, more publishable question).
+**Important nuance — "surveys ≈ interview" is GSS-specific.** v2 also reports outcomes beyond GSS:
+
+| Outcome | Interview | Surveys-only | Gap |
+|---|---|---|---|
+| GSS attitudes (normalized accuracy) | 0.83 | 0.82 | tie |
+| BFI-44 personality (normalized correlation) | 0.80 | 0.65 | surveys lag by 0.15 |
+| Behavioral economic games (normalized correlation) | 0.66 | 0.38 | surveys lag by 0.28 |
+
+**This refines the thesis question.** Not "can surveys substitute for interviews universally" (no — they lag on personality and behavior), but: *"which survey-collectible feature categories close that gap on which outcome dimensions?"* That's the cleaner, more publishable framing my LOO ablation directly tests.
+
+**Also worth noting:** Park's "surveys-only" condition uses GSS + BFI-44 (full standardized batteries) as input. My Study 2 uses an 18-item, four-category battery from my proposal taxonomy (demographic / behavioral / psychological / attitudinal). These are *different survey designs* — my pilot tests whether a leaner, theory-driven battery can approach Park's standardized-battery results. That methodological difference is part of the thesis novelty, not a deviation.
 
 ## Five design pivots forced by Cookiy's constraints
 
@@ -77,7 +89,7 @@ Self-consistency, BFI-trait RMSE, and categorical accuracy are in `metrics_per_r
 
 ### What the numbers say
 
-**Study 1 (interview arm) — interview conditioning effect is large.** C beats A by ~0.75–1.17 MAE on both respondents. This direction matches Park's 83% (interview-only) > 74% (demographics-only).
+**Study 1 (interview arm) — interview conditioning effect is large.** C beats A by ~0.75–1.17 MAE on both respondents. Direction matches Park v2's interview-only (0.83 normalized accuracy) > demographics-only (0.74) on GSS.
 
 **Study 2 (survey arm) — A > D unexpectedly.** Adding the 18 construction items on top of demographics did *not* improve accuracy for this respondent. With N=1, this could be noise (≈ 2 items more wrong out of 12) or a real signal that needs rich-context survey items beyond demographics aren't always additive. The LOO ranking shows dropping demographics hurt most (MAE 0.50 → 1.17), then psychological (0.92), then behavioral and attitudinal (smaller deltas).
 

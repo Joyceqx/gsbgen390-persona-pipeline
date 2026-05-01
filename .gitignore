@@ -30,6 +30,9 @@ leakage_audit.json
 # --- Personal documents ---
 *.docx
 
+# --- External / copyrighted papers (kept locally only) ---
+*.pdf
+
 # --- Build / cache artifacts ---
 __pycache__/
 *.py[cod]

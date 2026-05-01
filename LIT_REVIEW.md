@@ -20,10 +20,15 @@ This is a working bibliography, not a full literature review. Each entry has the
 ### 1.2 Park, Zou, Shaw, Hill, Cai, Morris, Willer, Liang & Bernstein (2024). *Generative Agent Simulations of 1,000 People.* arXiv:2411.10109. (Later retitled *LLM Agents Grounded in Self-Reports Enable General-Purpose Simulation of Individuals.*)
 - **Author affiliations.** Park, Zou, Liang, Bernstein, Willer (Stanford); Shaw (Northwestern); Hill (University of Washington); Cai, Morris (Google DeepMind). Stanford-led with cross-institution collaboration.
 - **Core contribution.** The paper our thesis builds on. n=1,052 U.S. adults; 2-hour AVP-style interview → LLM persona → held-out GSS/BFI/economic-game battery.
-- **Headline numbers** (% of test-retest reliability): demographics 74% / interview 83% / surveys 82% / combined 86%. **Surveys-only ≈ interview-only is the key result.**
-- **Method.** Custom voice-to-voice AI interviewer (not human), AVP-protocol-grounded, adaptive follow-ups, 6,491 words/transcript average.
-- **Relevance.** Direct prior work. Our pilot replicates the architecture; the thesis extends with feature-importance analysis they did not run.
-- **Borrowable.** Full eval battery; condition design (demo / description / interview / surveys / combined); test-retest baseline framing.
+- **Headline numbers — GSS attitudes** (% of test-retest reliability): demographics 74% / interview 83% / surveys 82% / combined 86%. The "surveys ≈ interview" framing in the proposal came from this row alone.
+- **Outcome-stratified breakdown (v2 paper, Tables 2–3).** The "surveys ≈ interview" claim does **not** generalize beyond attitudes:
+  - **GSS attitudes (normalized accuracy):** interview 0.83 / surveys 0.82 — tie
+  - **BFI-44 personality (normalized correlation):** interview 0.80 / surveys 0.65 — surveys lag by 0.15
+  - **Behavioral economic games (normalized correlation):** interview 0.66 / surveys 0.38 — surveys lag by 0.28
+- **Method.** Custom voice-to-voice AI interviewer (not human), AVP-protocol-grounded, adaptive follow-ups, 6,491 words/transcript average. Park's "surveys-only" condition uses GSS + full BFI-44 (saturated standardized batteries) as input.
+- **v1 vs v2 note.** The original v1 abstract led with an interview-based normalized-accuracy headline of ~0.85; v2 reorganized conditions and added the per-outcome breakdown above. Both versions live at the same arXiv ID. Citing v2 is correct for current literature; the proposal's "85%" was v1.
+- **Relevance.** Direct prior work. Our pilot replicates the architecture; the thesis extension is the **outcome-stratified feature-importance analysis** Park did not run — *which* survey-collectible feature category closes *which* part of the BFI/games gap.
+- **Borrowable.** Full eval battery; condition design (demo / description / interview / surveys / combined); test-retest baseline framing; per-outcome reporting structure (do not collapse to a single number).
 - arXiv: 2411.10109 · [HAI summary](https://hai.stanford.edu/news/ai-agents-simulate-1052-individuals-personalities-with-impressive-accuracy)
 
 ---
@@ -98,7 +103,7 @@ This is a working bibliography, not a full literature review. Each entry has the
 
 ## What's missing from the existing literature (= thesis opportunity)
 
-1. **Feature-importance ablation across persona-construction inputs.** No paper systematically removes feature categories from the persona prompt and measures the marginal contribution. Park 2024 compares interview vs. survey vs. combined, but does not subdivide "surveys" by feature type. **This is the thesis novelty.**
+1. **Outcome-stratified feature-importance ablation.** No paper systematically removes feature categories from the persona prompt and measures the marginal contribution *per outcome dimension*. Park 2024 compares interview vs. survey vs. combined and reports per-outcome (GSS / BFI / games) gaps, but does not subdivide "surveys" by feature type. The thesis novelty is the **two-way decomposition**: which feature category × which outcome dimension. The interview→surveys gap is 0.01 on attitudes, 0.15 on personality, 0.28 on games — that pattern is itself a research target.
 2. **Industry-deployment-aware methodology.** SCOPE and Eval4Sim are academic benchmarks; Park used custom-built tooling. The cost/fidelity tradeoff using *commercial* AI-moderator platforms (Cookiy, Outset, Listen Labs) is unmapped. The thesis can fill this with deliberate documentation of platform constraints (15-min cap, no participant pairing, paraphrase variance — all observed in our pilot).
 3. **Item-level vs category-level feature importance.** Even SCOPE, with its 8-facet taxonomy, does not run leave-one-item-out within facet. The thesis could go finer-grained at higher N.
 
