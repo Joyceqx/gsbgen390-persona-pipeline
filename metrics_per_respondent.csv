@@ -1,0 +1,13 @@
+arm,respondent,condition,n_likert,likert_mae,likert_within1_pct,n_cat,categorical_acc_pct,bfi_trait_rmse,self_likert_mae,self_cat_match_pct
+study1,study1_interview_p1,A_demographics,12,0.833,75.0,3,66.7,0.742,0.25,100.0
+study1,study1_interview_p1,B_description,12,0.917,75.0,3,66.7,0.632,0.25,100.0
+study1,study1_interview_p1,C_interview,12,0.417,83.3,3,100.0,0.671,0.083,100.0
+study1,study1_interview_p2,A_demographics,12,1.25,58.3,3,100.0,1.225,0.25,100.0
+study1,study1_interview_p2,B_description,12,0.833,83.3,3,66.7,0.806,0.083,100.0
+study1,study1_interview_p2,C_interview,12,0.25,91.7,3,100.0,0.671,0.0,100.0
+study2,study2_survey_p1,A_demographics,12,0.5,91.7,3,33.3,0.775,0.167,66.7
+study2,study2_survey_p1,D_survey,12,0.833,83.3,3,33.3,1.14,0.167,100.0
+study2,study2_survey_p1,D_loo_drop_demographic,12,1.167,75.0,3,33.3,1.225,0.333,100.0
+study2,study2_survey_p1,D_loo_drop_behavioral,12,0.833,83.3,3,33.3,1.049,0.25,100.0
+study2,study2_survey_p1,D_loo_drop_psychological,12,0.917,83.3,3,33.3,1.049,0.333,100.0
+study2,study2_survey_p1,D_loo_drop_attitudinal,12,0.583,91.7,3,33.3,0.866,0.25,100.0

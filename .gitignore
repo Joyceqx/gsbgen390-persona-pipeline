@@ -1,0 +1,39 @@
+# --- Secrets ---
+Openai_api.txt
+*.key
+*api_key*
+.env
+.env.*
+
+# --- Raw participant data (PII) ---
+# Cookiy transcripts contain verbatim audio-transcribed speech with identifiable
+# content (politics, religion, family relationships, health context, etc.).
+# NEVER push these to a public repo without IRB / Cookiy consent review.
+cookiy_transcripts/
+responses/
+responses_s2/
+
+# Same content embedded inside LLM prompts:
+persona_answers_full.json
+
+# Run logs may have re-quoted prompt content:
+run_*.log
+
+# Quote-bearing methodology audits — keep local; aggregate findings are
+# already published in MEETING_HANDOUT.md and the website without quotes.
+interview_quality_audit.md
+survey_quality_audit.md
+leakage_audit.json
+
+# --- Personal documents ---
+*.docx
+
+# --- Build / cache artifacts ---
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# --- Editor / IDE ---
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSBGEN390 — Persona Pipeline Dashboard</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1>GSBGEN390 — Mini-Replication of Park et al. (2024)</h1>
+    <p class="subtitle">AI Persona Fidelity & Survey Feature Importance · Joyce Yu · Stanford GSB · Spring 2026</p>
+    <p class="status-line" id="status-banner">Status: <strong>Pilot data collected (N=2 interview + N=1 survey). Pipeline ready.</strong></p>
+  </div>
+</header>
+
+<nav>
+  <div class="container">
+    <a href="#intro">0. Intro</a>
+    <a href="#pipeline">1. Pipeline</a>
+    <a href="#data">2. Data</a>
+    <a href="#conditions">3. Conditions</a>
+    <a href="#results">4. Results</a>
+    <a href="#leakage">4.5 Robustness</a>
+    <a href="#loo">5. Feature Importance</a>
+    <a href="#drilldown">6. Drilldown</a>
+    <a href="#limitations">7. Limitations</a>
+    <a href="#next">8. Next Steps</a>
+  </div>
+</nav>
+
+<main class="container">
+
+<!-- =================== SECTION 0: INTRO =================== -->
+<section id="intro">
+  <h2>0. What is this project?</h2>
+  <div class="two-col">
+    <div>
+      <h3>The big question</h3>
+      <p><strong>Can an LLM faithfully simulate a specific real person's responses on a held-out battery of survey questions?</strong> Park et al. (2024) showed yes — at 83% of test-retest reliability — using 2-hour deep interviews with 1,052 real people.</p>
+      <p>This pilot reproduces the architecture at small scale (<strong>N=2 interview + N=1 survey</strong>) and adds a feature-importance ablation Park did not run, designed to seed the thesis-stage replication.</p>
+    </div>
+    <div>
+      <h3>Park et al.'s headline results</h3>
+      <table class="park-table">
+        <thead><tr><th>Construction</th><th>GSS accuracy<br>(% of test-retest)</th></tr></thead>
+        <tbody>
+          <tr><td>Demographics only</td><td>74%</td></tr>
+          <tr><td>Interview only</td><td>83%</td></tr>
+          <tr class="highlight"><td>Surveys only</td><td>82%</td></tr>
+          <tr><td>Interview + surveys</td><td>86%</td></tr>
+        </tbody>
+      </table>
+      <p class="caption">Highlight: surveys-only (82%) ≈ interview-only (83%). Surveys are the cheaper, more scalable methodology — the central motivation of this thesis.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== SECTION 1: PIPELINE =================== -->
+<section id="pipeline">
+  <h2>1. Pipeline architecture</h2>
+  <p>Eight stages from raw transcript to final metrics. Each stage is independently testable; eval ground truth never enters persona prompts (no leakage).</p>
+  <div class="pipeline-flow">
+    <div class="stage" data-stage="1"><div class="stage-num">1</div><div class="stage-name">Battery</div><div class="stage-desc">15 eval items + 18 construction items</div></div>
+    <div class="arrow">→</div>
+    <div class="stage" data-stage="2"><div class="stage-num">2</div><div class="stage-name">Split transcript</div><div class="stage-desc">Stem-anchored, zero leakage verified</div></div>
+    <div class="arrow">→</div>
+    <div class="stage" data-stage="3"><div class="stage-num">3</div><div class="stage-name">Parse answers</div><div class="stage-desc">Smart parser uses moderator confirmation as gold</div></div>
+    <div class="arrow">→</div>
+    <div class="stage" data-stage="4"><div class="stage-num">4</div><div class="stage-name">CSV truth</div><div class="stage-desc">Audited gold-standard external to pipeline</div></div>
+  </div>
+  <div class="pipeline-flow">
+    <div class="stage" data-stage="5"><div class="stage-num">5</div><div class="stage-name">Persona prompt</div><div class="stage-desc">"You are this person; answer in character"</div></div>
+    <div class="arrow">→</div>
+    <div class="stage" data-stage="6"><div class="stage-num">6</div><div class="stage-name">LLM call</div><div class="stage-desc">GPT-4o, temp=0.7, 2 samples/item</div></div>
+    <div class="arrow">→</div>
+    <div class="stage" data-stage="7"><div class="stage-num">7</div><div class="stage-name">Score</div><div class="stage-desc">MAE, %within±1, BFI distance, self-consistency</div></div>
+    <div class="arrow">→</div>
+    <div class="stage" data-stage="8"><div class="stage-num">8</div><div class="stage-name">Aggregate</div><div class="stage-desc">Per-respondent + per-arm + per-condition</div></div>
+  </div>
+</section>
+
+<!-- =================== SECTION 2: DATA =================== -->
+<section id="data">
+  <h2>2. The data</h2>
+  <div class="three-col">
+    <div class="card">
+      <h3>Cookiy sessions</h3>
+      <ul>
+        <li><strong>Study 1 R1:</strong> 12.5 min, 22yo male college student</li>
+        <li><strong>Study 1 R2:</strong> 13.6 min, 38yo woman, AI search-quality rater</li>
+        <li><strong>Study 2 R1:</strong> 9.8 min, 18-24 male, Midwest, high school</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Eval battery (15 items)</h3>
+      <ul>
+        <li>BFI-10 (Big Five personality)</li>
+        <li>4 GSS items: happy, trust, polviews, satjob</li>
+        <li>1 consumer item: brand loyalty</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Construction battery (18, Study 2 only)</h3>
+      <ul>
+        <li>5 demographic (age, gender, education, income, region)</li>
+        <li>5 behavioral (work hrs, exercise, social media, voting, religion)</li>
+        <li>4 psychological (risk, planning, optimism, decision style)</li>
+        <li>4 attitudinal (priority, tradition, individualism, institutional trust)</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout">
+    <strong>Truth table:</strong> 15 items × 3 respondents = 45 ground-truth datapoints, parsed at 100% from transcripts.
+  </div>
+</section>
+
+<!-- =================== SECTION 3: CONDITIONS =================== -->
+<section id="conditions">
+  <h2>3. Persona-construction conditions</h2>
+  <p>Each condition feeds a different "richness" of material into the persona prompt. The LLM then answers the same 15 eval items.</p>
+  <div class="conditions-grid">
+    <div class="condition-card">
+      <h4>A · Demographics only</h4>
+      <p class="arms">Studies 1 & 2</p>
+      <p>Age, gender, education, region. Information floor.</p>
+    </div>
+    <div class="condition-card">
+      <h4>B · Persona description</h4>
+      <p class="arms">Study 1</p>
+      <p>One paragraph of self-introduction extracted from interview.</p>
+    </div>
+    <div class="condition-card highlight-c">
+      <h4>C · Full interview</h4>
+      <p class="arms">Study 1</p>
+      <p>~9-min Cookiy AVP-style interview transcript verbatim.</p>
+    </div>
+    <div class="condition-card highlight-d">
+      <h4>D · Full survey</h4>
+      <p class="arms">Study 2</p>
+      <p>All 18 construction items as structured Q&amp;A.</p>
+    </div>
+    <div class="condition-card loo">
+      <h4>D – LOO ablation × 4</h4>
+      <p class="arms">Study 2</p>
+      <p>D minus each of {demographic, behavioral, psychological, attitudinal} — feature-importance via subtraction.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== SECTION 4: RESULTS =================== -->
+<section id="results">
+  <h2>4. Headline results</h2>
+  <p id="results-intro">Per-condition Likert MAE, lower = persona is closer to the real person. Numbers below are <em>placeholder mock data</em> until pipeline run completes — they will auto-update once <code>metrics_per_respondent.json</code> is dropped into <code>docs/data/</code>.</p>
+  <div class="chart-wrapper">
+    <canvas id="chart-mae"></canvas>
+  </div>
+  <div class="chart-wrapper">
+    <canvas id="chart-categorical"></canvas>
+  </div>
+  <div class="chart-wrapper">
+    <canvas id="chart-self-consistency"></canvas>
+  </div>
+</section>
+
+<!-- =================== SECTION 4.5: LEAKAGE AUDIT (added 2026-04-30) =================== -->
+<section id="leakage">
+  <h2>4.5 Robustness check: does Condition C win because of leakage?</h2>
+  <p>The pilot's eval is administered <em>in the same Cookiy session</em> as the interview, not 2 weeks later as in Park's protocol. This means some eval items have their answer effectively pre-stated in the interview content fed to the persona prompt — e.g., P1 disclosed political ideology in the open-interview portion, then minutes later was asked to self-place on the 1–7 liberal–conservative scale. So we expect Condition C (interview-conditioned) to look artificially strong.</p>
+  <p><strong>Audit method:</strong> for each respondent × each of 15 eval items, manually tag as <strong>STRONG</strong> (construct directly stated or moderator paraphrased it), <strong>SOFT</strong> (semantically related), or <strong>CLEAN</strong> (no detectable mention). Then re-score each condition under three filters: keep all 15 items, drop STRONG only (strict-clean), or drop STRONG and SOFT (broad-clean). If C's win comes from leakage, it should collapse on the strict-clean / broad-clean columns.</p>
+  <div class="chart-wrapper">
+    <canvas id="chart-leakage"></canvas>
+  </div>
+  <div class="callout success">
+    <strong>Finding: C's interview-conditioning advantage survives leakage filtering.</strong> Even after dropping the 3 STRONG-leaked items per respondent (<code>bfi_c</code>, <code>polviews</code>, <code>happy</code>/<code>satjob</code>), Condition C still substantially outperforms A and B. The persona prompt apparently encodes enough personality structure that the LLM predicts uncovered items by inference, not regex.
+  </div>
+  <div class="callout warning">
+    <strong>Caveat: broad-clean has very few items left</strong> (P2 down to 4). MAE = 0.00 in those cells should be read as "consistent with no error at small N", not "perfect prediction." The honest headline is the strict-clean column.
+  </div>
+  <p>Tag rationale and evidence quotes are kept locally in <code>leakage_audit.json</code> (not committed to this repo because the quotes contain identifying transcript content).</p>
+</section>
+
+<!-- =================== SECTION 5: LOO IMPORTANCE =================== -->
+<section id="loo">
+  <h2>5. Feature-importance: leave-one-out ablation</h2>
+  <p>For Study 2's full-survey persona (Condition D), drop one feature category at a time. Larger Δ MAE means that category, when removed, hurt accuracy more — i.e., it was more predictive.</p>
+  <div class="chart-wrapper">
+    <canvas id="chart-loo"></canvas>
+  </div>
+  <div class="callout warning">
+    <strong>N=1 caveat:</strong> with one Study 2 respondent, each Δ MAE is a single point estimate. Treat as <em>directional signal</em>, not as causal evidence. The LOO design itself is the methodological contribution; the thesis-stage replication will reproduce it at N≥30 with confidence intervals.
+  </div>
+</section>
+
+<!-- =================== SECTION 6: DRILLDOWN =================== -->
+<section id="drilldown">
+  <h2>6. Per-item drill-down</h2>
+  <p>For each eval item, see what each persona-condition LLM answered vs. the participant's ground truth. Pick a respondent below.</p>
+  <div class="drilldown-controls">
+    <label>Respondent: <select id="drilldown-respondent"><option>Study 1 R1</option><option>Study 1 R2</option><option>Study 2 R1</option></select></label>
+  </div>
+  <div class="drilldown-table-wrapper">
+    <table id="drilldown-table">
+      <thead>
+        <tr><th>Item</th><th>Truth</th><th>A</th><th>B</th><th>C / D</th></tr>
+      </thead>
+      <tbody>
+        <!-- populated by app.js -->
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- =================== SECTION 7: LIMITATIONS =================== -->
+<section id="limitations">
+  <h2>7. Limitations (Park deviations and pilot caveats)</h2>
+  <div class="limitations-grid">
+    <div class="lim-card">
+      <h4>In-session priming</h4>
+      <p>Park separated interview from eval by 2 weeks. We do them in one 15-min session. Likely inflates absolute accuracy. Acceptable as v1; thesis must adopt 2-week separation or constrain probes to disjoint constructs.</p>
+    </div>
+    <div class="lim-card">
+      <h4>No test-retest baseline</h4>
+      <p>Park's 83% is % of test-retest reliability. We have no retest data, so our raw % cannot be cited side-by-side with Park's 83%. Decide: collect retest at thesis stage, or use only relative comparisons.</p>
+    </div>
+    <div class="lim-card">
+      <h4>BFI-10 instead of BFI-44</h4>
+      <p>2 items per trait makes BFI trait scores statistically noisy. For thesis trait-level metrics to be defensible, upgrade to BFI-44.</p>
+    </div>
+    <div class="lim-card">
+      <h4>Cookiy interview depth</h4>
+      <p>15-min cap = ~10% of Park's 2-hour AVP. This is a different measurement instrument, not a sampling difference. Expect lower Condition C accuracy than Park; not evidence against the architecture.</p>
+    </div>
+    <div class="lim-card">
+      <h4>Panel respondent quality</h4>
+      <p>One respondent gave one-word answers and asked "which AI are you?" mid-eval. Real-world deployment realism, but sets a ceiling on persona-conditioning quality.</p>
+    </div>
+    <div class="lim-card">
+      <h4>N=2 + N=1</h4>
+      <p>Pilot is feasibility-only. No statistical inference. All numbers should be read as "the pipeline works and produces interpretable values," not "X is better than Y."</p>
+    </div>
+  </div>
+</section>
+
+<!-- =================== SECTION 8: NEXT STEPS =================== -->
+<section id="next">
+  <h2>8. What's next (thesis roadmap)</h2>
+  <ol class="roadmap">
+    <li><strong>Lock the methodology.</strong> Pre-register on OSF before scaling. Switch to BFI-44, decide on retest baseline, decide on 2-week separation.</li>
+    <li><strong>Recruit so each respondent does both arms.</strong> Each person completes a 15-min interview <em>and</em> the 18-item survey. Enables Park's "Combined" condition (E) — the strongest in his paper.</li>
+    <li><strong>Scale to N≥30 per arm.</strong> Put error bars on LOO contributions. Statistical inference becomes possible.</li>
+    <li><strong>Item-level LOO inside the strongest category.</strong> If the pilot shows e.g. attitudinal matters most, run leave-one-item-out on the 4–8 attitudinal items to find which specific items drive the signal.</li>
+    <li><strong>Cross-model robustness.</strong> Run on Claude Sonnet 4.6 alongside GPT-4o; report how stable feature-importance ranking is across models.</li>
+    <li><strong>Publishable contribution.</strong> Park's framework × explicit feature taxonomy × cost/fidelity analysis — a clean extension positioned for a CHI / AAAI / marketing-science venue.</li>
+  </ol>
+</section>
+
+<footer>
+  <div class="container">
+    <p>Last updated <span id="last-updated">—</span> · Source repo: <a href="https://github.com/joyceyu/GSBGEN390" target="_blank">github.com/joyceyu/GSBGEN390</a> · Faculty advisor: Prof. Mohsen Bayati</p>
+  </div>
+</footer>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+participant_id,c_age,c_gender,c_education,c_income,c_region,c_workhrs,c_exercise,c_socmedia,c_voted,c_relattend,c_risk,c_planning,c_optimism,c_decstyle,c_priority,c_tradition,c_indiv_comm,c_inst_trust
+study1_interview_p1,,,,,,,,,,,,,,,,,,
+study1_interview_p2,,,,,,,,,,,,,,,,,,
+study2_survey_p1,18-24,Man,High school,"$50,000-100,000",Midwest,20-40,Several times per week,4 or more,No,Never,A (guaranteed $500),4,5,2,D (financial security),2,4,3

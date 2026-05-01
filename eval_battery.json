@@ -1,0 +1,44 @@
+{
+  "version": "0.3-compressed-with-anchors",
+  "name": "Compressed held-out eval battery (15 items, ~6 min) — explicit stem anchors",
+  "description": "Each item has an explicit `anchor` phrase chosen to match what the moderator says aloud (robust to small punctuation/wording differences in transcripts).",
+  "instructions_for_persona": "You are answering as the person described in the materials. Use only what's given. Choose the option that BEST matches what the person would say if asked directly today. Do not refuse, do not hedge — pick the closest scale point.",
+  "sections": [
+    {
+      "id": "bfi10",
+      "name": "Big Five Personality (BFI-10)",
+      "scale": {"type": "likert_5"},
+      "stem": "I see myself as someone who...",
+      "items": [
+        {"id": "bfi_e_r", "text": "is reserved",                          "anchor": "reserved",                       "trait": "Extraversion",      "reverse": true},
+        {"id": "bfi_a",   "text": "is generally trusting",                "anchor": "generally trusting",             "trait": "Agreeableness",     "reverse": false},
+        {"id": "bfi_c_r", "text": "tends to be lazy",                     "anchor": "tends to be lazy",               "trait": "Conscientiousness", "reverse": true},
+        {"id": "bfi_n_r", "text": "is relaxed, handles stress well",      "anchor": "handles stress well",            "trait": "Neuroticism",       "reverse": true},
+        {"id": "bfi_o_r", "text": "has few artistic interests",           "anchor": "few artistic interests",         "trait": "Openness",          "reverse": true},
+        {"id": "bfi_e",   "text": "is outgoing, sociable",                "anchor": "outgoing",                       "trait": "Extraversion",      "reverse": false},
+        {"id": "bfi_a_r", "text": "tends to find fault with others",      "anchor": "find fault with others",         "trait": "Agreeableness",     "reverse": true},
+        {"id": "bfi_c",   "text": "does a thorough job",                  "anchor": "does a thorough job",            "trait": "Conscientiousness", "reverse": false},
+        {"id": "bfi_n",   "text": "gets nervous easily",                  "anchor": "gets nervous easily",            "trait": "Neuroticism",       "reverse": false},
+        {"id": "bfi_o",   "text": "has an active imagination",            "anchor": "active imagination",             "trait": "Openness",          "reverse": false}
+      ]
+    },
+    {
+      "id": "gss",
+      "name": "GSS subset",
+      "items": [
+        {"id": "happy",    "text": "Taken all together, how would you say things are these days — would you say that you are…", "anchor": "Taken all together",        "scale": ["Very happy", "Pretty happy", "Not too happy"]},
+        {"id": "trust",    "text": "Generally speaking, would you say that…",                                                  "anchor": "most people can be trusted","scale": ["Most people can be trusted", "You can't be too careful in dealing with people", "Depends"]},
+        {"id": "polviews", "text": "On a seven-point scale of political views, where would you place yourself?",              "anchor": "extremely liberal",         "scale": ["1", "2", "3", "4", "5", "6", "7"]},
+        {"id": "satjob",   "text": "On the whole, how satisfied are you with the work you do",                                 "anchor": "satisfied are you with the work","scale": ["Very satisfied", "Moderately satisfied", "A little dissatisfied", "Very dissatisfied"]}
+      ]
+    },
+    {
+      "id": "consumer",
+      "name": "Consumer & decision-making",
+      "scale": {"type": "likert_5"},
+      "items": [
+        {"id": "loyal", "text": "When I find a brand I like, I tend to stick with it for years.", "anchor": "stick with it for years"}
+      ]
+    }
+  ]
+}

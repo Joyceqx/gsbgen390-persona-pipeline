@@ -1,0 +1,71 @@
+MODERATOR: Thanks for joining. This is a structured survey — I'll read about thirty short questions and you'll give me a quick answer for each. There are no right answers and no follow-ups; we'll just go straight through the list. Let's start.
+PARTICIPANT: Sounds good.
+MODERATOR: Which age range applies to you: 18 to 24, 25 to 34, 35 to 44, 45 to 54, or 55 or older?
+PARTICIPANT: 35 to 44.
+MODERATOR: How would you describe your gender: man, woman, non-binary, or prefer not to say?
+PARTICIPANT: Woman.
+MODERATOR: What's the highest level of education you've completed: high school, some college, bachelor's degree, master's degree, or doctorate?
+PARTICIPANT: Master's.
+MODERATOR: Which range describes your household's annual income before taxes: under 50,000 dollars; 50 to 100,000; 100 to 200,000; or over 200,000 dollars?
+PARTICIPANT: 100 to 200,000.
+MODERATOR: Which US region do you live in: Northeast, Midwest, South, or West?
+PARTICIPANT: Northeast.
+MODERATOR: How many hours per week do you typically work or study: under 20, 20 to 40, 40 to 60, or over 60 hours?
+PARTICIPANT: 40 to 60.
+MODERATOR: How often do you exercise: never, monthly, weekly, several times per week, or daily?
+PARTICIPANT: Several times per week.
+MODERATOR: How many hours per day do you typically spend on social media: under 1, 1 to 2, 2 to 4, or 4 or more hours?
+PARTICIPANT: 1 to 2.
+MODERATOR: Did you vote in the last presidential election: yes, no, or were not eligible?
+PARTICIPANT: Yes.
+MODERATOR: How often do you attend religious services: never, only on special occasions, monthly, or weekly or more often?
+PARTICIPANT: Special occasions.
+MODERATOR: If forced to choose, would you rather take a guaranteed 500 dollars, or take a 50-50 chance of getting nothing or 1,200 dollars? Pick A for the guaranteed amount or B for the gamble.
+PARTICIPANT: A.
+MODERATOR: On a scale of 1 to 5, where 1 means I plan my day in advance and 5 means I prefer to go with the flow, which best describes you?
+PARTICIPANT: 2.
+MODERATOR: On a scale of 1 to 5, where 1 is strongly disagree and 5 is strongly agree: I am optimistic about how my next 5 years will go. Your rating?
+PARTICIPANT: 4.
+MODERATOR: On a scale of 1 to 5, where 1 means I research extensively before making important decisions and 5 means I mostly trust my gut, which best describes you?
+PARTICIPANT: 2.
+MODERATOR: Which of these matters most to you right now: A career success, B family and relationships, C personal growth, D financial security, or E helping others? Pick one.
+PARTICIPANT: B.
+MODERATOR: On a scale of 1 to 5, where 1 is strongly disagree and 5 is strongly agree: I prefer maintaining tradition to embracing change. Your rating?
+PARTICIPANT: 2.
+MODERATOR: On a scale of 1 to 5, where 1 means society works best when individuals look after themselves and 5 means society works best when communities take care of each other, which best describes your view?
+PARTICIPANT: 4.
+MODERATOR: On a scale of 1 to 5, where 1 is strongly disagree and 5 is strongly agree: I generally trust major institutions like the government, media, and corporations. Your rating?
+PARTICIPANT: 3.
+MODERATOR: Thanks. For the last few minutes I'll read fifteen more short statements and ask you to give me a quick rating or pick one option for each. Same format as before — no follow-ups, just go with your gut.
+PARTICIPANT: Okay.
+MODERATOR: On a scale of 1 to 5, where 1 is strongly disagree and 5 is strongly agree: I see myself as someone who is reserved. What's your rating?
+PARTICIPANT: 3.
+MODERATOR: On the same 1-to-5 scale: I see myself as someone who is generally trusting. Your rating?
+PARTICIPANT: 4.
+MODERATOR: 1 to 5: I see myself as someone who tends to be lazy. Your rating?
+PARTICIPANT: 2.
+MODERATOR: 1 to 5: I see myself as someone who is relaxed and handles stress well. Your rating?
+PARTICIPANT: 4.
+MODERATOR: 1 to 5: I see myself as someone who has few artistic interests. Your rating?
+PARTICIPANT: 1.
+MODERATOR: 1 to 5: I see myself as someone who is outgoing and sociable. Your rating?
+PARTICIPANT: 4.
+MODERATOR: 1 to 5: I see myself as someone who tends to find fault with others. Your rating?
+PARTICIPANT: 2.
+MODERATOR: 1 to 5: I see myself as someone who does a thorough job. Your rating?
+PARTICIPANT: 5.
+MODERATOR: 1 to 5: I see myself as someone who gets nervous easily. Your rating?
+PARTICIPANT: 2.
+MODERATOR: 1 to 5: I see myself as someone who has an active imagination. Your rating?
+PARTICIPANT: 5.
+MODERATOR: Now a different format. Taken all together, how would you say things are these days — would you say that you are very happy, pretty happy, or not too happy? Pick one.
+PARTICIPANT: Pretty happy.
+MODERATOR: Generally speaking, would you say that most people can be trusted, that you can't be too careful in dealing with people, or it depends? Pick one.
+PARTICIPANT: Most people can be trusted.
+MODERATOR: On a seven-point scale where 1 is extremely liberal, 4 is moderate, and 7 is extremely conservative, where would you place yourself politically? Give me a number from 1 to 7.
+PARTICIPANT: 2.
+MODERATOR: On the whole, how satisfied are you with the work you do — very satisfied, moderately satisfied, a little dissatisfied, or very dissatisfied? Pick one.
+PARTICIPANT: Very satisfied.
+MODERATOR: Last one. Back to the 1-to-5 agreement scale: When I find a brand I like, I tend to stick with it for years. What's your rating?
+PARTICIPANT: 5.
+MODERATOR: Thanks, that's everything. Have a great rest of your day.

@@ -1,0 +1,45 @@
+MODERATOR: Thanks for joining today. Before we get into specifics, can you give me a paragraph about who you are — like how you'd describe yourself to a stranger? What you do, what kind of person you are, what's currently going on in your life.
+PARTICIPANT: I'm Alex, I'm thirty-one, work as a software engineer in Seattle. I'd describe myself as curious, a planner, somewhat introverted but warm with people I know well. Currently I'm focused on saving for a house and dating someone seriously for the first time in years.
+MODERATOR: Walk me through your life story briefly — where you grew up, family of origin, education, big turning points, how you got to where you are now.
+PARTICIPANT: Grew up in suburban Ohio, two siblings, dad was an accountant and mom a nurse. Went to a state school for engineering, moved to Seattle for my first job after graduating. The biggest turning point was probably switching companies three years ago — much better culture, made me realize how toxic my first job had been.
+MODERATOR: Tell me about the closest people in your life right now.
+PARTICIPANT: My partner of two years, my brother who lives in Portland, and a small group of college friends I still text with daily. My parents and I are close but more in a calling-once-a-week way.
+MODERATOR: What do you do for work, and how would you describe how you make decisions — both small and big?
+PARTICIPANT: Senior backend engineer. For decisions I research a lot. Recently I spent two months evaluating apartments before signing a lease — spreadsheets, photos, neighborhood walkthroughs. I trust data more than my gut.
+MODERATOR: Tell me about a recent purchase over $200 and what drove the decision.
+PARTICIPANT: Bought a $400 mechanical keyboard about three months ago. Used my work computer for ten hours a day — felt worth investing in something I touch constantly. Read maybe 30 reviews, watched four YouTube videos, finally pulled the trigger.
+MODERATOR: How would you describe your political views and worldview, and where do you see yourself in 5 years?
+PARTICIPANT: Center-left, kind of pragmatic. I think the country has real problems but I'm not in either camp ideologically. In 5 years I hope to own a small house, be married, maybe a kid on the way.
+MODERATOR: Great, thank you for sharing all that. For the last few minutes I'm going to switch to a structured rating section. I'll read fifteen short statements and ask you to give me a quick rating or pick one option for each. There are no right answers — just go with your gut. Ready?
+PARTICIPANT: Ready.
+MODERATOR: On a scale of 1 to 5, where 1 is strongly disagree and 5 is strongly agree: I see myself as someone who is reserved. What's your rating?
+PARTICIPANT: 4.
+MODERATOR: On the same 1-to-5 scale: I see myself as someone who is generally trusting. Your rating?
+PARTICIPANT: 3.
+MODERATOR: 1 to 5: I see myself as someone who tends to be lazy. Your rating?
+PARTICIPANT: 2.
+MODERATOR: 1 to 5: I see myself as someone who is relaxed and handles stress well. Your rating?
+PARTICIPANT: 3.
+MODERATOR: 1 to 5: I see myself as someone who has few artistic interests. Your rating?
+PARTICIPANT: 2.
+MODERATOR: 1 to 5: I see myself as someone who is outgoing and sociable. Your rating?
+PARTICIPANT: 2.
+MODERATOR: 1 to 5: I see myself as someone who tends to find fault with others. Your rating?
+PARTICIPANT: 3.
+MODERATOR: 1 to 5: I see myself as someone who does a thorough job. Your rating?
+PARTICIPANT: 5.
+MODERATOR: 1 to 5: I see myself as someone who gets nervous easily. Your rating?
+PARTICIPANT: 3.
+MODERATOR: 1 to 5: I see myself as someone who has an active imagination. Your rating?
+PARTICIPANT: 4.
+MODERATOR: Now a different format. Taken all together, how would you say things are these days — would you say that you are very happy, pretty happy, or not too happy? Pick one.
+PARTICIPANT: Pretty happy.
+MODERATOR: Generally speaking, would you say that most people can be trusted, that you can't be too careful in dealing with people, or it depends? Pick one.
+PARTICIPANT: It depends.
+MODERATOR: On a seven-point scale where 1 is extremely liberal, 4 is moderate, and 7 is extremely conservative, where would you place yourself politically? Give me a number from 1 to 7.
+PARTICIPANT: 3.
+MODERATOR: On the whole, how satisfied are you with the work you do — very satisfied, moderately satisfied, a little dissatisfied, or very dissatisfied? Pick one.
+PARTICIPANT: Moderately satisfied.
+MODERATOR: Last one. Back to the 1-to-5 agreement scale: When I find a brand I like, I tend to stick with it for years. What's your rating?
+PARTICIPANT: 4.
+MODERATOR: Thanks, that's everything. Have a great rest of your day.

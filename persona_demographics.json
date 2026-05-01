@@ -1,0 +1,13 @@
+{
+  "_comment": "Minimal demographic facts used in the demographic-only baseline persona. Edit to taste BEFORE running the pipeline. The persona pipeline reads this for Condition A only.",
+  "name_or_pseudonym": "Joyce Y.",
+  "age_range": "[FILL: e.g., 26-30]",
+  "gender": "[FILL]",
+  "nationality_or_region": "[FILL: e.g., Bay Area, USA]",
+  "education": "Stanford GSB MBA student; CS undergrad",
+  "current_role": "Founder of Lens (AI persona platform for marketing research); Stanford GSB student; independent research with Prof. Mohsen Bayati",
+  "languages": ["[FILL]"],
+  "household_situation": "[FILL: e.g., single, lives in shared apartment]",
+  "political_lean_self_descr": "[FILL or 'declined to specify']",
+  "religion_self_descr": "[FILL or 'declined to specify']"
+}
