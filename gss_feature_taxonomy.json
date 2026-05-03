@@ -1,0 +1,100 @@
+{
+  "version": "0.1-locked-2026-05-02",
+  "description": "Phase 1 feature taxonomy mapping GSS variable names to one of {primary_eval, sensitivity_eval, demographic, behavioral, psychological, attitudinal, exclude}. Locked in writing before pipeline runs; identical to OSF pre-registration content.",
+  "design": "Path A* (Path B as primary, Path A as sensitivity):\n  - primary_eval: 12 high-variance items, one per construct family. LOO ablation runs against this.\n  - sensitivity_eval: full Park v2 eval list (~120 items). For per-item Park comparability. No LOO.\n  - demographic / behavioral / psychological / attitudinal: feature pool, partitioned for the 4-bin LOO.\n  - exclude: variables NOT used (utility/meta/derived).\nDisjointness: each variable appears in exactly one bin. Eval items NEVER appear in feature bins.",
+  "missingness_rule": "GSS ballot rotation means not every respondent gets every item. For each (respondent, item), if value is in the missing-codes set {-100..-40} we treat it as absent and EXCLUDE that item from that respondent's feature/eval set. We do NOT impute.",
+
+  "primary_eval": {
+    "_note": "Path B's 12 curated items. Each from a different construct family to minimize within-eval auto-correlation.",
+    "items": [
+      {"id": "POLVIEWS",  "construct": "political ideology",        "format": "likert7",     "scale_text": "1=Extremely liberal ... 7=Extremely conservative"},
+      {"id": "PARTYID",   "construct": "party identification",      "format": "likert7",     "scale_text": "0=Strong Democrat ... 6=Strong Republican (7=Other)"},
+      {"id": "ABANY",     "construct": "abortion attitudes",        "format": "binary",      "scale_text": "1=Yes, 2=No"},
+      {"id": "CAPPUN",    "construct": "death penalty",             "format": "binary",      "scale_text": "1=Favor, 2=Oppose"},
+      {"id": "GUNLAW",    "construct": "gun control",               "format": "binary",      "scale_text": "1=Favor permits, 2=Oppose"},
+      {"id": "FECHLD",    "construct": "gender role attitudes",     "format": "likert4",     "scale_text": "1=Strongly agree ... 4=Strongly disagree (mother working doesn't hurt children)"},
+      {"id": "FEPOL",     "construct": "women in politics",         "format": "binary",      "scale_text": "1=Agree (women not suited for politics), 2=Disagree"},
+      {"id": "RACDIF1",   "construct": "racial attitudes",          "format": "binary",      "scale_text": "1=Yes, 2=No (Blacks lag due to discrimination)"},
+      {"id": "CONFINAN",  "construct": "institutional confidence",  "format": "likert3",     "scale_text": "1=Great deal, 2=Only some, 3=Hardly any"},
+      {"id": "CONLEGIS",  "construct": "trust in Congress",         "format": "likert3",     "scale_text": "1=Great deal, 2=Only some, 3=Hardly any"},
+      {"id": "HELPPOOR",  "construct": "economic-policy attitudes", "format": "likert5",     "scale_text": "1=Govt action ... 5=People help themselves"},
+      {"id": "SATFIN",    "construct": "financial life-evaluation", "format": "likert3",     "scale_text": "1=Pretty well satisfied, 2=More or less, 3=Not satisfied"}
+    ]
+  },
+
+  "sensitivity_eval": {
+    "_note": "Park v2 Table 3 list (after their 27-item AVP-overlap removal). Used for per-item Park comparability only; no LOO. Items overlap with primary_eval (which is intentional — primary_eval is the headline subset).",
+    "items": [
+      "NATSPAC","NATENVIR","NATHEAL","NATCITY","NATDRUG","NATEDUC","NATRACE","NATARMS","NATAID","NATFARE",
+      "NATROAD","NATSOC","NATCHLD","NATSCI","NATENRGY","PRAYER","COURTS",
+      "DISCAFFW","DISCAFFM","DISCAFF","FEHIRE","FECHLD","FEPRESCH","FEFAM","FEPOL",
+      "POLHITOK","POLABUSE","POLATTAK",
+      "SPKATH","COLATH","SPKRAC","COLRAC","LIBRAC","SPKCOM","COLCOM","LIBCOM",
+      "CONARMY","CONBUS","CONCLERG","CONEDUC","CONFED","CONFINAN","CONJUDGE","CONLABOR","CONLEGIS","CONMEDIC","CONPRESS","CONSCI","CONTV",
+      "HAPPY","HAPMAR","SATJOB","WRKSTAT","EVWORK","PARTFULL","WKSUB1","WKSUP1","UNEMP","UNION1","JOBLOSE","JOBFIND",
+      "CAPPUN","GUNLAW","OWNGUN","HUNT1","GRASS","SEXEDUC","PILLOK","XMARSEX","HOMOSEX","PORNLAW","DIVLAW","SPANKING","TAX",
+      "SATFIN","FINALTER","FINRELA","RACDIF1","RACDIF2","RACDIF3","RACDIF4","WLTHWHTS","WLTHBLKS","WLTHHSPS","LETIN1A",
+      "GETAHEAD","PARSOL","KIDSSOL",
+      "ABDEFECT","ABNOMORE","ABHLTH","ABPOOR","ABRAPE","ABSINGLE","ABANY","LETDIE1","SUICIDE1","SUICIDE2","SUICIDE4",
+      "FAIR","HELPFUL","TRUST","POLVIEWS","NEWS",
+      "ATTEND","PRAY","POSTLIFE","BIBLE","REBORN","SPRTPRSN","RELPERSN",
+      "INCOME","HEALTH","COMPUSE","WEBMOB","XMOVIE","LIFE","RICHWORK"
+    ]
+  },
+
+  "feature_bins": {
+    "_note": "Phase 1 feature pool, partitioned into 4 bins. LOO ablation drops one bin at a time from the persona prompt. ALL items here are EXCLUDED from primary_eval and sensitivity_eval to enforce disjoint-set leakage hygiene.",
+
+    "demographic": [
+      "AGE","SEX","RACE","HISPANIC","REGION","EDUC","DEGREE","MARITAL","HOMPOP","BORN","INCOME16",
+      "PAEDUC","MAEDUC","PADEG","MADEG","REG16","MOBILE16","FAMILY16","FAMDIF16","INCOM16","DWELOWN16",
+      "MARTYPE","WIDOWED"
+    ],
+
+    "behavioral": [
+      "ATTEND","PRAY","WRKSTAT","HRS1","TVHOURS","NEWS","VOTE16","VOTE20","PRES16","PRES20",
+      "RELIG","RELIG16","FUND","RELITEN","ETHNIC",
+      "EVWORK","PARTFULL","UNEMP","UNION1","JOBLOSE","JOBFIND",
+      "OWNGUN","HUNT1","GRASS","COMPUSE","WEBMOB","XMOVIE","XMARSEX","HOMOSEX"
+    ],
+
+    "psychological": [
+      "HAPPY","HAPMAR","SATJOB","HEALTH","LIFE","FAIR","HELPFUL","TRUST"
+    ],
+
+    "attitudinal": [
+      "PARTYID",
+      "ABDEFECT","ABNOMORE","ABHLTH","ABPOOR","ABRAPE","ABSINGLE",
+      "SPANKING","DIVLAW","SEXEDUC","PILLOK","PORNLAW",
+      "FEHIRE","FEPRESCH","FEFAM",
+      "RACDIF2","RACDIF3","RACDIF4","WLTHWHTS","WLTHBLKS","WLTHHSPS","LETIN1A",
+      "CONARMY","CONBUS","CONCLERG","CONEDUC","CONFED","CONJUDGE","CONLABOR","CONMEDIC","CONPRESS","CONSCI","CONTV",
+      "POLHITOK","POLABUSE","POLATTAK","COURTS",
+      "SPKATH","COLATH","SPKRAC","COLRAC","LIBRAC","SPKCOM","COLCOM","LIBCOM",
+      "NATSPAC","NATENVIR","NATHEAL","NATCITY","NATDRUG","NATEDUC","NATRACE","NATARMS","NATAID","NATFARE",
+      "NATROAD","NATSOC","NATCHLD","NATSCI","NATENRGY",
+      "PRAYER","DISCAFF","DISCAFFW","DISCAFFM",
+      "TAX","HELPSICK","HELPNOT","HELPBLK","EQWLTH",
+      "GETAHEAD","PARSOL","KIDSSOL",
+      "LETDIE1","SUICIDE1","SUICIDE2","SUICIDE4",
+      "BIBLE","POSTLIFE","REBORN","SPRTPRSN","RELPERSN"
+    ],
+
+    "_resolution_rule": "Two-pass rule:\n  PRIMARY ANALYSIS (LOO with primary_eval 12 items):\n    - Effective features per bin = (declared bin list) MINUS primary_eval.\n    - Items in sensitivity_eval are STILL ALLOWED in feature bins.\n    - This keeps the psychological bin populated (HAPPY/SATFIN/HEALTH/LIFE/FAIR/HELPFUL/TRUST etc.\n      are all in Park's full eval list but they DO appear in feature bins for primary analysis;\n      no leakage because primary_eval items are excluded).\n  SENSITIVITY ANALYSIS (Park-comparable per-item prediction over sensitivity_eval):\n    - For each predicted sensitivity item X, build the persona prompt from features that EXCLUDE X\n      (per-item leakage handling).\n    - All other (non-X) sensitivity items remain in features.\nImplementation: gss_pipeline.py applies this two-pass rule explicitly."
+  },
+
+  "exclude": {
+    "_note": "Variables NOT used in any persona prompt or eval. Includes meta variables, weights, derived/computed indices, sampling-specific items.",
+    "categories": {
+      "meta": ["YEAR","ID","BALLOT","FORM","FORMWT","WTSSPS","WTSALL","WTSCOMP","WTSSPS_NEXT","WTCOMB","SAMPLE","PHASE","SAMPCODE","SAMPTYPE","VERSION","ORIG_NUM","ISSP"],
+      "interview_meta": ["INTRACE","INTSEX","INTID","INTAGE","INTYRS","INTHISP","INT_DATE","TIME_LOAD","TIME_RATE","TIME_OPEN","TIME_FIRSTBLOCK","TIME_FRMOD","COOP","COMPREND","PHONE"]
+    }
+  },
+
+  "_audit_2026-05-02": {
+    "data_source": "GSS 2024 cross-section (3,309 respondents, 973 variables, downloaded via GSS Data Explorer)",
+    "extract_path": "data/gss/390data1/{batch1,batch2,batch3}/",
+    "loader": "gss_loader.py — combines 3 batches horizontally into single DataFrame at 3,309 × 973",
+    "verified_keys_present": ["POLVIEWS","PARTYID","ABANY","CAPPUN","GUNLAW","FECHLD","FEPOL","RACDIF1","CONFINAN","CONLEGIS","HELPPOOR","SATFIN","HAPPY","ATTEND","TRUST","SATJOB","AGE","SEX","RACE","EDUC","INCOME","REGION"]
+  }
+}

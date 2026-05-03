@@ -21,36 +21,53 @@ If you (or future-Claude) walked in cold, read these in order:
 7. [`cookiy_brief.md`](cookiy_brief.md) — Study 1 (interview arm) brief
 8. [`cookiy_brief_study2.md`](cookiy_brief_study2.md) — Study 2 (survey arm) brief
 
-## How to run the pipeline
+## How to run the pipelines
 
-The canonical pipeline is `persona_pipeline.ipynb` (Jupyter / Colab notebook). To run it locally without Jupyter:
+### Phase 1 (GSS public, in progress)
 
+Validate the locked taxonomy + loader (no API, ~30s):
 ```bash
 cd ~/Documents/GSBGEN390
-export OPENAI_API_KEY=$(cat Openai_api.txt)
-python3 -u run_notebook_local.py 2>&1 | tee run_$(date +%Y%m%d_%H%M).log
+python3 gss_loader.py            # smoke-test loader, prints variable + label sample
+python3 validate_taxonomy.py     # checks variable presence, bin disjointness, coverage
 ```
 
-`run_notebook_local.py` is a thin runner that executes the notebook's code cells outside Colab (patches the file-upload cell to read from `cookiy_transcripts/`, skips Jupyter magics, stubs `display()`, adds retry+exponential-backoff for OpenAI TPM limits).
-
-Runtime: ~9 minutes, ~$3-5 in OpenAI API calls. Outputs:
-- `metrics_per_respondent.csv` — 12 conditions × full eval metrics
-- `persona_answers_full.json` — per-condition primary + samples for every item
-
-Then optionally re-score under leakage-filter views (no API, ~1 second) and produce the chart:
+Run the full Phase 1 pipeline (NOT YET BUILT — task #10):
 ```bash
-python3 rescore_with_leakage_audit.py    # → metrics_with_leakage_audit.csv
-python3 make_robustness_chart.py         # → chart_robustness.png
+# Coming next:
+# python3 gss_pipeline.py --n 10        # smoke test, ~$1
+# python3 gss_pipeline.py --n 100       # Phase 1a sanity, ~$30
+# python3 gss_pipeline.py --n 1500      # Phase 1b primary, ~$300-500
 ```
 
-`persona_pipeline.py` (the older script-based version) still works but is no longer the canonical path. See STATUS.md for the latest results and file inventory.
+### Pilot phase (Cookiy, completed)
+
+Canonical pipeline is `persona_pipeline.ipynb`. To run it locally without Jupyter:
+
+```bash
+export OPENAI_API_KEY=$(cat Openai_api.txt)
+python3 -u run_notebook_local.py 2>&1 | tee outputs/logs/run_$(date +%Y%m%d_%H%M).log
+```
+
+Runtime: ~9 minutes, ~$3-5 in OpenAI API calls. Outputs `metrics_per_respondent.csv` + `outputs/persona_answers_full.json`.
+
+Then re-score under leakage-filter views and refresh the dashboard data (no API, ~1 second):
+```bash
+python3 rescore_with_leakage_audit.py    # → outputs/metrics_with_leakage_audit.csv
+python3 make_robustness_chart.py         # → outputs/chart_robustness.png
+python3 build_site_data.py               # → docs/data/*.json
+```
+
+`run_notebook_local.py` is a thin runner that executes the notebook's code cells outside Colab (patches Cell 8 to read from `cookiy_transcripts/`, skips Jupyter magics, stubs `display()`, adds retry+exponential-backoff for OpenAI TPM limits).
+
+`persona_pipeline.py` (the older script-based version) still works but is no longer the canonical path. See STATUS.md for the latest results and full file inventory.
 
 ## Project goal
 
 The eventual thesis fills a 4 (feature category) × 3 (outcome dimension) feature-importance matrix that Park v2 implies but does not produce. The pilot establishes the architecture; **two phases** carry it to publishable scale:
 
-- **Phase 1 — GSS public-data analysis** ([`gss_phase1_design.md`](gss_phase1_design.md)). N≈1,500 same respondents from the GSS Three-Wave Panel 2010-2014; Park-comparable normalized accuracy via within-person retest baseline. Covers the GSS-attitudes outcome row only. Budget ~$300-500, ~1-4 weeks.
-- **Phase 2 — Interview-decomposed study** ([`thesis_phase2_design.md`](thesis_phase2_design.md)). N=20-30 Prolific respondents, 30-45 min modular long interview (4 modules ↔ 4 feature bins) with 2-week separation, BFI-44 + behavioral-game vignettes + GSS held-out outcomes. LOO ablation operates at the **interview-content level** — directly decomposes Park's "interview-only" condition. Budget ~$1,500-1,750, ~7-9 weeks.
+- **Phase 1 — GSS public-data analysis** (IN PROGRESS, [`gss_phase1_design.md`](gss_phase1_design.md)). N≈1,500 from GSS 2024 cross-section. **Snapshot prediction** (no panel for prediction; raw accuracy as primary metric, no normalization in Phase 1). Path A* design: Path B 12-item curated eval as primary (supports 4-bin LOO); Path A Park's full ~118 items as sensitivity (per-item Park-comparability). Covers GSS-attitudes outcome row only. Budget ~$300-500, ~1-4 weeks.
+- **Phase 2 — Interview-decomposed study** ([`thesis_phase2_design.md`](thesis_phase2_design.md)). N=20-30 Prolific respondents, 30-45 min modular long interview (4 modules ↔ 4 feature bins) with **2-week separation** (recovers test-retest baseline GSS can't provide), BFI-44 + behavioral-game vignettes + GSS held-out outcomes. LOO ablation operates at the **interview-content level** — directly decomposes Park's "interview-only" condition. Budget ~$1,500-1,750, ~7-9 weeks.
 
 **Composed thesis output**: the full feature × outcome feature-importance matrix in one semester, ~$2,000 total.
 

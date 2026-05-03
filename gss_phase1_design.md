@@ -2,7 +2,7 @@
 
 **Author:** Joyce Yu
 **Course:** GSBGEN390 / thesis prep · Prof. Mohsen Bayati
-**Status:** Proposed (drafted 2026-04-30, awaiting Bayati sign-off)
+**Status:** Locked 2026-05-02 (Bayati endorsed direction; design choices below frozen pending OSF pre-registration)
 **Sequel to:** the Cookiy pilot in `MEETING_HANDOUT.md` and `progress_report.md`
 
 ---
@@ -92,13 +92,40 @@ This sequence is **hypothesis-driven**, not exploratory: Phase 1 outputs become 
 4. **GSS-attitude outcome dimension only.** Be explicit in writeup: this is the surveys ≈ interview row of Park's matrix, not a full replacement for Phase 2.
 5. **Pre-register on OSF before running** — feature taxonomy, exclusion rules, primary metric. Locks Joyce in against post-hoc flexibility.
 
-## 9. Decision Joyce wants from Bayati
+## 9. Decisions locked (post-Bayati 2026-05-02)
 
-1. **Endorse the phase-split**: GSS-first then targeted Cookiy, vs. straight-to-Cookiy at higher N.
-2. **Endorse the feature taxonomy** at this granularity (4 bins) for the GSS-row analysis, with the option to subdivide for Phase 2.
-3. **Endorse pre-registration** before Phase 1b launches.
+1. ✅ **Phase split endorsed**: GSS-first → targeted Cookiy in Phase 2.
+2. ✅ **4-bin feature taxonomy endorsed** for the GSS-row analysis.
+3. ✅ **Pre-registration on OSF before Phase 1b** — eval set, feature taxonomy, primary metric, exclusion rules, secondary analyses all locked in writing before any 1b API calls.
 
-If yes on all three, Joyce's two-week plan: complete the GSS loader + feature-taxonomy mapper, run Phase 1a (N=100) sanity check, present results in three weeks.
+### 9a. Wave & timing structure — locked
+
+- **Single-wave snapshot** for prediction (no panel use for primary analysis). Most recent fully-released GSS cross-section (target: GSS 2022, ~N=3,500). Cleanly avoids two issues: (a) cross-wave content leakage when same item is asked at multiple waves, (b) panel evolution conflating measurement noise with real attitude drift.
+- **No test-retest normalization in Phase 1.** Park's 0.82 normalized accuracy is computed against a 2-week recontact baseline that GSS does not provide. We report **raw** Likert MAE / %within±1 / categorical accuracy as primary, not normalized. Caveat in writeup: not directly numerically comparable to Park's 0.82 — comparable only at the raw level. Test-retest baseline deferred to Phase 2 (Cookiy-collected 2-week recontact arm at smaller N).
+- **Persona self-consistency** (temp=0.7, multi-sample) reported as a supplementary stability check throughout — measures whether the persona itself is internally stable, independent of the human-side test-retest question.
+
+### 9b. Eval-set composition — Path A* (locked)
+
+- **Primary analysis (the headline)**: curated **12-item attitudinal eval** (Path B). Feature pool = all other GSS items (~140), partitioned into the 4 bins. Supports meaningful 4-bin LOO ablation with full-population feature bins.
+- **Sensitivity / Park-comparability analysis**: same persona prompts (built from Path B's feature pool), evaluated against **Park's full ~120 item GSS eval list** (Path A). No LOO. Per-item accuracy reported side-by-side with Park v2 Table 3.
+- One data download covers both paths (superset of all involved GSS variables, ~150-180 items). Analysis-side split happens in code, audited via `gss_feature_taxonomy.json`.
+
+### 9c. Leakage hygiene — three-layer audit
+
+1. **Layer 1 (direct)** — eval items strictly disjoint from feature pool. Enforced by construction.
+2. **Layer 2 (synonymous)** — Park v2's 27-item AVP-overlap removal does not apply to us (no AVP interview in Phase 1); within-GSS Park argues no synonymous pairs.
+3. **Layer 3 (constructive auto-correlation)** — the curated 12-item eval is chosen to **minimize within-eval auto-correlation** (one item per construct family: e.g., one abortion item, not the full battery; one gender attitude, not all `fe*`).
+
+### 9d. Two-week plan
+
+1. (✅ done) Lock design (this section)
+2. Build feature-taxonomy JSON (gss_feature_taxonomy.json)
+3. Joyce: download GSS data from NORC
+4. Build GSS loader + adapt pipeline
+5. End-to-end smoke test on N=10
+6. Draft OSF pre-registration
+7. Run Phase 1a (N=100) sanity check
+8. Present 1a results to Bayati before launching 1b
 
 ---
 

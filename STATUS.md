@@ -1,6 +1,6 @@
-# Project Status — GSBGEN390 Mini-Replication
+# Project Status — GSBGEN390 Phase 1 Underway
 
-**Last updated:** 2026-04-30 evening (post-tidy: outputs/ + archive/ created; GitHub repo + Pages deployed)
+**Last updated:** 2026-05-02 (Phase 1 build phase: GSS data + loader + taxonomy locked; pipeline adapter next)
 **Maintained by:** Joyce Yu + collaborating Claude session
 
 This document is the single-source-of-truth for what's done, what's pending, and how to pick up the project in a fresh terminal, Claude Code CLI, or Claude Cowork session.
@@ -9,21 +9,72 @@ This document is the single-source-of-truth for what's done, what's pending, and
 
 ## TL;DR for a fresh session
 
-Pilot replication of Park et al. (2024) *Generative Agent Simulations of 1,000 People* is **end-to-end complete at small scale**:
+The project has **two sequential phases**, both scoped at the Bayati meeting (2026-05-02):
 
-- **3 Cookiy transcripts** collected (Study 1 N=2 interview, Study 2 N=1 survey).
-- **Smart parser** extracts 15/15 eval truth and 18/18 construction items at 100% rate.
-- **Persona pipeline ran successfully on local laptop** via `run_notebook_local.py` (a thin runner that executes `persona_pipeline.ipynb` outside Colab) — 12 conditions, ~9 min, ~$4 in OpenAI API.
-- **Headline finding**: Condition C (interview-conditioned) wins by a large margin on Study 1 (Likert MAE 0.00–0.08 vs 0.83–1.17 for A demographics-only). Direction matches Park.
-- **Leakage audit**: even after manually dropping the 3 STRONG-leaked items per Study-1 respondent, C still wins. The interview-conditioning advantage is **not** a regex artifact — robustness check passes.
-- **Study 2 LOO ablation** is run-unstable at N=1 (different category ranks first across runs at temp 0.7) — directional only, awaits N≥30.
-- **Bayati meeting handout** ready: `MEETING_HANDOUT.md` covers headline numbers, leakage audit, open questions.
+### ✅ Pilot phase (completed 2026-04-30)
+End-to-end replication of Park et al. at N=2 + N=1 via Cookiy. Pipeline + dashboard + leakage audit shipped. GitHub repo: https://github.com/Joyceqx/gsbgen390-persona-pipeline. Live dashboard: https://joyceqx.github.io/gsbgen390-persona-pipeline/
 
-**What has NOT been done yet**: 3-5 page formal writeup, multi-seed run-variance estimation, 2-week-separated re-collection, BFI-44 upgrade. All are post-meeting decisions.
+### 🟡 Phase 1: GSS public-data feature-importance analysis (IN PROGRESS, 2026-05-02→)
+**Goal**: attack the GSS-attitudes row of Park's outcome × feature-category matrix at N≈1,500, using free GSS public panel data (no Cookiy collection needed).
+
+**Locked design (Path A\*)**:
+- **Snapshot prediction** on a single GSS wave (2024 cross-section, N=3,309)
+- **Primary eval (Path B)**: 12 curated high-variance attitudinal items — supports meaningful 4-bin LOO
+- **Sensitivity eval (Path A)**: Park's full ~118 GSS items — for per-item Park-comparable accuracy
+- **Feature pool**: 140 GSS variables partitioned into 4 bins (23 demographic / 29 behavioral / 8 psychological / 80 attitudinal)
+- **Raw accuracy** as primary metric (no test-retest normalization in Phase 1; deferred to Phase 2)
+- **Persona self-consistency** (temp=0.7 multi-sample) reported as supplementary stability check
+- **Pre-registration** on OSF before Phase 1b launches
+
+**State**:
+- ✅ GSS 2024 data downloaded (973 unique variables × 75,699 rows from cumulative; 3,309 in 2024)
+- ✅ `gss_loader.py` reads the 3-batch fixed-width extract; verified 22/22 key Park variables present with correct labels
+- ✅ `gss_feature_taxonomy.json` locked + validated (all 140 features + 12 primary_eval + 118 sensitivity_eval present in data; bins disjoint)
+- 🟡 `gss_pipeline.py` (persona-prompt builder + LLM dispatcher + scorer) — next
+- 🔒 N=10 smoke test
+- 🔒 OSF pre-registration
+- 🔒 Phase 1a (N=100, ~$30) sanity check
+- 🔒 Phase 1b (N=1500, ~$300-500) primary
+
+### 🔮 Phase 2: targeted Cookiy collection (planned, not started)
+Will cover BFI-44 personality + behavioral game outcomes that GSS doesn't measure. Includes 2-week recontact for proper test-retest baseline. Smaller N (~30-100). Design in `thesis_phase2_design.md`.
 
 ---
 
-## What changed in this session (2026-04-30 evening)
+## What changed 2026-05-02 (Phase 1 build session)
+
+### Direction-setting
+1. ✅ **Bayati meeting**: Phase split (GSS-first → targeted Cookiy) and 4-bin taxonomy endorsed; pre-registration committed to before Phase 1b.
+2. ✅ **Path A\* locked**: Path B as primary (12 items, supports LOO), Path A as sensitivity (Park's ~118 items, per-item comparability). Same data, two analytical lenses.
+3. ✅ **Snapshot wave structure**: single-wave prediction on GSS 2024 (avoids panel-evolution and cross-wave leakage). Raw accuracy primary; test-retest normalization deferred to Phase 2.
+4. ✅ **Disjoint-set rule clarified**: primary-pass features = (declared bin lists) MINUS primary_eval only; sensitivity-pass handles per-item leakage separately. Resolves the otherwise-empty-psychological-bin problem.
+
+### Data + loader
+5. ✅ **GSS 2024 data downloaded** via GSS Data Explorer. The 973-variable extract is split into 3 batches by GSS DE; combined locally to a single 973-column DataFrame.
+6. ✅ **`gss_loader.py`** — parses each batch's `.do` script for column ranges + variable labels + value labels; reads the corresponding `.dat` fixed-width file; merges 3 batches horizontally into one DataFrame at 75,699 rows × 973 columns. Handles missing-value codes (-100, -99, etc.) explicitly. Namespaced label sets per batch to avoid label-set name collisions across batches.
+7. ✅ **Verified**: 22/22 key Park variables present with correct labels (POLVIEWS=4 → "Moderate, middle of the road"; HAPPY=3 → "Not too happy"; SEX=1 → "MALE"; etc.). N=3,309 respondents in 2024.
+
+### Taxonomy
+8. ✅ **`gss_feature_taxonomy.json`** locked:
+   - 12 primary_eval items (one per construct family, ~auto-correlation-minimized)
+   - 118 sensitivity_eval items (Park's list minus 15 retired/renamed in 2024)
+   - 140 feature variables in 4 bins (23 demographic / 29 behavioral / 8 psychological / 80 attitudinal)
+9. ✅ **`validate_taxonomy.py`** — confirms (a) every claimed variable exists in the data, (b) bins are mutually disjoint, (c) per-respondent coverage. Median respondent answered: 8/12 primary_eval, 20/23 demographic, 20/29 behavioral, 4/8 psychological, 40/80 attitudinal items.
+
+### Doc updates locked
+10. ✅ `gss_phase1_design.md` rewritten with locked decisions (snapshot, raw accuracy, Path A\*, disjoint-set rule, 2-week plan).
+11. ✅ `gss_variables_to_download.md` documenting the GSS DE workflow + variable list (now used as the data download record).
+
+### Open work (not started yet)
+- **#10 `gss_pipeline.py`** — persona-prompt builder + LLM dispatcher + scorer adapted for GSS rows. Reuses pilot's retry/backoff and self-consistency machinery. Needed before any LLM calls.
+- **#6 N=10 smoke test** — verify pipeline end-to-end at minimum scale (~$1).
+- **#7 OSF pre-registration** — drafted before Phase 1b; locks taxonomy, eval list, primary metric, exclusion rules, secondary analyses.
+- **#8 Phase 1a (N=100)** — sanity check.
+- **#9 Phase 1b (N=1,500)** — primary analysis.
+
+---
+
+## What changed in earlier sessions (2026-04-30 evening — pilot phase wrap)
 
 ### Major fixes / additions to pipeline
 1. ✅ **Path reconciliation** — transcripts copied to `responses/R{1,2}/transcript.txt` and `responses_s2/R1/transcript.txt`.
@@ -80,86 +131,107 @@ Pilot replication of Park et al. (2024) *Generative Agent Simulations of 1,000 P
 
 ---
 
-## Current work tree (post-tidy 2026-04-30 evening)
+## Current work tree (updated 2026-05-02)
 
 ```
 GSBGEN390/
+│
+├── ── DESIGN + NARRATIVE DOCS ──
 ├── README.md                          ← front door
 ├── STATUS.md                          ← this file (single-source-of-truth)
-├── PRIMER.md                          ← 1-2 page Joyce self-intro (audience-tunable)
-├── MEETING_HANDOUT.md                 ← one-page brief for Bayati meeting
+├── CLAUDE.md                          ← guidance for AI assistants in this folder
+├── PRIMER.md                          ← 1-2 page Joyce self-intro
+├── MEETING_HANDOUT.md                 ← one-page brief for Bayati meeting (pilot)
 ├── WRITEUP.md                         ← 3-5 page formal pilot write-up
-├── progress_report.md                 ← full sprint narrative
+├── progress_report.md                 ← pilot sprint narrative
 ├── replication_scoping.md             ← design rationale + Park's actual numbers
-├── FUTURE_DESIGN.md                   ← open design questions for the thesis-stage study
-├── BUSINESS_LANDSCAPE.md              ← market scan: AI persona simulation + AI-moderated research
+├── FUTURE_DESIGN.md                   ← open design questions for the thesis-stage
+├── BUSINESS_LANDSCAPE.md              ← market scan
 ├── LIT_REVIEW.md                      ← academic literature review
-├── EXPLAIN_ZH.md                      ← Chinese-language project explanation
+├── EXPLAIN_ZH.md                      ← Chinese project explanation
 ├── CODE_WALKTHROUGH_ZH.md             ← Chinese walkthrough of persona_pipeline.py
 ├── COLAB_RUN_GUIDE.md                 ← Colab fallback instructions
 │
+├── ── PHASE 1 (GSS-PUBLIC) DESIGN + ARTIFACTS ──
+├── gss_phase1_design.md               ← Phase 1 locked design (Path A*, snapshot, raw acc)
+├── gss_variables_to_download.md       ← record of GSS Data Explorer variable list
+├── gss_feature_taxonomy.json          ← LOCKED: 12 primary_eval, 118 sensitivity_eval, 140 features × 4 bins
+├── gss_loader.py                      ← reads 3-batch GSS extract → pandas DataFrame; label-set namespacing
+├── validate_taxonomy.py               ← sanity-check: variables exist, bins disjoint, coverage stats
+│   (next: gss_pipeline.py, gss_phase1_results.csv, gss_pipeline_logs/)
+│
+├── ── PHASE 2 (COOKIY-TARGETED) DESIGN ──
+├── thesis_phase2_design.md            ← Phase 2 design (BFI + econ games, smaller N + 2-week recontact)
+│
+├── ── PILOT PHASE COOKIY ARTIFACTS ──
 ├── cookiy_brief.md                    ← Study 1 brief (interview arm)
 ├── cookiy_brief_study2.md             ← Study 2 brief (survey arm)
-├── cookiy_guide_session1.md           ← Cookiy's auto-generated discussion guide (S1)
-├── cookiy_guide_session2.md           ← Cookiy's auto-generated discussion guide (S2)
-│
+├── cookiy_guide_session1.md           ← Cookiy auto-generated discussion guide (S1)
+├── cookiy_guide_session2.md           ← Cookiy auto-generated discussion guide (S2)
 ├── eval_battery.json                  ← 15-item held-out eval, with regex anchors
 ├── eval_answers_extracted.csv         ← parsed truth: 15 items × 3 respondents (GOLD)
 ├── construction_answers_extracted.csv ← parsed truth: 18 construction items × 1 respondent
 ├── metrics_per_respondent.csv         ← notebook scoring: 12 conditions × full eval metrics
 │
-├── persona_pipeline.py                ← script-style pipeline (uses responses/ layout)
-├── persona_pipeline.ipynb             ← CANONICAL pipeline (31 cells, includes LOO)
+├── ── PILOT PIPELINE CODE ──
+├── persona_pipeline.py                ← script-style pipeline (responses/ layout)
+├── persona_pipeline.ipynb             ← CANONICAL pilot pipeline (31 cells, incl. LOO)
 ├── run_notebook_local.py              ← runner: executes the notebook outside Colab
 ├── parse_eval_answers.py              ← smart parser using moderator confirmations as gold
 ├── parse_construction_answers.py      ← parser for Study 2 construction items
 ├── rescore_with_leakage_audit.py      ← post-hoc rescoring under STRONG/SOFT/CLEAN filters
 ├── make_robustness_chart.py           ← chart generator for the leakage audit
-├── build_site_data.py                 ← CSV→JSON for docs/data/ with naming normalization
+├── build_site_data.py                 ← CSV→JSON for docs/data/
 ├── build_notebook.py                  ← (Cowork-built — assembles persona_pipeline.ipynb)
 │
-├── interview_quality_audit.md         ← Study 1 transcript quality audit (GITIGNORED — quotes)
-├── survey_quality_audit.md            ← Study 2 transcript quality audit (GITIGNORED — quotes)
-├── leakage_audit.json                 ← per-item leakage tags + evidence (GITIGNORED — quotes)
-├── Openai_api.txt                     ← API key (GITIGNORED)
+├── ── GITIGNORED (PII + secrets) ──
+├── interview_quality_audit.md         ← Study 1 transcript quality audit (verbatim quotes)
+├── survey_quality_audit.md            ← Study 2 transcript quality audit (verbatim quotes)
+├── leakage_audit.json                 ← per-item leakage tags + evidence quotes
+├── Openai_api.txt                     ← API key
+├── 2411.10109v2.pdf                   ← Park v2 paper (kept local for reference)
 │
-├── cookiy_transcripts/                ← raw Cookiy outputs (GITIGNORED — verbatim PII)
+├── cookiy_transcripts/                ← raw Cookiy outputs (verbatim PII)
 │   ├── study1_interview_p{1,2}.{txt,json}
 │   ├── study2_survey_p1.{txt,json}
-│   └── study{1,2}_report.{md,json}    ← Cookiy auto-generated qual/quant reports
+│   └── study{1,2}_report.{md,json}
 │
-├── responses/        R{1,2}/{transcript.txt,demographics.json}    ← script-pipeline layout (GITIGNORED)
-├── responses_s2/     R1/{transcript.txt,demographics.json}        ← (GITIGNORED)
+├── responses/        R{1,2}/{transcript.txt,demographics.json}
+├── responses_s2/     R1/{transcript.txt,demographics.json}
 │
-├── outputs/                           ← all pipeline-derivative artifacts
-│   ├── metrics_with_leakage_audit.csv ← 36 rows: 12 conditions × 3 filter views
-│   ├── chart_robustness.png           ← 2-panel leakage robustness chart
-│   ├── persona_answers_full.json      ← per-condition primary+samples (GITIGNORED — embeds prompts)
-│   └── logs/                          ← run_*.log timestamped runner logs (GITIGNORED)
+├── data/gss/                          ← GSS Data Explorer extracts (NOT public; large; partly PII)
+│   ├── 390data1/{batch1,batch2,batch3}/  ← active extract: 973 vars × 75,699 rows
+│   │   ├── GSS.dat   (fixed-width data)
+│   │   ├── GSS.do    (Stata import script with col specs + labels)
+│   │   └── post_processing_output.json
+│   └── archive/                       ← older extract attempts
 │
-├── docs/                              ← static GitHub Pages dashboard
+├── ── PIPELINE OUTPUTS ──
+├── outputs/                           ← all pilot-pipeline-derivative artifacts
+│   ├── metrics_with_leakage_audit.csv
+│   ├── chart_robustness.png
+│   ├── persona_answers_full.json      (gitignored — embeds prompts)
+│   └── logs/                          (gitignored — runner logs)
+│
+├── ── DASHBOARD ──
+├── docs/                              ← static GitHub Pages dashboard for pilot
 │   ├── index.html, style.css, app.js, README.md
-│   └── data/                          ← JSON inputs the site fetches (built by build_site_data.py)
+│   └── data/
 │       ├── metrics_per_respondent.json
 │       ├── metrics_with_leakage_audit.json
 │       ├── metrics_aggregate.json
 │       └── eval_answers_extracted.json
 │
-├── archive/                           ← stale pre-pivot files, kept for history
-│   ├── eval_joyce_truth.md
-│   ├── eval_joyce_truth_FORM.md
-│   ├── persona_demographics.json
-│   ├── persona_description.md
-│   └── claude_moderator_prompt.md
+├── ── HISTORICAL ──
+├── archive/                           ← stale pre-pivot files (pilot history)
+├── test/                              ← synthetic transcript fixtures
 │
-├── test/                              ← synthetic transcript fixtures for smoke testing
-│   ├── synthetic_s1_transcript.txt
-│   └── synthetic_s2_transcript.txt
-│
-└── (gitignored at root: GSBGEN390_Application_*.docx, __pycache__/)
+└── (also gitignored: GSBGEN390_Application_*.docx, __pycache__/, *.pdf)
 ```
 
 ### Where each file is read from / written to
+
+#### Pilot phase (Cookiy)
 
 | File | Read by | Written by |
 |---|---|---|
@@ -174,39 +246,60 @@ GSBGEN390/
 | `leakage_audit.json` | `rescore_with_leakage_audit.py` | (manual tagging — Joyce + Claude) |
 | `docs/data/*.json` | `docs/app.js` (browser fetch) | `build_site_data.py` |
 
+#### Phase 1 (GSS public)
+
+| File | Read by | Written by |
+|---|---|---|
+| `data/gss/390data1/batch{1,2,3}/GSS.{dat,do}` | `gss_loader.py` | (downloaded from GSS Data Explorer 2026-05-02) |
+| `gss_loader.py` | `validate_taxonomy.py`, `gss_pipeline.py` (next) | (manual) |
+| `gss_feature_taxonomy.json` | `validate_taxonomy.py`, `gss_pipeline.py` (next) | (locked manual + Bayati endorsement 2026-05-02) |
+| `validate_taxonomy.py` | (manual integrity check) | — |
+| `gss_pipeline.py` (NOT YET WRITTEN) | (top-level driver) | — |
+| `outputs/gss_phase1_results.csv` (NOT YET WRITTEN) | — | `gss_pipeline.py` |
+
 ---
 
 ## How to resume in a fresh terminal / new Claude Cowork session
 
-### To re-read everything and pick up the story:
+### To re-read everything and pick up the story (current Phase 1 build):
 ```bash
 cd ~/Documents/GSBGEN390
-# Read in this order:
+# Read in this order for Phase 1 context:
 #   1. STATUS.md (this file) — current state
-#   2. MEETING_HANDOUT.md — what we're presenting
-#   3. progress_report.md — full sprint narrative
-#   4. replication_scoping.md — design rationale
-#   5. interview_quality_audit.md / survey_quality_audit.md — data quality findings
+#   2. CLAUDE.md — guidance for AI assistants
+#   3. gss_phase1_design.md — Phase 1 locked design
+#   4. gss_feature_taxonomy.json — eval and feature lists
+# Then for pilot context:
+#   5. MEETING_HANDOUT.md, WRITEUP.md, progress_report.md
 ```
 
-### To re-run the pipeline (~9 min, $3-5 in API):
+### Phase 1 commands (current session)
+
+**Validate the loaded GSS extract + taxonomy** (no API):
 ```bash
-cd ~/Documents/GSBGEN390
+python3 gss_loader.py            # smoke test loader, ~30s for 75K-row .dat parse
+python3 validate_taxonomy.py     # check variable presence + bin disjointness + coverage
+```
+
+**Run Phase 1 pipeline** (NOT YET BUILT — task #10):
+```bash
+# Will be: python3 gss_pipeline.py --n 10        # smoke test, ~$1
+# Will be: python3 gss_pipeline.py --n 100       # Phase 1a sanity, ~$30
+# Will be: python3 gss_pipeline.py --n 1500      # Phase 1b primary, ~$300-500
+```
+
+### Pilot phase commands (still works, for the Cookiy pipeline)
+
+**Re-run pilot pipeline** (~9 min, $3-5 in API):
+```bash
 export OPENAI_API_KEY=$(cat Openai_api.txt)
-# Note: pandas, openai, matplotlib must be installed (already are on Joyce's laptop)
 python3 -u run_notebook_local.py 2>&1 | tee outputs/logs/run_$(date +%Y%m%d_%H%M).log
+python3 rescore_with_leakage_audit.py
+python3 make_robustness_chart.py
+python3 build_site_data.py
 ```
 
-This produces `metrics_per_respondent.csv` (at root) + `outputs/persona_answers_full.json`. Then:
-
-```bash
-python3 rescore_with_leakage_audit.py    # → outputs/metrics_with_leakage_audit.csv
-python3 make_robustness_chart.py         # → outputs/chart_robustness.png
-python3 build_site_data.py               # → docs/data/*.json (refreshes the website)
-```
-
-### To re-run only the rescoring (no API calls, ~1 second):
-If `outputs/persona_answers_full.json` exists from a previous run:
+**Re-run rescoring only** (no API, ~1s) — if `outputs/persona_answers_full.json` exists:
 ```bash
 python3 rescore_with_leakage_audit.py
 python3 make_robustness_chart.py
@@ -214,11 +307,18 @@ python3 build_site_data.py
 ```
 
 ### Known runtime gotchas
-- **TPM rate limit**: account is at 30K tokens/min for gpt-4o. Condition C prompts hit this; the runner has retry+exponential-backoff that adds ~30-60s total to a run.
-- **Cell 8** in the notebook uses `google.colab.files.upload()` which doesn't work locally. The runner replaces this with disk reads from `cookiy_transcripts/`.
-- **Cell 16** uses `display()` (Jupyter built-in). The runner stubs this to `print()`.
-- **Jupyter magics (`!pip`, `%`)** in cells are silently skipped by the runner.
-- **`LLM_CACHE`** is in-memory only — every fresh process re-runs all 240+ API calls. To make iteration cheap, the runner persists `persona_answers_full.json` end-of-run; the rescoring script reads from that without API calls.
+
+**Phase 1 / GSS:**
+- GSS DE splits the 973-variable extract into **3 batches** — `gss_loader.py` merges them horizontally. If you re-download, expect 3 batch folders.
+- Label-set names (e.g., `GSP002X`) **collide across batches** with different contents. The loader namespaces them per-batch (`b0_GSP002X`, `b1_GSP002X`) to avoid wrong labels.
+- GSS missing-value codes are negative integers in `{-100, -99, -98, -97, -96, -95, -90, -80, -70, -60, -50, -40}`. Loader exposes `is_missing()` helper. **Ballot rotation** means many GSS items aren't asked of every respondent; pre-registration must commit to handling.
+
+**Pilot phase:**
+- TPM rate limit: account is at 30K tokens/min for gpt-4o. Condition C prompts hit this; the runner has retry+exponential-backoff.
+- Cell 8 in the notebook uses `google.colab.files.upload()` which doesn't work locally. The runner replaces this with disk reads from `cookiy_transcripts/`.
+- Cell 16 uses `display()` (Jupyter built-in). The runner stubs this to `print()`.
+- Jupyter magics (`!pip`, `%`) in cells are silently skipped by the runner.
+- `LLM_CACHE` is in-memory only — every fresh process re-runs all 240+ API calls. The runner persists `persona_answers_full.json` end-of-run; the rescoring script reads from that without API calls.
 
 ---
 
@@ -259,3 +359,5 @@ python3 build_site_data.py
 - **2026-04-30 late evening**: GitHub repo created at `Joyceqx/gsbgen390-persona-pipeline` and pushed; GitHub Pages enabled on `/docs`. Project folder tidied: derivative outputs moved into `outputs/` (logs to `outputs/logs/`); pre-pivot stale files moved into `archive/`; code paths in `rescore_with_leakage_audit.py`, `make_robustness_chart.py`, `build_site_data.py`, `run_notebook_local.py` updated for new locations and verified by re-running the post-pipeline rescore + chart + site-build pipeline end-to-end.
 - **2026-04-30 late night — Thesis-stage two-phase plan committed.** Phase 1 = GSS public-data feature-importance (`gss_phase1_design.md`). Phase 2 = interview-decomposed study (`thesis_phase2_design.md`). Phase 2 replaces an earlier "paired structured survey" idea after Joyce noted that the actual question — *what's IN the interview that surveys can't capture* — requires interview decomposition, not survey-feature ablation. Phase 2 forces a platform pivot: Cookiy 15-min cap is incompatible with 30-45 min modular long interview, so Phase 2 will use Prolific + a self-hosted OpenAI Realtime API moderator. Composed deliverable = the full 4×3 feature-category × outcome-dimension matrix.
 - **2026-04-30 night — Park v1 vs v2 reconciliation + outcome-stratified narrative pivot.** Verified directly from both v1 and v2 PDFs that the proposal's "85%" headline came from v1's interview-based normalized accuracy (~0.85), while v2 reorganized conditions and reports the four numbers we now cite (74/82/83/86%). Both versions live at the same arXiv ID; we adopt v2 framing throughout. **Critical refinement**: the "surveys ≈ interview" tie holds only on GSS attitudes — v2 also reports surveys lagging interviews by 0.15 on BFI-44 personality and by 0.28 on behavioral economic games. Thesis question reframed from "can surveys substitute for interviews?" to **outcome-stratified** "which feature categories close which parts of that gap on which outcomes?" Batch update propagated through `MEETING_HANDOUT.md`, `README.md`, `replication_scoping.md`, `EXPLAIN_ZH.md`, `LIT_REVIEW.md`, `PRIMER.md`, `FUTURE_DESIGN.md`, `progress_report.md`, `docs/index.html`, and this STATUS file.
+- **2026-05-02 — Bayati meeting; Phase 1 design locked.** Direction confirmed: GSS-first then targeted Cookiy. **Path A\* locked**: Path B (12 curated items) as primary for the LOO; Path A (Park's full ~118 items) as sensitivity. Snapshot prediction on a single GSS wave (no panel for prediction). Raw accuracy as primary metric — no test-retest normalization in Phase 1; deferred to Phase 2's recontact arm. Persona self-consistency reported as supplementary stability check. Resolution rule for disjoint sets: features = (declared bin lists) MINUS primary_eval (only); sensitivity-pass handles per-item leakage separately. This rule preserves a populated psychological feature bin in GSS, which would otherwise be empty.
+- **2026-05-02 — Phase 1 data + tooling shipped.** GSS 2024 cross-section (3,309 respondents × 973 unique variables) downloaded via GSS Data Explorer in 3-batch fixed-width format. `gss_loader.py` written: parses each batch's `.do` script for column specs + variable labels + value labels, reads the corresponding `.dat` fixed-width file, namespaces label-set names per batch (avoids cross-batch label collisions), merges 3 batches horizontally. Verified 22/22 key Park variables present with correct labels. `gss_feature_taxonomy.json` locked: 12 primary_eval items + 118 sensitivity_eval items + 140 features (23 demographic / 29 behavioral / 8 psychological / 80 attitudinal). `validate_taxonomy.py` confirms variable presence, bin disjointness, per-respondent coverage. Next: `gss_pipeline.py` (persona-prompt builder + LLM dispatcher + scorer adapted for GSS rows).

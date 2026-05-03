@@ -33,6 +33,15 @@ leakage_audit.json
 # --- External / copyrighted papers (kept locally only) ---
 *.pdf
 
+# --- Phase 1 GSS raw data (large, also potentially redistribution-restricted) ---
+# GSS public-use data is freely downloadable from NORC; we don't redistribute.
+# Each session gets its own download. Loader scripts read from this folder
+# but do not commit its contents.
+data/
+
+# Temp / scratch files written by validation scripts (regenerable):
+gss_missing_variables.txt
+
 # --- Build / cache artifacts ---
 __pycache__/
 *.py[cod]
