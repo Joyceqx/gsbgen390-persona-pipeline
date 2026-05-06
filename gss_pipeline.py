@@ -844,6 +844,210 @@ def compute_phase1_headline(
 
 
 # ---------------------------------------------------------------------------
+# AUDIT-E multi-model extension (task #13)
+# ---------------------------------------------------------------------------
+# When records carry a "model" field (locked design §12), aggregation is
+# extended:
+#   - Per-model headline: filter records by model → existing aggregator.
+#   - Panel median: synthesize records where each item's persona_code is the
+#     median across all models for that (respondent, condition, item, sample).
+#     Then re-score and aggregate.
+#   - Cross-model agreement %: % of (respondent, item, sample) tuples where
+#     all models output the same persona_code (excluding parse failures).
+# ---------------------------------------------------------------------------
+
+def filter_records_by_model(records: list[dict[str, Any]], model: str) -> list[dict[str, Any]]:
+    """Return records belonging to a specific model. Preserves all other fields."""
+    return [r for r in records if r.get("model") == model]
+
+
+def synthesize_panel_median_records(
+    records: list[dict[str, Any]],
+    valid_codes_by_item: dict[str, list[int]],
+) -> list[dict[str, Any]]:
+    """For each (respondent, condition, item, sample_idx), compute the median
+    persona_code across all models. Build new records as if a single 'panel'
+    model had answered. Re-score each synthesized observation against truth.
+
+    Excludes any (respondent, condition, item, sample_idx) where any model had
+    a parse failure (panel median is only computed when all models parsed OK,
+    to avoid implicit imputation).
+
+    Args:
+        valid_codes_by_item: {item_id: [valid integer codes]} — used to constrain
+            the median into a valid scale point.
+    """
+    from statistics import median as _median
+
+    # Group by (respondent_id, condition) → list of model records
+    grouped: dict[tuple, list[dict]] = {}
+    for r in records:
+        key = (r["respondent_id"], r["condition"])
+        grouped.setdefault(key, []).append(r)
+
+    out_records = []
+    for (rid, cond), model_records in grouped.items():
+        # All model records for this (rid, cond). Compute panel median per item × sample.
+        model_count = len(model_records)
+        if model_count < 2:
+            # Single-model case — panel median trivially equals that model
+            continue
+        panel_per_item: dict[str, list[dict]] = {}
+        # Iterate over items (use first model's items as the union; assume all models cover same items)
+        all_items = set()
+        for mr in model_records:
+            all_items.update(mr.get("per_item_scores", {}).keys())
+        for item_id in all_items:
+            # Determine n_samples: minimum across models (paranoid)
+            sample_lists = [mr.get("per_item_scores", {}).get(item_id, []) for mr in model_records]
+            n_samples = min(len(sl) for sl in sample_lists) if sample_lists else 0
+            samples_out: list[dict] = []
+            for s_idx in range(n_samples):
+                codes = []
+                truth = None
+                for sl in sample_lists:
+                    s = sl[s_idx]
+                    truth = s.get("truth") if truth is None else truth
+                    if s.get("parse_fail") or s.get("persona_code") is None:
+                        codes = None
+                        break
+                    codes.append(s["persona_code"])
+                if codes is None:
+                    samples_out.append({
+                        "treatment": None, "abs_err": None, "within1": None,
+                        "cat_match": None, "parse_fail": True, "persona_code": None,
+                        "truth": truth, "skipped_missing_truth": truth is None,
+                    })
+                    continue
+                med_raw = _median(codes)
+                # Snap median to a valid code (if median is e.g. 3.5, round to nearest integer
+                # in valid_codes; ties broken toward lower)
+                vcodes = valid_codes_by_item.get(item_id, list(range(int(min(codes)), int(max(codes))+1)))
+                med = min(vcodes, key=lambda c: (abs(c - med_raw), c))
+                # Re-score this synthesized observation
+                if truth is None:
+                    samples_out.append({
+                        "treatment": None, "abs_err": None, "within1": None,
+                        "cat_match": None, "parse_fail": False, "persona_code": int(med),
+                        "truth": None, "skipped_missing_truth": True,
+                    })
+                    continue
+                # Use any one model's treatment classification (they should all match)
+                # For panel-median scoring, use the same logic as score_item but with med.
+                # Re-import classify_item_for_scoring at runtime to avoid circular import.
+                fmt_str = "binary" if len(vcodes) == 2 else f"likert{len(vcodes)}"
+                # Best-effort: if a model record had a treatment, use it
+                model_treatment = None
+                for sl in sample_lists:
+                    if s_idx < len(sl) and sl[s_idx].get("treatment"):
+                        model_treatment = sl[s_idx]["treatment"]
+                        break
+                treatment = model_treatment or classify_item_for_scoring(item_id, fmt_str, int(med), int(truth))
+                if treatment == "likert":
+                    abs_err = abs(int(med) - int(truth))
+                    samples_out.append({
+                        "treatment": "likert", "abs_err": abs_err,
+                        "within1": int(abs_err <= 1), "cat_match": None,
+                        "parse_fail": False, "persona_code": int(med), "truth": int(truth),
+                        "skipped_missing_truth": False,
+                    })
+                else:
+                    samples_out.append({
+                        "treatment": "categorical", "abs_err": None, "within1": None,
+                        "cat_match": int(int(med) == int(truth)),
+                        "parse_fail": False, "persona_code": int(med), "truth": int(truth),
+                        "skipped_missing_truth": False,
+                    })
+            panel_per_item[item_id] = samples_out
+        out_records.append({
+            "respondent_id": rid,
+            "condition": cond,
+            "model": "panel_median",
+            "per_item_scores": panel_per_item,
+        })
+    return out_records
+
+
+def cross_model_agreement_pct(records: list[dict[str, Any]]) -> dict[str, float]:
+    """% of (respondent, condition, item, sample_idx) tuples where all models
+    output the same persona_code. Computed per condition.
+
+    Returns: {condition: agreement_pct}
+    """
+    from collections import defaultdict
+    grouped: dict[tuple, list[dict]] = defaultdict(list)
+    for r in records:
+        grouped[(r["respondent_id"], r["condition"])].append(r)
+
+    by_cond: dict[str, list[int]] = defaultdict(list)
+    for (rid, cond), model_records in grouped.items():
+        if len(model_records) < 2:
+            continue
+        items = set()
+        for mr in model_records:
+            items.update(mr.get("per_item_scores", {}).keys())
+        for item_id in items:
+            sample_lists = [mr.get("per_item_scores", {}).get(item_id, []) for mr in model_records]
+            n_samples = min(len(sl) for sl in sample_lists) if sample_lists else 0
+            for s_idx in range(n_samples):
+                codes = [
+                    sl[s_idx].get("persona_code")
+                    for sl in sample_lists
+                    if not sl[s_idx].get("parse_fail")
+                ]
+                if len(codes) < 2 or any(c is None for c in codes):
+                    continue
+                by_cond[cond].append(1 if len(set(codes)) == 1 else 0)
+
+    return {
+        cond: round(100 * sum(v) / len(v), 1) if v else 0.0
+        for cond, v in by_cond.items()
+    }
+
+
+def compute_phase1_headline_multimodel(
+    records: list[dict[str, Any]],
+    valid_codes_by_item: dict[str, list[int]],
+    bootstrap_B: int = 1000,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """End-to-end multi-model headline.
+
+    Returns:
+        {
+            "per_model": {model: compute_phase1_headline output for that model's records},
+            "panel_median": compute_phase1_headline output for synthesized records,
+            "cross_model_agreement_pct": {condition: agreement_pct},
+            "n_models": int,
+        }
+    """
+    models = sorted({r.get("model") for r in records if r.get("model")})
+    if not models:
+        raise ValueError("No 'model' field in records — use compute_phase1_headline for single-model")
+
+    out: dict[str, Any] = {
+        "n_models": len(models),
+        "models": models,
+        "per_model": {},
+        "panel_median": None,
+        "cross_model_agreement_pct": cross_model_agreement_pct(records),
+    }
+
+    for m in models:
+        m_records = filter_records_by_model(records, m)
+        out["per_model"][m] = compute_phase1_headline(
+            m_records, bootstrap_B=bootstrap_B, seed=seed
+        )
+
+    if len(models) >= 2:
+        panel_records = synthesize_panel_median_records(records, valid_codes_by_item)
+        out["panel_median"] = compute_phase1_headline(
+            panel_records, bootstrap_B=bootstrap_B, seed=seed
+        )
+    return out
+
+
+# ---------------------------------------------------------------------------
 # AUDIT-E smoke test — synthetic per-respondent records, hand-checked
 # ---------------------------------------------------------------------------
 
@@ -1074,6 +1278,104 @@ def _audit_e_test():
     print("   ✓ end-to-end orchestrator works")
 
     print("\n✓ ALL AUDIT-E AGGREGATION TESTS PASSED")
+
+
+def _audit_e_multimodel_test():
+    """Smoke test for multi-model panel aggregation (task #13)."""
+    print("\n=== AUDIT-E multi-model panel smoke test ===\n")
+
+    def mk(treatment, abs_err=None, within1=None, cat_match=None, persona_code=None,
+           truth=None, parse_fail=False):
+        return {
+            "treatment": treatment, "abs_err": abs_err, "within1": within1,
+            "cat_match": cat_match, "persona_code": persona_code, "truth": truth,
+            "parse_fail": parse_fail, "skipped_missing_truth": truth is None,
+        }
+
+    # 2 respondents × 2 conditions (full + loo) × 4 models × 2 items
+    # Item ITEM_A: likert5, truth=3
+    # Item ITEM_B: binary, truth=1
+    valid_codes_by_item = {"ITEM_A": [1,2,3,4,5], "ITEM_B": [1,2]}
+
+    def build_resp(rid, cond, model, item_a_code, item_b_code, truth_a=3, truth_b=1):
+        scores = {}
+        if item_a_code is not None:
+            scores["ITEM_A"] = [mk("likert", abs_err=abs(item_a_code-truth_a),
+                                   within1=int(abs(item_a_code-truth_a)<=1),
+                                   persona_code=item_a_code, truth=truth_a)]
+        if item_b_code is not None:
+            scores["ITEM_B"] = [mk("categorical", cat_match=int(item_b_code==truth_b),
+                                   persona_code=item_b_code, truth=truth_b)]
+        return {"respondent_id": rid, "condition": cond, "model": model,
+                "per_item_scores": scores}
+
+    # 4 models all giving slightly different codes for resp 1, full
+    # Resp 1 / full: A_codes [3, 3, 4, 3], B_codes [1, 1, 1, 2] → median A=3, B=1
+    # Resp 1 / loo:  A_codes [4, 4, 5, 4], B_codes [2, 2, 1, 2] → median A=4, B=2
+    # Resp 2 / full: A_codes [2, 3, 3, 3], B_codes [1, 1, 1, 1] → median A=3, B=1
+    # Resp 2 / loo:  A_codes [3, 3, 4, 3], B_codes [2, 1, 1, 1] → median A=3, B=1
+    models = ["m1", "m2", "m3", "m4"]
+    records = []
+    # resp 1 full
+    a_codes = [3, 3, 4, 3]; b_codes = [1, 1, 1, 2]
+    for i, m in enumerate(models):
+        records.append(build_resp(1, "full", m, a_codes[i], b_codes[i]))
+    # resp 1 loo
+    a_codes = [4, 4, 5, 4]; b_codes = [2, 2, 1, 2]
+    for i, m in enumerate(models):
+        records.append(build_resp(1, "loo_drop_attitudinal", m, a_codes[i], b_codes[i]))
+    # resp 2 full
+    a_codes = [2, 3, 3, 3]; b_codes = [1, 1, 1, 1]
+    for i, m in enumerate(models):
+        records.append(build_resp(2, "full", m, a_codes[i], b_codes[i]))
+    # resp 2 loo
+    a_codes = [3, 3, 4, 3]; b_codes = [2, 1, 1, 1]
+    for i, m in enumerate(models):
+        records.append(build_resp(2, "loo_drop_attitudinal", m, a_codes[i], b_codes[i]))
+
+    print(f"[1] built {len(records)} records ({len(records)//4} resp-conditions × 4 models)")
+
+    # Cross-model agreement
+    agree = cross_model_agreement_pct(records)
+    print(f"\n[2] cross-model agreement % per condition:")
+    for c, v in agree.items():
+        print(f"   {c:<28s} {v}%")
+    # Expected: full has 3/4 of 4 obs agreed unanimously; loo has 1/4
+    # full: ITEM_A/r1 codes [3,3,4,3] → 3 distinct → not unanimous → 0
+    #       ITEM_B/r1 codes [1,1,1,2] → not unanimous → 0
+    #       ITEM_A/r2 codes [2,3,3,3] → not unanimous → 0
+    #       ITEM_B/r2 codes [1,1,1,1] → unanimous → 1
+    # full agreement = 1/4 = 25%
+    assert agree["full"] == 25.0, f"expected full=25.0, got {agree['full']}"
+    print("   ✓ agreement % matches hand calc")
+
+    # Panel median
+    panel = synthesize_panel_median_records(records, valid_codes_by_item)
+    print(f"\n[3] panel median: {len(panel)} synthesized records")
+    # resp 1 full: med(A) = 3, med(B) = 1 → ITEM_A abs_err=0, ITEM_B cat=1
+    r1_full = next(r for r in panel if r["respondent_id"] == 1 and r["condition"] == "full")
+    assert r1_full["per_item_scores"]["ITEM_A"][0]["abs_err"] == 0
+    assert r1_full["per_item_scores"]["ITEM_B"][0]["cat_match"] == 1
+    # resp 1 loo: med(A) = 4 → abs_err=1
+    r1_loo = next(r for r in panel if r["respondent_id"] == 1 and r["condition"] == "loo_drop_attitudinal")
+    assert r1_loo["per_item_scores"]["ITEM_A"][0]["abs_err"] == 1
+    print("   ✓ resp 1 full panel-median ITEM_A abs_err=0, ITEM_B match=1")
+    print("   ✓ resp 1 loo  panel-median ITEM_A abs_err=1")
+
+    # End-to-end multi-model headline
+    print(f"\n[4] compute_phase1_headline_multimodel()")
+    out = compute_phase1_headline_multimodel(records, valid_codes_by_item, bootstrap_B=200)
+    print(f"   models tracked:                   {out['models']}")
+    print(f"   has per-model headlines:          {list(out['per_model'].keys())}")
+    print(f"   has panel_median:                 {out['panel_median'] is not None}")
+    print(f"   cross_model_agreement_pct:        {out['cross_model_agreement_pct']}")
+    panel_full = out["panel_median"]["per_condition"]["full"]["likert_mae"]
+    print(f"   panel-median Full likert_mae:     {panel_full['respondent_macro']:.3f} "
+          f"[{panel_full['respondent_macro_ci_lo']:.3f}, {panel_full['respondent_macro_ci_hi']:.3f}]")
+    assert "loo_drop_attitudinal" in out["panel_median"]["loo_deltas"]
+    print("   ✓ multi-model orchestrator returns expected structure")
+
+    print("\n✓ ALL MULTI-MODEL AGGREGATION TESTS PASSED")
 
 
 def _audit_d_test():
@@ -1345,6 +1647,7 @@ def _cli():
     p.add_argument("--test-scoring", action="store_true", help="run AUDIT-C: hand-crafted scoring smoke tests")
     p.add_argument("--test-exclusion", action="store_true", help="run AUDIT-D: sensitivity per-item exclusion test")
     p.add_argument("--test-aggregation", action="store_true", help="run AUDIT-E: aggregation + paired bootstrap test")
+    p.add_argument("--test-multimodel", action="store_true", help="run AUDIT-E multi-model panel test (task #13)")
     p.add_argument("--save", type=Path, default=None, help="optionally save full prompt to a file")
     return p.parse_args()
 
@@ -1361,6 +1664,8 @@ if __name__ == "__main__":
         _audit_d_test()
     elif args.test_aggregation:
         _audit_e_test()
+    elif args.test_multimodel:
+        _audit_e_multimodel_test()
     else:
         print("Pipeline scaffold loaded.")
         print(f"  --print-prompt    : AUDIT-A persona-prompt sample (locked)")
