@@ -538,6 +538,544 @@ def aggregate_respondent_condition(
 # AUDIT-C smoke test — hand-crafted scoring scenarios
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# 🔍 AUDIT-E: Aggregation rules
+# ---------------------------------------------------------------------------
+# Locked decisions (from gss_phase1_design.md §10):
+#   E.1  Three aggregations:
+#        - PRIMARY: respondent-macro-averaged. Each respondent contributes
+#          one number per (condition, metric); these are averaged.
+#        - SECONDARY: item-macro (mean per item across respondents, then
+#          mean across items) and pooled (flat mean over all observations).
+#   E.2  Bootstrap CIs at respondent level, B=1000, 95% percentile.
+#   E.3  LOO ΔMAE = MAE(LOO_drop_bin) − MAE(Full). PAIRED bootstrap:
+#        resample respondents once, compute Full and LOO from the same
+#        resample, then take delta. Do NOT independently bootstrap.
+#   E.4  Output: gss_phase1_per_respondent.csv + gss_phase1_headline.csv +
+#        gss_phase1_persona_answers.json (diagnostics).
+# ---------------------------------------------------------------------------
+
+import random as _aud_e_random  # explicit import scope; not the missing-data 'random'
+
+
+def _likert_errors_for_record(record: dict[str, Any]) -> list[int]:
+    """Flatten one (respondent, condition) record to its list of Likert
+    abs-errors across items × samples (excluding parse-fails, missing-truth,
+    and categorical-treated items)."""
+    errs: list[int] = []
+    for samples in record.get("per_item_scores", {}).values():
+        for s in samples:
+            if (
+                s.get("treatment") == "likert"
+                and s.get("abs_err") is not None
+                and not s.get("parse_fail")
+                and not s.get("skipped_missing_truth")
+            ):
+                errs.append(s["abs_err"])
+    return errs
+
+
+def _cat_matches_for_record(record: dict[str, Any]) -> list[int]:
+    """Flatten one (respondent, condition) record to list of 0/1 categorical
+    matches across items × samples."""
+    matches: list[int] = []
+    for samples in record.get("per_item_scores", {}).values():
+        for s in samples:
+            if (
+                s.get("treatment") == "categorical"
+                and s.get("cat_match") is not None
+                and not s.get("parse_fail")
+                and not s.get("skipped_missing_truth")
+            ):
+                matches.append(s["cat_match"])
+    return matches
+
+
+def _per_respondent_metric(record: dict[str, Any], metric: str) -> float | None:
+    """Compute one (respondent, condition) summary for the named metric.
+    Returns None if the respondent has zero contributing observations.
+    """
+    if metric == "likert_mae":
+        errs = _likert_errors_for_record(record)
+        return mean(errs) if errs else None
+    if metric == "likert_within1_pct":
+        errs = _likert_errors_for_record(record)
+        if not errs:
+            return None
+        return 100 * sum(1 for e in errs if e <= 1) / len(errs)
+    if metric == "cat_match_pct":
+        matches = _cat_matches_for_record(record)
+        return 100 * mean(matches) if matches else None
+    raise ValueError(f"unknown metric: {metric}")
+
+
+def aggregate_condition(
+    records: list[dict[str, Any]], condition: str, metric: str = "likert_mae"
+) -> dict[str, Any]:
+    """Compute respondent-macro, item-macro, and pooled aggregations for one
+    (condition, metric).
+
+    Returns:
+        {
+            "n_respondents_contributing": int,
+            "respondent_macro": float | None,   # PRIMARY
+            "per_respondent_values": {rid: float},  # for paired bootstrap downstream
+            "item_macro": float | None,         # secondary
+            "pooled": float | None,             # secondary
+            "n_total_observations": int,
+        }
+    """
+    cond_records = [r for r in records if r.get("condition") == condition]
+
+    # Respondent-macro — primary
+    per_resp: dict[int, float] = {}
+    for r in cond_records:
+        v = _per_respondent_metric(r, metric)
+        if v is not None:
+            per_resp[r["respondent_id"]] = v
+    respondent_macro = mean(per_resp.values()) if per_resp else None
+
+    # Pooled and item-macro need observation-level info
+    if metric == "likert_mae":
+        per_item_errs: dict[str, list[int]] = {}
+        all_obs: list[int] = []
+        for r in cond_records:
+            for item, samples in r.get("per_item_scores", {}).items():
+                for s in samples:
+                    if (
+                        s.get("treatment") == "likert"
+                        and s.get("abs_err") is not None
+                        and not s.get("parse_fail")
+                        and not s.get("skipped_missing_truth")
+                    ):
+                        per_item_errs.setdefault(item, []).append(s["abs_err"])
+                        all_obs.append(s["abs_err"])
+        item_macro = (
+            mean([mean(errs) for errs in per_item_errs.values()]) if per_item_errs else None
+        )
+        pooled = mean(all_obs) if all_obs else None
+        n_total = len(all_obs)
+    elif metric == "likert_within1_pct":
+        per_item_within: dict[str, list[int]] = {}
+        all_obs_w: list[int] = []
+        for r in cond_records:
+            for item, samples in r.get("per_item_scores", {}).items():
+                for s in samples:
+                    if s.get("treatment") == "likert" and s.get("within1") is not None:
+                        per_item_within.setdefault(item, []).append(s["within1"])
+                        all_obs_w.append(s["within1"])
+        item_macro = (
+            100 * mean([mean(v) for v in per_item_within.values()]) if per_item_within else None
+        )
+        pooled = 100 * mean(all_obs_w) if all_obs_w else None
+        n_total = len(all_obs_w)
+    elif metric == "cat_match_pct":
+        per_item_cat: dict[str, list[int]] = {}
+        all_obs_c: list[int] = []
+        for r in cond_records:
+            for item, samples in r.get("per_item_scores", {}).items():
+                for s in samples:
+                    if s.get("treatment") == "categorical" and s.get("cat_match") is not None:
+                        per_item_cat.setdefault(item, []).append(s["cat_match"])
+                        all_obs_c.append(s["cat_match"])
+        item_macro = (
+            100 * mean([mean(v) for v in per_item_cat.values()]) if per_item_cat else None
+        )
+        pooled = 100 * mean(all_obs_c) if all_obs_c else None
+        n_total = len(all_obs_c)
+    else:
+        item_macro = pooled = None
+        n_total = 0
+
+    return {
+        "n_respondents_contributing": len(per_resp),
+        "respondent_macro": respondent_macro,
+        "per_respondent_values": per_resp,
+        "item_macro": item_macro,
+        "pooled": pooled,
+        "n_total_observations": n_total,
+    }
+
+
+def bootstrap_ci(
+    per_respondent_values: dict[int, float],
+    B: int = 1000,
+    alpha: float = 0.05,
+    seed: int = 42,
+) -> tuple[float, float]:
+    """Percentile bootstrap CI on the mean of per-respondent values.
+    Resampling is at respondent level (per locked design §10).
+
+    Returns: (ci_lo, ci_hi) at the (alpha/2, 1 - alpha/2) percentiles.
+    Returns (nan, nan) if input is empty.
+    """
+    if not per_respondent_values:
+        return (float("nan"), float("nan"))
+    rng = _aud_e_random.Random(seed)
+    rids = list(per_respondent_values.keys())
+    n = len(rids)
+    boot_means: list[float] = []
+    for _ in range(B):
+        sample = [per_respondent_values[rng.choice(rids)] for _ in range(n)]
+        boot_means.append(mean(sample))
+    boot_means.sort()
+    lo_idx = int((alpha / 2) * B)
+    hi_idx = int((1 - alpha / 2) * B) - 1
+    return (boot_means[lo_idx], boot_means[hi_idx])
+
+
+def paired_bootstrap_loo_delta(
+    full_per_resp: dict[int, float],
+    loo_per_resp: dict[int, float],
+    B: int = 1000,
+    alpha: float = 0.05,
+    seed: int = 42,
+) -> dict[str, float]:
+    """Paired bootstrap for ΔMAE = MAE(LOO) − MAE(Full).
+
+    Locked design §10: resample respondents ONCE per replicate, compute MAE
+    on Full and LOO from THE SAME resample, then take delta. Mathematically
+    equivalent to bootstrapping per-respondent deltas (paired Δ → mean Δ).
+
+    Args:
+        full_per_resp: respondent_id → per-respondent metric under Full
+        loo_per_resp:  respondent_id → per-respondent metric under LOO
+    Both dicts must use the same metric (e.g., likert_mae).
+
+    Returns: {
+        "mean_delta": float,
+        "ci_lo": float,
+        "ci_hi": float,
+        "n_paired_respondents": int,
+    }
+    """
+    common_rids = sorted(set(full_per_resp) & set(loo_per_resp))
+    if not common_rids:
+        return {"mean_delta": float("nan"), "ci_lo": float("nan"), "ci_hi": float("nan"),
+                "n_paired_respondents": 0}
+
+    # Per-respondent paired delta
+    per_resp_delta = {rid: loo_per_resp[rid] - full_per_resp[rid] for rid in common_rids}
+    mean_delta = mean(per_resp_delta.values())
+
+    # Paired bootstrap: resample respondents, take mean of their deltas
+    rng = _aud_e_random.Random(seed)
+    n = len(common_rids)
+    boot_deltas: list[float] = []
+    for _ in range(B):
+        sample = [per_resp_delta[rng.choice(common_rids)] for _ in range(n)]
+        boot_deltas.append(mean(sample))
+    boot_deltas.sort()
+    lo_idx = int((alpha / 2) * B)
+    hi_idx = int((1 - alpha / 2) * B) - 1
+
+    return {
+        "mean_delta": mean_delta,
+        "ci_lo": boot_deltas[lo_idx],
+        "ci_hi": boot_deltas[hi_idx],
+        "n_paired_respondents": n,
+    }
+
+
+def compute_phase1_headline(
+    records: list[dict[str, Any]],
+    conditions: list[str] | None = None,
+    metrics: tuple[str, ...] = ("likert_mae", "likert_within1_pct", "cat_match_pct"),
+    bootstrap_B: int = 1000,
+    seed: int = 42,
+    full_condition: str = "full",
+    loo_conditions: tuple[str, ...] = (
+        "loo_drop_demographic",
+        "loo_drop_behavioral",
+        "loo_drop_psychological",
+        "loo_drop_attitudinal",
+    ),
+) -> dict[str, Any]:
+    """End-to-end headline computation for Phase 1.
+
+    For each condition × metric, compute respondent-macro / item-macro /
+    pooled with respondent-level percentile bootstrap CIs at B replicates.
+
+    For each LOO condition × metric, additionally compute the paired-
+    bootstrap ΔMAE_bin against the Full condition.
+
+    Returns a nested dict suitable for serializing to gss_phase1_headline.csv.
+    """
+    if conditions is None:
+        conditions = sorted({r["condition"] for r in records})
+
+    headline: dict[str, Any] = {"per_condition": {}, "loo_deltas": {}}
+
+    for cond in conditions:
+        headline["per_condition"][cond] = {}
+        for metric in metrics:
+            agg = aggregate_condition(records, cond, metric=metric)
+            ci = bootstrap_ci(agg["per_respondent_values"], B=bootstrap_B, seed=seed)
+            headline["per_condition"][cond][metric] = {
+                "n_respondents_contributing": agg["n_respondents_contributing"],
+                "n_total_observations": agg["n_total_observations"],
+                "respondent_macro": agg["respondent_macro"],
+                "respondent_macro_ci_lo": ci[0],
+                "respondent_macro_ci_hi": ci[1],
+                "item_macro": agg["item_macro"],
+                "pooled": agg["pooled"],
+            }
+
+    # LOO deltas (paired bootstrap), against Full
+    full_aggs_by_metric = {
+        metric: aggregate_condition(records, full_condition, metric=metric) for metric in metrics
+    }
+    for loo_cond in loo_conditions:
+        if loo_cond not in conditions:
+            continue
+        headline["loo_deltas"][loo_cond] = {}
+        for metric in metrics:
+            full_agg = full_aggs_by_metric[metric]
+            loo_agg = aggregate_condition(records, loo_cond, metric=metric)
+            delta_result = paired_bootstrap_loo_delta(
+                full_agg["per_respondent_values"],
+                loo_agg["per_respondent_values"],
+                B=bootstrap_B,
+                seed=seed,
+            )
+            headline["loo_deltas"][loo_cond][metric] = delta_result
+
+    return headline
+
+
+# ---------------------------------------------------------------------------
+# AUDIT-E smoke test — synthetic per-respondent records, hand-checked
+# ---------------------------------------------------------------------------
+
+def _audit_e_test():
+    """Verify aggregation math and paired-bootstrap correctness on a
+    synthetic dataset where the answers can be hand-calculated."""
+    print("\n=== AUDIT-E: aggregation smoke test ===\n")
+
+    # ---- Build synthetic records ----
+    # 3 respondents. 3 items: ITEM_A (likert), ITEM_B (likert), ITEM_C (cat).
+    # 2 samples per item.
+    # Two conditions: "full" and "loo_drop_attitudinal".
+    # Hand-calc the expected aggregates below.
+
+    def make_item_score(treatment, abs_err=None, within1=None, cat_match=None, parse_fail=False):
+        return {
+            "treatment": treatment,
+            "abs_err": abs_err,
+            "within1": within1,
+            "cat_match": cat_match,
+            "parse_fail": parse_fail,
+            "skipped_missing_truth": False,
+        }
+
+    records = [
+        # Respondent 1, full: ITEM_A errs [0, 1], ITEM_B errs [2, 0], ITEM_C cat [1, 0]
+        {
+            "respondent_id": 1, "condition": "full",
+            "per_item_scores": {
+                "ITEM_A": [
+                    make_item_score("likert", abs_err=0, within1=1),
+                    make_item_score("likert", abs_err=1, within1=1),
+                ],
+                "ITEM_B": [
+                    make_item_score("likert", abs_err=2, within1=0),
+                    make_item_score("likert", abs_err=0, within1=1),
+                ],
+                "ITEM_C": [
+                    make_item_score("categorical", cat_match=1),
+                    make_item_score("categorical", cat_match=0),
+                ],
+            },
+        },
+        # Respondent 2, full: ITEM_A errs [1, 1], ITEM_B errs [3, 2], ITEM_C cat [1, 1]
+        {
+            "respondent_id": 2, "condition": "full",
+            "per_item_scores": {
+                "ITEM_A": [
+                    make_item_score("likert", abs_err=1, within1=1),
+                    make_item_score("likert", abs_err=1, within1=1),
+                ],
+                "ITEM_B": [
+                    make_item_score("likert", abs_err=3, within1=0),
+                    make_item_score("likert", abs_err=2, within1=0),
+                ],
+                "ITEM_C": [
+                    make_item_score("categorical", cat_match=1),
+                    make_item_score("categorical", cat_match=1),
+                ],
+            },
+        },
+        # Respondent 3, full: ITEM_A errs [0, 0], ITEM_B errs [1, 1], ITEM_C cat [0, 0]
+        {
+            "respondent_id": 3, "condition": "full",
+            "per_item_scores": {
+                "ITEM_A": [
+                    make_item_score("likert", abs_err=0, within1=1),
+                    make_item_score("likert", abs_err=0, within1=1),
+                ],
+                "ITEM_B": [
+                    make_item_score("likert", abs_err=1, within1=1),
+                    make_item_score("likert", abs_err=1, within1=1),
+                ],
+                "ITEM_C": [
+                    make_item_score("categorical", cat_match=0),
+                    make_item_score("categorical", cat_match=0),
+                ],
+            },
+        },
+        # Same 3 respondents under loo_drop_attitudinal — Likert errors are
+        # WORSE (LOO removes useful features).
+        {
+            "respondent_id": 1, "condition": "loo_drop_attitudinal",
+            "per_item_scores": {
+                "ITEM_A": [
+                    make_item_score("likert", abs_err=2, within1=0),
+                    make_item_score("likert", abs_err=2, within1=0),
+                ],
+                "ITEM_B": [
+                    make_item_score("likert", abs_err=3, within1=0),
+                    make_item_score("likert", abs_err=2, within1=0),
+                ],
+                "ITEM_C": [
+                    make_item_score("categorical", cat_match=0),
+                    make_item_score("categorical", cat_match=0),
+                ],
+            },
+        },
+        {
+            "respondent_id": 2, "condition": "loo_drop_attitudinal",
+            "per_item_scores": {
+                "ITEM_A": [
+                    make_item_score("likert", abs_err=2, within1=0),
+                    make_item_score("likert", abs_err=1, within1=1),
+                ],
+                "ITEM_B": [
+                    make_item_score("likert", abs_err=3, within1=0),
+                    make_item_score("likert", abs_err=3, within1=0),
+                ],
+                "ITEM_C": [
+                    make_item_score("categorical", cat_match=0),
+                    make_item_score("categorical", cat_match=0),
+                ],
+            },
+        },
+        {
+            "respondent_id": 3, "condition": "loo_drop_attitudinal",
+            "per_item_scores": {
+                "ITEM_A": [
+                    make_item_score("likert", abs_err=2, within1=0),
+                    make_item_score("likert", abs_err=1, within1=1),
+                ],
+                "ITEM_B": [
+                    make_item_score("likert", abs_err=2, within1=0),
+                    make_item_score("likert", abs_err=2, within1=0),
+                ],
+                "ITEM_C": [
+                    make_item_score("categorical", cat_match=1),
+                    make_item_score("categorical", cat_match=0),
+                ],
+            },
+        },
+    ]
+
+    # ---- Hand-calc expected values ----
+    # Full / likert_mae:
+    #   R1: errs [0,1,2,0]  → mean = 0.75
+    #   R2: errs [1,1,3,2]  → mean = 1.75
+    #   R3: errs [0,0,1,1]  → mean = 0.5
+    #   respondent_macro = mean(0.75, 1.75, 0.5) = 1.0
+    expected_full_likert_macro = 1.0
+
+    # Full / likert_mae item-macro:
+    #   ITEM_A errs across resp×samples: [0,1, 1,1, 0,0] → mean = 3/6 = 0.5
+    #   ITEM_B errs: [2,0, 3,2, 1,1] → mean = 9/6 = 1.5
+    #   item_macro = mean(0.5, 1.5) = 1.0
+    expected_full_likert_item_macro = 1.0
+
+    # Full / likert_mae pooled:
+    #   all 12 likert errs: [0,1,2,0, 1,1,3,2, 0,0,1,1] → sum=12 → mean 1.0
+    expected_full_likert_pooled = 1.0
+
+    # Full / cat_match_pct respondent-macro:
+    #   R1: [1, 0] → 50%
+    #   R2: [1, 1] → 100%
+    #   R3: [0, 0] → 0%
+    #   respondent_macro = mean(50, 100, 0) = 50%
+    expected_full_cat_macro = 50.0
+
+    # ---- Run aggregations ----
+    print("[1] Aggregating Full condition")
+    agg_full_likert = aggregate_condition(records, "full", "likert_mae")
+    print(f"   respondent_macro: {agg_full_likert['respondent_macro']:.3f}  (expected {expected_full_likert_macro})")
+    print(f"   item_macro:       {agg_full_likert['item_macro']:.3f}  (expected {expected_full_likert_item_macro})")
+    print(f"   pooled:           {agg_full_likert['pooled']:.3f}  (expected {expected_full_likert_pooled})")
+    assert abs(agg_full_likert["respondent_macro"] - expected_full_likert_macro) < 1e-9
+    assert abs(agg_full_likert["item_macro"] - expected_full_likert_item_macro) < 1e-9
+    assert abs(agg_full_likert["pooled"] - expected_full_likert_pooled) < 1e-9
+    print("   ✓ all three aggregations match")
+
+    print("\n[2] Categorical aggregation (Full)")
+    agg_full_cat = aggregate_condition(records, "full", "cat_match_pct")
+    print(f"   respondent_macro: {agg_full_cat['respondent_macro']:.1f}%  (expected {expected_full_cat_macro})")
+    assert abs(agg_full_cat["respondent_macro"] - expected_full_cat_macro) < 1e-9
+    print("   ✓ matches")
+
+    print("\n[3] Bootstrap CI (Full likert_mae)")
+    ci_lo, ci_hi = bootstrap_ci(agg_full_likert["per_respondent_values"], B=1000, seed=42)
+    print(f"   per-respondent values: {agg_full_likert['per_respondent_values']}")
+    print(f"   95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]")
+    # With per-resp values (0.75, 1.75, 0.5) and N=3, CI should be quite wide
+    # but bracket the point estimate 1.0
+    assert ci_lo <= 1.0 <= ci_hi, f"CI [{ci_lo}, {ci_hi}] does not bracket point estimate 1.0"
+    print("   ✓ CI brackets point estimate")
+
+    print("\n[4] Paired bootstrap LOO delta (loo_drop_attitudinal vs full)")
+    # Expected per-respondent deltas:
+    #   LOO_likert_mae per respondent:
+    #     R1: errs [2,2,3,2] → 9/4 = 2.25
+    #     R2: errs [2,1,3,3] → 9/4 = 2.25
+    #     R3: errs [2,1,2,2] → 7/4 = 1.75
+    #   Full per-resp: 0.75, 1.75, 0.5
+    #   Per-resp delta: 2.25-0.75=1.5, 2.25-1.75=0.5, 1.75-0.5=1.25
+    #   mean delta = (1.5 + 0.5 + 1.25)/3 = 3.25/3 ≈ 1.0833
+    expected_mean_delta = (1.5 + 0.5 + 1.25) / 3
+    full_per_resp = aggregate_condition(records, "full", "likert_mae")["per_respondent_values"]
+    loo_per_resp = aggregate_condition(records, "loo_drop_attitudinal", "likert_mae")["per_respondent_values"]
+    delta_result = paired_bootstrap_loo_delta(full_per_resp, loo_per_resp, B=1000, seed=42)
+    print(f"   per-resp Full: {full_per_resp}")
+    print(f"   per-resp LOO:  {loo_per_resp}")
+    print(f"   paired mean Δ:  {delta_result['mean_delta']:.4f}  (expected {expected_mean_delta:.4f})")
+    print(f"   95% CI:         [{delta_result['ci_lo']:.4f}, {delta_result['ci_hi']:.4f}]")
+    print(f"   n_paired:       {delta_result['n_paired_respondents']}")
+    assert abs(delta_result["mean_delta"] - expected_mean_delta) < 1e-9, \
+        f"paired mean delta should equal mean of per-resp deltas; got {delta_result['mean_delta']} vs expected {expected_mean_delta}"
+    assert delta_result["n_paired_respondents"] == 3
+    # Δ should be positive (LOO hurt accuracy → MAE went up)
+    assert delta_result["mean_delta"] > 0
+    print("   ✓ paired delta matches per-resp delta mean exactly (paired bootstrap property)")
+
+    print("\n[5] End-to-end compute_phase1_headline()")
+    headline = compute_phase1_headline(
+        records,
+        conditions=["full", "loo_drop_attitudinal"],
+        metrics=("likert_mae", "cat_match_pct"),
+        bootstrap_B=500,  # smaller for speed
+        seed=42,
+        loo_conditions=("loo_drop_attitudinal",),
+    )
+    full_lik = headline["per_condition"]["full"]["likert_mae"]
+    print(f"   Full likert_mae headline: {full_lik['respondent_macro']:.3f} "
+          f"[{full_lik['respondent_macro_ci_lo']:.3f}, {full_lik['respondent_macro_ci_hi']:.3f}]")
+    delta = headline["loo_deltas"]["loo_drop_attitudinal"]["likert_mae"]
+    print(f"   LOO Δ likert_mae:         {delta['mean_delta']:.3f} "
+          f"[{delta['ci_lo']:.3f}, {delta['ci_hi']:.3f}]")
+    assert abs(full_lik["respondent_macro"] - 1.0) < 1e-9
+    assert delta["mean_delta"] > 0
+    print("   ✓ end-to-end orchestrator works")
+
+    print("\n✓ ALL AUDIT-E AGGREGATION TESTS PASSED")
+
+
 def _audit_d_test():
     """AUDIT-D smoke test: pick a sensitivity_eval item that's also in a feature
     bin, build a sensitivity-pass prompt for one respondent, and assert that
@@ -806,6 +1344,7 @@ def _cli():
     p.add_argument("--print-questions", action="store_true", help="run AUDIT-B: print all 12 primary_eval questions")
     p.add_argument("--test-scoring", action="store_true", help="run AUDIT-C: hand-crafted scoring smoke tests")
     p.add_argument("--test-exclusion", action="store_true", help="run AUDIT-D: sensitivity per-item exclusion test")
+    p.add_argument("--test-aggregation", action="store_true", help="run AUDIT-E: aggregation + paired bootstrap test")
     p.add_argument("--save", type=Path, default=None, help="optionally save full prompt to a file")
     return p.parse_args()
 
@@ -820,6 +1359,8 @@ if __name__ == "__main__":
         _audit_c_test()
     elif args.test_exclusion:
         _audit_d_test()
+    elif args.test_aggregation:
+        _audit_e_test()
     else:
         print("Pipeline scaffold loaded.")
         print(f"  --print-prompt    : AUDIT-A persona-prompt sample (locked)")
