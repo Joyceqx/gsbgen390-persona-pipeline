@@ -1,5 +1,5 @@
 {
-  "version": "0.2-locked-2026-05-05",
+  "version": "0.3-locked-2026-05-05",
   "description": "Phase 1 feature taxonomy mapping GSS variable names to one of {primary_eval, sensitivity_eval, demographic, behavioral, psychological, attitudinal, exclude}. Locked in writing before pipeline runs; will be the OSF pre-registration content for Phase 1b.",
 
   "design": "Path A* (Path B as primary, Path A as sensitivity, applied to GSS 2024 cross-section, N=3,309):\n  - primary_eval: 12 high-variance items, one per construct family. The 4-bin LOO ablation runs against this set.\n  - sensitivity_eval: ~118-item Park v2 GSS list (post their 27-item AVP-overlap removal, minus 15 retired/renamed in 2024). Used ONLY for per-item raw-accuracy comparison to Park v2 Table 3. No LOO.\n  - demographic / behavioral / psychological / attitudinal: feature pool partitioned into the 4 LOO bins.\n  - exclude: utility/meta/derived variables not used in any prompt or eval.",
@@ -58,16 +58,16 @@
     "_note": "Phase 1 feature pool, partitioned into 4 bins. LOO ablation drops one bin at a time from the persona prompt. Declared bins MUST be disjoint from `primary_eval` (validator enforces). Sensitivity-eval items MAY appear in feature bins; per-item exclusion of the prediction target X happens at runtime in gss_pipeline.py. See top-level `leakage_rules` field for the full rule and constructive-auto-correlation caveat.",
 
     "demographic": [
-      "AGE","SEX","RACE","HISPANIC","REGION","EDUC","DEGREE","MARITAL","HOMPOP","BORN","INCOME16",
+      "AGE","SEX","RACE","HISPANIC","ETHNIC","REGION","EDUC","DEGREE","MARITAL","HOMPOP","BORN","INCOME16",
       "PAEDUC","MAEDUC","PADEG","MADEG","REG16","MOBILE16","FAMILY16","FAMDIF16","INCOM16","DWELOWN16",
       "MARTYPE","WIDOWED"
     ],
 
     "behavioral": [
       "ATTEND","PRAY","WRKSTAT","HRS1","TVHOURS","NEWS","VOTE16","VOTE20","PRES16","PRES20",
-      "RELIG","RELIG16","FUND","RELITEN","ETHNIC",
+      "RELIG","RELIG16","FUND","RELITEN",
       "EVWORK","PARTFULL","UNEMP","UNION1","JOBLOSE","JOBFIND",
-      "OWNGUN","HUNT1","GRASS","COMPUSE","WEBMOB","XMOVIE","XMARSEX","HOMOSEX"
+      "OWNGUN","HUNT1","COMPUSE","WEBMOB","XMOVIE"
     ],
 
     "psychological": [
@@ -76,7 +76,7 @@
 
     "attitudinal": [
       "ABDEFECT","ABNOMORE","ABHLTH","ABPOOR","ABRAPE","ABSINGLE",
-      "SPANKING","DIVLAW","SEXEDUC","PILLOK","PORNLAW",
+      "SPANKING","DIVLAW","SEXEDUC","PILLOK","PORNLAW","XMARSEX","HOMOSEX","GRASS",
       "FEHIRE","FEPRESCH","FEFAM",
       "RACDIF2","RACDIF3","RACDIF4","WLTHWHTS","WLTHBLKS","WLTHHSPS","LETIN1A",
       "CONARMY","CONBUS","CONCLERG","CONEDUC","CONFED","CONJUDGE","CONLABOR","CONMEDIC","CONPRESS","CONSCI","CONTV",
@@ -105,6 +105,7 @@
   "_audit": {
     "2026-05-02": "Initial lock post-Bayati: Path A* design, GSS 2024 single-wave snapshot, 3,309 respondents.",
     "2026-05-05": "Codex audit fixes applied:\n  (a) PARTYID removed from `attitudinal` feature bin (it is in primary_eval; declared feature bins are now disjoint from primary_eval).\n  (b) `leakage_rules` field rewritten to be self-consistent — declared feature bins disjoint from primary_eval; sensitivity-eval items MAY appear in features with per-item exclusion when predicted.\n  (c) Constructive auto-correlation explicitly acknowledged as a methodological caveat (not silently allowed).\n  (d) Missingness rule cross-references gss_loader.py MISSING_CODES; aggregation rule cross-references gss_phase1_design.md §10.",
+    "2026-05-05-audit-a": "AUDIT-A (persona-prompt review) found 4 conceptual mis-classifications in feature bins:\n  - ETHNIC moved behavioral → demographic (ancestry/origin is descriptive not behavioral)\n  - XMARSEX moved behavioral → attitudinal (opinion on extramarital sex)\n  - HOMOSEX moved behavioral → attitudinal (opinion on same-sex relations)\n  - GRASS moved behavioral → attitudinal (opinion on marijuana legalization)\n  Net counts: demographic 23→24, behavioral 29→25, attitudinal 80→83. Total features unchanged at 140. No primary_eval / sensitivity_eval changes.",
     "data_source": "GSS 2024 cross-section (3,309 respondents, 973 unique variables, downloaded via GSS Data Explorer)",
     "extract_path": "data/gss/390data1/{batch1,batch2,batch3}/",
     "loader": "gss_loader.py — combines 3 batches horizontally into single DataFrame at 3,309 × 973 after dropping repeated YEAR + ID_ identifier columns from batches 2-3.",
