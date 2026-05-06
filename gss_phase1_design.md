@@ -82,12 +82,20 @@ For each of the 3,309 respondents:
 
 ## 5. Sample size, budget, timeline
 
-| Sub-phase | N | LLM calls | API budget | Wall-clock |
-|---|---|---|---|---|
-| 1a — sanity check | 100 | ~6,000 | $20–30 | 1 week (pipeline build + run + sanity-read) |
-| 1b — primary | 1,500 | ~90,000 | $300–500 | 3–4 weeks (full LOO + sensitivity pass + analysis + writeup) |
-
 The N=1,500 sample is drawn from the 3,309 GSS 2024 respondents. Sampling rule (pre-registered): random sample without replacement, fixed seed = 42, no oversampling on demographics. Optional weighted reanalysis using GSS sampling weights as a robustness check (see §10).
+
+**Multi-model panel as primary** (locked 2026-05-05; see §12 for full rationale): each respondent is queried under all conditions × items by 4 OpenRouter models in parallel. The headline result reports per-model raw accuracy AND a panel headline (median across 4 models). A small GPT-4o anchor on N=50 subset gives direct Park v2 Table 3 comparability.
+
+| Sub-phase | N | LLM calls per respondent | Cost / respondent | Total budget |
+|---|---|---|---|---|
+| 1a — sanity check | 100 | ~712 (primary + sensitivity, 4 cheap models, n=1) | ~$0.24 | **~$25** |
+| 1b — primary | 1,500 | ~712 | ~$0.24 | **~$360** |
+| 1b GPT-4o anchor | 50 (subset of 1b) | 60 (primary only, 5 cond × 12 items × n=2) | ~$0.50 | **~$30** |
+| **Total Phase 1** | | | | **~$420** |
+
+Within the original $300-500 budget, with 4-model robustness as a bonus.
+
+Wall-clock: 1a in 1 week; 1b in 3-4 weeks (LLM run dominated by OpenRouter rate limits, not compute).
 
 ## 6. What Phase 1 produces (and what it does not)
 
@@ -135,7 +143,7 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 
 - **Single-wave snapshot** (GSS 2024 cross-section, N=3,309). No panel data. No earlier-wave data. No test-retest computation.
 - **Persona prediction window**: same-wave (T=2024) feature → same-wave (T=2024) held-out item.
-- **Persona self-consistency** (temp=0.7, multi-sample) is the only "consistency" measure reported in Phase 1; it is a property of the LLM, not of the human respondent.
+- **Stability metric**: **cross-model agreement** across the 4-cheap-model panel (locked 2026-05-05; see §12). Within-model self-consistency only computed on the GPT-4o anchor subset (N=50).
 
 ### 9b. Eval-set composition — Path A* (locked)
 
@@ -195,6 +203,55 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 - Generalization to BFI personality or behavioral games — Phase 2 only.
 
 These constraints carry over into the abstract, headline figures, and reviewer-facing claims of the Phase 1 writeup.
+
+## 12. Multi-model panel design (locked 2026-05-05)
+
+### Rationale
+
+GPT-4o-only Phase 1 would cost ~$900 at N=1500, exceeding the $300-500 budget. More importantly, single-model results conflate "feature-category contribution" with "GPT-4o-specific quirks" — a reviewer could plausibly reject "X is the most predictive feature category" with "but maybe only on GPT-4o."
+
+**Solution**: query the same persona prompts on a **panel of 4 cheap, diverse OpenRouter-available models** as the primary analysis. The headline finding becomes "feature-category contribution to GSS-attitude prediction is robust **across LLM families**" — a stronger claim than single-model GPT-4o.
+
+A small GPT-4o anchor on a 50-respondent subset preserves direct Park v2 Table 3 comparability without blowing budget.
+
+### Locked model panel
+
+| Role | Model | Provider | Input $/M (≈) | Output $/M (≈) | Why this model |
+|---|---|---|---|---|---|
+| Cheap-panel primary | **Qwen-2.5-72B-Instruct** | Alibaba | 0.40 | 0.40 | strong instruction-following; multilingual |
+| Cheap-panel primary | **DeepSeek-V3.1** | DeepSeek | 0.20 | 0.80 | very cheap, strong reasoning |
+| Cheap-panel primary | **MiniMax-M1** (Hailuo) | MiniMax | 0.20 | 1.00 | different RLHF philosophy from above |
+| Cheap-panel primary | **Kimi K2** | Moonshot | 0.40 | 1.00 | long-context strong; 4th distinct family |
+| Anchor | **GPT-4o** | OpenAI | 2.50 | 10.00 | Park v2 used this; direct Table 3 comparability |
+
+**Panel diversity argument**: 4 different teams, 4 different RLHF philosophies, 4 different training corpora. Convergence across all 4 = result generalizes beyond any single model's bias. This is the core methodological strength of the multi-model panel.
+
+### Sampling rules
+
+- **Cheap models**: `n_samples = 1` per (respondent, item, condition). Cross-model agreement (% of items where all 4 models gave the same code) replaces within-model self-consistency as the primary stability metric.
+- **GPT-4o anchor**: `n_samples = 2` per (respondent, item) on N=50 subset, primary conditions only. Restores Park-style within-model self-consistency for the directly-comparable subset. Sensitivity pass NOT run on GPT-4o (cost reasons).
+
+### Headline output extension to multi-model
+
+The aggregation in §10 is computed:
+- **Per model**: each cheap-panel model gets its own respondent-macro / item-macro / pooled headline + bootstrap CIs. Reported alongside in the writeup.
+- **Panel median**: for each (respondent, condition, item, sample-position-equivalent), take the median (Likert) or mode (categorical) across the 4 models. Re-run aggregation on this synthetic "panel respondent." Reported as the primary headline; per-model deltas in supplementary.
+- **GPT-4o anchor**: per-item raw accuracy table on N=50 subset, side-by-side with Park v2 Table 3.
+- **Cross-model agreement**: % of (respondent, item, condition) tuples where all 4 cheap models output the same integer code. Reported as the new "consistency QA metric" replacing within-model self-consistency.
+
+### What the writeup must say (extension to §11 constraints)
+
+- "Our headline is the panel median of 4 models (Qwen, DeepSeek, MiniMax, Kimi). Per-model results are in the supplementary."
+- "Direct comparability to Park v2 Table 3 is via the N=50 GPT-4o anchor subset, not via the cheap-model panel. The cheap-model panel addresses generalization across LLM families; the anchor addresses model-comparability with the established benchmark."
+- "Cross-model agreement at temperature 0.7 (4 cheap models on the same item) is reported as a stability QA metric in lieu of within-model self-consistency. The two are different concepts."
+
+### Pre-registration must declare
+
+Before Phase 1b launches the OSF pre-reg locks:
+- The exact 4-cheap-model list (prevents post-hoc cherry-picking)
+- The N=50 anchor model (GPT-4o) and that it is run only on primary conditions
+- The aggregation method (per-model + panel median + anchor side-by-side)
+- The cross-model agreement metric definition
 
 ---
 
