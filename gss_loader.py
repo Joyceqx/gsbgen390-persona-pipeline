@@ -159,22 +159,66 @@ def _read_batch(batch_dir: Path, spec: dict) -> pd.DataFrame:
 
 @lru_cache(maxsize=1)
 def _full_data() -> pd.DataFrame:
-    """Read all 3 batch .dat files and concatenate horizontally (same row order)."""
+    """Read all 3 batch .dat files and concatenate horizontally.
+
+    GSS Data Explorer splits a single year-filtered extract into multiple batches
+    (each holding a subset of variables but the SAME respondents in the SAME row
+    order). We verify alignment explicitly via repeated YEAR + ID_ columns before
+    concatenating: row counts AND per-row YEAR + ID_ values must match across
+    batches.
+
+    The repeated identifier columns in GSS DE extracts are exactly `YEAR` and
+    `ID_` (with trailing underscore). We keep them only from the first batch.
+    """
     spec = _spec()
-    batches = []
+    batches_raw = []
     for entry in spec["_per_batch"]:
         df = _read_batch(entry["dir"], entry["spec"])
-        # YEAR / ID are repeated across batches — keep only on first batch
-        if batches:
-            df = df.drop(columns=[c for c in ["YEAR", "ID"] if c in df.columns], errors="ignore")
-        batches.append(df)
-    if not batches:
+        batches_raw.append(df)
+    if not batches_raw:
         raise RuntimeError(f"No batch data found under {GSS_BATCHES_DIR}")
-    # Concat columns (assumes same row count + order across batches; GSS DE guarantees this)
-    row_counts = [len(b) for b in batches]
+
+    # Verify row counts match across batches.
+    row_counts = [len(b) for b in batches_raw]
     if len(set(row_counts)) > 1:
-        raise RuntimeError(f"Batch row counts differ: {row_counts}")
-    return pd.concat(batches, axis=1)
+        raise RuntimeError(
+            f"Batch row counts differ — cannot horizontally concat. counts={row_counts}"
+        )
+
+    # Verify per-row alignment via repeated identifier columns YEAR and ID_.
+    # If GSS DE ever changes the row ordering across batches this catches it.
+    ref = batches_raw[0]
+    for col in ("YEAR", "ID_"):
+        if col not in ref.columns:
+            continue  # no reference to align against
+        for i, b in enumerate(batches_raw[1:], start=1):
+            if col not in b.columns:
+                continue
+            same = (ref[col].fillna(-99999) == b[col].fillna(-99999)).all()
+            if not same:
+                first_diff = (ref[col].fillna(-99999) != b[col].fillna(-99999)).idxmax()
+                raise RuntimeError(
+                    f"Batch row alignment failed: batch 0 vs batch {i} disagree on {col!r} "
+                    f"at row index {first_diff} "
+                    f"(batch0={ref.loc[first_diff, col]}, batch{i}={b.loc[first_diff, col]}). "
+                    f"Re-download or re-extract — this should not happen for a single GSS DE extract."
+                )
+
+    # Drop repeated identifier columns from all batches except the first.
+    REPEATED_COLS = ["YEAR", "ID_"]
+    batches = [batches_raw[0]]
+    for b in batches_raw[1:]:
+        batches.append(b.drop(columns=[c for c in REPEATED_COLS if c in b.columns], errors="ignore"))
+
+    full = pd.concat(batches, axis=1)
+    # Sanity: no duplicate column names after the drop.
+    dup_cols = full.columns[full.columns.duplicated()].tolist()
+    if dup_cols:
+        raise RuntimeError(
+            f"Loader produced duplicate columns after batch merge: {sorted(set(dup_cols))[:10]}. "
+            f"Add the duplicate(s) to REPEATED_COLS in gss_loader.py."
+        )
+    return full
 
 
 def load_gss(year: int | None = 2024, columns: list[str] | None = None) -> pd.DataFrame:
@@ -248,7 +292,7 @@ if __name__ == "__main__":
 
     print()
     print("=== check key variables present in spec ===")
-    target = ["YEAR", "ID", "POLVIEWS", "ABANY", "FECHLD", "FEPOL", "CAPPUN", "GUNLAW",
+    target = ["YEAR", "ID_", "POLVIEWS", "ABANY", "FECHLD", "FEPOL", "CAPPUN", "GUNLAW",
              "CONFINAN", "CONLEGIS", "ATTEND", "PRAY", "HAPPY", "SATFIN", "TRUST",
              "RACDIF1", "AGE", "SEX", "RACE", "EDUC", "INCOME", "REGION"]
     var_names = {n.upper() for n, _, _ in spec["variables"]}
@@ -266,7 +310,7 @@ if __name__ == "__main__":
     if len(df) > 0:
         print()
         print("=== sample row (first respondent, key vars only) ===")
-        sample_cols = [c for c in ["YEAR", "ID", "AGE", "SEX", "EDUC", "POLVIEWS", "ABANY", "HAPPY"]
+        sample_cols = [c for c in ["YEAR", "ID_", "AGE", "SEX", "EDUC", "POLVIEWS", "ABANY", "HAPPY"]
                        if c in df.columns]
         if sample_cols:
             row = df.iloc[0][sample_cols]

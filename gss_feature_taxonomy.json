@@ -1,8 +1,20 @@
 {
-  "version": "0.1-locked-2026-05-02",
-  "description": "Phase 1 feature taxonomy mapping GSS variable names to one of {primary_eval, sensitivity_eval, demographic, behavioral, psychological, attitudinal, exclude}. Locked in writing before pipeline runs; identical to OSF pre-registration content.",
-  "design": "Path A* (Path B as primary, Path A as sensitivity):\n  - primary_eval: 12 high-variance items, one per construct family. LOO ablation runs against this.\n  - sensitivity_eval: full Park v2 eval list (~120 items). For per-item Park comparability. No LOO.\n  - demographic / behavioral / psychological / attitudinal: feature pool, partitioned for the 4-bin LOO.\n  - exclude: variables NOT used (utility/meta/derived).\nDisjointness: each variable appears in exactly one bin. Eval items NEVER appear in feature bins.",
-  "missingness_rule": "GSS ballot rotation means not every respondent gets every item. For each (respondent, item), if value is in the missing-codes set {-100..-40} we treat it as absent and EXCLUDE that item from that respondent's feature/eval set. We do NOT impute.",
+  "version": "0.2-locked-2026-05-05",
+  "description": "Phase 1 feature taxonomy mapping GSS variable names to one of {primary_eval, sensitivity_eval, demographic, behavioral, psychological, attitudinal, exclude}. Locked in writing before pipeline runs; will be the OSF pre-registration content for Phase 1b.",
+
+  "design": "Path A* (Path B as primary, Path A as sensitivity, applied to GSS 2024 cross-section, N=3,309):\n  - primary_eval: 12 high-variance items, one per construct family. The 4-bin LOO ablation runs against this set.\n  - sensitivity_eval: ~118-item Park v2 GSS list (post their 27-item AVP-overlap removal, minus 15 retired/renamed in 2024). Used ONLY for per-item raw-accuracy comparison to Park v2 Table 3. No LOO.\n  - demographic / behavioral / psychological / attitudinal: feature pool partitioned into the 4 LOO bins.\n  - exclude: utility/meta/derived variables not used in any prompt or eval.",
+
+  "leakage_rules": {
+    "_summary": "Direct leakage (same item in features AND target eval) is prohibited. Constructive auto-correlation across related items (e.g., abortion battery, confidence battery) is acknowledged as a methodological limitation, NOT prevented — see limitations in gss_phase1_design.md §8.",
+
+    "primary_loo_analysis": "Declared feature bins MUST be disjoint from primary_eval. Validator enforces this. The LOO conditions drop one full bin at a time; no item is ever both in features and in primary_eval.",
+
+    "sensitivity_analysis_per_item": "When predicting a sensitivity-eval item X (X ∈ sensitivity_eval), gss_pipeline.py builds the persona prompt from features that EXCLUDE X. Other sensitivity-eval items that happen to live in feature bins MAY remain in the prompt. This is a per-item exclusion rule, not a per-set exclusion rule, because excluding the entire ~118-item sensitivity_eval from features would empty the psychological bin (most psych-relevant GSS items are ALSO in Park's eval list).\n\nGSS auto-correlation across related items (e.g., predicting ABDEFECT when ABNOMORE is in features) IS a real methodological caveat: the contribution of `attitudinal` features to attitude-prediction will be partly inflated by within-domain correlation with other attitude features. See limitations.",
+
+    "constructive_auto_correlation": "Phase 1 estimates feature-category contribution WITHIN GSS-attitude prediction. Attitudinal-feature contribution is partially driven by within-domain auto-correlation (e.g., abortion-battery items predicting each other). Results should NOT be generalized as 'the LLM persona has high human-simulation fidelity' — they speak only to which feature categories most help GSS-attitudinal-item prediction in a single-wave snapshot. BFI personality and behavioral-game prediction are out of scope (Phase 2 will address)."
+  },
+
+  "missingness_rule": "GSS ballot rotation means not every respondent gets every item. For each (respondent, item), if value is in the missing-codes set MISSING_CODES (defined in gss_loader.py: {-100, -99, -98, -97, -96, -95, -90, -80, -70, -60, -50, -40}) we treat it as absent and EXCLUDE that item from that respondent's feature/eval set for that pass. We do NOT impute. Aggregation rules in gss_phase1_design.md §10 specify how per-respondent metrics are combined into headline numbers under uneven coverage.",
 
   "primary_eval": {
     "_note": "Path B's 12 curated items. Each from a different construct family to minimize within-eval auto-correlation.",
@@ -43,7 +55,7 @@
   },
 
   "feature_bins": {
-    "_note": "Phase 1 feature pool, partitioned into 4 bins. LOO ablation drops one bin at a time from the persona prompt. ALL items here are EXCLUDED from primary_eval and sensitivity_eval to enforce disjoint-set leakage hygiene.",
+    "_note": "Phase 1 feature pool, partitioned into 4 bins. LOO ablation drops one bin at a time from the persona prompt. Declared bins MUST be disjoint from `primary_eval` (validator enforces). Sensitivity-eval items MAY appear in feature bins; per-item exclusion of the prediction target X happens at runtime in gss_pipeline.py. See top-level `leakage_rules` field for the full rule and constructive-auto-correlation caveat.",
 
     "demographic": [
       "AGE","SEX","RACE","HISPANIC","REGION","EDUC","DEGREE","MARITAL","HOMPOP","BORN","INCOME16",
@@ -63,7 +75,6 @@
     ],
 
     "attitudinal": [
-      "PARTYID",
       "ABDEFECT","ABNOMORE","ABHLTH","ABPOOR","ABRAPE","ABSINGLE",
       "SPANKING","DIVLAW","SEXEDUC","PILLOK","PORNLAW",
       "FEHIRE","FEPRESCH","FEFAM",
@@ -80,7 +91,7 @@
       "BIBLE","POSTLIFE","REBORN","SPRTPRSN","RELPERSN"
     ],
 
-    "_resolution_rule": "Two-pass rule:\n  PRIMARY ANALYSIS (LOO with primary_eval 12 items):\n    - Effective features per bin = (declared bin list) MINUS primary_eval.\n    - Items in sensitivity_eval are STILL ALLOWED in feature bins.\n    - This keeps the psychological bin populated (HAPPY/SATFIN/HEALTH/LIFE/FAIR/HELPFUL/TRUST etc.\n      are all in Park's full eval list but they DO appear in feature bins for primary analysis;\n      no leakage because primary_eval items are excluded).\n  SENSITIVITY ANALYSIS (Park-comparable per-item prediction over sensitivity_eval):\n    - For each predicted sensitivity item X, build the persona prompt from features that EXCLUDE X\n      (per-item leakage handling).\n    - All other (non-X) sensitivity items remain in features.\nImplementation: gss_pipeline.py applies this two-pass rule explicitly."
+    "_resolution_rule": "See top-level `leakage_rules` field — declared feature bins are disjoint from primary_eval (validator enforces); sensitivity-eval items MAY appear in feature bins but are excluded per-item when they are the prediction target."
   },
 
   "exclude": {
@@ -91,10 +102,12 @@
     }
   },
 
-  "_audit_2026-05-02": {
-    "data_source": "GSS 2024 cross-section (3,309 respondents, 973 variables, downloaded via GSS Data Explorer)",
+  "_audit": {
+    "2026-05-02": "Initial lock post-Bayati: Path A* design, GSS 2024 single-wave snapshot, 3,309 respondents.",
+    "2026-05-05": "Codex audit fixes applied:\n  (a) PARTYID removed from `attitudinal` feature bin (it is in primary_eval; declared feature bins are now disjoint from primary_eval).\n  (b) `leakage_rules` field rewritten to be self-consistent — declared feature bins disjoint from primary_eval; sensitivity-eval items MAY appear in features with per-item exclusion when predicted.\n  (c) Constructive auto-correlation explicitly acknowledged as a methodological caveat (not silently allowed).\n  (d) Missingness rule cross-references gss_loader.py MISSING_CODES; aggregation rule cross-references gss_phase1_design.md §10.",
+    "data_source": "GSS 2024 cross-section (3,309 respondents, 973 unique variables, downloaded via GSS Data Explorer)",
     "extract_path": "data/gss/390data1/{batch1,batch2,batch3}/",
-    "loader": "gss_loader.py — combines 3 batches horizontally into single DataFrame at 3,309 × 973",
+    "loader": "gss_loader.py — combines 3 batches horizontally into single DataFrame at 3,309 × 973 after dropping repeated YEAR + ID_ identifier columns from batches 2-3.",
     "verified_keys_present": ["POLVIEWS","PARTYID","ABANY","CAPPUN","GUNLAW","FECHLD","FEPOL","RACDIF1","CONFINAN","CONLEGIS","HELPPOOR","SATFIN","HAPPY","ATTEND","TRUST","SATJOB","AGE","SEX","RACE","EDUC","INCOME","REGION"]
   }
 }
