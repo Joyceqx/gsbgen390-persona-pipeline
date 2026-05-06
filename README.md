@@ -23,22 +23,35 @@ If you (or future-Claude) walked in cold, read these in order:
 
 ## How to run the pipelines
 
-### Phase 1 (GSS public, in progress)
+### Phase 1 (GSS public — pipeline built; needs OpenRouter API key for actual runs)
 
-Validate the locked taxonomy + loader (no API, ~30s):
+**No-API validation** (~30s):
 ```bash
 cd ~/Documents/GSBGEN390
-python3 gss_loader.py            # smoke-test loader, prints variable + label sample
-python3 validate_taxonomy.py     # checks variable presence, bin disjointness, coverage
+python3 gss_loader.py             # loader smoke
+python3 validate_taxonomy.py      # 9-check validator
+python3 gss_pipeline.py --print-prompt          # AUDIT-A
+python3 gss_pipeline.py --print-questions       # AUDIT-B
+python3 gss_pipeline.py --test-scoring          # AUDIT-C
+python3 gss_pipeline.py --test-exclusion        # AUDIT-D
+python3 gss_pipeline.py --test-aggregation      # AUDIT-E
+python3 gss_pipeline.py --test-multimodel       # multi-model panel test
 ```
 
-Run the full Phase 1 pipeline (NOT YET BUILT — task #10):
+**Real LLM runs** (need OpenRouter API key — `echo "sk-or-v1-..." > OpenRouter_api.txt`):
 ```bash
-# Coming next:
-# python3 gss_pipeline.py --n 10        # smoke test, ~$1
-# python3 gss_pipeline.py --n 100       # Phase 1a sanity, ~$30
-# python3 gss_pipeline.py --n 1500      # Phase 1b primary, ~$300-500
+python3 llm_router.py --smoke-one               # ~$0.001 — verify connectivity
+python3 llm_router.py --smoke-panel             # ~$0.005 — verify all 4 models respond
+python3 gss_driver.py --smoke                   # ~$0.02 — 1 resp / 1 model / primary
+python3 gss_driver.py --n 10 --primary-only     # ~$0.70 — full panel, primary only
+python3 gss_driver.py --n 10                    # ~$2.00 — primary + sensitivity
+python3 gss_driver.py --anchor --n 50           # GPT-4o anchor on N=50
+python3 gss_driver.py --n 1500                  # Phase 1b primary (after OSF pre-reg)
 ```
+
+Output: `outputs/gss_phase1_records_n{N}_*.json` (atomic-write per respondent; `--resume` default-on).
+
+See **STATUS.md** for the full work-tree, locked design references, and known runtime gotchas.
 
 ### Pilot phase (Cookiy, completed)
 

@@ -1,6 +1,6 @@
-# Project Status — GSBGEN390 Phase 1 Underway
+# Project Status — GSBGEN390 Phase 1 Pipeline Built
 
-**Last updated:** 2026-05-02 (Phase 1 build phase: GSS data + loader + taxonomy locked; pipeline adapter next)
+**Last updated:** 2026-05-05 evening (all 5 audit checkpoints locked + LLM dispatcher + driver + multi-model aggregation built; only smoke run remaining before pre-reg)
 **Maintained by:** Joyce Yu + collaborating Claude session
 
 This document is the single-source-of-truth for what's done, what's pending, and how to pick up the project in a fresh terminal, Claude Code CLI, or Claude Cowork session.
@@ -9,35 +9,88 @@ This document is the single-source-of-truth for what's done, what's pending, and
 
 ## TL;DR for a fresh session
 
+**The full Phase 1 pipeline is built.** Joyce just needs to: (1) get an OpenRouter API key, (2) drop it in `OpenRouter_api.txt`, (3) run smoke tests in the documented order. After smoke green: OSF pre-registration → Phase 1a → Phase 1b.
+
 The project has **two sequential phases**, both scoped at the Bayati meeting (2026-05-02):
 
 ### ✅ Pilot phase (completed 2026-04-30)
 End-to-end replication of Park et al. at N=2 + N=1 via Cookiy. Pipeline + dashboard + leakage audit shipped. GitHub repo: https://github.com/Joyceqx/gsbgen390-persona-pipeline. Live dashboard: https://joyceqx.github.io/gsbgen390-persona-pipeline/
 
-### 🟡 Phase 1: GSS public-data feature-importance analysis (IN PROGRESS, 2026-05-02→)
-**Goal**: attack the GSS-attitudes row of Park's outcome × feature-category matrix at N≈1,500, using free GSS public panel data (no Cookiy collection needed).
+### 🟢 Phase 1: GSS public-data feature-importance analysis — pipeline complete
 
-**Locked design (Path A\*)**:
-- **Snapshot prediction** on a single GSS wave (2024 cross-section, N=3,309)
-- **Primary eval (Path B)**: 12 curated high-variance attitudinal items — supports meaningful 4-bin LOO
-- **Sensitivity eval (Path A)**: Park's full ~118 GSS items — for per-item Park-comparable accuracy
-- **Feature pool**: 140 GSS variables partitioned into 4 bins (23 demographic / 29 behavioral / 8 psychological / 80 attitudinal)
-- **Raw accuracy** as primary metric (no test-retest normalization in Phase 1; deferred to Phase 2)
-- **Persona self-consistency** (temp=0.7 multi-sample) reported as supplementary stability check
+**Goal**: attack the GSS-attitudes row of Park's outcome × feature-category matrix at N≈1,500, using free GSS public panel data + 4-cheap-OpenRouter-model panel + GPT-4o anchor on N=50.
+
+**Locked design (Path A\* + multi-model panel)**:
+- **Snapshot prediction** on GSS 2024 cross-section (N=3,309 respondents, 973 variables)
+- **Primary eval (Path B)**: 12 curated high-variance attitudinal items → supports 4-bin LOO ablation
+- **Sensitivity eval (Path A)**: Park's full ~118 GSS items → per-item Park-comparable accuracy
+- **Feature pool**: 140 variables across 4 bins (24 demographic / 25 behavioral / 8 psychological / 83 attitudinal — taxonomy v0.3 after audit-A reclassification of HOMOSEX/XMARSEX/GRASS to attitudinal, ETHNIC to demographic)
+- **LLM panel (PRIMARY)**: 4 OpenRouter models, n_samples=1 each:
+  - Qwen-2.5-72B-Instruct
+  - DeepSeek-V3.1
+  - MiniMax-M1
+  - Kimi K2
+- **GPT-4o anchor**: on N=50 subset, primary conditions only, n_samples=2 → direct Park v2 Table 3 comparability
+- **Stability metric**: cross-model agreement % (replaces within-model self-consistency for cheap-panel; restored on anchor subset)
+- **Aggregation**: respondent-macro PRIMARY; bootstrap CIs at respondent level B=1000; LOO ΔMAE via PAIRED bootstrap (resample once, compute Full and LOO from same resample, then delta)
+- **Raw accuracy** primary metric — no test-retest normalization (deferred to Phase 2)
 - **Pre-registration** on OSF before Phase 1b launches
 
+**Phase 1 budget**: ~$420 total at N=1500 (within original $300-500 envelope).
+
 **State**:
-- ✅ GSS 2024 data downloaded (973 unique variables × 75,699 rows from cumulative; 3,309 in 2024)
-- ✅ `gss_loader.py` reads the 3-batch fixed-width extract; verified 22/22 key Park variables present with correct labels
-- ✅ `gss_feature_taxonomy.json` locked + validated (all 140 features + 12 primary_eval + 118 sensitivity_eval present in data; bins disjoint)
-- 🟡 `gss_pipeline.py` (persona-prompt builder + LLM dispatcher + scorer) — next
-- 🔒 N=10 smoke test
-- 🔒 OSF pre-registration
-- 🔒 Phase 1a (N=100, ~$30) sanity check
-- 🔒 Phase 1b (N=1500, ~$300-500) primary
+- ✅ GSS 2024 data downloaded (3-batch fixed-width extract from GSS DE)
+- ✅ `gss_loader.py` reads the 3-batch extract → 3,309 × 973 DataFrame; 22/22 key Park variables verified
+- ✅ `gss_feature_taxonomy.json` v0.3 locked + 9-check validator passes
+- ✅ AUDIT-A persona prompt template (locked + smoke test)
+- ✅ AUDIT-B eval question phrasing — 4 stem overrides for canonical GSS wording (locked + smoke test)
+- ✅ AUDIT-C scoring rules — Likert MAE / categorical match / PARTYID contingent treatment (7 hand assertions pass)
+- ✅ AUDIT-D sensitivity per-item exclusion (3-target smoke test with hard assertions)
+- ✅ AUDIT-E aggregation — respondent-macro / item-macro / pooled + bootstrap CI + paired-bootstrap LOO Δ (5 hand assertions)
+- ✅ Multi-model extension to AUDIT-E — per-model + panel-median + cross-model agreement (synthetic 4-model × 2-resp test)
+- ✅ `llm_router.py` — OpenRouter / OpenAI client with retry/backoff
+- ✅ `gss_driver.py` — top-level orchestrator with atomic-write resumability
+- 🟡 **N=10 smoke test on real LLM data** ← needs OpenRouter API key
+- 🔒 OSF pre-registration draft (after smoke green)
+- 🔒 Phase 1a (N=100, ~$25) sanity check
+- 🔒 Phase 1b (N=1500, ~$420) primary
 
 ### 🔮 Phase 2: targeted Cookiy collection (planned, not started)
 Will cover BFI-44 personality + behavioral game outcomes that GSS doesn't measure. Includes 2-week recontact for proper test-retest baseline. Smaller N (~30-100). Design in `thesis_phase2_design.md`.
+
+---
+
+## What changed 2026-05-05 (audit checkpoints + LLM panel build)
+
+### 5 audit checkpoints all locked
+1. ✅ **AUDIT-A** persona prompt template — Park-style "you are this person" preamble + 4 fixed-order bin sections + alphabetical within-bin + missing-coded items omitted. Smoke: `--print-prompt`.
+2. ✅ **AUDIT-B** eval question phrasing — unified format (GSS question + numbered option list + "output single integer code"). 4 stem overrides for FECHLD/FEPOL/RACDIF1/HELPPOOR with canonical GSS codebook wording. PARTYID presents all 8 codes 0-7. Smoke: `--print-questions`.
+3. ✅ **AUDIT-C** scoring rules — Likert MAE for likert3-7, categorical exact-match for binary, contingent treatment for PARTYID (Likert on 0-6, categorical when either side = 7 'Other party'). Parse failures tracked separately. Self-consistency at temp=0.7. 7 hand-test assertions pass (`--test-scoring`).
+4. ✅ **AUDIT-D** sensitivity per-item exclusion — `build_persona_prompt(exclude_vars=...)` drops listed variables from all bins. Hard assertion: when excluding X, X disappears AND other items remain. Smoke: `--test-exclusion` (3 targets).
+5. ✅ **AUDIT-E** aggregation — respondent-macro PRIMARY (each respondent equal weight); item-macro and pooled SECONDARY. Bootstrap CIs at respondent level B=1000. LOO ΔMAE via PAIRED bootstrap (locked rule from §10: resample respondents once, compute Full and LOO on same resample, then delta). 5 hand-test assertions pass (`--test-aggregation`).
+
+### Multi-model panel redesign (locked 2026-05-05)
+Original GPT-4o-only would cost ~$900 at N=1500 (over budget). Redesigned to a **4-model OpenRouter panel** as primary + **GPT-4o anchor on N=50** for Park-comparability:
+
+| Role | Model | Budget at N=1500 |
+|---|---|---|
+| Cheap-panel (n=1, all conditions, all items) | Qwen-2.5-72B + DeepSeek-V3.1 + MiniMax-M1 + Kimi K2 | ~$360 |
+| Anchor (n=2, primary conditions only, N=50) | GPT-4o | ~$30 |
+| **Total Phase 1b** | | **~$420** |
+
+**Methodological strengthening**: "feature-category contribution generalizes across 4 LLM families" is a stronger thesis claim than "tested on GPT-4o." Anchor preserves direct Park v2 Table 3 comparison. Cross-model agreement % replaces within-model self-consistency as primary stability metric. See `gss_phase1_design.md` §12 for full rationale.
+
+### Built this session
+- **`llm_router.py`** (254 lines) — OpenRouter / OpenAI client with 8-attempt exponential backoff (caps at 60s), `call_panel()` for multi-model, locked panel constants, smoke-test CLI (`--smoke-one`, `--smoke-panel`, `--smoke-anchor`).
+- **`gss_driver.py`** (369 lines) — top-level orchestrator. `run_phase1(n, models, ...)` runs respondents × conditions × items × models with atomic-write resumability (every respondent's records persisted before next; SIGINT-safe via `--resume`). CLI flags: `--smoke`, `--anchor`, `--n`, `--primary-only`, `--sensitivity-only`, `--models`, `--no-resume`.
+- **gss_pipeline.py multi-model extension** (305 lines added) — `compute_phase1_headline_multimodel()` returns per-model headlines + panel-median synthesis + cross-model agreement %. Smoke test: `--test-multimodel`.
+
+### Codex audits passed
+- First audit (post-pilot tidy): 5 critical + 5 important issues fixed (commit `6947c70`).
+- Second audit (AUDIT A-D scaffold): 4 important + 4 minor issues fixed; no critical issues found (commit `d00cb17`).
+
+### Status of locked decisions (no changes since 05-02)
+All Bayati-endorsed direction (Phase split / 4-bin taxonomy / pre-registration commitment) and AUDIT A-E decisions still locked. Multi-model panel is an ADDITION to the locked design (in §12), not a change to it.
 
 ---
 
@@ -131,7 +184,7 @@ Will cover BFI-44 personality + behavioral game outcomes that GSS doesn't measur
 
 ---
 
-## Current work tree (updated 2026-05-02)
+## Current work tree (updated 2026-05-05)
 
 ```
 GSBGEN390/
@@ -140,6 +193,7 @@ GSBGEN390/
 ├── README.md                          ← front door
 ├── STATUS.md                          ← this file (single-source-of-truth)
 ├── CLAUDE.md                          ← guidance for AI assistants in this folder
+├── AGENTS.md                          ← guidance for Codex (parallel of CLAUDE.md)
 ├── PRIMER.md                          ← 1-2 page Joyce self-intro
 ├── MEETING_HANDOUT.md                 ← one-page brief for Bayati meeting (pilot)
 ├── WRITEUP.md                         ← 3-5 page formal pilot write-up
@@ -153,12 +207,21 @@ GSBGEN390/
 ├── COLAB_RUN_GUIDE.md                 ← Colab fallback instructions
 │
 ├── ── PHASE 1 (GSS-PUBLIC) DESIGN + ARTIFACTS ──
-├── gss_phase1_design.md               ← Phase 1 locked design (Path A*, snapshot, raw acc)
+├── gss_phase1_design.md               ← Phase 1 locked design (Path A*, snapshot, raw acc, multi-model panel §12)
 ├── gss_variables_to_download.md       ← record of GSS Data Explorer variable list
-├── gss_feature_taxonomy.json          ← LOCKED: 12 primary_eval, 118 sensitivity_eval, 140 features × 4 bins
+├── gss_feature_taxonomy.json          ← LOCKED v0.3: 12 primary_eval, 118 sensitivity_eval, 140 features × 4 bins
 ├── gss_loader.py                      ← reads 3-batch GSS extract → pandas DataFrame; label-set namespacing
-├── validate_taxonomy.py               ← sanity-check: variables exist, bins disjoint, coverage stats
-│   (next: gss_pipeline.py, gss_phase1_results.csv, gss_pipeline_logs/)
+├── validate_taxonomy.py               ← 9-check validator: vars exist, bins disjoint, coverage, missingness
+├── gss_pipeline.py                    ← AUDIT primitives: persona prompt builder, eval question formatter, scorer, aggregation, multi-model panel synthesis
+├── llm_router.py                      ← OpenRouter / OpenAI client with retry+backoff; locked model panel
+├── gss_driver.py                      ← top-level orchestrator: respondents × conditions × items × models loop with atomic-write resumability
+│
+├── ── EXPECTED-AT-RUNTIME (after smoke test, gitignored where appropriate) ──
+│   outputs/gss_phase1_records_n{N}_*.json          ← raw LLM outputs + scores per (resp, cond, model)
+│   outputs/gss_phase1_per_respondent.csv           ← per-respondent metrics (built post-run)
+│   outputs/gss_phase1_headline.csv                 ← multi-model headline + LOO ΔMAE + CIs
+│   outputs/gss_phase1_persona_answers.json         ← diagnostic per-item record
+│   OpenRouter_api.txt                              ← (gitignored) OpenRouter API key
 │
 ├── ── PHASE 2 (COOKIY-TARGETED) DESIGN ──
 ├── thesis_phase2_design.md            ← Phase 2 design (BFI + econ games, smaller N + 2-week recontact)
@@ -251,11 +314,13 @@ GSBGEN390/
 | File | Read by | Written by |
 |---|---|---|
 | `data/gss/390data1/batch{1,2,3}/GSS.{dat,do}` | `gss_loader.py` | (downloaded from GSS Data Explorer 2026-05-02) |
-| `gss_loader.py` | `validate_taxonomy.py`, `gss_pipeline.py` (next) | (manual) |
-| `gss_feature_taxonomy.json` | `validate_taxonomy.py`, `gss_pipeline.py` (next) | (locked manual + Bayati endorsement 2026-05-02) |
+| `gss_loader.py` | `validate_taxonomy.py`, `gss_pipeline.py`, `gss_driver.py` | (manual) |
+| `gss_feature_taxonomy.json` (v0.3) | `validate_taxonomy.py`, `gss_pipeline.py`, `gss_driver.py` | (locked, audit-revised 2026-05-05) |
 | `validate_taxonomy.py` | (manual integrity check) | — |
-| `gss_pipeline.py` (NOT YET WRITTEN) | (top-level driver) | — |
-| `outputs/gss_phase1_results.csv` (NOT YET WRITTEN) | — | `gss_pipeline.py` |
+| `gss_pipeline.py` | `gss_driver.py` (calls AUDIT primitives), aggregation post-run | (built 2026-05-05) |
+| `llm_router.py` | `gss_driver.py` (LLM calls) | (built 2026-05-05) |
+| `gss_driver.py` | (top-level CLI) | — |
+| `outputs/gss_phase1_records_n{N}_*.json` | (post-run aggregation script, TBD) | `gss_driver.py` (atomic-write per respondent) |
 
 ---
 
@@ -267,26 +332,74 @@ cd ~/Documents/GSBGEN390
 # Read in this order for Phase 1 context:
 #   1. STATUS.md (this file) — current state
 #   2. CLAUDE.md — guidance for AI assistants
-#   3. gss_phase1_design.md — Phase 1 locked design
-#   4. gss_feature_taxonomy.json — eval and feature lists
+#   3. gss_phase1_design.md — Phase 1 locked design (esp. §10 aggregation, §12 multi-model panel)
+#   4. gss_feature_taxonomy.json — eval and feature lists (v0.3)
 # Then for pilot context:
 #   5. MEETING_HANDOUT.md, WRITEUP.md, progress_report.md
 ```
 
-### Phase 1 commands (current session)
+### Phase 1 — IMMEDIATE NEXT STEP (task #6: N=10 smoke test)
 
-**Validate the loaded GSS extract + taxonomy** (no API):
+**1. Get an OpenRouter API key:** https://openrouter.ai/keys → load $5 in credits.
+
+**2. Drop the key in the project root** (file is gitignored):
 ```bash
-python3 gss_loader.py            # smoke test loader, ~30s for 75K-row .dat parse
-python3 validate_taxonomy.py     # check variable presence + bin disjointness + coverage
+echo "sk-or-v1-XXXXXX..." > ~/Documents/GSBGEN390/OpenRouter_api.txt
+git status   # confirm OpenRouter_api.txt is NOT shown — gitignored via *api* pattern
 ```
 
-**Run Phase 1 pipeline** (NOT YET BUILT — task #10):
+**3. Run smoke tests in escalating order:**
 ```bash
-# Will be: python3 gss_pipeline.py --n 10        # smoke test, ~$1
-# Will be: python3 gss_pipeline.py --n 100       # Phase 1a sanity, ~$30
-# Will be: python3 gss_pipeline.py --n 1500      # Phase 1b primary, ~$300-500
+cd ~/Documents/GSBGEN390
+
+# (a) Verify API key works on one model — ~$0.001, ~5s
+python3 llm_router.py --smoke-one
+
+# (b) Verify the 4-model panel responds — ~$0.005, ~30s
+python3 llm_router.py --smoke-panel
+
+# (c) Single respondent / single model / primary only — ~$0.02, ~1 min
+python3 gss_driver.py --smoke
+
+# (d) Full N=10 panel, primary only — ~$0.70, ~30-60 min sequential
+python3 gss_driver.py --n 10 --primary-only
+
+# (e) (optional) Full N=10 with sensitivity pass — ~$2.00, ~2-3 hours sequential
+python3 gss_driver.py --n 10
 ```
+
+**4. After smoke green:** commit the records JSON (it's anonymized — only respondent ID_ codes + LLM outputs, no transcripts), then move to OSF pre-registration draft (task #7).
+
+### Phase 1 — already-validated commands (no API; safe anytime)
+
+```bash
+# Loader + taxonomy validation
+python3 gss_loader.py
+python3 validate_taxonomy.py
+
+# Audit checkpoint smoke tests (all pass; pure synthetic + parsed data)
+python3 gss_pipeline.py --print-prompt          # AUDIT-A
+python3 gss_pipeline.py --print-questions       # AUDIT-B
+python3 gss_pipeline.py --test-scoring          # AUDIT-C
+python3 gss_pipeline.py --test-exclusion        # AUDIT-D
+python3 gss_pipeline.py --test-aggregation      # AUDIT-E
+python3 gss_pipeline.py --test-multimodel       # multi-model extension
+```
+
+### Driver CLI reference
+
+```bash
+python3 gss_driver.py --smoke                   # 1 resp / 1 model / primary only (cheapest)
+python3 gss_driver.py --n 10 --primary-only     # full panel, primary only
+python3 gss_driver.py --n 10                    # full panel + sensitivity pass
+python3 gss_driver.py --anchor --n 50           # GPT-4o anchor on N=50, primary only, n=2
+python3 gss_driver.py --n 1500                  # Phase 1b primary (after pre-reg)
+python3 gss_driver.py --n 1500 --sensitivity-only  # fill in sensitivity after primary done
+python3 gss_driver.py --models qwen/qwen-2.5-72b-instruct  # custom model list
+python3 gss_driver.py --no-resume               # ignore existing output, start fresh
+```
+
+Output format: each run writes `outputs/gss_phase1_records_n{N}_*.json` — a JSON list of records, one per (respondent, condition, model). Per-item per-sample scores nested inside `per_item_scores`. Atomic-write per respondent — kill the process and resume with the same command + default `--resume` (on by default).
 
 ### Pilot phase commands (still works, for the Cookiy pipeline)
 
@@ -311,7 +424,16 @@ python3 build_site_data.py
 **Phase 1 / GSS:**
 - GSS DE splits the 973-variable extract into **3 batches** — `gss_loader.py` merges them horizontally. If you re-download, expect 3 batch folders.
 - Label-set names (e.g., `GSP002X`) **collide across batches** with different contents. The loader namespaces them per-batch (`b0_GSP002X`, `b1_GSP002X`) to avoid wrong labels.
-- GSS missing-value codes are negative integers in `{-100, -99, -98, -97, -96, -95, -90, -80, -70, -60, -50, -40}`. Loader exposes `is_missing()` helper. **Ballot rotation** means many GSS items aren't asked of every respondent; pre-registration must commit to handling.
+- The repeated identifier columns are `YEAR` AND `ID_` (with trailing underscore). Loader drops `ID_` from batches 2-3 and asserts row alignment via per-row equality on YEAR + ID_. Final shape = 3,309 × 973.
+- GSS missing-value codes are negative integers in `{-100, -99, -98, -97, -96, -95, -90, -80, -70, -60, -50, -40}`. Loader exposes `is_missing()` and `truth_code_or_none()` helpers. **Ballot rotation** means many GSS items aren't asked of every respondent; aggregation rule (gss_phase1_design.md §10) handles via respondent-macro averaging.
+
+**Phase 1 / LLM panel:**
+- OpenRouter API key required before any actual LLM call. Put in `OpenRouter_api.txt` at project root (gitignored via `*api*` pattern).
+- The 4-cheap-panel run is sequential (~30-60 min for N=10 primary). Could parallelize via threadpool/async — not a priority; smoke first.
+- Each model has different rate limits on OpenRouter. Dispatcher has 8-attempt exponential backoff (caps at 60s/delay) for 429/timeout/connection/5xx errors.
+- `gss_driver.py` writes `outputs/gss_phase1_records_n{N}_*.json` atomically per respondent. Resumable: rerun the same command and it skips already-done (respondent, condition, model) tuples.
+- PARTYID code 7 = "Other party" is contingent: scored as Likert MAE on 0-6, categorical exact-match when either side outputs 7 (per AUDIT-C.3).
+- HELPPOOR has sparse codebook anchors at 1, 3, 5; codes 2 and 4 are valid intermediate positions (per AUDIT-B.4 instruction).
 
 **Pilot phase:**
 - TPM rate limit: account is at 30K tokens/min for gpt-4o. Condition C prompts hit this; the runner has retry+exponential-backoff.
@@ -360,4 +482,10 @@ python3 build_site_data.py
 - **2026-04-30 late night — Thesis-stage two-phase plan committed.** Phase 1 = GSS public-data feature-importance (`gss_phase1_design.md`). Phase 2 = interview-decomposed study (`thesis_phase2_design.md`). Phase 2 replaces an earlier "paired structured survey" idea after Joyce noted that the actual question — *what's IN the interview that surveys can't capture* — requires interview decomposition, not survey-feature ablation. Phase 2 forces a platform pivot: Cookiy 15-min cap is incompatible with 30-45 min modular long interview, so Phase 2 will use Prolific + a self-hosted OpenAI Realtime API moderator. Composed deliverable = the full 4×3 feature-category × outcome-dimension matrix.
 - **2026-04-30 night — Park v1 vs v2 reconciliation + outcome-stratified narrative pivot.** Verified directly from both v1 and v2 PDFs that the proposal's "85%" headline came from v1's interview-based normalized accuracy (~0.85), while v2 reorganized conditions and reports the four numbers we now cite (74/82/83/86%). Both versions live at the same arXiv ID; we adopt v2 framing throughout. **Critical refinement**: the "surveys ≈ interview" tie holds only on GSS attitudes — v2 also reports surveys lagging interviews by 0.15 on BFI-44 personality and by 0.28 on behavioral economic games. Thesis question reframed from "can surveys substitute for interviews?" to **outcome-stratified** "which feature categories close which parts of that gap on which outcomes?" Batch update propagated through `MEETING_HANDOUT.md`, `README.md`, `replication_scoping.md`, `EXPLAIN_ZH.md`, `LIT_REVIEW.md`, `PRIMER.md`, `FUTURE_DESIGN.md`, `progress_report.md`, `docs/index.html`, and this STATUS file.
 - **2026-05-02 — Bayati meeting; Phase 1 design locked.** Direction confirmed: GSS-first then targeted Cookiy. **Path A\* locked**: Path B (12 curated items) as primary for the LOO; Path A (Park's full ~118 items) as sensitivity. Snapshot prediction on a single GSS wave (no panel for prediction). Raw accuracy as primary metric — no test-retest normalization in Phase 1; deferred to Phase 2's recontact arm. Persona self-consistency reported as supplementary stability check. Resolution rule for disjoint sets: features = (declared bin lists) MINUS primary_eval (only); sensitivity-pass handles per-item leakage separately. This rule preserves a populated psychological feature bin in GSS, which would otherwise be empty.
-- **2026-05-02 — Phase 1 data + tooling shipped.** GSS 2024 cross-section (3,309 respondents × 973 unique variables) downloaded via GSS Data Explorer in 3-batch fixed-width format. `gss_loader.py` written: parses each batch's `.do` script for column specs + variable labels + value labels, reads the corresponding `.dat` fixed-width file, namespaces label-set names per batch (avoids cross-batch label collisions), merges 3 batches horizontally. Verified 22/22 key Park variables present with correct labels. `gss_feature_taxonomy.json` locked: 12 primary_eval items + 118 sensitivity_eval items + 140 features (23 demographic / 29 behavioral / 8 psychological / 80 attitudinal). `validate_taxonomy.py` confirms variable presence, bin disjointness, per-respondent coverage. Next: `gss_pipeline.py` (persona-prompt builder + LLM dispatcher + scorer adapted for GSS rows).
+- **2026-05-02 — Phase 1 data + tooling shipped.** GSS 2024 cross-section (3,309 respondents × 973 unique variables) downloaded via GSS Data Explorer in 3-batch fixed-width format. `gss_loader.py` written: parses each batch's `.do` script for column specs + variable labels + value labels, reads the corresponding `.dat` fixed-width file, namespaces label-set names per batch (avoids cross-batch label collisions), merges 3 batches horizontally. Verified 22/22 key Park variables present with correct labels. `gss_feature_taxonomy.json` locked: 12 primary_eval items + 118 sensitivity_eval items + 140 features (23 demographic / 29 behavioral / 8 psychological / 80 attitudinal). `validate_taxonomy.py` confirms variable presence, bin disjointness, per-respondent coverage.
+- **2026-05-05 morning — Codex audit fixes (1st round).** 5 critical issues fixed: (a) gss_phase1_design.md rewritten end-to-end to match locked snapshot/raw-accuracy design (was internally inconsistent, mixing old 2010-2014 panel design with new 2024 snapshot); (b) Park comparability claims softened to "raw / per-item" only ("not directly numerically comparable to Park's normalized accuracy"); (c) feature-bin leakage rule rewritten to be self-consistent — declared bins disjoint from primary_eval, sensitivity items may be in features with per-item exclusion; (d) PARTYID removed from attitudinal feature bin (it's in primary_eval); (e) loader batch merge now verifies row alignment via per-row YEAR + ID_ equality, fixed ID_ vs ID column drop bug (final shape now correctly 973). validate_taxonomy.py rewritten with 9 explicit checks; raises SystemExit(1) on failure.
+- **2026-05-05 morning — gss_pipeline.py AUDIT-A built + taxonomy v0.3.** Persona prompt template scaffold; AUDIT-A inspection of a sample prompt revealed 4 conceptual mis-categorizations: ETHNIC moved behavioral → demographic; XMARSEX/HOMOSEX/GRASS moved behavioral → attitudinal (these GSS items ask opinions, not behaviors). Net counts now: demographic 24, behavioral 25, psychological 8, attitudinal 83 (still 140 total).
+- **2026-05-05 mid-day — AUDIT B/C/D scaffold + Codex audit fixes (2nd round).** AUDIT-B eval question phrasing: unified format (GSS question + numbered options + "output single integer"). 4 stem overrides for FECHLD/FEPOL/RACDIF1/HELPPOOR with canonical GSS codebook wording (overrides terse `.do` `label var` summaries that were ambiguous). PARTYID presents all 8 codes 0-7. AUDIT-C scoring: Likert MAE for likert3-7, categorical for binary, contingent treatment for PARTYID code 7, parse-failure tracking, missing-truth handling (truth_code_or_none helper). 7 hand-test assertions pass. AUDIT-D sensitivity per-item exclusion: build_persona_prompt(exclude_vars=...). Hard-asserted smoke test: when excluding X, X disappears from prompt AND other sensitivity items remain. 2nd Codex audit: 4 important + 4 minor issues — all fixed (assertion strength, missing-truth converter, paired-bootstrap explicit, stale docstrings, etc.).
+- **2026-05-05 afternoon — AUDIT-E aggregation built.** Respondent-macro (PRIMARY) + item-macro + pooled (secondary). Bootstrap CIs at respondent level B=1000 percentile. LOO ΔMAE via PAIRED bootstrap (resample respondents once, compute Full and LOO from same resample, then delta — explicitly enforced in code, with caveat that mathematically equivalent to bootstrap of per-respondent paired deltas). 5 hand-test assertions pass.
+- **2026-05-05 evening — multi-model panel redesign (locked).** GPT-4o-only would cost ~$900 at N=1500 (over budget). Redesigned to **4 OpenRouter cheap models** (Qwen-2.5-72B / DeepSeek-V3.1 / MiniMax-M1 / Kimi K2) with n_samples=1 each as PRIMARY + **GPT-4o anchor** on N=50 subset, primary conditions only, n_samples=2 for direct Park v2 Table 3 comparability. Headline = panel median across 4 cheap models; cross-model agreement % replaces within-model self-consistency as primary stability metric. Pre-registration must declare the exact 4-cheap-model list. Total Phase 1b budget ~$420 (within $300-500 envelope). Methodological strengthening: "feature-category contribution generalizes across 4 LLM families" is a stronger claim than "tested on GPT-4o." See gss_phase1_design.md §12.
+- **2026-05-05 evening — LLM dispatcher + driver + multi-model aggregation built.** llm_router.py (OpenRouter / OpenAI client with 8-attempt exponential backoff, locked panel constants, smoke-test CLI). gss_driver.py (top-level orchestrator with atomic-write resumability per respondent; CLI: --smoke / --anchor / --n / --primary-only / --sensitivity-only / --models / --no-resume). gss_pipeline.py extended with multi-model aggregation: filter_records_by_model, synthesize_panel_median_records (median across models, snap to valid code, re-score), cross_model_agreement_pct, compute_phase1_headline_multimodel orchestrator. All 6 audit smoke tests pass; multi-model orchestrator tested on synthetic 4-model × 2-resp data with hand-checked agreement % and panel-median values. **Pipeline is 100% built.** Joyce just needs OpenRouter API key + run smoke tests in documented order.
