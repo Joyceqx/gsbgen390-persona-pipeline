@@ -1,6 +1,6 @@
-# Project Status — GSBGEN390 Phase 1 Pipeline Built
+# Project Status — GSBGEN390 Phase 1 Pipeline Built + Two Design Upgrades
 
-**Last updated:** 2026-05-05 evening (all 5 audit checkpoints locked + LLM dispatcher + driver + multi-model aggregation built; only smoke run remaining before pre-reg)
+**Last updated:** 2026-05-06 (post-Codex audit fixes + two locked design upgrades: model-selection rule for 1a→1b, theory-driven secondary analysis pending Joyce's literature review)
 **Maintained by:** Joyce Yu + collaborating Claude session
 
 This document is the single-source-of-truth for what's done, what's pending, and how to pick up the project in a fresh terminal, Claude Code CLI, or Claude Cowork session.
@@ -9,7 +9,18 @@ This document is the single-source-of-truth for what's done, what's pending, and
 
 ## TL;DR for a fresh session
 
-**The full Phase 1 pipeline is built.** Joyce just needs to: (1) get an OpenRouter API key, (2) drop it in `OpenRouter_api.txt`, (3) run smoke tests in the documented order. After smoke green: OSF pre-registration → Phase 1a → Phase 1b.
+**The full Phase 1 pipeline is built.** Two locked design upgrades since the last STATUS update:
+
+1. **Q1 — Model-selection rule (Phase 1a → 1b)**: instead of running all 4 cheap models on N=1500, run them on N=100 (Phase 1a), pick the most cost-efficient by a pre-registered composite criterion (cost × (1 + parse-failure-rate); tie-break by MAE then cross-model agreement), then run Phase 1b on that single model. **Halves the budget** (~$215 vs ~$440). See `gss_phase1_design.md` §12.2.
+
+2. **Q2 — Theory-driven secondary analysis**: alongside the atheoretical 4-bin LOO, run a theoretically-grounded secondary LOO (Moral Foundations Theory / Schwartz Values / Bourdieu Capital / Cultural Theory of Risk — Joyce's choice after literature review). Pre-registered alongside the 4-bin. Almost zero extra cost (re-aggregates same LLM outputs). **Pending Joyce's literature review** — see `theory_review.md`. See `gss_phase1_design.md` §13.
+
+Joyce's path forward:
+- (a) Get OpenRouter API key + run smoke tests (no theory dependency)
+- (b) Read `theory_review.md` + literature → lock theory in §8 of that doc
+- (c) Build OSF pre-reg with both locked design upgrades + 4-bin + theory-bin LOOs declared
+- (d) Run Phase 1a (4 cheap models, multi-model panel, N=100) → model selected
+- (e) Run Phase 1b (single model selected, N=1500) + GPT-4o anchor (N=100)
 
 The project has **two sequential phases**, both scoped at the Bayati meeting (2026-05-02):
 
@@ -57,6 +68,53 @@ End-to-end replication of Park et al. at N=2 + N=1 via Cookiy. Pipeline + dashbo
 
 ### 🔮 Phase 2: targeted Cookiy collection (planned, not started)
 Will cover BFI-44 personality + behavioral game outcomes that GSS doesn't measure. Includes 2-week recontact for proper test-retest baseline. Smaller N (~30-100). Design in `thesis_phase2_design.md`.
+
+---
+
+## What changed 2026-05-06 (Codex audit fixes + two design upgrades)
+
+### Codex audit (2nd round) — all critical + most important issues fixed
+
+Codex audited the AUDIT-E + multi-model build and found 2 critical + 10 important issues. Fixed all that affect smoke correctness; deferred concurrency / fine-grained resume to post-smoke.
+
+**Critical fixes**:
+- C-1: sensitivity item scale derivation was unsafe (WLTH* trio misclassified as binary; COL* meta-codes contaminating Likert scoring). Added `SENSITIVITY_FORMAT_OVERRIDES` in `gss_driver.py` for 9 affected items + override-aware `format_eval_question`.
+- C-2: panel synthesis used median for ALL items (broken for binary + PARTYID-with-7). New `_panel_aggregate_code` routes by item_format: median for likert3+, mode for binary/categorical, mode for PARTYID when any model outputs 7.
+
+**Important fixes**:
+- I-1: positive non-substantive codes (e.g., OWNGUN=3 REFUSED, 36 of 3309 respondents) now filtered at both prompt-build and truth-conversion via `_is_non_substantive_label()` heuristic.
+- I-2: `cross_model_agreement_pct` now strictly defined (all expected models present + parsed + identical), reports {agreement_pct, n_tuples, n_strict_agreed, n_lost_to_parse_or_missing} per condition.
+- I-3: panel synthesis takes `expected_models`, skips incomplete-coverage tuples.
+- I-4: `max_tokens` 16 → 64 to handle reasoning-style chain-of-thought.
+- I-5: `_is_retryable` now class-aware (RateLimitError / APITimeoutError / APIStatusError 5xx), substring fallback extended for 500 / "internal server" / "service unavailable".
+- I-9: GPT-4o anchor bumped N=50 → N=100 (Codex flagged underpowered for per-item Park comparison).
+- I-10: Cost-estimate caveats added (rates approximate; no prompt caching assumed).
+- I-8: Panel diversity language softened — explicit acknowledgment that all 4 cheap models are China-trained orgs.
+
+**Deferred**: I-6 concurrency in `call_panel`; I-7 finer resume granularity. Both irrelevant to N=10 smoke; flagged for pre-Phase-1b implementation.
+
+### Two locked design upgrades (post-Codex)
+
+**Q1 (locked) — Model-selection rule (Phase 1a → 1b)**:
+- Phase 1a runs all 4 cheap models on N=100 + GPT-4o anchor.
+- Phase 1b runs only the cheap model that minimizes the locked composite score: `cost_per_call × (1 + parse_failure_rate)`. Tie-break by Likert MAE then cross-model agreement.
+- Total Phase 1 budget halved: ~$215 (vs ~$440 previously).
+- Methodological strengthening: Phase 1a multi-model comparison itself becomes a publishable mini-result; Phase 1b focuses on the cost-pre-registered single model with multi-model robustness panel from 1a.
+- Pre-registration must lock the rule BEFORE 1a runs.
+- See `gss_phase1_design.md` §12.2.
+
+**Q2 (pending Joyce's literature review) — Theory-driven secondary analysis**:
+- The atheoretical 4-bin LOO will be paired with a theoretically-grounded secondary LOO using one of: Moral Foundations Theory (Haidt), Schwartz Values, Bourdieu's Capitals, or Cultural Theory of Risk (Douglas/Wildavsky).
+- Same persona prompts + same eval items; only the cluster organization differs. Almost zero extra LLM cost.
+- Paper claim shifts from "engineering result on GSS data" to "psychological theoretical claim about LLM persona-internal feature representation."
+- Joyce's literature review starter scaffolded in `theory_review.md` (NEW file). 4 candidates surveyed; Joyce reads foundational papers + recent LLM-persona applications + decides + locks in §8 of that doc.
+- After lock: build `gss_theory_taxonomy.json`, extend aggregation to compute theory-cluster LOO. Pre-register alongside 4-bin LOO.
+- See `gss_phase1_design.md` §13.
+
+### Tasks updated
+- #14 (model-selection script) — depends on 1a complete
+- #15 (Joyce's literature review) — Joyce's work; blocks #7 OSF pre-reg
+- #16 (theory-bin LOO build) — blocked by #15
 
 ---
 
@@ -207,9 +265,11 @@ GSBGEN390/
 ├── COLAB_RUN_GUIDE.md                 ← Colab fallback instructions
 │
 ├── ── PHASE 1 (GSS-PUBLIC) DESIGN + ARTIFACTS ──
-├── gss_phase1_design.md               ← Phase 1 locked design (Path A*, snapshot, raw acc, multi-model panel §12)
+├── gss_phase1_design.md               ← Phase 1 locked design (Path A*, snapshot, raw acc, multi-model panel §12, model-selection §12.2, theory-driven §13)
+├── theory_review.md                   ← LITERATURE REVIEW STARTER for theory-driven feature engineering (Joyce's review pending; lock in §8)
 ├── gss_variables_to_download.md       ← record of GSS Data Explorer variable list
 ├── gss_feature_taxonomy.json          ← LOCKED v0.3: 12 primary_eval, 118 sensitivity_eval, 140 features × 4 bins
+├── gss_theory_taxonomy.json (PENDING) ← will lock theory-cluster mapping after Joyce's review
 ├── gss_loader.py                      ← reads 3-batch GSS extract → pandas DataFrame; label-set namespacing
 ├── validate_taxonomy.py               ← 9-check validator: vars exist, bins disjoint, coverage, missingness
 ├── gss_pipeline.py                    ← AUDIT primitives: persona prompt builder, eval question formatter, scorer, aggregation, multi-model panel synthesis

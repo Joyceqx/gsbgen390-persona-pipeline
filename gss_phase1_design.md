@@ -84,20 +84,23 @@ For each of the 3,309 respondents:
 
 The N=1,500 sample is drawn from the 3,309 GSS 2024 respondents. Sampling rule (pre-registered): random sample without replacement, fixed seed = 42, no oversampling on demographics. Optional weighted reanalysis using GSS sampling weights as a robustness check (see §10).
 
-**Multi-model panel as primary** (locked 2026-05-05; see §12 for full rationale): each respondent is queried under all conditions × items by 4 OpenRouter models in parallel. The headline result reports per-model raw accuracy AND a panel headline (median across 4 models). A small GPT-4o anchor on N=50 subset gives direct Park v2 Table 3 comparability.
+**Two-stage model strategy** (locked 2026-05-06; see §12 for the multi-model-then-single rationale):
+- **Phase 1a (N=100)**: run all 4 cheap OpenRouter models in parallel + GPT-4o anchor. Use this as a model-selection step under a pre-registered criterion.
+- **Phase 1b (N=1500)**: run the single cheap model selected by the Phase-1a criterion + GPT-4o anchor on N=100 subset. The other 3 cheap models are NOT carried forward to 1b.
 
 | Sub-phase | N | LLM calls per respondent | Cost / respondent | Total budget |
 |---|---|---|---|---|
-| 1a — sanity check | 100 | ~712 (primary + sensitivity, 4 cheap models, n=1) | ~$0.24 | **~$25** |
-| 1b — primary | 1,500 | ~712 | ~$0.24 | **~$360** |
-| 1b GPT-4o anchor | 100 (subset of 1b) | 60 (primary only, 5 cond × 12 items × n=2) | ~$0.50 | **~$50** |
-| **Total Phase 1** | | | | **~$440** |
+| Smoke | 10 | ~712 (primary + sensitivity, 4 cheap, n=1) | ~$0.24 | **~$2-3** |
+| 1a — sanity + model selection | 100 | ~712 × 4 cheap models + 60 × GPT-4o = ~3000 | ~$0.65 | **~$65** |
+| 1b — primary | 1,500 | ~712 (1 selected cheap model only, n=1) | ~$0.06 | **~$95** |
+| 1b GPT-4o anchor | 100 (subset of 1b) | 60 (primary only, n=2) | ~$0.50 | **~$50** |
+| **Total Phase 1** | | | | **~$215** |
 
-Within the original $300-500 budget, with 4-model robustness as a bonus.
+Roughly halves the previous $440 budget (which assumed all-4-cheap-models for the full 1b run). The savings (~$225) are reserved for Phase 1c — the theory-driven secondary analysis (§13) — and any post-hoc concurrency / robustness extensions.
 
-**Cost estimate caveats**: (a) per-token rates above are May-2026 OpenRouter approximations and must be verified at smoke-test time before scaling. (b) These estimates assume **no prompt caching** (the persona prompt repeats across the 12 items × 2 samples within a (respondent, condition); caching would discount input tokens by ~50%). Implementing prompt caching is deferred but could halve the 1b budget if needed.
+**Cost estimate caveats**: (a) per-token rates above are May-2026 OpenRouter approximations and must be verified at smoke-test time before scaling. (b) These estimates assume **no prompt caching** (the persona prompt repeats across the 12 items × 2 samples within a (respondent, condition); caching would discount input tokens by ~50%). Implementing prompt caching is deferred but could halve costs further if needed.
 
-Wall-clock: 1a in 1 week; 1b in 3-4 weeks (LLM run dominated by OpenRouter rate limits, not compute).
+Wall-clock: smoke in 1-2 hours; 1a in ~1 day at sequential rates (~10 min / respondent × 4 models); 1b in 3-5 days (single-model is much faster). Concurrency (ThreadPoolExecutor for parallel model calls) bumps this 4× faster on 1a; flagged but not implemented yet.
 
 ## 6. What Phase 1 produces (and what it does not)
 
@@ -251,11 +254,72 @@ The aggregation in §10 is computed:
 
 ### Pre-registration must declare
 
-Before Phase 1b launches the OSF pre-reg locks:
-- The exact 4-cheap-model list (prevents post-hoc cherry-picking)
-- The N=50 anchor model (GPT-4o) and that it is run only on primary conditions
-- The aggregation method (per-model + panel median + anchor side-by-side)
-- The cross-model agreement metric definition
+Before Phase 1a launches the OSF pre-reg locks:
+- The exact 4-cheap-model list for Phase 1a (prevents post-hoc cherry-picking)
+- The model-selection rule from 1a → 1b (locked below in §12.2)
+- The GPT-4o anchor scope (N=100 subset, primary conditions only, n_samples=2)
+- Aggregation method (per-model + panel median/mode + cross-model agreement)
+- Cross-model agreement metric definition (strict: all expected models present + parsed + identical)
+
+### §12.2  Locked model-selection rule (Phase 1a → Phase 1b)
+
+After Phase 1a (N=100) completes for all 4 cheap models, Phase 1b is run on the single cheap model that minimizes the **composite cost-efficiency score**:
+
+```
+score(model) = (cost_per_call_USD)  ×  (1 + parse_failure_rate_on_1a)
+```
+
+with tie-break (within 5% of best score) by:
+1. Lowest median Likert MAE on Phase 1a primary_eval items (excludes parse-failed);
+2. Lowest cross-model disagreement (model is closest to panel-median).
+
+This selection rule is locked in writing in OSF before Phase 1a is run. After 1a completes, the selected model is announced and 1b proceeds on that single model.
+
+**Why this rule**:
+- `cost × (1 + parse_fail)` punishes both high direct cost AND wasteful parse failures (a 50%-fail $0.0001 model is effectively pricier than a 1%-fail $0.0002 model).
+- Tie-break by Likert MAE picks the most-reliable predictor, not the model that happened to be cheapest by a hair.
+- Tie-break by cross-model agreement picks the model closest to the panel consensus — i.e., the one whose results are most generalizable.
+
+**Scope adjustment**: Phase 1b reports remain valid as "predictive findings on the cost-selected model." Multi-model robustness is established by the 1a comparison itself (which is published alongside 1b). The thesis claim becomes:
+> "On Phase 1a (N=100, 4 cheap models), feature-category contribution rankings agreed within bootstrap noise across all 4 models. We selected {model_X} for Phase 1b under a cost-pre-registered criterion; the N=1500 results on {model_X} are reported alongside the 1a multi-model robustness panel."
+
+This is honest and avoids the cherry-picking objection.
+
+---
+
+## 13. Theory-driven feature engineering (Phase 1c — pending literature lock)
+
+The 4-bin taxonomy (demographic / behavioral / psychological / attitudinal) is **atheoretical** — it's a sorting convention, not derived from any cognitive or behavioral-science theory. To strengthen the paper's theoretical contribution, Phase 1 will additionally run a **theory-driven secondary LOO analysis** alongside the atheoretical primary.
+
+### Status
+
+🔒 **Pending Joyce's literature review** (deliberate). Candidate theories surveyed in `theory_review.md`; the chosen theory's mapping to GSS items will be locked in `gss_theory_taxonomy.json` before Phase 1a launches.
+
+### What this adds
+
+After the 4-bin LOO produces the atheoretical primary headline, **the same persona prompts and the same eval items** will be re-aggregated under a theoretically-grounded grouping (e.g., Moral Foundations Theory's 5-6 foundations, or Schwartz's 10 universal values, or Bourdieu's 3 capitals). The same LOO ablation runs against the new groups.
+
+### Why this matters for the paper
+
+- The 4-bin LOO answers an engineering question: *which arbitrary feature category contributes most?*
+- The theory-driven LOO answers a psychological question: *which theoretical construct best organizes the input that drives accurate persona prediction?*
+- Comparing the two LOOs tells us whether the LLM's persona-internal feature representation aligns with established human-cognition theory.
+- This shifts the paper from "feature-engineering result on GSS data" to "psychological-theoretical claim about LLM persona construction" — much stronger thesis fit.
+
+### Cost addition
+
+Almost zero. The theoretical secondary analysis re-uses the same LLM outputs from Phase 1a/1b — it's a re-aggregation, not a re-run. Only cost is the 2-3 days of Joyce's literature work to lock the mapping.
+
+### Pre-registration
+
+Before Phase 1a launches:
+- Lock candidate theory in `theory_review.md` (literature decision)
+- Lock variable→theory-cluster mapping in `gss_theory_taxonomy.json`
+- OSF pre-reg includes both 4-bin and theory-bin LOO as primary-paired analyses
+
+### Joyce's next step
+
+Read `theory_review.md` for the candidate-theory survey. Pick one. Update the `_locked_theory` field at the top of that doc. Then I'll build the mapping JSON and extend the aggregation code to handle theory-bin LOO.
 
 ---
 
