@@ -46,7 +46,11 @@ MODEL_ANCHOR: str = "openai/gpt-4o"
 
 # Default per-call hyperparameters
 DEFAULT_TEMPERATURE: float = 0.7
-DEFAULT_MAX_TOKENS: int = 16   # we only need a single integer code
+# We only need a single integer code, but some models (notably DeepSeek-V3.1
+# in reasoning mode) emit chain-of-thought before the final answer. 64 tokens
+# is a safe ceiling for an integer + brief reasoning, while still cheap.
+# Per Codex audit 2026-05-06.
+DEFAULT_MAX_TOKENS: int = 64
 DEFAULT_TIMEOUT: float = 30.0
 
 
@@ -91,10 +95,32 @@ class LLMError(Exception):
 
 
 def _is_retryable(exc: Exception) -> bool:
+    """Decide whether an LLM exception should trigger backoff+retry.
+
+    First check exception class via openai SDK exceptions (preferred — robust);
+    fall back to substring matching the error message (handles non-OpenAI
+    SDK errors and OpenRouter-passthrough cases).
+    """
+    # Class-based check (most reliable)
+    try:
+        from openai import RateLimitError, APITimeoutError, APIConnectionError, APIStatusError
+        if isinstance(exc, (RateLimitError, APITimeoutError, APIConnectionError)):
+            return True
+        if isinstance(exc, APIStatusError):
+            # Retry on server-side errors (5xx) and rate limits
+            status = getattr(exc, "status_code", None)
+            if status is not None and (status >= 500 or status == 429):
+                return True
+    except ImportError:
+        pass
+
     msg = str(exc).lower()
+    # Substring fallback
     return any(t in msg for t in (
-        "rate", "429", "timeout", "timed out", "503", "502", "overload",
-        "connection", "econnreset", "temporar", "try again",
+        "rate", "429", "500", "502", "503", "504",
+        "internal server", "service unavailable", "bad gateway", "gateway timeout",
+        "timeout", "timed out", "overload", "connection",
+        "econnreset", "temporar", "try again",
     ))
 
 

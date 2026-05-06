@@ -90,10 +90,12 @@ The N=1,500 sample is drawn from the 3,309 GSS 2024 respondents. Sampling rule (
 |---|---|---|---|---|
 | 1a — sanity check | 100 | ~712 (primary + sensitivity, 4 cheap models, n=1) | ~$0.24 | **~$25** |
 | 1b — primary | 1,500 | ~712 | ~$0.24 | **~$360** |
-| 1b GPT-4o anchor | 50 (subset of 1b) | 60 (primary only, 5 cond × 12 items × n=2) | ~$0.50 | **~$30** |
-| **Total Phase 1** | | | | **~$420** |
+| 1b GPT-4o anchor | 100 (subset of 1b) | 60 (primary only, 5 cond × 12 items × n=2) | ~$0.50 | **~$50** |
+| **Total Phase 1** | | | | **~$440** |
 
 Within the original $300-500 budget, with 4-model robustness as a bonus.
+
+**Cost estimate caveats**: (a) per-token rates above are May-2026 OpenRouter approximations and must be verified at smoke-test time before scaling. (b) These estimates assume **no prompt caching** (the persona prompt repeats across the 12 items × 2 samples within a (respondent, condition); caching would discount input tokens by ~50%). Implementing prompt caching is deferred but could halve the 1b budget if needed.
 
 Wall-clock: 1a in 1 week; 1b in 3-4 weeks (LLM run dominated by OpenRouter rate limits, not compute).
 
@@ -102,7 +104,7 @@ Wall-clock: 1a in 1 week; 1b in 3-4 weeks (LLM run dominated by OpenRouter rate 
 **Produces** (publishable on its own, Phase 1-only):
 - **Confidence-intervaled feature-category contribution ranking** on GSS-attitudinal-item prediction (the 4-bin LOO ΔMAE per category, with bootstrap CIs at N=1,500)
 - **Per-item raw accuracy table** on the ~118 Park-comparable sensitivity_eval items, side-by-side with the corresponding entries in Park v2 Table 3 (raw accuracy only — see §11 on what is NOT a valid comparison)
-- **Persona self-consistency** as a stability QA metric
+- **Cross-model agreement %** as the primary stability QA metric for the cheap panel (4 models on the same item) — replaces within-model self-consistency for cost reasons. Within-model self-consistency (n_samples=2) is restored for the GPT-4o anchor subset only. See §12.
 - A pre-registered feature taxonomy → standardized vocabulary for Phase 2 and for any later survey-instrument design
 - A reusable codebase that runs against any single-wave GSS extract
 
@@ -224,12 +226,14 @@ A small GPT-4o anchor on a 50-respondent subset preserves direct Park v2 Table 3
 | Cheap-panel primary | **Kimi K2** | Moonshot | 0.40 | 1.00 | long-context strong; 4th distinct family |
 | Anchor | **GPT-4o** | OpenAI | 2.50 | 10.00 | Park v2 used this; direct Table 3 comparability |
 
-**Panel diversity argument**: 4 different teams, 4 different RLHF philosophies, 4 different training corpora. Convergence across all 4 = result generalizes beyond any single model's bias. This is the core methodological strength of the multi-model panel.
+**Panel diversity argument**: 4 different teams, 4 different RLHF philosophies. Convergence across all 4 = result generalizes beyond any single model's bias.
+
+**Honest caveat about diversity scope**: All 4 cheap-panel models are trained by China-based organizations (Alibaba, DeepSeek, MiniMax, Moonshot). The diversity is real *across teams and RLHF philosophies* but is NOT a Western-vs-Eastern training-data robustness check. The GPT-4o anchor (N=100 subset) provides a single Western-trained reference; for stronger diversity claims at thesis-stage, swap one slot for Llama-3.3-70B (Meta) or Mistral-Large-2 in a sensitivity reanalysis.
 
 ### Sampling rules
 
 - **Cheap models**: `n_samples = 1` per (respondent, item, condition). Cross-model agreement (% of items where all 4 models gave the same code) replaces within-model self-consistency as the primary stability metric.
-- **GPT-4o anchor**: `n_samples = 2` per (respondent, item) on N=50 subset, primary conditions only. Restores Park-style within-model self-consistency for the directly-comparable subset. Sensitivity pass NOT run on GPT-4o (cost reasons).
+- **GPT-4o anchor**: `n_samples = 2` per (respondent, item) on **N=100** subset, primary conditions only. Restores Park-style within-model self-consistency for the directly-comparable subset. Sensitivity pass NOT run on GPT-4o (cost reasons). N=100 (bumped from N=50 per Codex audit 2026-05-06) gives wider per-item CIs but still tight enough for per-item Park v2 Table 3 anchoring.
 
 ### Headline output extension to multi-model
 

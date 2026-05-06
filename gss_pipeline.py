@@ -6,13 +6,15 @@ per-item exclusion.
 Locked design: see gss_phase1_design.md (v 2026-05-05) and
 gss_feature_taxonomy.json (v 0.3-locked-2026-05-05).
 
-Audit checkpoint status:
-  AUDIT-A persona prompt template     ✅ locked + smoke test (--print-prompt)
-  AUDIT-B eval question phrasing      ✅ locked + smoke test (--print-questions)
-  AUDIT-C scoring rules               ✅ locked + smoke test (--test-scoring)
-  AUDIT-D sensitivity exclusion       ✅ locked + smoke test (--test-exclusion)
-  AUDIT-E aggregation                 🔒 designed; implementation pending
-  LLM dispatcher + driver             🔒 pending after AUDIT-E lock
+Audit checkpoint status (locked + smoke-tested):
+  AUDIT-A persona prompt template     ✅ --print-prompt
+  AUDIT-B eval question phrasing      ✅ --print-questions
+  AUDIT-C scoring rules               ✅ --test-scoring (7 hand assertions)
+  AUDIT-D sensitivity exclusion       ✅ --test-exclusion (with hard asserts)
+  AUDIT-E aggregation                 ✅ --test-aggregation (5 hand assertions)
+  Multi-model panel extension         ✅ --test-multimodel (synthetic 4-model)
+  LLM dispatcher (llm_router.py)      ✅
+  Top-level driver (gss_driver.py)    ✅
 
 Usage (no LLM yet):
     python3 gss_pipeline.py --print-prompt       # AUDIT-A
@@ -117,9 +119,36 @@ You will now be asked one or more additional GSS questions. Answer in character,
 in the exact format requested by each question."""
 
 
+# Label patterns that indicate non-substantive responses (positive integer codes
+# that nevertheless mean "no real answer"). Per Codex audit 2026-05-06: e.g.,
+# OWNGUN code 3 = REFUSED is not in MISSING_CODES (which only covers negative
+# meta-codes) but is also not a substantive answer for persona purposes.
+_NON_SUBSTANTIVE_LABEL_PATTERNS = (
+    "refused", "no answer", "don't know", "do not know",
+    "iap", "inapplicable", "not applicable", "skipped on web",
+    "uncodable", "n.a.", "n/a", "dk/na", "dk", "na",
+)
+
+
+def _is_non_substantive_label(label: str) -> bool:
+    """Detect labels that should be treated as missing for persona purposes
+    even when the underlying code is positive (not in MISSING_CODES)."""
+    if label is None:
+        return False
+    s = label.strip().lower()
+    if not s:
+        return True
+    # Tight match: exact phrase or starts-with for short labels
+    if s in _NON_SUBSTANTIVE_LABEL_PATTERNS:
+        return True
+    # Substring contains for longer labels
+    return any(p in s for p in _NON_SUBSTANTIVE_LABEL_PATTERNS)
+
+
 def _format_feature_line(varname: str, value) -> str | None:
     """Render one feature as a labeled line.
-    Returns None if the value is missing/coded-missing (caller filters these out).
+    Returns None if the value is missing/coded-missing OR if the label text
+    indicates a non-substantive response (REFUSED / DK / IAP / etc.).
     """
     if pd.isna(value) or int(value) in MISSING_CODES:
         return None
@@ -127,7 +156,10 @@ def _format_feature_line(varname: str, value) -> str | None:
     val_label = get_value_label(varname, value)
     if val_label is None:
         return None
-    # Compact format: "- variable description: VALUE LABEL"
+    if _is_non_substantive_label(val_label):
+        # Positive-coded but non-substantive (e.g., OWNGUN=3 REFUSED). Treat
+        # as missing for persona prompts to avoid teaching the LLM to refuse.
+        return None
     return f"- {var_label}: {val_label}"
 
 
@@ -288,6 +320,17 @@ def format_eval_question(item: dict) -> tuple[str, dict[str, Any]]:
     options = _scale_options_for(item_id)
     is_sparse = item_id in _SPARSE_ANCHOR_ITEMS
 
+    # Sensitivity-item overrides (set by derive_sensitivity_item in gss_driver):
+    # if item carries _valid_codes_override / _is_sparse_override, honor them.
+    valid_codes_override = item.get("_valid_codes_override")
+    if valid_codes_override is not None:
+        # Filter the label set to the override's codes, preserving labels for
+        # the ones we have, and synthesizing "(unanchored)" for missing intermediate codes.
+        existing_labels = dict(options)
+        options = [(c, existing_labels.get(c, "(unanchored intermediate)"))
+                   for c in valid_codes_override]
+        is_sparse = item.get("_is_sparse_override", False)
+
     option_lines = [f"  {code}. {label}" for code, label in options]
     valid_codes = [c for c, _ in options]
     code_to_label = {c: l for c, l in options}
@@ -371,13 +414,14 @@ import re
 from statistics import mean
 
 
-def truth_code_or_none(value: Any) -> int | None:
+def truth_code_or_none(value: Any, varname: str | None = None) -> int | None:
     """Convert a respondent's raw GSS value into an integer truth code, or
-    None if the value is GSS-missing-coded (in MISSING_CODES from
-    gss_loader) or genuinely null.
+    None if the value is GSS-missing-coded OR if its label is non-substantive
+    (REFUSED / DK / IAP / etc., which are positive integer codes outside the
+    MISSING_CODES set but still aren't real answers).
 
-    Use this BEFORE passing a respondent's value into score_item() as
-    truth_code — it is the contract between raw GSS rows and the scorer.
+    Pass `varname` to enable label-based filtering (recommended). Without
+    `varname`, only MISSING_CODES filtering applies.
     """
     if value is None or pd.isna(value):
         return None
@@ -387,6 +431,10 @@ def truth_code_or_none(value: Any) -> int | None:
         return None
     if i in MISSING_CODES:
         return None
+    if varname is not None:
+        lbl = get_value_label(varname, i)
+        if lbl is not None and _is_non_substantive_label(lbl):
+            return None
     return i
 
 
@@ -861,23 +909,74 @@ def filter_records_by_model(records: list[dict[str, Any]], model: str) -> list[d
     return [r for r in records if r.get("model") == model]
 
 
+def _panel_aggregate_code(
+    codes: list[int],
+    valid_codes: list[int],
+    item_id: str,
+    item_format: str | None,
+) -> int:
+    """Aggregate model codes into a single 'panel' code.
+
+    Locked design (gss_phase1_design.md §12 + Codex audit 2026-05-06):
+      - Likert items (likert3+): MEDIAN, snapped to nearest valid code.
+        Tie-break toward lower (deterministic).
+      - Binary / categorical items: MODE (most common code).
+        Tie-break toward lower (deterministic).
+      - PARTYID contingent: if any model output 7 ('Other party'), MODE
+        (because 7 is off the ordinal scale); else MEDIAN.
+    """
+    from statistics import median as _median
+    from collections import Counter
+
+    use_mode = (
+        item_format == "binary"
+        or item_format == "categorical"
+        or (item_id == "PARTYID" and 7 in codes)
+    )
+
+    if use_mode:
+        # Most common code; tie-break toward LOWER value for determinism.
+        counts = Counter(codes)
+        top = max(counts.values())
+        candidates = [c for c, n in counts.items() if n == top]
+        chosen = min(candidates)
+        # Ensure chosen is a valid code (always should be, but defensive)
+        if chosen not in valid_codes:
+            chosen = min(valid_codes, key=lambda c: abs(c - chosen))
+        return int(chosen)
+    else:
+        med_raw = _median(codes)
+        # Snap median to a valid code (ties broken toward lower)
+        chosen = min(valid_codes, key=lambda c: (abs(c - med_raw), c))
+        return int(chosen)
+
+
 def synthesize_panel_median_records(
     records: list[dict[str, Any]],
     valid_codes_by_item: dict[str, list[int]],
+    item_format_by_id: dict[str, str] | None = None,
+    expected_models: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """For each (respondent, condition, item, sample_idx), compute the median
-    persona_code across all models. Build new records as if a single 'panel'
-    model had answered. Re-score each synthesized observation against truth.
+    """For each (respondent, condition, item, sample_idx), aggregate model
+    codes into a single panel code and re-score against truth.
 
-    Excludes any (respondent, condition, item, sample_idx) where any model had
-    a parse failure (panel median is only computed when all models parsed OK,
-    to avoid implicit imputation).
+    Locked rule: median for Likert, mode for binary/categorical (and for
+    PARTYID when any model outputs 7 — see _panel_aggregate_code).
+
+    Excludes any (respondent, condition, item, sample_idx) where ANY model
+    parse-failed → no implicit imputation.
 
     Args:
-        valid_codes_by_item: {item_id: [valid integer codes]} — used to constrain
-            the median into a valid scale point.
+        valid_codes_by_item: {item_id: [valid integer codes]}
+        item_format_by_id: {item_id: 'binary'|'likert3'|'likert4'|...|'categorical'}.
+            If None, defaults to inferring from len(valid_codes) (likert{N} for ≥3,
+            binary for 2). Pass-through expected to come from primary_eval +
+            sensitivity_eval format declarations.
+        expected_models: if given, ONLY synthesize panel records for
+            (respondent, condition) tuples where all expected_models are
+            present. Other tuples are dropped (incomplete panel coverage).
     """
-    from statistics import median as _median
+    item_format_by_id = item_format_by_id or {}
 
     # Group by (respondent_id, condition) → list of model records
     grouped: dict[tuple, list[dict]] = {}
@@ -887,18 +986,19 @@ def synthesize_panel_median_records(
 
     out_records = []
     for (rid, cond), model_records in grouped.items():
-        # All model records for this (rid, cond). Compute panel median per item × sample.
-        model_count = len(model_records)
-        if model_count < 2:
-            # Single-model case — panel median trivially equals that model
+        models_present = {r.get("model") for r in model_records}
+        if expected_models is not None:
+            missing = set(expected_models) - models_present
+            if missing:
+                # Skip incomplete-panel groups; caller can audit.
+                continue
+        if len(model_records) < 2:
             continue
         panel_per_item: dict[str, list[dict]] = {}
-        # Iterate over items (use first model's items as the union; assume all models cover same items)
-        all_items = set()
+        all_items: set = set()
         for mr in model_records:
             all_items.update(mr.get("per_item_scores", {}).keys())
         for item_id in all_items:
-            # Determine n_samples: minimum across models (paranoid)
             sample_lists = [mr.get("per_item_scores", {}).get(item_id, []) for mr in model_records]
             n_samples = min(len(sl) for sl in sample_lists) if sample_lists else 0
             samples_out: list[dict] = []
@@ -911,7 +1011,7 @@ def synthesize_panel_median_records(
                     if s.get("parse_fail") or s.get("persona_code") is None:
                         codes = None
                         break
-                    codes.append(s["persona_code"])
+                    codes.append(int(s["persona_code"]))
                 if codes is None:
                     samples_out.append({
                         "treatment": None, "abs_err": None, "within1": None,
@@ -919,118 +1019,178 @@ def synthesize_panel_median_records(
                         "truth": truth, "skipped_missing_truth": truth is None,
                     })
                     continue
-                med_raw = _median(codes)
-                # Snap median to a valid code (if median is e.g. 3.5, round to nearest integer
-                # in valid_codes; ties broken toward lower)
-                vcodes = valid_codes_by_item.get(item_id, list(range(int(min(codes)), int(max(codes))+1)))
-                med = min(vcodes, key=lambda c: (abs(c - med_raw), c))
-                # Re-score this synthesized observation
+
+                vcodes = valid_codes_by_item.get(
+                    item_id, list(range(int(min(codes)), int(max(codes)) + 1))
+                )
+                # Resolve item format: prefer explicit per-item map; else infer.
+                fmt = item_format_by_id.get(item_id)
+                if fmt is None:
+                    fmt = "binary" if len(vcodes) == 2 else f"likert{len(vcodes)}"
+
+                panel_code = _panel_aggregate_code(codes, vcodes, item_id, fmt)
+
                 if truth is None:
                     samples_out.append({
                         "treatment": None, "abs_err": None, "within1": None,
-                        "cat_match": None, "parse_fail": False, "persona_code": int(med),
-                        "truth": None, "skipped_missing_truth": True,
+                        "cat_match": None, "parse_fail": False,
+                        "persona_code": panel_code, "truth": None,
+                        "skipped_missing_truth": True,
                     })
                     continue
-                # Use any one model's treatment classification (they should all match)
-                # For panel-median scoring, use the same logic as score_item but with med.
-                # Re-import classify_item_for_scoring at runtime to avoid circular import.
-                fmt_str = "binary" if len(vcodes) == 2 else f"likert{len(vcodes)}"
-                # Best-effort: if a model record had a treatment, use it
-                model_treatment = None
-                for sl in sample_lists:
-                    if s_idx < len(sl) and sl[s_idx].get("treatment"):
-                        model_treatment = sl[s_idx]["treatment"]
-                        break
-                treatment = model_treatment or classify_item_for_scoring(item_id, fmt_str, int(med), int(truth))
+
+                # Re-classify treatment using the same rule score_item uses
+                treatment = classify_item_for_scoring(item_id, fmt, panel_code, int(truth))
                 if treatment == "likert":
-                    abs_err = abs(int(med) - int(truth))
+                    abs_err = abs(panel_code - int(truth))
                     samples_out.append({
                         "treatment": "likert", "abs_err": abs_err,
                         "within1": int(abs_err <= 1), "cat_match": None,
-                        "parse_fail": False, "persona_code": int(med), "truth": int(truth),
-                        "skipped_missing_truth": False,
+                        "parse_fail": False, "persona_code": panel_code,
+                        "truth": int(truth), "skipped_missing_truth": False,
                     })
                 else:
                     samples_out.append({
                         "treatment": "categorical", "abs_err": None, "within1": None,
-                        "cat_match": int(int(med) == int(truth)),
-                        "parse_fail": False, "persona_code": int(med), "truth": int(truth),
-                        "skipped_missing_truth": False,
+                        "cat_match": int(panel_code == int(truth)),
+                        "parse_fail": False, "persona_code": panel_code,
+                        "truth": int(truth), "skipped_missing_truth": False,
                     })
             panel_per_item[item_id] = samples_out
         out_records.append({
             "respondent_id": rid,
             "condition": cond,
-            "model": "panel_median",
+            "model": "panel",
             "per_item_scores": panel_per_item,
         })
     return out_records
 
 
-def cross_model_agreement_pct(records: list[dict[str, Any]]) -> dict[str, float]:
-    """% of (respondent, condition, item, sample_idx) tuples where all models
-    output the same persona_code. Computed per condition.
+def cross_model_agreement_pct(
+    records: list[dict[str, Any]],
+    expected_models: list[str] | None = None,
+) -> dict[str, dict[str, Any]]:
+    """% of (respondent, condition, item, sample_idx) tuples where ALL
+    expected models parsed successfully AND output the same persona_code.
 
-    Returns: {condition: agreement_pct}
+    Locked design (gss_phase1_design.md §12 + Codex audit 2026-05-06):
+    strict definition — agreement requires ALL models present + parsed +
+    identical. Tuples where any model parse-failed or is missing from the
+    record set count as NON-agreement (numerator=0) and ARE included in the
+    denominator. This avoids inflating agreement under parse failures.
+
+    Args:
+        expected_models: list of model slugs that should be present.
+            If None, defaults to set of distinct models found in records.
+
+    Returns: {
+        condition: {
+            "agreement_pct": float,
+            "n_tuples": int,
+            "n_strict_agreed": int,
+            "n_lost_to_parse_or_missing": int,
+        }
+    }
     """
     from collections import defaultdict
+
+    if expected_models is None:
+        expected_models = sorted({r.get("model") for r in records if r.get("model")})
+
     grouped: dict[tuple, list[dict]] = defaultdict(list)
     for r in records:
         grouped[(r["respondent_id"], r["condition"])].append(r)
 
-    by_cond: dict[str, list[int]] = defaultdict(list)
+    by_cond_total: dict[str, int] = defaultdict(int)
+    by_cond_agreed: dict[str, int] = defaultdict(int)
+    by_cond_lost: dict[str, int] = defaultdict(int)
+
     for (rid, cond), model_records in grouped.items():
-        if len(model_records) < 2:
-            continue
-        items = set()
+        records_by_model = {r.get("model"): r for r in model_records}
+        # Are all expected models present for this (rid, cond)?
+        all_present = all(m in records_by_model for m in expected_models)
+        items: set = set()
         for mr in model_records:
             items.update(mr.get("per_item_scores", {}).keys())
         for item_id in items:
-            sample_lists = [mr.get("per_item_scores", {}).get(item_id, []) for mr in model_records]
-            n_samples = min(len(sl) for sl in sample_lists) if sample_lists else 0
+            sample_lists_by_model = {
+                m: records_by_model[m].get("per_item_scores", {}).get(item_id, [])
+                for m in expected_models if m in records_by_model
+            }
+            if not sample_lists_by_model:
+                continue
+            n_samples = min(len(sl) for sl in sample_lists_by_model.values()) if sample_lists_by_model else 0
             for s_idx in range(n_samples):
-                codes = [
-                    sl[s_idx].get("persona_code")
-                    for sl in sample_lists
-                    if not sl[s_idx].get("parse_fail")
-                ]
-                if len(codes) < 2 or any(c is None for c in codes):
+                by_cond_total[cond] += 1
+                if not all_present:
+                    by_cond_lost[cond] += 1
                     continue
-                by_cond[cond].append(1 if len(set(codes)) == 1 else 0)
+                codes = []
+                any_fail = False
+                for m in expected_models:
+                    sl = sample_lists_by_model[m]
+                    s = sl[s_idx]
+                    if s.get("parse_fail") or s.get("persona_code") is None:
+                        any_fail = True
+                        break
+                    codes.append(int(s["persona_code"]))
+                if any_fail:
+                    by_cond_lost[cond] += 1
+                    continue
+                if len(set(codes)) == 1:
+                    by_cond_agreed[cond] += 1
 
-    return {
-        cond: round(100 * sum(v) / len(v), 1) if v else 0.0
-        for cond, v in by_cond.items()
-    }
+    out: dict[str, dict[str, Any]] = {}
+    for cond, n_total in by_cond_total.items():
+        out[cond] = {
+            "agreement_pct": round(100 * by_cond_agreed[cond] / n_total, 1) if n_total else 0.0,
+            "n_tuples": n_total,
+            "n_strict_agreed": by_cond_agreed[cond],
+            "n_lost_to_parse_or_missing": by_cond_lost[cond],
+        }
+    return out
 
 
 def compute_phase1_headline_multimodel(
     records: list[dict[str, Any]],
     valid_codes_by_item: dict[str, list[int]],
+    item_format_by_id: dict[str, str] | None = None,
+    expected_models: list[str] | None = None,
     bootstrap_B: int = 1000,
     seed: int = 42,
 ) -> dict[str, Any]:
     """End-to-end multi-model headline.
 
+    Args:
+        expected_models: locked panel list (e.g. MODEL_PANEL_PRIMARY).
+            Strict cross-model agreement requires all expected models present
+            + parsed + identical. If None, defaults to models observed in
+            records.
+        item_format_by_id: explicit per-item format ('binary' / 'likert3' /
+            'likert4' / etc.) used by panel-mode-vs-median routing.
+
     Returns:
         {
-            "per_model": {model: compute_phase1_headline output for that model's records},
-            "panel_median": compute_phase1_headline output for synthesized records,
-            "cross_model_agreement_pct": {condition: agreement_pct},
             "n_models": int,
+            "models": [...],
+            "per_model": {model: compute_phase1_headline output},
+            "panel": compute_phase1_headline output for panel synthesis,
+            "cross_model_agreement": {condition: {pct, n_tuples, n_agreed, n_lost}},
         }
     """
     models = sorted({r.get("model") for r in records if r.get("model")})
     if not models:
         raise ValueError("No 'model' field in records — use compute_phase1_headline for single-model")
+    if expected_models is None:
+        expected_models = models
 
     out: dict[str, Any] = {
         "n_models": len(models),
         "models": models,
+        "expected_models": list(expected_models),
         "per_model": {},
-        "panel_median": None,
-        "cross_model_agreement_pct": cross_model_agreement_pct(records),
+        "panel": None,
+        "cross_model_agreement": cross_model_agreement_pct(records, expected_models=expected_models),
     }
 
     for m in models:
@@ -1040,8 +1200,13 @@ def compute_phase1_headline_multimodel(
         )
 
     if len(models) >= 2:
-        panel_records = synthesize_panel_median_records(records, valid_codes_by_item)
-        out["panel_median"] = compute_phase1_headline(
+        panel_records = synthesize_panel_median_records(
+            records,
+            valid_codes_by_item,
+            item_format_by_id=item_format_by_id,
+            expected_models=expected_models,
+        )
+        out["panel"] = compute_phase1_headline(
             panel_records, bootstrap_B=bootstrap_B, seed=seed
         )
     return out
@@ -1335,44 +1500,69 @@ def _audit_e_multimodel_test():
 
     print(f"[1] built {len(records)} records ({len(records)//4} resp-conditions × 4 models)")
 
-    # Cross-model agreement
-    agree = cross_model_agreement_pct(records)
-    print(f"\n[2] cross-model agreement % per condition:")
-    for c, v in agree.items():
-        print(f"   {c:<28s} {v}%")
-    # Expected: full has 3/4 of 4 obs agreed unanimously; loo has 1/4
-    # full: ITEM_A/r1 codes [3,3,4,3] → 3 distinct → not unanimous → 0
-    #       ITEM_B/r1 codes [1,1,1,2] → not unanimous → 0
-    #       ITEM_A/r2 codes [2,3,3,3] → not unanimous → 0
-    #       ITEM_B/r2 codes [1,1,1,1] → unanimous → 1
-    # full agreement = 1/4 = 25%
-    assert agree["full"] == 25.0, f"expected full=25.0, got {agree['full']}"
-    print("   ✓ agreement % matches hand calc")
+    # Cross-model agreement (strict — all 4 models present + parsed + identical)
+    item_format_by_id = {"ITEM_A": "likert5", "ITEM_B": "binary"}
+    agree = cross_model_agreement_pct(records, expected_models=models)
+    print(f"\n[2] cross-model agreement (strict, all-4 required):")
+    for c, info in agree.items():
+        print(f"   {c:<28s} {info['agreement_pct']}%  "
+              f"(n_tuples={info['n_tuples']}, agreed={info['n_strict_agreed']}, "
+              f"lost={info['n_lost_to_parse_or_missing']})")
+    # full: 4 (resp,item) tuples × 1 sample = 4 tuples
+    # ITEM_A/r1 [3,3,4,3] → 0; ITEM_B/r1 [1,1,1,2] → 0; ITEM_A/r2 [2,3,3,3] → 0;
+    # ITEM_B/r2 [1,1,1,1] → 1. Agreement = 1/4 = 25%.
+    assert agree["full"]["agreement_pct"] == 25.0, f"expected full=25.0, got {agree['full']['agreement_pct']}"
+    assert agree["full"]["n_tuples"] == 4
+    assert agree["full"]["n_strict_agreed"] == 1
+    print("   ✓ strict agreement % matches hand calc")
 
-    # Panel median
-    panel = synthesize_panel_median_records(records, valid_codes_by_item)
-    print(f"\n[3] panel median: {len(panel)} synthesized records")
-    # resp 1 full: med(A) = 3, med(B) = 1 → ITEM_A abs_err=0, ITEM_B cat=1
+    # Panel synthesis (median for likert, mode for binary)
+    panel = synthesize_panel_median_records(
+        records, valid_codes_by_item, item_format_by_id=item_format_by_id, expected_models=models
+    )
+    print(f"\n[3] panel synthesis: {len(panel)} records (median for ITEM_A likert, mode for ITEM_B binary)")
+    # resp 1 full: ITEM_A codes [3,3,4,3] → median 3.0 → 3, abs_err=0;
+    #              ITEM_B codes [1,1,1,2] → mode 1 (3 of 4), cat_match=1
     r1_full = next(r for r in panel if r["respondent_id"] == 1 and r["condition"] == "full")
     assert r1_full["per_item_scores"]["ITEM_A"][0]["abs_err"] == 0
     assert r1_full["per_item_scores"]["ITEM_B"][0]["cat_match"] == 1
-    # resp 1 loo: med(A) = 4 → abs_err=1
+    print("   ✓ resp 1 full panel ITEM_A median=3 abs_err=0, ITEM_B mode=1 cat_match=1")
+
+    # resp 1 loo: ITEM_A codes [4,4,5,4] → median 4 → abs_err=1
+    #              ITEM_B codes [2,2,1,2] → mode 2 → cat_match=0 (truth=1)
     r1_loo = next(r for r in panel if r["respondent_id"] == 1 and r["condition"] == "loo_drop_attitudinal")
     assert r1_loo["per_item_scores"]["ITEM_A"][0]["abs_err"] == 1
-    print("   ✓ resp 1 full panel-median ITEM_A abs_err=0, ITEM_B match=1")
-    print("   ✓ resp 1 loo  panel-median ITEM_A abs_err=1")
+    assert r1_loo["per_item_scores"]["ITEM_B"][0]["cat_match"] == 0
+    print("   ✓ resp 1 loo  panel ITEM_A median=4 abs_err=1, ITEM_B mode=2 cat_match=0")
+
+    # Verify mode tie-break (lower wins). Hand-build a tie case:
+    # codes=[1,1,2,2] → mode tie {1,2} → tie-break to lower = 1
+    tied_code = _panel_aggregate_code([1, 1, 2, 2], [1, 2], "FAKE_BIN", "binary")
+    assert tied_code == 1, f"expected tie-break to lower (1), got {tied_code}"
+    print("   ✓ binary tie [1,1,2,2] → mode=1 (lower tie-break)")
+
+    # PARTYID code-7 contingent: when any model outputs 7, use mode
+    # codes=[3,4,7,7] → mode 7; should NOT be median 5.5→5/6
+    pid_code = _panel_aggregate_code([3, 4, 7, 7], [0,1,2,3,4,5,6,7], "PARTYID", "likert7")
+    assert pid_code == 7, f"PARTYID with 7 in codes should use mode; expected 7, got {pid_code}"
+    print("   ✓ PARTYID [3,4,7,7] → mode=7 (any-model-7 triggers categorical)")
 
     # End-to-end multi-model headline
     print(f"\n[4] compute_phase1_headline_multimodel()")
-    out = compute_phase1_headline_multimodel(records, valid_codes_by_item, bootstrap_B=200)
-    print(f"   models tracked:                   {out['models']}")
-    print(f"   has per-model headlines:          {list(out['per_model'].keys())}")
-    print(f"   has panel_median:                 {out['panel_median'] is not None}")
-    print(f"   cross_model_agreement_pct:        {out['cross_model_agreement_pct']}")
-    panel_full = out["panel_median"]["per_condition"]["full"]["likert_mae"]
-    print(f"   panel-median Full likert_mae:     {panel_full['respondent_macro']:.3f} "
+    out = compute_phase1_headline_multimodel(
+        records, valid_codes_by_item,
+        item_format_by_id=item_format_by_id,
+        expected_models=models,
+        bootstrap_B=200,
+    )
+    print(f"   models tracked:           {out['models']}")
+    print(f"   has per-model headlines:  {list(out['per_model'].keys())}")
+    print(f"   has panel:                {out['panel'] is not None}")
+    print(f"   cross-model agreement:    {out['cross_model_agreement']}")
+    panel_full = out["panel"]["per_condition"]["full"]["likert_mae"]
+    print(f"   panel Full likert_mae:    {panel_full['respondent_macro']:.3f} "
           f"[{panel_full['respondent_macro_ci_lo']:.3f}, {panel_full['respondent_macro_ci_hi']:.3f}]")
-    assert "loo_drop_attitudinal" in out["panel_median"]["loo_deltas"]
+    assert "loo_drop_attitudinal" in out["panel"]["loo_deltas"]
     print("   ✓ multi-model orchestrator returns expected structure")
 
     print("\n✓ ALL MULTI-MODEL AGGREGATION TESTS PASSED")

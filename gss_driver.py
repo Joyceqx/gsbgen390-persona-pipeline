@@ -68,10 +68,47 @@ CONDITIONS_PRIMARY = [
 # Sensitivity-pass synthesis: derive eval-item dicts from sensitivity_eval
 # ---------------------------------------------------------------------------
 
+# Items where label-set count does NOT correctly reflect the true ordinal scale.
+# Either codebook labels are sparse (only endpoints + middle anchored), or labels
+# include meta-codes (e.g., 8/9/97 = DK/REFUSED/NAP) that should be excluded
+# from the scale shown to the LLM. Per Codex audit 2026-05-06.
+SENSITIVITY_FORMAT_OVERRIDES: dict[str, dict] = {
+    # WLTH* battery — true scale 1-7, codebook only anchors at 1 and 7
+    "WLTHWHTS": {"format": "likert7", "valid_codes": [1,2,3,4,5,6,7], "is_sparse": True},
+    "WLTHBLKS": {"format": "likert7", "valid_codes": [1,2,3,4,5,6,7], "is_sparse": True},
+    "WLTHHSPS": {"format": "likert7", "valid_codes": [1,2,3,4,5,6,7], "is_sparse": True},
+    # COL* / SPK* / LIB* batteries — codebook may include meta-codes;
+    # observed substantive values are 1=ALLOWED / 2=NOT ALLOWED for newer waves.
+    # Treat as binary on substantive codes only.
+    "COLATH":   {"format": "binary", "valid_codes": [1,2], "is_sparse": False},
+    "COLRAC":   {"format": "binary", "valid_codes": [1,2], "is_sparse": False},
+    "LIBRAC":   {"format": "binary", "valid_codes": [1,2], "is_sparse": False},
+    "SPKRAC":   {"format": "binary", "valid_codes": [1,2], "is_sparse": False},
+    "SPKATH":   {"format": "binary", "valid_codes": [1,2], "is_sparse": False},
+    "COLCOM":   {"format": "binary", "valid_codes": [1,2], "is_sparse": False},
+    "LIBCOM":   {"format": "binary", "valid_codes": [1,2], "is_sparse": False},
+    "SPKCOM":   {"format": "binary", "valid_codes": [1,2], "is_sparse": False},
+}
+
+
 def derive_sensitivity_item(varname: str) -> dict | None:
     """Build a synthetic eval-item dict for a sensitivity_eval variable, by
     inspecting its label set to infer format. Returns None if the variable
-    has no usable label set (skip it)."""
+    has no usable label set (skip it).
+
+    For variables in SENSITIVITY_FORMAT_OVERRIDES, the override wins:
+    overrides specify the true ordinal scale and any sparse-anchor flag,
+    correcting cases where label-set length misclassifies the format.
+    """
+    if varname in SENSITIVITY_FORMAT_OVERRIDES:
+        ovr = SENSITIVITY_FORMAT_OVERRIDES[varname]
+        return {
+            "id": varname,
+            "format": ovr["format"],
+            "construct": "(sensitivity)",
+            "_valid_codes_override": ovr["valid_codes"],
+            "_is_sparse_override": ovr["is_sparse"],
+        }
     options = _scale_options_for(varname)
     n = len(options)
     if n == 0:
@@ -118,7 +155,7 @@ def run_primary_one_respondent(
 
         for item in primary_eval_items:
             question, meta = format_eval_question(item)
-            truth = truth_code_or_none(respondent.get(item["id"]))
+            truth = truth_code_or_none(respondent.get(item["id"]), item["id"])
             for m in models:
                 samples: list[dict] = []
                 for s_idx in range(n_samples):
@@ -170,7 +207,7 @@ def run_sensitivity_one_respondent(
             respondent, taxonomy, drop_bin=None, exclude_vars=[vid]
         )
         question, meta = format_eval_question(item)
-        truth = truth_code_or_none(respondent.get(vid))
+        truth = truth_code_or_none(respondent.get(vid), vid)
 
         for m in models:
             samples: list[dict] = []
