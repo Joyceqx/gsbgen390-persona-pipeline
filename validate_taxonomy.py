@@ -203,6 +203,45 @@ else:
     ok("sensitivity overrides", f"all {len(SENSITIVITY_FORMAT_OVERRIDES)} overrides cover observed truth codes")
 
 # ---------------------------------------------------------------------------
+# CHECK 7c: Battery map is well-formed (R1 — locked 2026-05-08)
+#   - Every battery item exists in the loaded data
+#   - Battery items are mutually disjoint (no item in 2 batteries)
+#   - Every primary_eval item is either in a battery OR in the singletons list
+# ---------------------------------------------------------------------------
+print("\n=== 7c. Battery map (R1) is well-formed ===")
+try:
+    from gss_pipeline import load_battery_map
+    bm = load_battery_map()
+    bm_failures: list[str] = []
+
+    # Every primary_eval item should be EITHER in a battery OR a singleton
+    singletons_set = set(bm["singletons"])
+    for it in tax["primary_eval"]["items"]:
+        vid = it["id"]
+        in_battery = vid in bm["_var_to_battery"]
+        in_singleton = vid in singletons_set
+        if in_battery and in_singleton:
+            bm_failures.append(f"{vid} appears in both a battery and the singleton list")
+        elif not in_battery and not in_singleton:
+            bm_failures.append(f"{vid} is a primary_eval item but appears in neither a battery nor singletons")
+
+    # Every battery item must exist in the loaded data
+    for bname, bdef in bm["batteries"].items():
+        for v in bdef["items"]:
+            if v not in df.columns:
+                bm_failures.append(f"battery {bname} references {v} which is not in the data")
+
+    if bm_failures:
+        for m in bm_failures:
+            fail("battery map", m)
+    else:
+        ok("battery map",
+           f"{len(bm['batteries'])} batteries, {len(bm['singletons'])} singletons; "
+           f"all primary_eval items mapped exactly once")
+except Exception as e:
+    fail("battery map", f"could not load: {e}")
+
+# ---------------------------------------------------------------------------
 # CHECK 8 (REPORTING): sensitivity per-item exclusion auditability
 # ---------------------------------------------------------------------------
 print("\n=== 8. Sensitivity per-item exclusion plan (downstream gss_pipeline.py contract) ===")

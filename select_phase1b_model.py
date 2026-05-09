@@ -1,16 +1,29 @@
 """Deterministic implementation of the §12.2 quality-primary model-selection rule.
 
-Locked rule (gss_phase1_design.md §12.2, 2026-05-06):
+Locked rule (gss_phase1_design.md §12.2, revised 2026-05-08):
 
     primary_score(model) = respondent-macro Likert MAE on Phase-1a primary_eval,
                            full condition only, parse-failed items excluded.
     choose argmin among DQ-passers
         DQ-1: parse_failure_rate_on_1a > 0.30  → disqualify
-        DQ-3: mean per-item output-code variance < 0.5  → disqualify (mode-collapse)
+        DQ-3: per-item output variance < 30% of human variance on that item
+              for any primary_eval item where the model is asked, computed as
+              the fraction of items failing the threshold; disqualify if
+              ≥ 50% of items fail (i.e., a majority of items show mode collapse
+              relative to the human distribution).
     tie-break: among models within 5% of best primary_score, pick lowest
                cost_per_call_USD × (1 + parse_failure_rate)
     fallback:  if candidate set is empty after DQ, OR ≥2 candidates tie on both
                quality (≤5%) AND cost (≤1%) → Qwen-2.5-72B-Instruct.
+
+DQ-3 history:
+- 2026-05-06: introduced as ABSOLUTE threshold (mean per-item variance < 0.5).
+- 2026-05-08: revised to PER-ITEM RELATIVE threshold (var(model_i) / var(human_i)
+  < 0.30 per item) after Codex audit §3.9 noted that an absolute threshold is
+  too lenient on heavily-skewed items (e.g., FAIR/HELPFUL/TRUST/FEPOL where
+  human variance itself is < 0.5) and too strict on widely-spread items (e.g.,
+  PARTYID where human variance is 4.24). The relative threshold scales with
+  the empirical human distribution per item.
 
 This script is the canonical executable form of the rule. Running it on the
 Phase-1a output JSON produces a single deterministic decision plus an audit
@@ -37,11 +50,17 @@ from typing import Any
 # Locked panel + canonical fallback (matches llm_router.MODEL_PANEL_PRIMARY).
 QWEN_FALLBACK_SLUG: str = "qwen/qwen-2.5-72b-instruct"
 
-# Pre-registered DQ thresholds (locked in OSF §12.2).
+# Pre-registered DQ thresholds (locked in OSF §12.2; revised 2026-05-08).
 DQ1_PARSE_FAIL_MAX: float = 0.30
-DQ3_VARIANCE_MIN: float = 0.50
+DQ3_RELATIVE_VARIANCE_FLOOR: float = 0.30  # model_var(i) / human_var(i) ≥ 30%
+DQ3_PER_ITEM_FAIL_MAX: float = 0.50         # disqualify if >50% of items fail floor
 TIE_BREAK_QUALITY_PCT: float = 0.05  # within 5% of best MAE → cost tie-break
 FALLBACK_COST_PCT: float = 0.01      # within 1% on cost AND ≤5% quality → fallback
+
+# Path to the precomputed per-item human variance reference. The reference is
+# computed once from GSS 2024 substantive responses (excluding MISSING_CODES
+# and non-substantive labels) for each primary_eval item. Pre-registered.
+HUMAN_VARIANCE_PATH = Path(__file__).parent / "outputs" / "primary_eval_human_variance_2024.json"
 
 # May-2026 OpenRouter cost snapshot (USD per call). The selection rule is
 # robust to the absolute scale; only relative cost matters. Update before
@@ -86,15 +105,9 @@ def _parse_failure_rate(model_records: list[dict]) -> float:
     return fails / total if total else 1.0
 
 
-def _mean_per_item_variance(model_records: list[dict]) -> float:
-    """For each primary_eval item, compute the variance of the model's
-    output code across respondents (parse-failed and missing-truth items
-    excluded). Average those variances over items.
-
-    A mode-collapsed model that always emits the same code has per-item
-    variance of 0, so this average is 0; a calibrated model produces a
-    range of codes per item and has variance > 1 on contested items.
-    DQ-3 disqualifies models below 0.5.
+def _per_item_variance(model_records: list[dict]) -> dict[str, float]:
+    """Per-item population variance of the model's output codes across
+    respondents. Parse-failed and missing-truth samples excluded.
     """
     by_item: dict[str, list[int]] = {}
     for r in model_records:
@@ -106,13 +119,69 @@ def _mean_per_item_variance(model_records: list[dict]) -> float:
                 if code is None:
                     continue
                 by_item.setdefault(item_id, []).append(int(code))
-    if not by_item:
-        return 0.0
-    variances = [
-        statistics.pvariance(codes) if len(codes) >= 2 else 0.0
-        for codes in by_item.values()
-    ]
-    return statistics.fmean(variances) if variances else 0.0
+    return {
+        item_id: (statistics.pvariance(codes) if len(codes) >= 2 else 0.0)
+        for item_id, codes in by_item.items()
+    }
+
+
+def _load_human_variance_reference() -> dict[str, float]:
+    """Load the locked GSS 2024 per-item human variance reference (DQ-3)."""
+    if not HUMAN_VARIANCE_PATH.exists():
+        return {}
+    raw = json.loads(HUMAN_VARIANCE_PATH.read_text())
+    return {vid: x["human_variance"] for vid, x in raw["items"].items()}
+
+
+def _dq3_relative_check(
+    model_records: list[dict],
+    human_variance_by_item: dict[str, float],
+    floor: float = DQ3_RELATIVE_VARIANCE_FLOOR,
+) -> dict[str, Any]:
+    """Apply per-item relative-variance DQ-3.
+
+    For each primary_eval item, compute model_var/human_var. Item fails the
+    floor if the ratio < `floor`. Model fails DQ-3 if more than DQ3_PER_ITEM_FAIL_MAX
+    of the items fail the floor.
+    """
+    model_var = _per_item_variance(model_records)
+    if not model_var:
+        return {
+            "fail_pct": 1.0, "n_items": 0, "n_items_failing": 0,
+            "per_item": {}, "passes": False,
+        }
+    per_item: dict[str, dict[str, Any]] = {}
+    n_fail = 0
+    n_total = 0
+    for item_id, mv in model_var.items():
+        hv = human_variance_by_item.get(item_id)
+        if hv is None or hv <= 0:
+            # Without a human-variance reference for this item, abstain
+            # (count it as 'unknown'); do not penalize the model.
+            per_item[item_id] = {
+                "model_var": round(mv, 4), "human_var": None,
+                "ratio": None, "fails_floor": None,
+            }
+            continue
+        ratio = mv / hv
+        fails = ratio < floor
+        per_item[item_id] = {
+            "model_var": round(mv, 4),
+            "human_var": round(hv, 4),
+            "ratio": round(ratio, 4),
+            "fails_floor": fails,
+        }
+        n_total += 1
+        if fails:
+            n_fail += 1
+    fail_pct = (n_fail / n_total) if n_total else 0.0
+    return {
+        "fail_pct": round(fail_pct, 4),
+        "n_items": n_total,
+        "n_items_failing": n_fail,
+        "per_item": per_item,
+        "passes": fail_pct <= DQ3_PER_ITEM_FAIL_MAX,
+    }
 
 
 def _respondent_macro_likert_mae(model_records: list[dict]) -> float | None:
@@ -148,6 +217,7 @@ def _respondent_macro_likert_mae(model_records: list[dict]) -> float | None:
 def select_phase1b_model(
     records: list[dict],
     cost_per_call: dict[str, float] | None = None,
+    human_variance_by_item: dict[str, float] | None = None,
 ) -> dict[str, Any]:
     """Apply the §12.2 quality-primary rule to a Phase-1a records list.
 
@@ -162,6 +232,7 @@ def select_phase1b_model(
     cost = dict(DEFAULT_COST_PER_CALL_USD)
     if cost_per_call:
         cost.update(cost_per_call)
+    hvar = human_variance_by_item or _load_human_variance_reference()
 
     by_model = _full_records_by_model(records)
     if not by_model:
@@ -180,33 +251,35 @@ def select_phase1b_model(
 
     for m, recs in sorted(by_model.items()):
         pf = _parse_failure_rate(recs)
-        var_mean = _mean_per_item_variance(recs)
+        dq3 = _dq3_relative_check(recs, hvar)
         mae = _respondent_macro_likert_mae(recs)
         cost_m = max(cost.get(m, 0.0), COST_FLOOR_USD)
         cost_score = cost_m * (1.0 + pf)
         dq1_pass = pf <= DQ1_PARSE_FAIL_MAX
-        dq3_pass = var_mean >= DQ3_VARIANCE_MIN
         per_model[m] = {
             "n_records_full": len(recs),
             "parse_failure_rate": round(pf, 4),
-            "mean_per_item_variance": round(var_mean, 4),
+            "dq3_per_item_fail_pct": dq3["fail_pct"],
+            "dq3_n_items_failing": dq3["n_items_failing"],
+            "dq3_per_item": dq3["per_item"],
             "respondent_macro_likert_mae": round(mae, 4) if mae is not None else None,
             "cost_per_call_usd": cost_m,
             "cost_score": round(cost_score, 8),
             "dq1_pass": dq1_pass,
-            "dq3_pass": dq3_pass,
+            "dq3_pass": dq3["passes"],
         }
         log.append(
-            f"  [{m}] pf={pf:.3f} var={var_mean:.3f} mae="
-            f"{f'{mae:.4f}' if mae is not None else 'NA'} "
+            f"  [{m}] pf={pf:.3f} "
+            f"dq3_fail_pct={dq3['fail_pct']:.2f} ({dq3['n_items_failing']}/{dq3['n_items']}) "
+            f"mae={f'{mae:.4f}' if mae is not None else 'NA'} "
             f"cost={cost_m:.2e} dq1={'OK' if dq1_pass else 'FAIL'} "
-            f"dq3={'OK' if dq3_pass else 'FAIL'}"
+            f"dq3={'OK' if dq3['passes'] else 'FAIL'}"
         )
 
     survivors = [
         m for m, x in per_model.items()
         if x["dq1_pass"] and x["dq3_pass"]
-        and x["respondent_macro_likert_mae"] is not None
+        and x.get("respondent_macro_likert_mae") is not None
     ]
 
     if not survivors:
@@ -294,7 +367,14 @@ def _cli():
 
 
 def _self_test() -> None:
-    """Hand-crafted records exercising each branch of the rule."""
+    """Hand-crafted records exercising each branch of the rule.
+
+    Synthetic human-variance reference for the self-test items P1/P2/P3:
+    we use {P1: 4.0, P2: 3.0, P3: 2.0} so the relative-variance DQ-3
+    has meaningful behavior. Real GSS items use the locked reference at
+    outputs/primary_eval_human_variance_2024.json.
+    """
+    SYNTHETIC_HUMAN_VAR = {"P1": 4.0, "P2": 3.0, "P3": 2.0}
 
     def _make_record(
         rid: int, model: str, item_codes: dict[str, list[tuple[int | None, int]]],
@@ -345,7 +425,7 @@ def _self_test() -> None:
         # Kimi: shift by +3 → MAE ~3
         r1.append(_make_record(rid, "moonshotai/kimi-k2",
                                {k: [(min(t + 3, 7), t)] for k, t in truths.items()}))
-    out1 = select_phase1b_model(r1)
+    out1 = select_phase1b_model(r1, human_variance_by_item=SYNTHETIC_HUMAN_VAR)
     assert out1["selected"] == "qwen/qwen-2.5-72b-instruct", out1["selected"]
     assert out1["rationale"] == "argmin_mae", out1["rationale"]
     print(f"    ✓ SELECTED={out1['selected']} rationale={out1['rationale']}")
@@ -359,7 +439,7 @@ def _self_test() -> None:
             # Every output is "4" → variance 0, fails DQ-3
             r2.append(_make_record(rid, m, {"P1": [(4, 4)], "P2": [(4, 3)],
                                             "P3": [(4, 5)]}))
-    out2 = select_phase1b_model(r2)
+    out2 = select_phase1b_model(r2, human_variance_by_item=SYNTHETIC_HUMAN_VAR)
     assert out2["selected"] == QWEN_FALLBACK_SLUG, out2["selected"]
     assert out2["rationale"] == "fallback_qwen_dq", out2["rationale"]
     print(f"    ✓ SELECTED={out2['selected']} rationale={out2['rationale']}")
@@ -375,7 +455,7 @@ def _self_test() -> None:
                 "P2": [(None, 3)],   # parse fail
                 "P3": [(5, 5)],      # OK
             }))  # 2/3 = 66.7% parse fail
-    out3 = select_phase1b_model(r3)
+    out3 = select_phase1b_model(r3, human_variance_by_item=SYNTHETIC_HUMAN_VAR)
     assert out3["selected"] == QWEN_FALLBACK_SLUG, out3["selected"]
     assert out3["rationale"] == "fallback_qwen_dq", out3["rationale"]
     print(f"    ✓ SELECTED={out3['selected']} rationale={out3['rationale']}")
@@ -389,7 +469,7 @@ def _self_test() -> None:
         truths = {"P1": (rid % 7) + 1, "P2": (rid % 5) + 1, "P3": (rid % 4) + 1}
         for m in ["qwen/qwen-2.5-72b-instruct", "deepseek/deepseek-chat"]:
             r4.append(_make_record(rid, m, {k: [(t, t)] for k, t in truths.items()}))
-    out4 = select_phase1b_model(r4)
+    out4 = select_phase1b_model(r4, human_variance_by_item=SYNTHETIC_HUMAN_VAR)
     # Note: DeepSeek has lower default cost (4.5e-5 < 6.0e-5 Qwen)
     assert out4["selected"] == "deepseek/deepseek-chat", out4["selected"]
     assert out4["rationale"] == "tie_break_cost", out4["rationale"]

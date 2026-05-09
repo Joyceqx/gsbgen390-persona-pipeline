@@ -36,8 +36,10 @@ import pandas as pd
 from gss_loader import load_gss
 from gss_pipeline import (
     BIN_DISPLAY,
+    battery_excludes_for_item,
     build_persona_prompt,
     format_eval_question,
+    load_battery_map,
     load_taxonomy,
     sample_respondents,
     score_item,
@@ -150,16 +152,41 @@ def run_primary_one_respondent(
     verbose: bool = True,
 ) -> list[dict]:
     """For one respondent: 5 conditions × 12 items × len(models) × n_samples calls.
-    Returns a list of records, one per (condition, model)."""
+    Returns a list of records, one per (condition, model).
+
+    R1 (locked 2026-05-08, gss_phase1_design.md §9c.R1): battery exclusion is
+    applied PER ITEM. When predicting any item that belongs to a battery (per
+    `gss_battery_map.json`), the entire battery is excluded from the persona
+    prompt for that prediction. This mirrors Park v2's BFI whole-trait-block
+    hold-out rule (Park v2 SI §5, PDF p.37) and defends against constructive
+    auto-correlation in the attitudinal feature bin (e.g., ABDEFECT/ABNOMORE
+    leaking into ABANY prediction).
+
+    Singleton items (PARTYID, POLVIEWS, CAPPUN, GUNLAW, SATFIN) get only the
+    predicted item itself excluded (a no-op since primary_eval is already
+    disjoint from feature bins per the validator).
+    """
     rid = int(respondent.get("ID_", -1))
     records: list[dict] = []
+    battery_map = load_battery_map()
 
     for cond_name, drop_bin in CONDITIONS_PRIMARY:
-        # Build the persona prompt ONCE per condition (reused across items + models)
-        system, prompt_stats = build_persona_prompt(respondent, taxonomy, drop_bin=drop_bin)
         per_model_scores: dict[str, dict[str, list[dict]]] = {m: {} for m in models}
+        # Track per-item prompt stats for transparency (each item now has its
+        # own battery-excluded prompt rather than a single shared prompt).
+        per_item_prompt_stats: dict[str, dict] = {}
 
         for item in primary_eval_items:
+            # R1: battery exclusion per item
+            excludes = battery_excludes_for_item(item["id"], battery_map)
+            system, prompt_stats = build_persona_prompt(
+                respondent, taxonomy, drop_bin=drop_bin, exclude_vars=excludes
+            )
+            per_item_prompt_stats[item["id"]] = {
+                k: v for k, v in prompt_stats.items() if k != "excluded_vars"
+            }
+            per_item_prompt_stats[item["id"]]["battery_excluded"] = sorted(excludes)
+
             question, meta = format_eval_question(item)
             truth = truth_code_or_none(respondent.get(item["id"]), item["id"])
             for m in models:
@@ -184,7 +211,8 @@ def run_primary_one_respondent(
                 "model": m,
                 "n_samples": n_samples,
                 "per_item_scores": per_item,
-                "prompt_stats": {k: v for k, v in prompt_stats.items() if k != "excluded_vars"},
+                "per_item_prompt_stats": per_item_prompt_stats,
+                "r1_battery_exclusion": True,
             })
     return records
 

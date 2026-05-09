@@ -1,5 +1,7 @@
 # --- Secrets ---
 Openai_api.txt
+OpenRouter_api.txt
+Openrouter_api.txt
 *.key
 *api_key*
 .env

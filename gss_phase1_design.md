@@ -147,14 +147,13 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 4. **GSS-attitudinal outcome only.** Does NOT generalize to BFI-personality or behavioral-game prediction. Phase 2 covers those.
 5. **Snapshot prediction.** Does NOT measure stability over time, longitudinal change, or causal direction.
 6. **GSS sampling design** is a complex multi-stage probability sample with weights (`WTSSALL`, `WTSSPS_NEXT`, etc.). Primary analysis is unweighted; a weighted-reanalysis robustness check is in §10.
-7. **Pre-registration on OSF before Phase 1a — staged.** The initial pre-reg (filed *before* 1a fires) locks: taxonomy, primary + sensitivity eval sets, primary metric, exclusion rules, the 4-cheap-model panel, the §12.2 quality-primary selection rule, the §10 aggregation + paired-bootstrap rules, and the **4-bin LOO** as the lock-ready primary analysis. No post-hoc adjustment of the 4-bin assignments after 1a fires.
-
-   **The theory-bin LOO (§13) is NOT in the initial pre-reg.** It enters via a pre-reg amendment, filed *before any 1c re-aggregation runs*, once Joyce's literature review has locked a theory and the variable→cluster mapping is committed in `gss_theory_taxonomy.json`. Until that amendment is filed, the theory-bin LOO is exploratory.
+7. **Pre-registration on OSF before Phase 1a.** The pre-reg (filed *before* 1a fires) locks: taxonomy, primary + sensitivity eval sets, primary metric, exclusion rules (R1 battery exclusion + sensitivity per-item exclusion), R2 regression-baseline partition, the 4-cheap-model panel, the §12.2 quality-primary selection rule, the §10 aggregation + paired-bootstrap rules, the **4-bin LOO** as primary analysis, the **bin-level Shapley decomposition** as a robustness re-aggregation, the **attitudinal-bin battery LOO** as a secondary interpretability analysis, and the §11.1 writeup language template. No post-hoc adjustment of the 4-bin assignments after 1a fires.
 
 8. **Multiplicity / multiple-LOO control.**
    - The 4-bin primary family has 4 ΔMAE tests. **Holm-Bonferroni at α=0.05** is applied within this family. Adjusted-significant findings are reported as "primary"; unadjusted bin contributions are reported descriptively.
-   - The theory-bin LOO (when activated via the §13 amendment) constitutes a separate, secondary family of ~5-10 ΔMAE tests; Holm-Bonferroni is applied within it independently. The theory-bin family is always reported as a *secondary confirmation*, not as a co-primary headline, even after the amendment.
-   - Until the §13 amendment is filed, **only the 4-bin primary multiplicity rule is in force.** No theory-bin tests are reported during the initial Phase 1a/1b primary writeup.
+   - The attitudinal-bin battery LOO (§13) is a *secondary interpretability* family of ~10-11 ΔMAE tests, **only run if the 4-bin LOO confirms attitudinal-bin dominance**. Holm-Bonferroni applied within this secondary family independently. Reported as descriptive within-bin decomposition, not as a co-primary headline.
+   - Bin-level Shapley decomposition (16-condition) is a *robustness* readout of the same primary 4-bin estimand; no separate multiplicity correction needed (it shares the 4-bin family).
+   - **Theory-bin LOO is NOT a confirmatory family in this slimmed design.** Theory framing enters in the Discussion section as interpretive secondary analysis only (see §13). If a future amendment adds theory-bin LOO as a confirmatory family, that amendment will introduce its own Holm correction at that time.
 
 ## 9. Decisions locked (post-Bayati 2026-05-02; audit-fix 2026-05-05)
 
@@ -174,11 +173,17 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 - **Sensitivity / Park-comparable analysis**: ~118-item `sensitivity_eval` (Park v2 GSS list minus 15 retired/renamed in 2024). Per-item exclusion when predicted. **Raw accuracy only** — no LOO, no normalization.
 - One data download (`data/gss/390data1/`) covers both. Analysis-side split happens in code, audited via `gss_feature_taxonomy.json`.
 
-### 9c. Leakage hygiene — three layers
+### 9c. Leakage hygiene — four layers (R1 + R2 added 2026-05-08 per §3.1 audit)
 
 1. **Layer 1 (direct, prevented)**: declared feature bins are disjoint from `primary_eval` (validator enforces); per-item exclusion in the sensitivity pass prevents direct leakage there too.
-2. **Layer 2 (synonymous, not present in GSS-only design)**: Park's 27-item AVP-overlap removal does not apply to us (no AVP interview in Phase 1). Within-GSS, Park v2 SI argues no synonymous pairs.
-3. **Layer 3 (constructive auto-correlation, acknowledged not prevented)**: items within a battery (abortion, confidence, gender) are highly correlated. Attitudinal-bin LOO drop will partly measure within-domain correlation, not just "construct understanding". This is documented in §11 and propagates to the writeup.
+2. **Layer 2 (synonymous, not present in GSS-only design)**: Park's 27-item AVP-overlap removal does not apply to us (no AVP interview in Phase 1). Within-GSS, Park v2 SI §9 (PDF p.10 / SI p.42) argues no synonymous pairs in the cross-instrument audit.
+3. **Layer 3 — R1 (battery-level structural exclusion, NEWLY ENFORCED 2026-05-08)**: when predicting any primary_eval item that belongs to a battery (per `gss_battery_map.json` v0.1, 15 batteries + 9 singletons), the entire battery is dropped from the persona prompt for that prediction. Mirrors Park v2's BFI whole-trait-block hold-out (Park v2 SI §5, PDF p.37: *"For the Big-5 we always hold-out the whole block of questions asking about a particular personality trait when predicting an outcome question within that trait"*). Implemented in `run_primary_one_respondent` and validated by `validate_taxonomy.py` check 7c.
+4. **Layer 4 — R2 (regression-baseline partition, NEWLY ADDED 2026-05-08)**: alongside the LLM panel, run a non-LLM regression baseline (`regression_baseline.py`: Ridge for Likert, multinomial Logistic for binary, 5-fold CV at the respondent level, same R1 battery exclusion applied symmetrically). The regression's per-item MAE is the "auto-correlation upper bound" any feature-to-item predictor can extract from the same input. The headline partition becomes:
+   - LLM-panel MAE on item X = (regression MAE on X) + (LLM gain over regression)
+   - The first term is pure auto-correlation; the second is the persona-reasoning contribution.
+   - This is methodologically a step *past* Park v2: Park brackets the inflation between two hold-out strategies (single-item gives 0.82, whole-module gives 0.77 — Park v2 SI §6, PDF p.39 *"average normalized accuracy of 0.77 (std = 0.12)"* under whole-module hold-out vs *"0.82 (std = 0.18)"* under single-item); we partition it by introducing a regression comparator the same input pool can produce.
+
+**R3 (whole-attitudinal-bin Park-strict reanalysis) was considered and explicitly NOT IMPLEMENTED** (decision 2026-05-08): R3 would globally remove every variable in any primary_eval battery from the attitudinal bin before any LOO ran, leaving an artificially-thin bin. Joyce's call: R1 already provides per-item structural exclusion at the right granularity (the predicted item's own battery, not all batteries), and R3 would conflate two effects (battery-level redundancy + bin-level information capacity), making the LOO ranking uninterpretable. R1 + R2 together provide the structural defense (R1) and the partition test (R2) that R3 was meant to triangulate.
 
 ### 9d. Two-week plan
 
@@ -221,11 +226,27 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 **Phase 1 evidence does NOT support**:
 - "The LLM persona simulates humans at X%" — we have no recontact baseline; X% is unnormalized.
 - "Our normalized accuracy matches Park's 82%" — we do not compute normalized accuracy.
-- "Attitudinal features dominate human-simulation fidelity" — they may dominate due to within-domain auto-correlation; the result is GSS-attitude-prediction-internal, not a fidelity claim.
+- "Attitudinal features dominate human-simulation fidelity" — they may dominate due to within-domain auto-correlation; with R1 + R2 in force we can quantify this, but the result remains GSS-attitude-prediction-internal, not a fidelity claim.
 - "Demographics don't matter for personas" — we measure demographics' contribution within GSS-attitude prediction, not their general informativeness for BFI personality or behavioral games.
 - Generalization to BFI personality or behavioral games — Phase 2 only.
+- "Robust across LLM families" — the 4 cheap-panel models are all China-trained (Qwen / DeepSeek / MiniMax / Kimi); the cross-family claim is restricted to "across four China-trained instruction-tuned models in a 100-respondent comparison" and does NOT apply to the N=1500 Phase 1b headline (which runs on a single quality-selected model). Cross-Western/Eastern robustness lives only on the GPT-4o anchor (N=100 subset).
 
 These constraints carry over into the abstract, headline figures, and reviewer-facing claims of the Phase 1 writeup.
+
+### 11.1 Writeup language template (locked 2026-05-08, per §3.3 + §3.4 audit)
+
+The following sentence-level constraints are **mandatory** in any Phase 1 abstract, headline figure, or reviewer-facing summary:
+
+| Constraint | Required form | Forbidden form |
+|---|---|---|
+| "Persona fidelity" qualifier | "within-wave attitudinal prediction" / "single-wave GSS attitudes" | bare "persona fidelity" |
+| Cross-model robustness scope | "across four China-trained instruction-tuned models in a 100-respondent comparison" | bare "across LLM families" |
+| Headline-N model identity | "the {selected_model} reported under the §12.2 quality-primary rule, N=1500" | "the cheap panel" / "the LLM panel" |
+| Park comparison anchor | "the GPT-4o anchor on the N=100 subset, with single-item hold-out matching Park v2 SI §6" | "matches Park's 82%" |
+| Auto-correlation framing | "after R1 battery-level exclusion and R2 regression-baseline partition" | bare "after leakage hygiene" |
+| Test-retest claim | (none — say nothing about test-retest) | "normalized accuracy" / "fidelity" |
+
+The abstract and the dashboard / GitHub Pages footer must each be checked against this table before submission. A reviewer who sees a violation immediately recognizes the over-claim — preventing this is what §11.1 exists for.
 
 ## 12. Multi-model panel design (locked 2026-05-05)
 
@@ -296,7 +317,7 @@ choose argmin
 
 1. **DQ-1 — Parse-failure ceiling.** Any model with `parse_failure_rate_on_1a > 0.30` is removed from the candidate set BEFORE quality scoring. Rationale: a model that parse-fails on >30% of items is operationally unusable at scale regardless of its measured MAE on the parsed remainder.
 
-2. **DQ-3 — Mode-collapse guard.** Any model whose **per-item output-code variance** averaged across the 12 primary_eval items is `< 0.5` is removed. Rationale: a model that constantly outputs the same modal code (e.g., always "4" on a Likert-7) trivially achieves a low MAE on a centrally-distributed sample — DQ-3 catches this without requiring a comparator. The 0.5 floor is calibrated against the GSS 2024 *human* per-item variance, which is typically >1.0 on contested items; a model below 0.5 is producing degenerate output, not a calibrated prediction.
+2. **DQ-3 — Mode-collapse guard (per-item relative threshold; revised 2026-05-08 per audit §3.9).** For each of the 12 primary_eval items, the model's output-code population variance across respondents must satisfy `var(model_i) ≥ 0.30 × var(human_i)`, where `var(human_i)` is the locked GSS 2024 per-item human variance (computed once from `outputs/primary_eval_human_variance_2024.json`, OSF-pre-registered). A model is disqualified if **more than 50% of items fail** this floor — i.e., a majority of items show output collapse relative to the empirical human distribution. Rationale: an absolute threshold (e.g., 0.5) is too lenient on heavily-skewed items where human variance itself is < 0.5 (FEPOL = 0.15, GUNLAW = 0.21, FEPOL is 82/18 split) and too strict on widely-spread items (PARTYID human variance = 4.24). The relative threshold scales with the empirical human distribution per item; 30% is the OSF-pre-registered floor (chosen because (a) a perfectly-calibrated LLM can plausibly run at ~50-100% of human variance, so 30% gives substantial headroom; (b) a mode-collapsed LLM with single-mode output has variance 0% of human; the 30% line cleanly separates the two regimes per the §12.2.1 simulation table).
 
 3. **Tie-break — cost.** Among models within **5% of the best primary_score** (i.e., `MAE_model ≤ 1.05 × MAE_best`), select the one with the **lowest `cost_per_call_USD × (1 + parse_failure_rate)`** score. Rationale: when quality is statistically indistinguishable, the cost-pre-registered framing of the cheap panel still informs the choice.
 
@@ -320,54 +341,71 @@ This is honest, internally consistent with the paper's primary metric, and avoid
 
 ---
 
-## 13. Theory-driven feature engineering (Phase 1c — pending literature lock)
+## 13. Secondary analyses (locked 2026-05-09: lean structure)
 
-The 4-bin taxonomy (demographic / behavioral / psychological / attitudinal) is **atheoretical** — it's a sorting convention, not derived from any cognitive or behavioral-science theory. To strengthen the paper's theoretical contribution, Phase 1 will additionally run a **theory-driven secondary LOO analysis** alongside the atheoretical primary.
+**Design philosophy** (locked 2026-05-09 per Codex slim-down audit): the paper has ONE clean primary contribution — *which survey-collectible feature categories actually improve LLM persona prediction of GSS attitude outcomes?* — answered by the 4-bin LOO. Two secondary analyses extend that contribution; theoretical interpretation enters the Discussion section but is NOT a parallel confirmatory analysis.
 
-### Status — NOT LOCK-READY
+### 13.1 Bin-level Shapley decomposition (secondary — robustness)
 
-⚠️ **§13 is NOT lock-ready as of 2026-05-06.** It cannot be in the OSF pre-registration in its current form because the theory has not yet been chosen. Joyce is conducting the literature review (`theory_review.md`) to pick one of: Moral Foundations Theory, Schwartz's Universal Values, Bourdieu's Capitals, or Cultural Theory of Risk. Once a theory is selected, the variable→cluster mapping is locked in `gss_theory_taxonomy.json`, and §13 becomes lock-eligible.
+**Purpose**: check whether the 4-bin LOO ranking is robust to feature-bin interactions that LOO (a marginal-effects estimator) cannot capture.
 
-**Pre-reg sequencing**:
-- The atheoretical 4-bin LOO (§§4–12) IS lock-ready and can go to OSF immediately.
-- §13 requires either (a) Joyce's theory pick + mapping JSON before pre-reg, OR (b) §13 being explicitly listed in the OSF pre-reg as "exploratory secondary analysis to be specified in a pre-reg amendment before any 1c re-aggregation runs."
-- Default: option (b) — file the OSF pre-reg now with the 4-bin primary locked, and amend with the locked theory mapping before Phase 1c re-aggregation.
+**Algorithm**: enumerate all 2⁴ = 16 conditions (include/exclude each of the 4 bins). Compute respondent-macro Likert MAE under each condition. Shapley value for bin B = average of `MAE(coalition without B) − MAE(coalition ∪ {B})` over all 8 coalitions not already containing B. Output schema in `tier1_tool_schemas.md`.
 
-🔒 **Pending Joyce's literature review** (deliberate). Candidate theories surveyed in `theory_review.md`; the chosen theory's mapping to GSS items will be locked in `gss_theory_taxonomy.json` before Phase 1c re-aggregation runs.
+**When run**: Phase 1a (N=100), once per cheap-panel model. Optionally re-run on Phase 1b selected model.
 
-### What this adds
+**Reporting role**: **robustness re-aggregation of the same primary 4-bin estimand**, not a separate confirmatory family. The 4-bin Shapley values + their interaction terms are reported alongside the LOO ΔMAE as evidence of robustness. No separate Holm correction (shares the 4-bin family).
 
-After the 4-bin LOO produces the atheoretical primary headline, **the same persona prompts and the same eval items** will be re-aggregated under a theoretically-grounded grouping (e.g., Moral Foundations Theory's 5-6 foundations, or Schwartz's 10 universal values, or Bourdieu's 3 capitals). The same LOO ablation runs against the new groups.
+**Anti-overclaim**: Shapley is a decomposition tool, NOT a "new theory engine." We do not interpret 2-way / 3-way interaction terms as theoretical findings unless they survive bootstrap CI; they are reported as descriptive numbers with their CIs. **We do not call any custom variance-share statistic "Friedman's H"** unless we explicitly implement Friedman & Popescu (2008)'s definition; we use a clearly-named non-standard metric (`interaction_variance_share`) defined in the schema.
 
-### Why this matters for the paper
+### 13.2 Attitudinal-bin battery LOO (secondary — interpretability)
 
-- The 4-bin LOO answers an engineering question: *which arbitrary feature category contributes most?*
-- The theory-driven LOO answers a psychological question: *which theoretical construct best organizes the input that drives accurate persona prediction?*
-- Comparing the two LOOs tells us whether the LLM's persona-internal feature representation aligns with established human-cognition theory.
-- This shifts the paper from "feature-engineering result on GSS data" to "psychological-theoretical claim about LLM persona construction" — much stronger thesis fit.
+**Purpose**: **conditional on** the 4-bin LOO confirming attitudinal-bin dominance, identify which specific attitude batteries within the bin drive the result.
 
-### Cost addition
+**Trigger**: only run if `shapley_per_bin.attitudinal.rank == 1` (or 4-bin LOO ΔMAE for attitudinal exceeds the other three bins). If attitudinal does not dominate, this analysis is skipped and reported as "not applicable to the observed pattern."
 
-Almost zero. The theoretical secondary analysis re-uses the same LLM outputs from Phase 1a/1b — it's a re-aggregation, not a re-run. Only cost is the 2-3 days of Joyce's literature work to lock the mapping.
+**Algorithm**: for each of the ~10-11 attitudinal-bin batteries (per `gss_battery_map.json`), drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1's per-item battery exclusion). Re-run prediction; compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level (B=1000, seed=42). Apply Holm-Bonferroni at α=0.05 across the ~10-11 within-attitudinal battery family.
 
-### Pre-registration — staged via amendment
+**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. ~$25-30 incremental.
 
-The initial OSF pre-registration (filed *before Phase 1a fires*) locks the **4-bin primary LOO only**. It does NOT include the theory-bin LOO, because the theory has not yet been chosen.
+**Reporting role**: **descriptive within-bin decomposition**, not a co-primary headline. The paper says *"if attitudinal features drive prediction, the contribution is concentrated in the [X, Y, Z] batteries (Holm-significant); battery-LOO ΔMAE rankings are reported in Table 4."*
 
-The theory-bin LOO enters via an **OSF pre-reg amendment**, filed *before any 1c re-aggregation runs*, once the following are committed:
-1. A locked candidate theory in `theory_review.md` §8 (`_locked_theory` field set)
-2. A locked variable → theory-cluster mapping in `gss_theory_taxonomy.json`
-3. A locked Holm-Bonferroni multiplicity rule for the theory-bin family (independent of the 4-bin primary family — see §8.8)
+**Output schema** in `tier1_tool_schemas.md` Tool 2.
 
-Until the amendment is filed, the theory-bin LOO is **exploratory** and is NOT reported as a confirmatory result in the Phase 1a/1b primary writeup. Re-aggregating the existing LLM outputs under a theory-bin grouping *before* the amendment is research-degrees-of-freedom misuse and must be avoided.
+### 13.3 Theory interpretation (Discussion section only)
 
-### Joyce's next step
+The 4-bin taxonomy is atheoretical — a sorting convention, not derived from cognitive theory. After the primary results are in, the paper's Discussion section situates the empirical pattern in relation to existing cognitive and sociological frameworks (see `theory_interpretation_guide.md`).
 
-Read `theory_review.md` for the candidate-theory survey. Pick one. Update the `_locked_theory` field at the top of that doc. Once locked, the next steps are:
-1. Build `gss_theory_taxonomy.json` mapping each attitudinal GSS variable → theory cluster
-2. Extend `compute_phase1_headline_multimodel` to compute LOO on theory-cluster groups
-3. **File the OSF pre-reg amendment** introducing the theory-bin family BEFORE running any theory-bin re-aggregation
-4. Re-aggregate Phase 1a/1b outputs under the theory grouping; report theory-bin LOO as a secondary confirmation
+**Critical preregistration commitment**: theory interpretation is **secondary and explanatory**. The primary findings (4-bin LOO rankings, Shapley decomposition, attitudinal battery LOO) do NOT depend on which theory aligns most closely with the data. Specifically:
+
+- The headline in the abstract is stated in atheoretical engineering terms (e.g., *"attitudinal features dominate, with within-bin contribution concentrated in [batteries]"*).
+- Theory framing enters one Discussion subsection labeled clearly as interpretive secondary analysis.
+- We do NOT preregister a horse race that would let one theory "win."
+- We do NOT make the abstract claim "LLM persona representation aligns with [Theory X]."
+- **Null or mixed theoretical alignment will be reported honestly** — if no framework cleanly explains the empirical pattern, the Discussion says so without distortion.
+
+**What we DO commit to** (anti-HARKing on the secondary):
+1. Listing candidate frameworks (MFT / Schwartz / Bourdieu / Cultural Theory / Inglehart-Welzel / Big Five) BEFORE seeing Phase 1a results, in `theory_interpretation_guide.md`.
+2. Stating each framework's broad expected pattern (which bin / battery should dominate) at a coarse level — to prevent post-hoc cherry-picking among them.
+3. Reporting the alignment qualitatively, NOT through preregistered numeric thresholds that would convert this into a confirmatory horse race.
+
+**What we explicitly DO NOT commit to**:
+- Hard Spearman ρ thresholds per theory.
+- A "Stage 3 refinement" experiment (deferred to future work; see §13.4).
+- Theory-bin LOO as a confirmatory family (deferred; see §13.4).
+- Any abstract claim that theory wins or aligns.
+
+### 13.4 Deferred to future work
+
+The following analyses were considered for Phase 1 but **explicitly deferred** under the 2026-05-09 lean-design lock. They may appear as future-work bullet points in the paper's Discussion or as optional appendix material, but are NOT in the primary OSF pre-registration:
+
+- **Theory-bin LOO as confirmatory family** (re-aggregating LLM outputs under a locked theoretical grouping; would require `gss_theory_taxonomy.json` lock + OSF amendment)
+- **Representational Similarity Analysis (RSA)** (theory-derived similarity matrices vs LLM-output similarity)
+- **Permutation importance theory adjudication** (per-(item, var) importance from R2 baseline used to rank theories)
+- **Stage 3 refinement experiments** (theory-organized prompts; counterfactual perturbation; theory-derived feature subsets)
+- **Six-theory horse race with hard numeric thresholds**
+- **Friedman & Popescu (2008) H-statistic** (proper implementation; the slimmed design uses a clearly-named non-standard `interaction_variance_share` instead)
+
+These are listed here so future Joyce + Bayati discussions know what was considered and explicitly chosen against.
 
 ---
 

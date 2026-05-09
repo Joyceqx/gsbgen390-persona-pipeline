@@ -12,14 +12,15 @@ The pilot is the first step of a larger thesis question: **which survey-collecti
 
 If you (or future-Claude) walked in cold, read these in order:
 
-1. [`README.md`](README.md) — this file
-2. [`MEETING_HANDOUT.md`](MEETING_HANDOUT.md) — comprehensive bilingual project brief (English + 中文) — best single read for full context
-3. [`STATUS.md`](STATUS.md) — current project state, what's done vs. pending, file inventory
-4. [`replication_scoping.md`](replication_scoping.md) — full design rationale, Park's actual numbers, what we are and aren't replicating
-5. [`gss_phase1_design.md`](gss_phase1_design.md) — **thesis Phase 1**: GSS public-data feature-importance analysis (proposal)
-6. [`thesis_phase2_design.md`](thesis_phase2_design.md) — **thesis Phase 2**: interview-decomposed feature-importance study (proposal)
-7. [`cookiy_brief.md`](cookiy_brief.md) — Study 1 (interview arm) brief
-8. [`cookiy_brief_study2.md`](cookiy_brief_study2.md) — Study 2 (survey arm) brief
+1. [`HANDOFF.md`](HANDOFF.md) — **start here** — fresh-session quickstart, current state, immediate next actions
+2. [`INDEX.md`](INDEX.md) — file map; what every file is and which are current vs historical
+3. [`STATUS.md`](STATUS.md) — TL;DR + dated changelog
+4. [`PROJECT_SYNTHESIS.md`](PROJECT_SYNTHESIS.md) — paper-ready bilingual (中文 + English) comprehensive synthesis
+5. [`gss_phase1_design.md`](gss_phase1_design.md) — locked Phase 1 design (lean lock 2026-05-09)
+6. [`theory_interpretation_guide.md`](theory_interpretation_guide.md) — Discussion-section memo on candidate cognitive frameworks
+7. [`MEETING_HANDOUT.md`](MEETING_HANDOUT.md) — earlier bilingual project brief (still useful for cross-phase context)
+8. [`replication_scoping.md`](replication_scoping.md) — original Park v2 replication scoping
+9. [`thesis_phase2_design.md`](thesis_phase2_design.md) — Phase 2 (planned)
 
 ## How to run the pipelines
 

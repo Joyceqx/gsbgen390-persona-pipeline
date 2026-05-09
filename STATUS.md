@@ -1,73 +1,138 @@
-# Project Status — GSBGEN390 Phase 1 Pipeline Built + Two Design Upgrades
+# Project Status — GSBGEN390 Phase 1 (Lean Design Locked)
 
-**Last updated:** 2026-05-06 (post-Codex audit fixes + two locked design upgrades: model-selection rule for 1a→1b, theory-driven secondary analysis pending Joyce's literature review)
+**Last updated:** 2026-05-09 (lean-design lock + housekeeping)
 **Maintained by:** Joyce Yu + collaborating Claude session
+**See also:** `INDEX.md` (file map), `HANDOFF.md` (fresh-session quickstart), `PROJECT_SYNTHESIS.md` (paper-ready synthesis)
 
-This document is the single-source-of-truth for what's done, what's pending, and how to pick up the project in a fresh terminal, Claude Code CLI, or Claude Cowork session.
+This document is the changelog-style single-source-of-truth for what's done, what's pending, and how to pick up the project in a fresh terminal. Per-decision rationale is in `PROJECT_SYNTHESIS.md` §4; per-section locked design is in `gss_phase1_design.md`.
 
 ---
 
 ## TL;DR for a fresh session
 
-**The full Phase 1 pipeline is built.** Two locked design upgrades since the last STATUS update:
+**Phase 1 design is LEAN-LOCKED as of 2026-05-09.** The full pipeline is built and tested; only paid runs (smoke + 1a + 1b) are pending an OpenRouter API key.
 
-1. **Q1 — Model-selection rule (Phase 1a → 1b)**: instead of running all 4 cheap models on N=1500, run them on N=100 (Phase 1a), pick the most cost-efficient by a pre-registered composite criterion (cost × (1 + parse-failure-rate); tie-break by MAE then cross-model agreement), then run Phase 1b on that single model. **Halves the budget** (~$215 vs ~$440). See `gss_phase1_design.md` §12.2.
+**Phase 1 has ONE clean primary contribution**: *which survey-collectible feature categories actually improve LLM persona prediction of GSS attitude outcomes?* — answered by the **4-bin LOO ablation** (demographic / behavioral / psychological / attitudinal).
 
-2. **Q2 — Theory-driven secondary analysis**: alongside the atheoretical 4-bin LOO, run a theoretically-grounded secondary LOO (Moral Foundations Theory / Schwartz Values / Bourdieu Capital / Cultural Theory of Risk — Joyce's choice after literature review). Pre-registered alongside the 4-bin. Almost zero extra cost (re-aggregates same LLM outputs). **Pending Joyce's literature review** — see `theory_review.md`. See `gss_phase1_design.md` §13.
+Two **secondary analyses** support the primary:
+1. **Bin-level Shapley decomposition** (16 conditions) — robustness check on the 4-bin LOO ranking against bin-bin interactions.
+2. **Attitudinal-bin Battery LOO** (~10-11 batteries) — within-bin interpretability, **conditional** on attitudinal-bin dominance from primary.
 
-Joyce's path forward:
-- (a) Get OpenRouter API key + run smoke tests (no theory dependency)
-- (b) Read `theory_review.md` + literature → lock theory in §8 of that doc
-- (c) Build OSF pre-reg with both locked design upgrades + 4-bin + theory-bin LOOs declared
-- (d) Run Phase 1a (4 cheap models, multi-model panel, N=100) → model selected
-- (e) Run Phase 1b (single model selected, N=1500) + GPT-4o anchor (N=100)
+**Theory interpretation** (6 candidate frameworks: MFT / Schwartz / Bourdieu / Cultural Theory / Inglehart-Welzel / Big Five) enters the Discussion section as **interpretive secondary analysis only** — NO horse race, no preregistered numeric thresholds, no Stage 3 refinement experiments. See `theory_interpretation_guide.md`.
+
+**Locked numerical and structural decisions**:
+- §12.2 quality-primary model-selection rule (DQ-1 parse-fail ≤30% + DQ-3 per-item relative variance ≥30% of human var + cost tie-break + Qwen fallback)
+- DQ-3 reference: `outputs/primary_eval_human_variance_2024.json` (frozen GSS 2024 per-item variance)
+- 4-layer leakage hygiene: §9c.1 disjointness + §9c.2 GSS-internal synonymy = none + §9c.3 R1 battery exclusion (15 batteries + 9 singletons in `gss_battery_map.json`) + §9c.4 R2 regression-baseline partition
+- §11.1 abstract language template (forbidden mentalist claims; required scope qualifiers)
+- Holm-Bonferroni multiplicity within 4-bin family + within attitudinal-bin Battery LOO family (independent)
+
+**Joyce's path forward (lean version)**:
+- (a) Get OpenRouter API key + run N=10 smoke (~$2-3)
+- (b) Draft OSF pre-reg (4-bin primary scope; `PROJECT_SYNTHESIS.md` §3+§4 is the template; Joyce + Bayati signoff on items in `theory_interpretation_guide.md` §"Open items")
+- (c) Run Phase 1a (4 cheap models on N=100 + GPT-4o anchor) → §12.2 selector picks 1b model
+- (d) Run Phase 1b (single quality-selected model, N=1500) + GPT-4o anchor on N=100 subset
+- (e) Run Shapley decomposition on Phase 1a outputs; conditionally run attitudinal Battery LOO on Phase 1b
+- (f) Write paper with theory framing as Discussion-only
 
 The project has **two sequential phases**, both scoped at the Bayati meeting (2026-05-02):
 
 ### ✅ Pilot phase (completed 2026-04-30)
 End-to-end replication of Park et al. at N=2 + N=1 via Cookiy. Pipeline + dashboard + leakage audit shipped. GitHub repo: https://github.com/Joyceqx/gsbgen390-persona-pipeline. Live dashboard: https://joyceqx.github.io/gsbgen390-persona-pipeline/
 
-### 🟢 Phase 1: GSS public-data feature-importance analysis — pipeline complete
+### 🟢 Phase 1: GSS public-data feature-importance analysis — design LEAN-LOCKED, pipeline complete
 
 **Goal**: attack the GSS-attitudes row of Park's outcome × feature-category matrix at N≈1,500, using free GSS public panel data + 4-cheap-OpenRouter-model panel + GPT-4o anchor on N=100.
 
-**Locked design (Path A\* + multi-model panel)**:
+**Locked design (lean version, 2026-05-09)**:
 - **Snapshot prediction** on GSS 2024 cross-section (N=3,309 respondents, 973 variables)
-- **Primary eval (Path B)**: 12 curated high-variance attitudinal items → supports 4-bin LOO ablation
-- **Sensitivity eval (Path A)**: Park's full ~118 GSS items → per-item Park-comparable accuracy
-- **Feature pool**: 140 variables across 4 bins (24 demographic / 25 behavioral / 8 psychological / 83 attitudinal — taxonomy v0.3 after audit-A reclassification of HOMOSEX/XMARSEX/GRASS to attitudinal, ETHNIC to demographic)
-- **LLM panel (PRIMARY)**: 4 OpenRouter models, n_samples=1 each:
-  - Qwen-2.5-72B-Instruct
-  - DeepSeek-V3.1
-  - MiniMax-M1
-  - Kimi K2
-- **GPT-4o anchor**: on N=100 subset, primary conditions only, n_samples=2 → direct Park v2 Table 3 comparability
-- **Stability metric**: cross-model agreement % (replaces within-model self-consistency for cheap-panel; restored on anchor subset)
-- **Aggregation**: respondent-macro PRIMARY; bootstrap CIs at respondent level B=1000; LOO ΔMAE via PAIRED bootstrap (resample once, compute Full and LOO from same resample, then delta)
+- **Primary eval (Path B)**: 12 curated `primary_eval` items → supports 4-bin LOO ablation
+- **Sensitivity eval (Path A)**: 118 Park-comparable items → per-item raw accuracy via GPT-4o anchor on N=100 subset
+- **Feature pool**: 140 variables across 4 bins (24 demographic / 25 behavioral / 8 psychological / 83 attitudinal — taxonomy v0.3)
+- **LLM panel — Phase 1a (N=100)**: 4 OpenRouter models, n_samples=1 each: Qwen-2.5-72B-Instruct / DeepSeek-V3.1 / MiniMax-M1 / Kimi K2 + GPT-4o anchor on full N=100
+- **LLM panel — Phase 1b (N=1500)**: single model selected by §12.2 quality-primary rule + GPT-4o anchor on N=100 subset
+- **Stability metric**: cross-model agreement % (cheap panel) + within-model self-consistency (GPT-4o anchor only)
+- **Aggregation**: respondent-macro PRIMARY; bootstrap CIs at respondent level B=1000, seed=42; LOO ΔMAE via PAIRED bootstrap; Holm-Bonferroni FWER within each LOO family
 - **Raw accuracy** primary metric — no test-retest normalization (deferred to Phase 2)
-- **Pre-registration** on OSF before Phase 1a launches (locks panel, §12.2 selection rule, multiplicity correction)
+- **Leakage hygiene**: 4 layers (see §9c of design doc): disjointness, GSS-internal synonymy = none, R1 battery exclusion, R2 regression-baseline partition
+- **Pre-registration** on OSF before Phase 1a launches
 
-**Phase 1 budget**: ~$420 total at N=1500 (within original $300-500 envelope).
+**Phase 1 budget**: ~$215 total at N=1500 (within original $300-500 envelope; halved from earlier ~$440 by the §12.2 single-model rule for 1b).
 
-**State**:
-- ✅ GSS 2024 data downloaded (3-batch fixed-width extract from GSS DE)
-- ✅ `gss_loader.py` reads the 3-batch extract → 3,309 × 973 DataFrame; 22/22 key Park variables verified
-- ✅ `gss_feature_taxonomy.json` v0.3 locked + 9-check validator passes
-- ✅ AUDIT-A persona prompt template (locked + smoke test)
-- ✅ AUDIT-B eval question phrasing — 4 stem overrides for canonical GSS wording (locked + smoke test)
-- ✅ AUDIT-C scoring rules — Likert MAE / categorical match / PARTYID contingent treatment (7 hand assertions pass)
-- ✅ AUDIT-D sensitivity per-item exclusion (3-target smoke test with hard assertions)
-- ✅ AUDIT-E aggregation — respondent-macro / item-macro / pooled + bootstrap CI + paired-bootstrap LOO Δ (5 hand assertions)
-- ✅ Multi-model extension to AUDIT-E — per-model + panel-median + cross-model agreement (synthetic 4-model × 2-resp test)
+**Pipeline state (all green)**:
+- ✅ GSS 2024 data downloaded (3-batch fixed-width extract)
+- ✅ `gss_loader.py` reads → 3,309 × 973 DataFrame; 22/22 key Park variables verified
+- ✅ `gss_feature_taxonomy.json` v0.3 locked + `validate_taxonomy.py` 10 checks pass (incl. 7c battery map well-formedness)
+- ✅ `gss_battery_map.json` v0.1 locked (15 batteries + 9 singletons)
+- ✅ AUDIT-A through AUDIT-E (5 audit smoke tests) all pass
+- ✅ AUDIT-B regression: no non-substantive options exposed (12 primary + 118 sensitivity items)
+- ✅ Multi-model extension to AUDIT-E: per-model + panel-median + cross-model agreement
 - ✅ `llm_router.py` — OpenRouter / OpenAI client with retry/backoff
-- ✅ `gss_driver.py` — top-level orchestrator with atomic-write resumability
+- ✅ `gss_driver.py` — top-level orchestrator (atomic-write per-respondent + item-level sensitivity resume + R1 battery exclusion + I-10 reproducibility guard with `--force-non-canonical-seed`)
+- ✅ `select_phase1b_model.py` — §12.2 rule executable + 5-branch self-test passes
+- ✅ `regression_baseline.py` — R2 partition test + N=200 self-test passes (12/12 items scored)
 - 🟡 **N=10 smoke test on real LLM data** ← needs OpenRouter API key
 - 🔒 OSF pre-registration draft (after smoke green)
-- 🔒 Phase 1a (N=100, ~$25) sanity check
-- 🔒 Phase 1b (N=1500, ~$420) primary
+- 🔒 Phase 1a (N=100, ~$65 with anchor)
+- 🔒 §12.2 selector run on 1a output → picks 1b model
+- 🔒 Phase 1b (N=1500, ~$95 selected model + ~$50 anchor)
+- 🔒 Shapley decomposition (Phase 1a; tool to be implemented)
+- 🔒 Attitudinal Battery LOO (Phase 1c, conditional on attitudinal dominance; tool to be implemented; ~$25-30)
 
 ### 🔮 Phase 2: targeted Cookiy collection (planned, not started)
-Will cover BFI-44 personality + behavioral game outcomes that GSS doesn't measure. Includes 2-week recontact for proper test-retest baseline. Smaller N (~30-100). Design in `thesis_phase2_design.md`.
+Will cover BFI-44 personality + behavioral game outcomes that GSS doesn't measure. Includes 2-week recontact for proper test-retest baseline. Smaller N (~20-30, with Phase-1-empirics-seeded power calc before launch). Design in `thesis_phase2_design.md`.
+
+---
+
+## What changed 2026-05-09 (lean-design lock + housekeeping)
+
+### Lean-design lock (Codex's lean-design audit; locked 2026-05-09 afternoon)
+1. **Slimmed away** from "staged confirmatory discovery with 6-theory horse race" toward a leaner, more-publishable structure: 4-bin LOO primary + Shapley robustness + attitudinal Battery LOO interpretability + theory-framing as Discussion-only.
+2. **Deferred to future work**: theory-bin LOO as confirmatory family, RSA, permutation importance theory adjudication, Stage 3 refinement experiments, 6-theory horse race with hard numeric thresholds, Friedman & Popescu (2008) H-statistic proper implementation. See `gss_phase1_design.md` §13.4.
+3. **Renamed**: the morning-of v0.1 DRAFT `osf_preregistration_appendix_a_theory_predictions.md` → `*.SUPERSEDED-2026-05-09.md`. New live spec is `theory_interpretation_guide.md` (Discussion-section memo, not OSF appendix).
+4. **Renamed metric**: the Shapley schema's `friedman_h_statistic` → `interaction_variance_share` (with explicit non-standard definition; we no longer call any custom variance-share statistic "Friedman's H" since we don't implement the Friedman & Popescu (2008) partial-dependence H).
+5. **Files updated**: `gss_phase1_design.md` (§7, §8, §13), `tier1_tool_schemas.md` (slimmed to Shapley + Battery LOO), `theory_interpretation_guide.md` (NEW), `PROJECT_SYNTHESIS.md` (§3.8, §4.8, §6.4, §6.8, §6.9).
+
+### Housekeeping (2026-05-09 evening)
+6. **Created `INDEX.md`** — canonical file map.
+7. **Updated STATUS.md TL;DR** — reflects the lean-locked design (was stale from 2026-05-06).
+8. **Updated HANDOFF.md** — §3 state snapshot + §4 design summary refreshed for lean lock.
+9. **Moved `email_to_bayati.md` → `archive/`** (one-off historical email).
+10. **`osf_preregistration_appendix_a_theory_predictions.SUPERSEDED-2026-05-09.md`** kept in root with explicit suffix (cross-referenced from `theory_interpretation_guide.md` + `PROJECT_SYNTHESIS.md`).
+
+---
+
+## What changed 2026-05-08 (R1 + R2 leakage hygiene + selector + lots of audit fixes)
+
+### Codex research-layer audit (§3.1 / §3.9 / §4) — addressed
+1. **R1 battery exclusion** (§3.1): when predicting any primary_eval item in a battery, drop the entire battery from the persona prompt. Mirrors Park v2's BFI whole-trait-block hold-out (Park v2 PDF p.37, verified). Implemented in `gss_pipeline.py::battery_excludes_for_item` + `gss_driver.py::run_primary_one_respondent`.
+2. **R2 regression baseline** (§3.1): non-LLM regression (Ridge for Likert, multinomial Logistic for binary; 5-fold CV). Per-item MAE = auto-correlation upper bound; partitions LLM gain from auto-correlation. Implemented in `regression_baseline.py`. **Beyond Park v2**: Park brackets inflation (single-item vs whole-module hold-out); we partition it.
+3. **R3 NOT implemented** — would conflate "battery info loss" with "bin capacity reduction." R1 + R2 do the work cleaner.
+4. **DQ-3 absolute threshold (var<0.5) → per-item relative threshold** (§3.9): `var(model_i) ≥ 0.30 × var(human_2024_i)`; >50% items failing disqualifies. Locked human-variance reference at `outputs/primary_eval_human_variance_2024.json`.
+5. **§3.3 + §3.4 abstract language tightening**: `gss_phase1_design.md` §11.1 adds 6-row mandatory measurement-language template (forbids "persona fidelity" / "robust across LLM families" / "matches Park's 82%" / mentalist claims).
+6. **§3.6 decision log**: this STATUS + `PROJECT_SYNTHESIS.md` §4 serve as the OSF "decisions locked, when, against what evidence" log.
+
+### Battery map locked
+7. **`gss_battery_map.json` v0.1**: 15 batteries + 9 singletons. Civil-liberties split into 3 batteries by target group (atheists / racists / communists). `morality_lifestyle` refined into 3 (`sexual_morality` / `moral_legalization` / `adolescent_sex_policy`).
+8. **`validate_taxonomy.py`** check 7c added: every primary_eval item is in a battery OR a singleton; every battery item exists in data; no item in two batteries.
+
+### §12.2 quality-primary selector
+9. **`select_phase1b_model.py`** implements the §12.2 rule deterministically: argmin Likert MAE among DQ-passers (DQ-1 parse-fail ≤30%; DQ-3 per-item relative variance ≥30% of human); cost as 5%-tie-break; Qwen-2.5-72B as named fallback. 5-branch self-test passes (`argmin_mae` / `tie_break_cost` / `fallback_qwen_dq` / `fallback_qwen_tie` / `fallback_qwen_no_data`).
+
+### Code-level operational fixes
+10. **§12.2 selector wired with relative DQ-3** + locked human-variance reference.
+11. **Item-level sensitivity resume** (`gss_driver.py`): `_completed_sensitivity_items` + `_upsert_sensitivity_records` + `persist_after_each_item` callback. Worst-case interruption rerun = 1 in-flight item per (rid, model) instead of 118.
+12. **`run_phase1` default path** now encodes `model_tag` + `seed` so notebook/programmatic callers can't bypass the I-10 reproducibility guard.
+13. **`gss_pipeline.py` `--test-question-options` CLI flag** wired to `_audit_b_test_no_refusal_options`.
+14. **Output schema for AUDIT-B regression** added (no non-substantive labels exposed in `format_eval_question` for any of 12 primary + 118 sensitivity items).
+15. **Bilingual comprehensive doc**: `PROJECT_SYNTHESIS.md` (~750 lines, ZH-first then EN) created — pre-smoke-test review artifact + paper scaffolding.
+
+---
+
+## What changed 2026-05-07 (theory review Round 2)
+
+1. **`theory_review_round2.md` created**: 5 additional candidates the Round 1 scaffold missed (Big Five/HEXACO, Inglehart-Welzel, Hofstede, Theory of Planned Behavior, Self-Determination, Dual-Process), verified 2024-2026 LLM-applied work in 4 buckets (methodological backbone / theory-as-input persona / silicon-sampling neighbors / critical-skeptic), tiered reading list (Tier 1 ~5.5h must-read, Tier 2-4 deeper), 4 open questions for Bayati.
+2. **Round 2 recommendations**: evaluate Inglehart-Welzel 4-quadrant (top) + Big Five-as-input (secondary) alongside Round-1's MFT/Schwartz.
 
 ---
 
@@ -170,8 +235,8 @@ All Bayati-endorsed direction (Phase split / 4-bin taxonomy / pre-registration c
 8. ✅ **`gss_feature_taxonomy.json`** locked:
    - 12 primary_eval items (one per construct family, ~auto-correlation-minimized)
    - 118 sensitivity_eval items (Park's list minus 15 retired/renamed in 2024)
-   - 140 feature variables in 4 bins (23 demographic / 29 behavioral / 8 psychological / 80 attitudinal)
-9. ✅ **`validate_taxonomy.py`** — confirms (a) every claimed variable exists in the data, (b) bins are mutually disjoint, (c) per-respondent coverage. Median respondent answered: 8/12 primary_eval, 20/23 demographic, 20/29 behavioral, 4/8 psychological, 40/80 attitudinal items.
+   - 140 feature variables in 4 bins (24 demographic / 25 behavioral / 8 psychological / 83 attitudinal — final v0.3 counts after audit-A reclassification; superseded the initial 23/29/8/80 from 2026-05-02)
+9. ✅ **`validate_taxonomy.py`** — confirms (a) every claimed variable exists in the data, (b) bins are mutually disjoint, (c) per-respondent coverage. Median respondent answered: 8/12 primary_eval, 20/24 demographic, 17/25 behavioral, 4/8 psychological, 42/83 attitudinal items.
 
 ### Doc updates locked
 10. ✅ `gss_phase1_design.md` rewritten with locked decisions (snapshot, raw accuracy, Path A\*, disjoint-set rule, 2-week plan).
@@ -543,7 +608,7 @@ python3 build_site_data.py
 - **2026-04-30 late night — Thesis-stage two-phase plan committed.** Phase 1 = GSS public-data feature-importance (`gss_phase1_design.md`). Phase 2 = interview-decomposed study (`thesis_phase2_design.md`). Phase 2 replaces an earlier "paired structured survey" idea after Joyce noted that the actual question — *what's IN the interview that surveys can't capture* — requires interview decomposition, not survey-feature ablation. Phase 2 forces a platform pivot: Cookiy 15-min cap is incompatible with 30-45 min modular long interview, so Phase 2 will use Prolific + a self-hosted OpenAI Realtime API moderator. Composed deliverable = the full 4×3 feature-category × outcome-dimension matrix.
 - **2026-04-30 night — Park v1 vs v2 reconciliation + outcome-stratified narrative pivot.** Verified directly from both v1 and v2 PDFs that the proposal's "85%" headline came from v1's interview-based normalized accuracy (~0.85), while v2 reorganized conditions and reports the four numbers we now cite (74/82/83/86%). Both versions live at the same arXiv ID; we adopt v2 framing throughout. **Critical refinement**: the "surveys ≈ interview" tie holds only on GSS attitudes — v2 also reports surveys lagging interviews by 0.15 on BFI-44 personality and by 0.28 on behavioral economic games. Thesis question reframed from "can surveys substitute for interviews?" to **outcome-stratified** "which feature categories close which parts of that gap on which outcomes?" Batch update propagated through `MEETING_HANDOUT.md`, `README.md`, `replication_scoping.md`, `EXPLAIN_ZH.md`, `LIT_REVIEW.md`, `PRIMER.md`, `FUTURE_DESIGN.md`, `progress_report.md`, `docs/index.html`, and this STATUS file.
 - **2026-05-02 — Bayati meeting; Phase 1 design locked.** Direction confirmed: GSS-first then targeted Cookiy. **Path A\* locked**: Path B (12 curated items) as primary for the LOO; Path A (Park's full ~118 items) as sensitivity. Snapshot prediction on a single GSS wave (no panel for prediction). Raw accuracy as primary metric — no test-retest normalization in Phase 1; deferred to Phase 2's recontact arm. Persona self-consistency reported as supplementary stability check. Resolution rule for disjoint sets: features = (declared bin lists) MINUS primary_eval (only); sensitivity-pass handles per-item leakage separately. This rule preserves a populated psychological feature bin in GSS, which would otherwise be empty.
-- **2026-05-02 — Phase 1 data + tooling shipped.** GSS 2024 cross-section (3,309 respondents × 973 unique variables) downloaded via GSS Data Explorer in 3-batch fixed-width format. `gss_loader.py` written: parses each batch's `.do` script for column specs + variable labels + value labels, reads the corresponding `.dat` fixed-width file, namespaces label-set names per batch (avoids cross-batch label collisions), merges 3 batches horizontally. Verified 22/22 key Park variables present with correct labels. `gss_feature_taxonomy.json` locked: 12 primary_eval items + 118 sensitivity_eval items + 140 features (23 demographic / 29 behavioral / 8 psychological / 80 attitudinal). `validate_taxonomy.py` confirms variable presence, bin disjointness, per-respondent coverage.
+- **2026-05-02 — Phase 1 data + tooling shipped.** GSS 2024 cross-section (3,309 respondents × 973 unique variables) downloaded via GSS Data Explorer in 3-batch fixed-width format. `gss_loader.py` written: parses each batch's `.do` script for column specs + variable labels + value labels, reads the corresponding `.dat` fixed-width file, namespaces label-set names per batch (avoids cross-batch label collisions), merges 3 batches horizontally. Verified 22/22 key Park variables present with correct labels. `gss_feature_taxonomy.json` initially locked at 23/29/8/80 (140 total); subsequently revised to v0.3 final counts 24/25/8/83 after the AUDIT-A reclassifications of 2026-05-05. `validate_taxonomy.py` confirms variable presence, bin disjointness, per-respondent coverage.
 - **2026-05-05 morning — Codex audit fixes (1st round).** 5 critical issues fixed: (a) gss_phase1_design.md rewritten end-to-end to match locked snapshot/raw-accuracy design (was internally inconsistent, mixing old 2010-2014 panel design with new 2024 snapshot); (b) Park comparability claims softened to "raw / per-item" only ("not directly numerically comparable to Park's normalized accuracy"); (c) feature-bin leakage rule rewritten to be self-consistent — declared bins disjoint from primary_eval, sensitivity items may be in features with per-item exclusion; (d) PARTYID removed from attitudinal feature bin (it's in primary_eval); (e) loader batch merge now verifies row alignment via per-row YEAR + ID_ equality, fixed ID_ vs ID column drop bug (final shape now correctly 973). validate_taxonomy.py rewritten with 9 explicit checks; raises SystemExit(1) on failure.
 - **2026-05-05 morning — gss_pipeline.py AUDIT-A built + taxonomy v0.3.** Persona prompt template scaffold; AUDIT-A inspection of a sample prompt revealed 4 conceptual mis-categorizations: ETHNIC moved behavioral → demographic; XMARSEX/HOMOSEX/GRASS moved behavioral → attitudinal (these GSS items ask opinions, not behaviors). Net counts now: demographic 24, behavioral 25, psychological 8, attitudinal 83 (still 140 total).
 - **2026-05-05 mid-day — AUDIT B/C/D scaffold + Codex audit fixes (2nd round).** AUDIT-B eval question phrasing: unified format (GSS question + numbered options + "output single integer"). 4 stem overrides for FECHLD/FEPOL/RACDIF1/HELPPOOR with canonical GSS codebook wording (overrides terse `.do` `label var` summaries that were ambiguous). PARTYID presents all 8 codes 0-7. AUDIT-C scoring: Likert MAE for likert3-7, categorical for binary, contingent treatment for PARTYID code 7, parse-failure tracking, missing-truth handling (truth_code_or_none helper). 7 hand-test assertions pass. AUDIT-D sensitivity per-item exclusion: build_persona_prompt(exclude_vars=...). Hard-asserted smoke test: when excluding X, X disappears from prompt AND other sensitivity items remain. 2nd Codex audit: 4 important + 4 minor issues — all fixed (assertion strength, missing-truth converter, paired-bootstrap explicit, stale docstrings, etc.).

@@ -1,0 +1,67 @@
+{
+  "_locked": "2026-05-08",
+  "_source": "GSS 2024 cross-section, N=3309, full population (not Phase 1 sample)",
+  "_purpose": "Per-item human variance reference for DQ-3 (gss_phase1_design.md \u00a712.2). Locked once; do not regenerate.",
+  "items": {
+    "POLVIEWS": {
+      "n": 3160,
+      "human_variance": 2.339937,
+      "dq3_threshold_30pct": 0.701981
+    },
+    "PARTYID": {
+      "n": 3268,
+      "human_variance": 4.243826,
+      "dq3_threshold_30pct": 1.273148
+    },
+    "ABANY": {
+      "n": 2140,
+      "human_variance": 0.240278,
+      "dq3_threshold_30pct": 0.072084
+    },
+    "CAPPUN": {
+      "n": 2067,
+      "human_variance": 0.239727,
+      "dq3_threshold_30pct": 0.071918
+    },
+    "GUNLAW": {
+      "n": 2191,
+      "human_variance": 0.21193,
+      "dq3_threshold_30pct": 0.063579
+    },
+    "FECHLD": {
+      "n": 2168,
+      "human_variance": 0.715637,
+      "dq3_threshold_30pct": 0.214691
+    },
+    "FEPOL": {
+      "n": 892,
+      "human_variance": 0.150053,
+      "dq3_threshold_30pct": 0.045016
+    },
+    "RACDIF1": {
+      "n": 1016,
+      "human_variance": 0.24981,
+      "dq3_threshold_30pct": 0.074943
+    },
+    "CONFINAN": {
+      "n": 2164,
+      "human_variance": 0.426227,
+      "dq3_threshold_30pct": 0.127868
+    },
+    "CONLEGIS": {
+      "n": 2148,
+      "human_variance": 0.355211,
+      "dq3_threshold_30pct": 0.106563
+    },
+    "HELPPOOR": {
+      "n": 2129,
+      "human_variance": 1.518114,
+      "dq3_threshold_30pct": 0.455434
+    },
+    "SATFIN": {
+      "n": 3291,
+      "human_variance": 0.549976,
+      "dq3_threshold_30pct": 0.164993
+    }
+  }
+}

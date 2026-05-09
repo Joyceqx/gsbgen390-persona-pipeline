@@ -41,6 +41,7 @@ from gss_loader import (
 
 WORK = Path("/Users/joyce/Documents/GSBGEN390")
 TAXONOMY_PATH = WORK / "gss_feature_taxonomy.json"
+BATTERY_MAP_PATH = WORK / "gss_battery_map.json"
 
 
 # ---------------------------------------------------------------------------
@@ -60,6 +61,57 @@ def load_taxonomy(path: Path = TAXONOMY_PATH) -> dict:
     }
     raw["_all_features_set"] = set().union(*raw["_feature_bins_sets"].values())
     return raw
+
+
+# Cached battery-map loader (R1 — locked 2026-05-08, gss_phase1_design.md §9c.R1)
+_BATTERY_MAP_CACHE: dict | None = None
+
+
+def load_battery_map(path: Path = BATTERY_MAP_PATH) -> dict:
+    """Load gss_battery_map.json and add reverse-lookup helpers.
+
+    Returns a dict with:
+        "batteries": {battery_name -> {"items": [...], "construct": "..."}}
+        "singletons": [item_ids ...]
+        "_var_to_battery": {var_id -> battery_name (or None)}
+        "_battery_items_set": {battery_name -> frozenset(items)}
+    """
+    global _BATTERY_MAP_CACHE
+    if _BATTERY_MAP_CACHE is not None:
+        return _BATTERY_MAP_CACHE
+    raw = json.loads(path.read_text())
+    var_to_battery: dict[str, str] = {}
+    battery_items_set: dict[str, frozenset[str]] = {}
+    for bname, bdef in raw["batteries"].items():
+        items = frozenset(bdef["items"])
+        battery_items_set[bname] = items
+        for v in items:
+            if v in var_to_battery:
+                raise ValueError(
+                    f"Battery map malformed: {v} appears in both "
+                    f"{var_to_battery[v]} and {bname}. Items must be in at most one battery."
+                )
+            var_to_battery[v] = bname
+    raw["_var_to_battery"] = var_to_battery
+    raw["_battery_items_set"] = battery_items_set
+    _BATTERY_MAP_CACHE = raw
+    return raw
+
+
+def battery_excludes_for_item(item_id: str, battery_map: dict | None = None) -> set[str]:
+    """For R1: return the set of variable ids that must be excluded from the
+    persona prompt when predicting `item_id`.
+
+    Returns the entire battery (including item_id itself) if item_id is in a
+    battery; otherwise returns the singleton {item_id}. The caller usually
+    union's this with any other per-item exclusions (e.g., the predicted item
+    itself in the sensitivity pass).
+    """
+    bm = battery_map or load_battery_map()
+    bname = bm["_var_to_battery"].get(item_id)
+    if bname is None:
+        return {item_id}
+    return set(bm["_battery_items_set"][bname])
 
 
 def sample_respondents(n: int, year: int = 2024, seed: int = 42) -> pd.DataFrame:

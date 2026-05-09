@@ -1,0 +1,77 @@
+{
+  "_version": "0.1",
+  "_locked": "2026-05-08",
+  "_purpose": "Maps GSS variables to construct-level batteries. Used by R1 (battery-level exclusion) — when predicting any item in a battery, the entire battery is dropped from the persona prompt for that prediction. Mirrors Park v2's BFI whole-trait-block hold-out rule (PDF p.37 SI §5).",
+  "_design_notes": [
+    "Battery boundaries are domain decisions, not statistical clusters. We pick the set such that within-battery items share question wording, response scale, and underlying construct closely enough that they are 'effectively asked twice' relative to the predicted item.",
+    "Items NOT listed in any battery are 'singletons' — they get no battery exclusion (R1 is a no-op for them).",
+    "Civil-liberties items are split into 3 batteries by target group (atheists / racists / communists) rather than collapsed into one mega-battery. Rationale: knowing R's view of racists' free-speech tells you very little about R's view of atheists' free-speech, but knowing R's view of one racist-related question tells you a lot about R's view of the others.",
+    "Locked decisions (Joyce 2026-05-08): R3 (whole-attitudinal-bin hold-out) NOT implemented; R1 alone is the structural defense; R2 (regression baseline) provides the partition test."
+  ],
+  "batteries": {
+    "abortion": {
+      "items": ["ABANY", "ABDEFECT", "ABNOMORE", "ABHLTH", "ABPOOR", "ABRAPE", "ABSINGLE"],
+      "construct": "Conditions under which legal abortion should be available. All 7 items are binary YES/NO and share canonical 1972-onward GSS wording."
+    },
+    "confidence_in_institutions": {
+      "items": ["CONFINAN", "CONLEGIS", "CONARMY", "CONBUS", "CONCLERG", "CONEDUC", "CONFED", "CONJUDGE", "CONLABOR", "CONMEDIC", "CONPRESS", "CONSCI", "CONTV"],
+      "construct": "Institutional confidence battery — same 3-point Likert scale (great deal / only some / hardly any) across all 13 institutions."
+    },
+    "national_priorities": {
+      "items": ["NATSPAC", "NATENVIR", "NATHEAL", "NATCITY", "NATDRUG", "NATEDUC", "NATRACE", "NATARMS", "NATAID", "NATFARE", "NATROAD", "NATSOC", "NATCHLD", "NATSCI", "NATENRGY"],
+      "construct": "Spending priority battery — same 3-point scale (too little / about right / too much) across all 15 domains."
+    },
+    "racial_inequality_perception": {
+      "items": ["RACDIF1", "RACDIF2", "RACDIF3", "RACDIF4", "WLTHWHTS", "WLTHBLKS", "WLTHHSPS", "DISCAFF", "DISCAFFW", "DISCAFFM"],
+      "construct": "Causes-of-racial-inequality + group-wealth-attribution + affirmative-action-perception. Tightly correlated cluster covering the same construct (perceived racial inequality)."
+    },
+    "gender_role_attitudes": {
+      "items": ["FECHLD", "FEPOL", "FEHIRE", "FEPRESCH", "FEFAM"],
+      "construct": "Gender-role attitudes battery — same 4-point agree/disagree scale on 5 gender-role propositions."
+    },
+    "civil_lib_atheists": {
+      "items": ["SPKATH", "COLATH"],
+      "construct": "Civil-liberty extension to anti-religionists (free speech + teaching)."
+    },
+    "civil_lib_racists": {
+      "items": ["SPKRAC", "COLRAC", "LIBRAC"],
+      "construct": "Civil-liberty extension to racists (free speech + teaching + library access)."
+    },
+    "civil_lib_communists": {
+      "items": ["SPKCOM", "COLCOM", "LIBCOM"],
+      "construct": "Civil-liberty extension to communists (free speech + employment + library access)."
+    },
+    "sexual_morality": {
+      "items": ["XMARSEX", "HOMOSEX"],
+      "construct": "Same 4-point ALWAYS/NOT WRONG scale on extramarital and same-sex relations."
+    },
+    "moral_legalization": {
+      "items": ["GRASS", "PORNLAW"],
+      "construct": "Should-be-legal stance on marijuana and pornography — both are 'should the state regulate this?' items."
+    },
+    "adolescent_sex_policy": {
+      "items": ["PILLOK", "SEXEDUC"],
+      "construct": "Adolescent sex policy — birth-control access for teens + sex-education in schools."
+    },
+    "religious_belief": {
+      "items": ["BIBLE", "POSTLIFE", "REBORN", "SPRTPRSN", "RELPERSN"],
+      "construct": "Personal religious / spiritual belief intensity (5 distinct measures of the same latent)."
+    },
+    "economic_help": {
+      "items": ["HELPPOOR", "HELPSICK", "HELPNOT", "HELPBLK", "EQWLTH", "GETAHEAD", "PARSOL", "KIDSSOL", "TAX"],
+      "construct": "Government redistribution + economic-mobility beliefs. Tightly correlated 'redistribution attitude' cluster."
+    },
+    "end_of_life": {
+      "items": ["LETDIE1", "SUICIDE1", "SUICIDE2", "SUICIDE4"],
+      "construct": "Right-to-die / suicide-acceptance battery."
+    },
+    "police_use_of_force": {
+      "items": ["POLHITOK", "POLABUSE", "POLATTAK"],
+      "construct": "When may police strike a citizen? — three scenarios with same 1-2 scale."
+    }
+  },
+  "singletons": [
+    "PARTYID", "POLVIEWS", "SATFIN", "CAPPUN", "GUNLAW",
+    "SPANKING", "DIVLAW", "COURTS", "PRAYER"
+  ]
+}
