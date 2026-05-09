@@ -168,6 +168,41 @@ else:
                                   f"(checked {len(all_taxonomy_vars)} vars)")
 
 # ---------------------------------------------------------------------------
+# CHECK 7b: Sensitivity overrides match observed truth codes (Codex 2026-05-06)
+# Loud failure if any sensitivity item's override valid_codes don't cover the
+# observed substantive codes in the loaded data — would otherwise silently
+# produce prompts on one scale and score on another.
+# ---------------------------------------------------------------------------
+print("\n=== 7b. Sensitivity overrides match observed truth codes ===")
+try:
+    from gss_driver import SENSITIVITY_FORMAT_OVERRIDES
+except ImportError:
+    fail("sensitivity overrides", "could not import gss_driver.SENSITIVITY_FORMAT_OVERRIDES")
+    SENSITIVITY_FORMAT_OVERRIDES = {}
+
+mismatches: list[str] = []
+for vname, ovr in SENSITIVITY_FORMAT_OVERRIDES.items():
+    if vname not in df.columns:
+        continue
+    declared = set(ovr["valid_codes"])
+    observed = set(df[vname].dropna().astype(int).tolist()) - MISSING_CODES
+    # Allow overrides to expand beyond observed (e.g., sparse 1-7 even if data only has 1-5)
+    # but require: every observed substantive code must be covered by override valid_codes.
+    uncovered = observed - declared
+    if uncovered:
+        mismatches.append(
+            f"  {vname}: override valid_codes={sorted(declared)} but observed "
+            f"substantive codes {sorted(observed)} contains uncovered {sorted(uncovered)}"
+        )
+
+if mismatches:
+    fail("sensitivity overrides", "valid_codes don't cover observed truth codes")
+    for m in mismatches:
+        print(m)
+else:
+    ok("sensitivity overrides", f"all {len(SENSITIVITY_FORMAT_OVERRIDES)} overrides cover observed truth codes")
+
+# ---------------------------------------------------------------------------
 # CHECK 8 (REPORTING): sensitivity per-item exclusion auditability
 # ---------------------------------------------------------------------------
 print("\n=== 8. Sensitivity per-item exclusion plan (downstream gss_pipeline.py contract) ===")

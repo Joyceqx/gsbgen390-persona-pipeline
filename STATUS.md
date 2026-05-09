@@ -29,7 +29,7 @@ End-to-end replication of Park et al. at N=2 + N=1 via Cookiy. Pipeline + dashbo
 
 ### 🟢 Phase 1: GSS public-data feature-importance analysis — pipeline complete
 
-**Goal**: attack the GSS-attitudes row of Park's outcome × feature-category matrix at N≈1,500, using free GSS public panel data + 4-cheap-OpenRouter-model panel + GPT-4o anchor on N=50.
+**Goal**: attack the GSS-attitudes row of Park's outcome × feature-category matrix at N≈1,500, using free GSS public panel data + 4-cheap-OpenRouter-model panel + GPT-4o anchor on N=100.
 
 **Locked design (Path A\* + multi-model panel)**:
 - **Snapshot prediction** on GSS 2024 cross-section (N=3,309 respondents, 973 variables)
@@ -41,11 +41,11 @@ End-to-end replication of Park et al. at N=2 + N=1 via Cookiy. Pipeline + dashbo
   - DeepSeek-V3.1
   - MiniMax-M1
   - Kimi K2
-- **GPT-4o anchor**: on N=50 subset, primary conditions only, n_samples=2 → direct Park v2 Table 3 comparability
+- **GPT-4o anchor**: on N=100 subset, primary conditions only, n_samples=2 → direct Park v2 Table 3 comparability
 - **Stability metric**: cross-model agreement % (replaces within-model self-consistency for cheap-panel; restored on anchor subset)
 - **Aggregation**: respondent-macro PRIMARY; bootstrap CIs at respondent level B=1000; LOO ΔMAE via PAIRED bootstrap (resample once, compute Full and LOO from same resample, then delta)
 - **Raw accuracy** primary metric — no test-retest normalization (deferred to Phase 2)
-- **Pre-registration** on OSF before Phase 1b launches
+- **Pre-registration** on OSF before Phase 1a launches (locks panel, §12.2 selection rule, multiplicity correction)
 
 **Phase 1 budget**: ~$420 total at N=1500 (within original $300-500 envelope).
 
@@ -99,7 +99,7 @@ Codex audited the AUDIT-E + multi-model build and found 2 critical + 10 importan
 - Phase 1a runs all 4 cheap models on N=100 + GPT-4o anchor.
 - Phase 1b runs only the cheap model that minimizes the locked composite score: `cost_per_call × (1 + parse_failure_rate)`. Tie-break by Likert MAE then cross-model agreement.
 - Total Phase 1 budget halved: ~$215 (vs ~$440 previously).
-- Methodological strengthening: Phase 1a multi-model comparison itself becomes a publishable mini-result; Phase 1b focuses on the cost-pre-registered single model with multi-model robustness panel from 1a.
+- Methodological strengthening: Phase 1a multi-model comparison itself becomes a publishable mini-result; Phase 1b focuses on the **quality-pre-registered** single model (argmin 1a Likert MAE among DQ-passers; cost is tie-break only — see §12.2) with multi-model robustness panel from 1a.
 - Pre-registration must lock the rule BEFORE 1a runs.
 - See `gss_phase1_design.md` §12.2.
 
@@ -128,13 +128,14 @@ Codex audited the AUDIT-E + multi-model build and found 2 critical + 10 importan
 5. ✅ **AUDIT-E** aggregation — respondent-macro PRIMARY (each respondent equal weight); item-macro and pooled SECONDARY. Bootstrap CIs at respondent level B=1000. LOO ΔMAE via PAIRED bootstrap (locked rule from §10: resample respondents once, compute Full and LOO on same resample, then delta). 5 hand-test assertions pass (`--test-aggregation`).
 
 ### Multi-model panel redesign (locked 2026-05-05)
-Original GPT-4o-only would cost ~$900 at N=1500 (over budget). Redesigned to a **4-model OpenRouter panel** as primary + **GPT-4o anchor on N=50** for Park-comparability:
+Original GPT-4o-only would cost ~$900 at N=1500 (over budget). Redesigned to a **4-model OpenRouter panel** as primary + **GPT-4o anchor on N=100** for Park-comparability (anchor bumped from N=50 → N=100 per Codex audit 2026-05-06; budget moved from 1b panel into the cost-saving switch to a single quality-selected model for 1b — see `gss_phase1_design.md` §5):
 
-| Role | Model | Budget at N=1500 |
+| Role | Model | Budget |
 |---|---|---|
-| Cheap-panel (n=1, all conditions, all items) | Qwen-2.5-72B + DeepSeek-V3.1 + MiniMax-M1 + Kimi K2 | ~$360 |
-| Anchor (n=2, primary conditions only, N=50) | GPT-4o | ~$30 |
-| **Total Phase 1b** | | **~$420** |
+| Phase 1a — 4 cheap panel + anchor (N=100) | Qwen-2.5-72B + DeepSeek-V3.1 + MiniMax-M1 + Kimi K2 + GPT-4o anchor | ~$65 |
+| Phase 1b — 1 quality-selected model (N=1500, n=1) | (selected by §12.2 quality-primary rule) | ~$95 |
+| Phase 1b — GPT-4o anchor (N=100 subset, n=2) | GPT-4o | ~$50 |
+| **Total Phase 1** | | **~$215** |
 
 **Methodological strengthening**: "feature-category contribution generalizes across 4 LLM families" is a stronger thesis claim than "tested on GPT-4o." Anchor preserves direct Park v2 Table 3 comparison. Cross-model agreement % replaces within-model self-consistency as primary stability metric. See `gss_phase1_design.md` §12 for full rationale.
 
@@ -155,7 +156,7 @@ All Bayati-endorsed direction (Phase split / 4-bin taxonomy / pre-registration c
 ## What changed 2026-05-02 (Phase 1 build session)
 
 ### Direction-setting
-1. ✅ **Bayati meeting**: Phase split (GSS-first → targeted Cookiy) and 4-bin taxonomy endorsed; pre-registration committed to before Phase 1b.
+1. ✅ **Bayati meeting**: Phase split (GSS-first → targeted Cookiy) and 4-bin taxonomy endorsed; pre-registration committed to before Phase 1a (revised 2026-05-06: pre-reg now precedes 1a so the §12.2 selection rule is locked before 1a fires; that rule was further revised 2026-05-06 from cost-primary to **quality-primary** — argmin 1a Likert MAE among DQ-passers — to align the selection metric with the paper's headline metric).
 2. ✅ **Path A\* locked**: Path B as primary (12 items, supports LOO), Path A as sensitivity (Park's ~118 items, per-item comparability). Same data, two analytical lenses.
 3. ✅ **Snapshot wave structure**: single-wave prediction on GSS 2024 (avoids panel-evolution and cross-wave leakage). Raw accuracy primary; test-retest normalization deferred to Phase 2.
 4. ✅ **Disjoint-set rule clarified**: primary-pass features = (declared bin lists) MINUS primary_eval only; sensitivity-pass handles per-item leakage separately. Resolves the otherwise-empty-psychological-bin problem.
@@ -179,7 +180,7 @@ All Bayati-endorsed direction (Phase split / 4-bin taxonomy / pre-registration c
 ### Open work (not started yet)
 - **#10 `gss_pipeline.py`** — persona-prompt builder + LLM dispatcher + scorer adapted for GSS rows. Reuses pilot's retry/backoff and self-consistency machinery. Needed before any LLM calls.
 - **#6 N=10 smoke test** — verify pipeline end-to-end at minimum scale (~$1).
-- **#7 OSF pre-registration** — drafted before Phase 1b; locks taxonomy, eval list, primary metric, exclusion rules, secondary analyses.
+- **#7 OSF pre-registration** — drafted **before Phase 1a**; locks taxonomy, eval list, primary metric, exclusion rules, secondary analyses, the 4-cheap-model panel, the §12.2 **quality-primary** selection rule (argmin 1a MAE among DQ-passers; DQ-1 parse-fail ≤30%; DQ-3 output-variance ≥0.5; cost as tie-break; Qwen fallback), and the Holm-Bonferroni multiplicity correction.
 - **#8 Phase 1a (N=100)** — sanity check.
 - **#9 Phase 1b (N=1,500)** — primary analysis.
 
@@ -452,7 +453,7 @@ python3 gss_pipeline.py --test-multimodel       # multi-model extension
 python3 gss_driver.py --smoke                   # 1 resp / 1 model / primary only (cheapest)
 python3 gss_driver.py --n 10 --primary-only     # full panel, primary only
 python3 gss_driver.py --n 10                    # full panel + sensitivity pass
-python3 gss_driver.py --anchor --n 50           # GPT-4o anchor on N=50, primary only, n=2
+python3 gss_driver.py --anchor --n 100          # GPT-4o anchor on N=100, primary only, n=2
 python3 gss_driver.py --n 1500                  # Phase 1b primary (after pre-reg)
 python3 gss_driver.py --n 1500 --sensitivity-only  # fill in sensitivity after primary done
 python3 gss_driver.py --models qwen/qwen-2.5-72b-instruct  # custom model list

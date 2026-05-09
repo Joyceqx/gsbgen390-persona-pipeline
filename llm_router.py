@@ -1,8 +1,9 @@
 """LLM router — minimal OpenRouter (or direct OpenAI) client for Phase 1.
 
 Locked panel (gss_phase1_design.md §12):
-  - 4 cheap OpenRouter models, n_samples=1 each, primary path
-  - GPT-4o anchor on N=50 subset, n_samples=2, primary-conditions-only
+  - 4 cheap OpenRouter models, n_samples=1 each, primary path (Phase 1a, N=100)
+  - Phase 1b: single quality-selected model (per §12.2: argmin 1a MAE among DQ-passers), n_samples=1
+  - GPT-4o anchor on N=100 subset, n_samples=2, primary-conditions-only
 
 This module is intentionally small — it does not own scoring, prompt
 construction, or result accumulation. Those live in gss_pipeline.py.
@@ -40,7 +41,7 @@ MODEL_PANEL_PRIMARY: tuple[str, ...] = (
     "moonshotai/kimi-k2",
 )
 
-# Anchor model — Park-comparable; run on N=50 subset only. Available via
+# Anchor model — Park-comparable; run on N=100 subset only. Available via
 # OpenRouter as "openai/gpt-4o" or directly via OpenAI SDK.
 MODEL_ANCHOR: str = "openai/gpt-4o"
 

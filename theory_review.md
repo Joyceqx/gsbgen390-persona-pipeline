@@ -4,6 +4,7 @@
 **Created:** 2026-05-06 by collaborating Claude session (scaffold only — Joyce owns the actual review)
 **Status:** Open. Decision needed before Phase 1a launches.
 **Locked theory:** _(not yet locked — see §6 below)_
+**See also:** `theory_review_round2.md` (2026-05-07) — adds 5 cog-sci/behavioral-science candidates Round-1 missed (Big Five/HEXACO, Inglehart-Welzel, Hofstede, Theory of Planned Behavior, Self-Determination, Dual-Process), verified 2024-2026 LLM-applied work, and a tiered reading list. Read Round 2 alongside this file before locking §8.
 
 This document is a structured starter for the literature review committed to in `gss_phase1_design.md` §13. The goal: pick ONE theoretical framework that maps cleanly onto GSS-attitudinal items, and lock the GSS-variable → theory-cluster mapping in `gss_theory_taxonomy.json` before Phase 1a runs.
 
@@ -64,7 +65,7 @@ Liberals weight care/harm and fairness more; conservatives weight all six more e
 
 - Highly cited, replicated in 30+ countries (Atari et al. 2023 for cross-cultural extension)
 - Direct validated mapping to political attitudes — well-suited to GSS attitudinal items
-- Has been APPLIED to LLM analysis: e.g., Atari et al. 2023, Tjuatja et al. 2024 used MFT to characterize LLM political alignment
+- There is a small body of LLM-MFT work in the moral-psych literature (Atari et al. is one cross-cultural validation paper, but it is about *human* MFT structure, not LLM analysis — Joyce should not cite it as "MFT applied to LLMs"). For "MFT applied to LLMs," Joyce should locate primary sources directly via Google Scholar before citing — I have NOT independently verified a Tjuatja et al. paper that uses MFT on LLMs (Tjuatja 2024 is about response biases, not MFT; see §10.1 caveat below)
 - 5-6 clusters → meaningful LOO with reasonable item-count per cluster (~10-15 items each)
 
 ### Weaknesses / risks
@@ -84,8 +85,10 @@ Liberals weight care/harm and fairness more; conservatives weight all six more e
 ### Foundational citation
 
 - Schwartz, S. H. (1992). *Universals in the content and structure of values: Theoretical advances and empirical tests in 20 countries.* Advances in Experimental Social Psychology, 25, 1-65.
-- Schwartz, S. H. (2012). *An overview of the Schwartz theory of basic values.* Online Readings in Psychology and Culture, 2(1).
-- Cieciuch, J. & Schwartz, S. H. (2012). *The number of distinct basic values and their structure assessed by PVQ-40.*
+- Schwartz, S. H. (2012). *An overview of the Schwartz theory of basic values.* Online Readings in Psychology and Culture, 2(1), Article 11. https://doi.org/10.9707/2307-0919.1116
+- Cieciuch, J. & Schwartz, S. H. (2012). *The number of distinct basic values and their structure assessed by PVQ-40.* Journal of Personality Assessment, 94(3), 321-328. https://doi.org/10.1080/00223891.2012.655817
+
+[verify-before-citing] All three Schwartz citations are well-established but Joyce should pull the originals from APA / J. Pers. Assess. archives before pre-reg quoting.
 
 ### What it claims
 
@@ -238,7 +241,7 @@ When choosing among candidates, evaluate against:
 
 1. **Coverage** — does the theory's clusters span ≥80% of the 80 attitudinal items? (MFT: yes; Schwartz: partial; Bourdieu: weak; Cultural Theory: yes)
 2. **Cluster balance** — do clusters have similar item counts (≥10 per cluster) for meaningful LOO? (MFT 6-cluster: ~10-15 each ✓; Schwartz 10-value: too granular; Schwartz 4-quadrant: balanced ✓; Bourdieu 3-capital: applies to features not attitudes; Cultural Theory: 4-cluster ~10-20 each ✓)
-3. **LLM-applicability literature** — has the theory been applied to LLM/persona analysis already? (MFT: yes — Atari et al. 2023, Tjuatja et al. 2024; Schwartz: partial; Bourdieu: rare in computational work; Cultural Theory: rare)
+3. **LLM-applicability literature** — has the theory been applied to LLM/persona analysis already? (MFT: yes, in scattered short papers — Joyce to find primary sources; Schwartz: partial coverage in survey-bias work; Bourdieu: rare in computational work; Cultural Theory: rare)
 4. **Cross-cultural validation** — supports generalization claim (MFT: cross-cultural; Schwartz: gold-standard; Bourdieu: Western-centric; Cultural Theory: Western-centric)
 5. **Reviewer-friendliness for GSB / Management Science / NeurIPS-NLP** — how each will be received (MFT: well-known but contested; Schwartz: respected but mainstream; Bourdieu: GSB-friendly; Cultural Theory: niche)
 6. **Falsifiability** — does the theory make sharp predictions about WHICH cluster matters MOST for WHICH outcome that we can verify? (MFT: strong; Schwartz: moderate; Bourdieu: weak; Cultural Theory: moderate)
@@ -248,7 +251,7 @@ When choosing among candidates, evaluate against:
 Before locking, Joyce should:
 
 - [ ] Read the foundational papers for at least 2 candidate theories (recommend MFT + Schwartz at minimum, or MFT + Bourdieu for sociology angle)
-- [ ] Look for at least one prior application of the chosen theory to LLM persona / agent analysis (Atari et al. 2023 on MFT is a good starter; arXiv search for "{theory name} LLM persona" should surface others)
+- [ ] Look for at least one prior application of the chosen theory **to LLM persona / agent analysis** — Joyce should locate a primary source via Google Scholar / arXiv search ("{theory name} LLM persona" / "{theory name} large language model" / "{theory name} simulated agents"). NOTE: do NOT cite Atari et al. 2023 here — that paper is a *human* MFT cross-cultural validation, not an LLM-on-MFT application; see §10.1 for the corrected interpretation
 - [ ] Consider Bayati's preference — sociology-tradition (Bourdieu) vs cog-psych (MFT/Schwartz) vs political-psych (Cultural Theory) signals different paper communities
 - [ ] Decide on factor structure (e.g., MFT-5 vs MFT-6, Schwartz-10 vs Schwartz-4-quadrant)
 - [ ] Update §8 below with the locked decision
@@ -266,7 +269,7 @@ Once Joyce updates this section, the next steps are:
 1. Build `gss_theory_taxonomy.json` mapping each attitudinal GSS variable → theory cluster
 2. Add `_audit_f_print()` smoke test that prints the new cluster organization for review
 3. Extend `compute_phase1_headline_multimodel` to compute LOO on theory-cluster groups in addition to 4-bin groups
-4. Pre-register both 4-bin and theory-cluster LOO together on OSF before Phase 1a launches
+4. **File an OSF pre-reg amendment** introducing the theory-bin LOO family (the initial OSF pre-reg locks 4-bin LOO only — see `gss_phase1_design.md` §8.7 + §13). The amendment must be filed *before* any theory-bin re-aggregation runs; the 4-bin primary analysis goes through unchanged.
 
 ---
 
@@ -275,3 +278,98 @@ Once Joyce updates this section, the next steps are:
 This document was scaffolded by AI based on familiar canonical citations. **Joyce must verify the citations, read the original sources, and make her own decision.** The mappings I've sketched are first-pass guesses; the locked mapping requires expert (Joyce + Bayati) judgment after primary-source reading. Treat this as a starting menu, not a literature review.
 
 I have not searched arXiv / Google Scholar to find the latest (2024-2026) work on theory-driven LLM persona analysis. Joyce should do that as part of her review.
+
+---
+
+## 10. Prior work — has anyone used theoretical frameworks for LLM personas?
+
+This section answers Joyce's direct question: *"have other papers / businesses already used theoretical frameworks for persona construction?"* The honest answer is **partially, in scattered ways, but not the way the thesis proposes**. Below: what I know, what I don't, and what the gap is.
+
+### 10.1 Academic LLM-persona work — VERIFY EACH BEFORE CITING
+
+⚠️ **All citations below need Joyce to verify directly via the publisher / arXiv before they appear in the OSF pre-registration or paper text. LLM citation hallucination is a known risk.** I have removed entries where I could not verify the existence of the cited work; the table below contains only papers whose existence and broad topic match my best recall, but author lists, year, journal, and exact title still need confirmation.
+
+| Citation (VERIFY before quoting) | What they did (verify) | Theoretical layer? |
+|---|---|---|
+| **Park, Bernstein, Liang et al. 2024-2025**, "Generative Agent Simulations of 1,000 People," arXiv:2411.10109 | 2-hour AVP-style interviews → LLM persona → predict GSS/BFI/games | **None — atheoretical**, raw transcripts |
+| **Argyle, Busby et al. 2023**, "Out of One, Many: Using Language Models to Simulate Human Samples," *Political Analysis* | Demographic priming (age, race, gender, party) → LLM "samples" → study political behavior | **None — demographic priming only** |
+| **Aher, Arriaga, Kalai 2023**, "Using Large Language Models to Simulate Multiple Humans," *ICML 2023* | Demographic-only LLM agents → replicate Milgram, Ultimatum, etc. | **None — demographic priming** |
+| **Horton 2023**, "Large Language Models as Simulated Economic Agents," NBER WP | Economic-rational-agent framing of LLMs | **Stylized econ theory** but not theory-of-persons |
+| **Santurkar, Durmus et al. 2023**, "Whose Opinions Do Language Models Reflect?" arXiv:2303.17548 | Measure GPT-3.5 demographic alignment with Pew/ATP groups | **Demographic priming**; opinions framed by ideology |
+| **Bisbee et al. 2024**, "Synthetic Replacements for Human Survey Data? The Perils of Large Language Models," *Political Analysis* | Test if GPT-4 demographic personas replicate ANES — finds inconsistencies | **Demographic priming** |
+| **Tjuatja, Chen et al. 2024**, "Do LLMs Exhibit Human-Like Response Biases?", arXiv:2311.04076 | Tests whether LLMs reproduce known survey-research response biases (acquiescence, social desirability, etc.) | **Survey-methodology bias theory** — NOT moral-foundations or values theory; do NOT cite as "MFT applied to LLMs" |
+| **Atari et al. 2023**, "Morality beyond the WEIRD: How the nomological network of morality varies across cultures," *JPSP* | Cross-cultural moral foundations validation in *humans* (extension of MFT to non-WEIRD samples) | **Moral Foundations Theory** — applied to *human* cross-cultural validation, NOT to LLM persona construction; do NOT cite as "MFT applied to LLM personas" |
+
+[REMOVED 2026-05-06] An earlier draft listed "Hewitt, Ashokkumar et al. 2024, 'Predicting Results of Social Science Experiments Using Large Language Models,' NBER WP w32068" — I could not verify that NBER working paper number resolves to a real paper, so it has been removed pending verification by Joyce. There is real recent work on LLMs predicting social-science experiment outcomes (Hewitt et al.; also Manning, Zhu & Horton), but Joyce must locate the canonical citation directly rather than relying on this scaffold.
+
+### 10.2 What is NOT in this list (to my knowledge)
+
+I have NOT found a paper that:
+
+> *Constructs LLM personas using a pre-registered theoretical framework (Moral Foundations / Schwartz / Bourdieu / Big Five etc.) to organize the input features, AND empirically compares that theoretical organization against an atheoretical baseline.*
+
+This is the gap Joyce's Phase 1c proposes to fill.
+
+The closest adjacencies I can identify:
+- **Atari et al. 2023** is a *human* cross-cultural validation of MFT — it does NOT measure LLM alignment; cite it only as background for MFT's cross-cultural pedigree, not as a precedent for "MFT-on-LLM."
+- **Tjuatja et al. 2024** uses survey-methodology theory (response biases) as a probe of LLM behavior — it is NOT an MFT/values application and should not be cited as such.
+- **Park et al. 2024** is the closest methodological forerunner but is explicitly atheoretical — they use raw interview transcripts.
+
+Joyce's literature search should look specifically for *2024-2026 short papers* that apply Moral Foundations / Schwartz / Bourdieu / cultural-theory-of-risk frameworks as **persona-construction inputs** (not as evaluation probes). My recall does not include such a paper, but workshops at NeurIPS / EMNLP / ACL 2024-2025 are the most likely source.
+
+**Caveat**: I have NOT searched arXiv for 2024-2026 papers exhaustively. There is non-zero probability that a 2025 or 2026 paper has done exactly this. Joyce's literature search must verify.
+
+### 10.3 Industry / startup landscape
+
+These are commercial products in adjacent space; I have only public-information-level knowledge of their methods.
+
+| Company | What they do (publicly) | Theoretical framework used? |
+|---|---|---|
+| **Simile** (Park lab spinout) | Persona-based prediction at commercial scale | Public materials suggest **atheoretical** (transcript-based, like Park 2024) |
+| **Aaru** | Election prediction + market research via LLM personas | Public claims focus on ENGINEERING (multi-model ensemble, recursive refinement) — **no public theory-driven framework** |
+| **Cookiy** | AI-moderated qualitative research interviews | Tool for COLLECTION, not persona construction |
+| **Yabble** | AI-moderated commercial qual + persona generation | Marketing-segmentation taxonomies (commercial), not academic theory |
+| **Voicepanel / Synthetic Users / Persona AI / Ad-Lib AI** | Commercial synthetic-respondent panels | Marketing-persona taxonomies; **no public academic-theory grounding** |
+
+**Key observation**: industry has converged on engineering improvements (better models, more data, ensembling) rather than theoretical grounding. Atheoretical wins for product because customers don't pay for "MFT-grounded" — they pay for "predicts elections / sells product."
+
+This is **good news for Joyce's thesis claim**: an academic atomic-paper-quality contribution that introduces theory-driven structure WHERE INDUSTRY HAS NOT is a clean contribution, because:
+1. Industry won't have done it (commercial pressure goes the other way)
+2. Academic literature has tested theories ON LLMs but not applied them as persona-construction principles
+3. Bayati's GSB program audience values theoretical grounding more than industry does
+
+### 10.4 What this means for Joyce's literature review
+
+When Joyce does her own search, she should look for:
+1. **Recent (2024-2026) arXiv papers** on theory-grounded persona construction — verify whether anything supersedes what I've listed
+2. **Workshops at NeurIPS / ICML / ACL** on LLM-personas — many recent workshops have produced relevant short papers
+3. **Bayati's network** — does anyone in his GSB / management-science circle do related work?
+4. **Citation graph from Park et al. 2024** — papers that cite Park (Google Scholar "cited by") and apply theoretical structure
+
+The thesis novelty claim should be conservative until verified:
+- "We are not aware of prior work that systematically applies a pre-registered theoretical framework to organize LLM persona inputs and empirically compares to an atheoretical baseline."
+- After thorough search: drop "to our knowledge" and assert directly.
+
+### 10.5 What I'd recommend Joyce add to the OSF pre-registration
+
+A short related-work section saying:
+
+> *Prior work in LLM persona simulation has used demographic priming (Argyle et al. 2023; Aher et al. 2023; Santurkar et al. 2023), interview-transcript priming (Park et al. 2024-2025), or stylized economic-agent priming (Horton 2023). Theoretical frameworks have been used to probe LLM response biases (e.g., Tjuatja et al. 2024) but, to our knowledge, no prior published work applies a pre-registered theory of human cognition or values as the organizing principle for persona input features and empirically compares to an atheoretical baseline. Phase 1c of this thesis (see §13 of the design document) proposes to fill that gap by applying [chosen theory] as a pre-registered organizing principle for the persona's input features, and empirically comparing the theoretical organization against an atheoretical 4-bin baseline.*
+
+(Joyce: tighten "to our knowledge" to a confident assertion only after the literature search rules out 2024-2026 superseding work. The reviewer test is: would a domain expert immediately produce a counter-example?)
+
+This positions the contribution clearly, distinguishes it from prior work, and avoids over-claiming.
+
+---
+
+## 11. ⚠️ Honest disclaimer (read before citing anything in §10)
+
+The citations in §10 are my best recall of work I believe I've encountered. Before any of these citations are used in OSF pre-registration or paper text, **Joyce must verify each one by retrieving the actual paper**:
+
+- arXiv IDs must resolve to a real abstract page
+- Author lists, year, and title must match
+- Claims about what each paper did must come from reading the abstract or beyond
+
+**LLM citation hallucination is a known risk.** Verify before quoting. If a citation doesn't resolve, drop it from the paper rather than approximating.
+
+I was honest above about uncertainty and explicitly said "to my knowledge / verify." Don't carry that vagueness into the final paper — verify and replace with confident citation, or remove.

@@ -120,29 +120,45 @@ in the exact format requested by each question."""
 
 
 # Label patterns that indicate non-substantive responses (positive integer codes
-# that nevertheless mean "no real answer"). Per Codex audit 2026-05-06: e.g.,
-# OWNGUN code 3 = REFUSED is not in MISSING_CODES (which only covers negative
-# meta-codes) but is also not a substantive answer for persona purposes.
-_NON_SUBSTANTIVE_LABEL_PATTERNS = (
+# that nevertheless mean "no real answer"). Per Codex audits 2026-05-06: must be
+# tight enough to NOT false-positive on substantive labels containing 'na' as a
+# substring (e.g., 'China', 'Native American', 'Inter-Nondenominational',
+# 'Argentina', 'French Guiana').
+#
+# Strategy: split into two pattern sets — "exact-match-only" for short codes
+# that would otherwise false-positive (na, dk), and "substring-match" for long
+# distinctive phrases.
+_NON_SUBSTANTIVE_EXACT = frozenset((
+    # short codes that must match the WHOLE label (after lower+strip)
+    "na", "n/a", "n.a.", "dk", "dk/na", "na/dk",
+))
+_NON_SUBSTANTIVE_SUBSTRINGS = (
+    # long enough that substring-matching is safe
     "refused", "no answer", "don't know", "do not know",
-    "iap", "inapplicable", "not applicable", "skipped on web",
-    "uncodable", "n.a.", "n/a", "dk/na", "dk", "na",
+    "inapplicable", "not applicable", "skipped on web",
+    "uncodable", "iap",  # IAP is a GSS-specific term: 'inapplicable'
+    "not asked", "not in survey",
 )
 
 
 def _is_non_substantive_label(label: str) -> bool:
     """Detect labels that should be treated as missing for persona purposes
-    even when the underlying code is positive (not in MISSING_CODES)."""
+    even when the underlying code is positive (not in MISSING_CODES).
+
+    Two-tier match:
+      1. Whole-label match against short codes that would false-positive
+         as substrings (na, dk, n/a).
+      2. Substring match against long distinctive phrases (refused, don't
+         know, inapplicable, IAP, etc.).
+    """
     if label is None:
         return False
     s = label.strip().lower()
     if not s:
         return True
-    # Tight match: exact phrase or starts-with for short labels
-    if s in _NON_SUBSTANTIVE_LABEL_PATTERNS:
+    if s in _NON_SUBSTANTIVE_EXACT:
         return True
-    # Substring contains for longer labels
-    return any(p in s for p in _NON_SUBSTANTIVE_LABEL_PATTERNS)
+    return any(p in s for p in _NON_SUBSTANTIVE_SUBSTRINGS)
 
 
 def _format_feature_line(varname: str, value) -> str | None:
@@ -285,7 +301,18 @@ _STEM_OVERRIDE = {
 
 def _scale_options_for(item_id: str) -> list[tuple[int, str]]:
     """Return the (code, label) pairs that define this item's response scale.
-    Pulls from the parsed .do label set; sorted by code; excludes missing codes.
+    Pulls from the parsed .do label set; sorted by code; excludes negative
+    missing codes AND positive-coded non-substantive labels (REFUSED / DK /
+    IAP / NA / etc.).
+
+    Why filter non-substantive labels here: scoring (`score_item`,
+    `truth_code_or_none`) treats labels like OWNGUN=3 ('REFUSED') and
+    INCOME=13 ('Refused') as missing on the truth side via
+    `_is_non_substantive_label`. If the formatter still presents those codes
+    as valid model outputs, the LLM can emit a code that scores as missing
+    on truth but is "valid" on its own output side — an asymmetry that
+    silently inflates parse-failure-equivalent behavior. Filter here so
+    presentation and scoring agree.
     """
     spec = _spec()
     set_name = spec["var_to_label_set"].get(item_id.upper())
@@ -295,7 +322,9 @@ def _scale_options_for(item_id: str) -> list[tuple[int, str]]:
     pairs = [
         (code, label)
         for code, label in label_set.items()
-        if code not in MISSING_CODES and code >= 0
+        if code not in MISSING_CODES
+        and code >= 0
+        and not _is_non_substantive_label(label)
     ]
     return sorted(pairs, key=lambda p: p[0])
 
@@ -386,6 +415,74 @@ def _audit_b_print():
         print(f"{'─' * 72}")
         print(question)
         print()
+
+
+def _audit_b_test_no_refusal_options():
+    """Regression: every primary_eval and sensitivity_eval item, when run
+    through `format_eval_question` (with sensitivity overrides applied where
+    they exist), MUST present only substantive answer options to the LLM.
+
+    Truth-side scoring filters non-substantive labels (REFUSED / DK / IAP /
+    NA) as missing; the formatter must agree, otherwise the model can emit
+    a code that is "valid output" but "missing truth" — an asymmetry that
+    silently inflates parse-failure-equivalent behavior.
+
+    Caught the OWNGUN=3 ('REFUSED') and INCOME=13 ('Refused') leak in the
+    2026-05-06 audit. Fails LOUDLY if anyone reintroduces a non-substantive
+    code into a presented option list.
+    """
+    taxonomy = load_taxonomy()
+
+    # Lazy import to avoid circular dependency: the sensitivity overrides
+    # live in the driver module.
+    try:
+        from gss_driver import SENSITIVITY_FORMAT_OVERRIDES, derive_sensitivity_item
+    except ImportError as e:
+        raise RuntimeError(
+            "AUDIT-B regression test needs gss_driver.SENSITIVITY_FORMAT_OVERRIDES "
+            f"and derive_sensitivity_item: {e}"
+        )
+
+    failures: list[str] = []
+
+    # Primary eval items: as-is.
+    for item in taxonomy["primary_eval"]["items"]:
+        _, meta = format_eval_question(item)
+        for code in meta["valid_codes"]:
+            label = meta["code_to_label"].get(code, "")
+            if _is_non_substantive_label(label):
+                failures.append(
+                    f"PRIMARY {item['id']}: option {code}={label!r} is non-substantive"
+                )
+
+    # Sensitivity eval items: route through the driver's derive helper so
+    # the same overrides used at run-time are exercised here.
+    for vname in taxonomy["sensitivity_eval"]["items"]:
+        sens_item = derive_sensitivity_item(vname)
+        if sens_item is None:
+            continue
+        _, meta = format_eval_question(sens_item)
+        for code in meta["valid_codes"]:
+            label = meta["code_to_label"].get(code, "")
+            if _is_non_substantive_label(label):
+                failures.append(
+                    f"SENSITIVITY {vname}: option {code}={label!r} is non-substantive"
+                )
+
+    if failures:
+        msg = (
+            "AUDIT-B regression FAILED: presented options include non-substantive "
+            "labels that truth-side scoring treats as missing.\n  - "
+            + "\n  - ".join(failures)
+        )
+        raise AssertionError(msg)
+
+    n_prim = len(taxonomy["primary_eval"]["items"])
+    n_sens = len(taxonomy["sensitivity_eval"]["items"])
+    print(
+        f"✓ AUDIT-B regression: no non-substantive options exposed "
+        f"({n_prim} primary + {n_sens} sensitivity items checked)"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -954,8 +1051,8 @@ def _panel_aggregate_code(
 def synthesize_panel_median_records(
     records: list[dict[str, Any]],
     valid_codes_by_item: dict[str, list[int]],
+    expected_models: list[str],
     item_format_by_id: dict[str, str] | None = None,
-    expected_models: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """For each (respondent, condition, item, sample_idx), aggregate model
     codes into a single panel code and re-score against truth.
@@ -968,14 +1065,20 @@ def synthesize_panel_median_records(
 
     Args:
         valid_codes_by_item: {item_id: [valid integer codes]}
+        expected_models: REQUIRED locked panel list (e.g. MODEL_PANEL_PRIMARY).
+            Tuples missing any expected model are dropped (no silent
+            partial-panel synthesis). Per Codex audit 2026-05-06 — earlier
+            versions made this optional; the helper contract is now strict.
         item_format_by_id: {item_id: 'binary'|'likert3'|'likert4'|...|'categorical'}.
             If None, defaults to inferring from len(valid_codes) (likert{N} for ≥3,
             binary for 2). Pass-through expected to come from primary_eval +
             sensitivity_eval format declarations.
-        expected_models: if given, ONLY synthesize panel records for
-            (respondent, condition) tuples where all expected_models are
-            present. Other tuples are dropped (incomplete panel coverage).
     """
+    if not expected_models:
+        raise ValueError(
+            "expected_models is required (no silent partial-panel synthesis). "
+            "Pass the locked panel list, e.g. list(MODEL_PANEL_PRIMARY)."
+        )
     item_format_by_id = item_format_by_id or {}
 
     # Group by (respondent_id, condition) → list of model records
@@ -1203,8 +1306,8 @@ def compute_phase1_headline_multimodel(
         panel_records = synthesize_panel_median_records(
             records,
             valid_codes_by_item,
+            expected_models=list(expected_models),
             item_format_by_id=item_format_by_id,
-            expected_models=expected_models,
         )
         out["panel"] = compute_phase1_headline(
             panel_records, bootstrap_B=bootstrap_B, seed=seed
@@ -1518,7 +1621,8 @@ def _audit_e_multimodel_test():
 
     # Panel synthesis (median for likert, mode for binary)
     panel = synthesize_panel_median_records(
-        records, valid_codes_by_item, item_format_by_id=item_format_by_id, expected_models=models
+        records, valid_codes_by_item, expected_models=list(models),
+        item_format_by_id=item_format_by_id,
     )
     print(f"\n[3] panel synthesis: {len(panel)} records (median for ITEM_A likert, mode for ITEM_B binary)")
     # resp 1 full: ITEM_A codes [3,3,4,3] → median 3.0 → 3, abs_err=0;
@@ -1564,6 +1668,19 @@ def _audit_e_multimodel_test():
           f"[{panel_full['respondent_macro_ci_lo']:.3f}, {panel_full['respondent_macro_ci_hi']:.3f}]")
     assert "loo_drop_attitudinal" in out["panel"]["loo_deltas"]
     print("   ✓ multi-model orchestrator returns expected structure")
+
+    # Codex 2026-05-06 fix: helper now requires expected_models (no silent partial)
+    print("\n[5] synthesize_panel_median_records contract: expected_models is required")
+    try:
+        synthesize_panel_median_records(records, valid_codes_by_item, expected_models=None)
+        raise AssertionError("expected_models=None should have raised ValueError")
+    except ValueError as e:
+        print(f"   ✓ raises ValueError when expected_models is None: {str(e)[:60]}…")
+    try:
+        synthesize_panel_median_records(records, valid_codes_by_item, expected_models=[])
+        raise AssertionError("expected_models=[] should have raised ValueError")
+    except ValueError:
+        print(f"   ✓ raises ValueError when expected_models is []")
 
     print("\n✓ ALL MULTI-MODEL AGGREGATION TESTS PASSED")
 
@@ -1834,6 +1951,9 @@ def _cli():
     p.add_argument("--seed", type=int, default=42, help="random seed for sampling (locked at 42)")
     p.add_argument("--print-prompt", action="store_true", help="run AUDIT-A: print a sample persona prompt")
     p.add_argument("--print-questions", action="store_true", help="run AUDIT-B: print all 12 primary_eval questions")
+    p.add_argument("--test-question-options", action="store_true",
+                   help="run AUDIT-B regression: assert no presented option label is non-substantive "
+                        "(REFUSED / DK / IAP / NA) for any primary or sensitivity item")
     p.add_argument("--test-scoring", action="store_true", help="run AUDIT-C: hand-crafted scoring smoke tests")
     p.add_argument("--test-exclusion", action="store_true", help="run AUDIT-D: sensitivity per-item exclusion test")
     p.add_argument("--test-aggregation", action="store_true", help="run AUDIT-E: aggregation + paired bootstrap test")
@@ -1848,6 +1968,8 @@ if __name__ == "__main__":
         _audit_a_print(n=args.n, seed=args.seed, save_to=args.save)
     elif args.print_questions:
         _audit_b_print()
+    elif args.test_question_options:
+        _audit_b_test_no_refusal_options()
     elif args.test_scoring:
         _audit_c_test()
     elif args.test_exclusion:

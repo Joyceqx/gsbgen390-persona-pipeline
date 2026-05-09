@@ -2,7 +2,7 @@
 
 **Author:** Joyce Yu
 **Course:** GSBGEN390 / thesis prep · Prof. Mohsen Bayati
-**Status:** Locked 2026-05-02; audit-fix revisions 2026-05-05 (this version frozen pending OSF pre-registration sign-off before Phase 1b launches)
+**Status:** Locked 2026-05-02; audit-fix revisions 2026-05-05 → 2026-05-06 (this version frozen pending OSF pre-registration sign-off **before Phase 1a launches** — pre-reg locks the model panel, the §12.2 selection rule, and dual-headline aggregation; Phase 1a's results then feed §12.2 to pick the Phase 1b model)
 **Sequel to:** the Cookiy pilot in `MEETING_HANDOUT.md` and `progress_report.md`
 
 ---
@@ -50,39 +50,50 @@ Freely available at https://gss.norc.org/ (registration required, no fee).
 
 ## 4. Method
 
-For each of the 3,309 respondents:
+For each respondent in the locked sample:
 
-1. **Apply the pre-registered feature taxonomy** (`gss_feature_taxonomy.json`):
-   - Demographic features: 23 GSS variables (age, sex, race, region, education, income, marital, work status, parental background, etc.)
-   - Behavioral features: 29 variables (voting, religious attendance, prayer, news, hours worked, gun ownership, media use, etc.)
-   - Psychological features: 8 variables (general happiness, marital happiness, job satisfaction, health, life-evaluation, fair/helpful/trust dispositional triad)
-   - Attitudinal features: 80 variables (the GSS attitude space minus the 12 primary_eval items — abortion battery, gender attitudes, racial attitudes, confidence battery, free-speech battery, national-priorities battery, etc.)
-2. **For each respondent, drop GSS-missing-coded values** from the per-respondent feature set (codes in `MISSING_CODES`: -100..-40). No imputation.
-3. **Construct the persona prompt** in 5 conditions:
-   - **Full**: all 4 feature bins included
-   - **LOO-drop-demographic**: 3 bins, demographic dropped
-   - **LOO-drop-behavioral**: 3 bins, behavioral dropped
-   - **LOO-drop-psychological**: 3 bins, psychological dropped
-   - **LOO-drop-attitudinal**: 3 bins, attitudinal dropped
-4. **Predict the 12 `primary_eval` items** under each condition, via GPT-4o at temperature 0.7, 2 samples per item (matches pilot pipeline; supports persona self-consistency reporting).
-5. **Sensitivity pass (Path A, Park-comparable)**: separately, for each of the ~118 sensitivity_eval items X, build a persona prompt from the full-bin feature set MINUS X (per-item exclusion to prevent direct leakage), predict X under the full condition only (no LOO), score against the respondent's actual GSS 2024 answer.
-6. **Score each (respondent, item) prediction**:
-   - Likert items: absolute error vs. the GSS-coded numeric answer (after de-reversing where the GSS scale is reverse-coded)
-   - Categorical items: exact match vs. the response label
-7. **Aggregate** per the rules in §10 below.
+1. **Apply the pre-registered feature taxonomy** (`gss_feature_taxonomy.json` v0.3, 140 variables):
+   - Demographic features: 24 GSS variables
+   - Behavioral features: 25 variables
+   - Psychological features: 8 variables
+   - Attitudinal features: 83 variables (the GSS attitude space minus the 12 `primary_eval` items)
+
+2. **For each respondent, drop missing-coded values** (codes in `MISSING_CODES = {-100, -99, …, -40}` AND positive codes whose label is a non-substantive marker like REFUSED / DK / IAP — see `_is_non_substantive_label`). No imputation.
+
+3. **Construct 5 persona-prompt conditions** per respondent:
+   - `full` — all 4 feature bins included
+   - `loo_drop_demographic` / `loo_drop_behavioral` / `loo_drop_psychological` / `loo_drop_attitudinal` — drop one bin
+
+4. **Run the LLM panel** on each (respondent, condition, item):
+   - **Phase 1a (N=100)**: 4 cheap OpenRouter models from the locked panel (Qwen-2.5-72B / DeepSeek-V3.1 / MiniMax-M1 / Kimi K2), n_samples=1 each, temperature=0.7 → 4 codes per (respondent, condition, item).
+   - **Phase 1b (N=1500)**: ONE model selected via the §12.2 quality-primary rule (lowest 1a Likert MAE among DQ-passers, cost as tie-break), n_samples=1, temperature=0.7.
+   - **Anchor (N=100 subset of 1b)**: GPT-4o, primary conditions only, n_samples=2, temperature=0.7. The anchor preserves Park-comparable per-item accuracy AND restores within-model self-consistency on the directly-comparable subset.
+
+5. **Sensitivity pass (Path A, Park-comparable)** — only on the selected 1b model + anchor: for each of the ~118 sensitivity-eval items X, build a persona prompt from the full feature set MINUS X (per-item exclusion to prevent direct leakage), predict X, score.
+
+6. **Score each (respondent, condition, model, item, sample)** via the rules locked in AUDIT-C (`gss_pipeline.py`):
+   - Likert items (likert3-7): absolute error vs. truth code
+   - Binary / categorical items: exact match
+   - PARTYID contingent: Likert on 0-6, categorical when either side outputs 7
+
+7. **Aggregate** per §10 (respondent-macro primary; bootstrap CIs at respondent level B=1000; LOO ΔMAE via paired bootstrap). Multi-model panel synthesis per §12 (median for Likert, mode for categorical, with `_panel_aggregate_code`).
 
 **Primary metrics — raw, NOT normalized**:
 - **Likert MAE** (mean absolute error on Likert items)
 - **% within ±1** (fraction of Likert items where persona is within 1 scale point of truth)
 - **Categorical exact-match accuracy**
 
-**Persona self-consistency** (temp=0.7 multi-sample): reported as a supplementary stability check throughout. Measures whether the persona is internally stable across LLM samples; INDEPENDENT of any human-side test-retest question.
+**Stability QA metric**:
+- Phase 1a / 1b cheap-panel: **cross-model agreement %** (strict — all expected models present + parsed + identical for that tuple). Replaces within-model self-consistency.
+- GPT-4o anchor subset: **within-model self-consistency** (n_samples=2, % of items where both samples gave the same code). Restored only here because the anchor is run with n=2.
 
-**Phase 1 does NOT compute test-retest-normalized accuracy.** Park's 0.82/0.83 are normalized against a 2-week recontact baseline that GSS does not provide. We report raw metrics only.
+**Phase 1 does NOT compute test-retest-normalized accuracy.** Park's 0.82/0.83 are normalized against a 2-week recontact baseline that GSS does not provide. We report raw metrics only and avoid direct numerical comparison to Park's normalized headline.
 
 ## 5. Sample size, budget, timeline
 
-The N=1,500 sample is drawn from the 3,309 GSS 2024 respondents. Sampling rule (pre-registered): random sample without replacement, fixed seed = 42, no oversampling on demographics. Optional weighted reanalysis using GSS sampling weights as a robustness check (see §10).
+The N=1,500 sample is drawn from the 3,309 GSS 2024 respondents. Sampling rule (pre-registered): random sample without replacement, **fixed seed = 42**, no oversampling on demographics. The same seed governs the bootstrap CI (B=1000, seed=42) and the paired-bootstrap LOO ΔMAE. Optional weighted reanalysis using GSS sampling weights as a robustness check (see §10).
+
+**Seed reproducibility (Codex I-10)**: every output artifact (ndjson, summary JSON, plots) MUST encode the seed in its filename suffix (e.g., `phase1a_panel_seed42.ndjson`). The driver emits a `WARNING` to stderr when the runtime seed is anything other than 42, and refuses to overwrite a seed-42 artifact with a non-42 run unless `--force-non-canonical-seed` is passed. This guards against silent reproducibility drift if a future contributor changes the seed.
 
 **Two-stage model strategy** (locked 2026-05-06; see §12 for the multi-model-then-single rationale):
 - **Phase 1a (N=100)**: run all 4 cheap OpenRouter models in parallel + GPT-4o anchor. Use this as a model-selection step under a pre-registered criterion.
@@ -136,19 +147,26 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 4. **GSS-attitudinal outcome only.** Does NOT generalize to BFI-personality or behavioral-game prediction. Phase 2 covers those.
 5. **Snapshot prediction.** Does NOT measure stability over time, longitudinal change, or causal direction.
 6. **GSS sampling design** is a complex multi-stage probability sample with weights (`WTSSALL`, `WTSSPS_NEXT`, etc.). Primary analysis is unweighted; a weighted-reanalysis robustness check is in §10.
-7. **Pre-registration on OSF before Phase 1b.** Locks taxonomy, eval set, primary metric, exclusion rules, secondary analyses. No post-hoc adjustment of the 4-bin assignments.
+7. **Pre-registration on OSF before Phase 1a — staged.** The initial pre-reg (filed *before* 1a fires) locks: taxonomy, primary + sensitivity eval sets, primary metric, exclusion rules, the 4-cheap-model panel, the §12.2 quality-primary selection rule, the §10 aggregation + paired-bootstrap rules, and the **4-bin LOO** as the lock-ready primary analysis. No post-hoc adjustment of the 4-bin assignments after 1a fires.
+
+   **The theory-bin LOO (§13) is NOT in the initial pre-reg.** It enters via a pre-reg amendment, filed *before any 1c re-aggregation runs*, once Joyce's literature review has locked a theory and the variable→cluster mapping is committed in `gss_theory_taxonomy.json`. Until that amendment is filed, the theory-bin LOO is exploratory.
+
+8. **Multiplicity / multiple-LOO control.**
+   - The 4-bin primary family has 4 ΔMAE tests. **Holm-Bonferroni at α=0.05** is applied within this family. Adjusted-significant findings are reported as "primary"; unadjusted bin contributions are reported descriptively.
+   - The theory-bin LOO (when activated via the §13 amendment) constitutes a separate, secondary family of ~5-10 ΔMAE tests; Holm-Bonferroni is applied within it independently. The theory-bin family is always reported as a *secondary confirmation*, not as a co-primary headline, even after the amendment.
+   - Until the §13 amendment is filed, **only the 4-bin primary multiplicity rule is in force.** No theory-bin tests are reported during the initial Phase 1a/1b primary writeup.
 
 ## 9. Decisions locked (post-Bayati 2026-05-02; audit-fix 2026-05-05)
 
 1. ✅ **Phase split endorsed**: GSS-first → targeted Cookiy in Phase 2.
 2. ✅ **4-bin feature taxonomy endorsed** for the GSS-row analysis.
-3. ✅ **Pre-registration on OSF before Phase 1b** — eval set, feature taxonomy, primary metric, aggregation rule, exclusion rules, secondary analyses.
+3. ✅ **Pre-registration on OSF before Phase 1a** — eval set, feature taxonomy, primary metric, aggregation rule, exclusion rules, secondary analyses, the 4-cheap-model panel, the §12.2 selection rule, multiplicity correction (Holm-Bonferroni within each LOO family), and the seed/sampling rule.
 
 ### 9a. Wave & timing structure — locked
 
 - **Single-wave snapshot** (GSS 2024 cross-section, N=3,309). No panel data. No earlier-wave data. No test-retest computation.
 - **Persona prediction window**: same-wave (T=2024) feature → same-wave (T=2024) held-out item.
-- **Stability metric**: **cross-model agreement** across the 4-cheap-model panel (locked 2026-05-05; see §12). Within-model self-consistency only computed on the GPT-4o anchor subset (N=50).
+- **Stability metric**: **cross-model agreement** across the 4-cheap-model panel (locked 2026-05-05; see §12). Within-model self-consistency only computed on the GPT-4o anchor subset (N=100, bumped from 50 per the 2026-05-06 audit).
 
 ### 9b. Eval-set composition — Path A* (locked)
 
@@ -217,7 +235,7 @@ GPT-4o-only Phase 1 would cost ~$900 at N=1500, exceeding the $300-500 budget. M
 
 **Solution**: query the same persona prompts on a **panel of 4 cheap, diverse OpenRouter-available models** as the primary analysis. The headline finding becomes "feature-category contribution to GSS-attitude prediction is robust **across LLM families**" — a stronger claim than single-model GPT-4o.
 
-A small GPT-4o anchor on a 50-respondent subset preserves direct Park v2 Table 3 comparability without blowing budget.
+A small GPT-4o anchor on a 100-respondent subset preserves direct Park v2 Table 3 comparability without blowing budget.
 
 ### Locked model panel
 
@@ -243,13 +261,13 @@ A small GPT-4o anchor on a 50-respondent subset preserves direct Park v2 Table 3
 The aggregation in §10 is computed:
 - **Per model**: each cheap-panel model gets its own respondent-macro / item-macro / pooled headline + bootstrap CIs. Reported alongside in the writeup.
 - **Panel median**: for each (respondent, condition, item, sample-position-equivalent), take the median (Likert) or mode (categorical) across the 4 models. Re-run aggregation on this synthetic "panel respondent." Reported as the primary headline; per-model deltas in supplementary.
-- **GPT-4o anchor**: per-item raw accuracy table on N=50 subset, side-by-side with Park v2 Table 3.
+- **GPT-4o anchor**: per-item raw accuracy table on N=100 subset, side-by-side with Park v2 Table 3.
 - **Cross-model agreement**: % of (respondent, item, condition) tuples where all 4 cheap models output the same integer code. Reported as the new "consistency QA metric" replacing within-model self-consistency.
 
 ### What the writeup must say (extension to §11 constraints)
 
 - "Our headline is the panel median of 4 models (Qwen, DeepSeek, MiniMax, Kimi). Per-model results are in the supplementary."
-- "Direct comparability to Park v2 Table 3 is via the N=50 GPT-4o anchor subset, not via the cheap-model panel. The cheap-model panel addresses generalization across LLM families; the anchor addresses model-comparability with the established benchmark."
+- "Direct comparability to Park v2 Table 3 is via the N=100 GPT-4o anchor subset, not via the cheap-model panel. The cheap-model panel addresses generalization across LLM families; the anchor addresses model-comparability with the established benchmark."
 - "Cross-model agreement at temperature 0.7 (4 cheap models on the same item) is reported as a stability QA metric in lieu of within-model self-consistency. The two are different concepts."
 
 ### Pre-registration must declare
@@ -261,29 +279,44 @@ Before Phase 1a launches the OSF pre-reg locks:
 - Aggregation method (per-model + panel median/mode + cross-model agreement)
 - Cross-model agreement metric definition (strict: all expected models present + parsed + identical)
 
-### §12.2  Locked model-selection rule (Phase 1a → Phase 1b)
+### §12.2  Locked model-selection rule (Phase 1a → Phase 1b) — quality-primary
 
-After Phase 1a (N=100) completes for all 4 cheap models, Phase 1b is run on the single cheap model that minimizes the **composite cost-efficiency score**:
+After Phase 1a (N=100) completes for all 4 cheap models, Phase 1b is run on the single cheap model that minimizes **respondent-macro Likert MAE on the Phase 1a primary_eval items, full condition only** — i.e., the model whose persona predictions are most accurate on the headline metric of the paper.
 
 ```
-score(model) = (cost_per_call_USD)  ×  (1 + parse_failure_rate_on_1a)
+primary_score(model) = respondent_macro_Likert_MAE_on_1a_primary_full
+                       (parse-failed items excluded from the per-respondent average;
+                        a respondent contributes only if they have ≥1 valid Likert item)
+choose argmin
 ```
 
-with tie-break (within 5% of best score) by:
-1. Lowest median Likert MAE on Phase 1a primary_eval items (excludes parse-failed);
-2. Lowest cross-model disagreement (model is closest to panel-median).
+**Why quality-primary, not cost-primary** (locked decision 2026-05-06): the 4-cheap-panel members differ in per-call cost by at most ~2× (~$50-80 swing on the entire N=1500 1b run), but can differ in MAE by considerably more. Optimizing the selection criterion on a $50 axis when the *paper's headline metric is MAE* is internally inconsistent — the rule should pick the model that is best at the thing the paper measures. Cost is preserved as a tie-break, not as the primary score.
 
-This selection rule is locked in writing in OSF before Phase 1a is run. After 1a completes, the selected model is announced and 1b proceeds on that single model.
+**Pre-registered guard rails (all locked in OSF before Phase 1a fires):**
 
-**Why this rule**:
-- `cost × (1 + parse_fail)` punishes both high direct cost AND wasteful parse failures (a 50%-fail $0.0001 model is effectively pricier than a 1%-fail $0.0002 model).
-- Tie-break by Likert MAE picks the most-reliable predictor, not the model that happened to be cheapest by a hair.
-- Tie-break by cross-model agreement picks the model closest to the panel consensus — i.e., the one whose results are most generalizable.
+1. **DQ-1 — Parse-failure ceiling.** Any model with `parse_failure_rate_on_1a > 0.30` is removed from the candidate set BEFORE quality scoring. Rationale: a model that parse-fails on >30% of items is operationally unusable at scale regardless of its measured MAE on the parsed remainder.
 
-**Scope adjustment**: Phase 1b reports remain valid as "predictive findings on the cost-selected model." Multi-model robustness is established by the 1a comparison itself (which is published alongside 1b). The thesis claim becomes:
-> "On Phase 1a (N=100, 4 cheap models), feature-category contribution rankings agreed within bootstrap noise across all 4 models. We selected {model_X} for Phase 1b under a cost-pre-registered criterion; the N=1500 results on {model_X} are reported alongside the 1a multi-model robustness panel."
+2. **DQ-3 — Mode-collapse guard.** Any model whose **per-item output-code variance** averaged across the 12 primary_eval items is `< 0.5` is removed. Rationale: a model that constantly outputs the same modal code (e.g., always "4" on a Likert-7) trivially achieves a low MAE on a centrally-distributed sample — DQ-3 catches this without requiring a comparator. The 0.5 floor is calibrated against the GSS 2024 *human* per-item variance, which is typically >1.0 on contested items; a model below 0.5 is producing degenerate output, not a calibrated prediction.
 
-This is honest and avoids the cherry-picking objection.
+3. **Tie-break — cost.** Among models within **5% of the best primary_score** (i.e., `MAE_model ≤ 1.05 × MAE_best`), select the one with the **lowest `cost_per_call_USD × (1 + parse_failure_rate)`** score. Rationale: when quality is statistically indistinguishable, the cost-pre-registered framing of the cheap panel still informs the choice.
+
+4. **Deterministic fallback — Qwen-2.5-72B-Instruct.** If after DQ-1 + DQ-3 the candidate set is empty (all 4 models failed gates), OR ≥2 candidates tie on both quality (within 5%) AND cost (within 1%), **Qwen-2.5-72B-Instruct** is used. Reason: it is the most stable instruction-following baseline of the four and is the panel's documented "default" provider. The OSF pre-reg names Qwen explicitly so there is no post-hoc judgment.
+
+**Why each guard rail**:
+- DQ-1 prevents picking a parse-broken model that scored a fluke MAE on its small parsed subset.
+- DQ-3 is the critical anti-cheat. Without it, a model that always outputs "4" on every item would beat a model that genuinely tries to predict each respondent — because most GSS attitudes cluster centrally and "always 4" has lower MAE than calibrated guesses on outliers. With DQ-3, mode-collapsed models are filtered out before the quality comparison.
+- Cost as tie-break (not primary) preserves the budget framing in the noise-equivalent regime without letting it override a real quality difference.
+- Qwen fallback ensures the rule is fully deterministic and OSF-eligible — no judgment call required after 1a completes.
+
+**The selection rule in one sentence (for the abstract / writeup):**
+> "We selected the Phase 1b model as the lowest-MAE Phase 1a candidate among models passing pre-registered parse-failure (≤30%) and output-variance (≥0.5) gates; cost served as a within-5% tie-break, with Qwen-2.5-72B-Instruct as the named fallback."
+
+**Scope** — Phase 1b reports remain valid as "predictive findings on the quality-selected model." Multi-model robustness is established by the 1a comparison itself (published alongside 1b). The thesis claim becomes:
+> "On Phase 1a (N=100, 4 cheap models), feature-category contribution rankings agreed within bootstrap noise across all 4 models. We selected {model_X} for Phase 1b under the §12.2 quality-primary criterion (with parse-failure and mode-collapse gates, cost tie-break, and Qwen fallback); the N=1500 results on {model_X} are reported alongside the 1a multi-model robustness panel."
+
+This is honest, internally consistent with the paper's primary metric, and avoids the cherry-picking objection.
+
+**History note**: an earlier draft (2026-05-06 morning) proposed a cost-primary rule with quality as tie-break. That was reconsidered the same day after recognizing that the 4-cheap-panel cost spread is too narrow to dominate over typical quality differences, and that selecting on a metric different from the paper's headline metric creates an internal inconsistency that reviewers will flag. The cost-primary alternative is preserved in version-control history but is NOT what the OSF pre-reg locks.
 
 ---
 
@@ -291,9 +324,16 @@ This is honest and avoids the cherry-picking objection.
 
 The 4-bin taxonomy (demographic / behavioral / psychological / attitudinal) is **atheoretical** — it's a sorting convention, not derived from any cognitive or behavioral-science theory. To strengthen the paper's theoretical contribution, Phase 1 will additionally run a **theory-driven secondary LOO analysis** alongside the atheoretical primary.
 
-### Status
+### Status — NOT LOCK-READY
 
-🔒 **Pending Joyce's literature review** (deliberate). Candidate theories surveyed in `theory_review.md`; the chosen theory's mapping to GSS items will be locked in `gss_theory_taxonomy.json` before Phase 1a launches.
+⚠️ **§13 is NOT lock-ready as of 2026-05-06.** It cannot be in the OSF pre-registration in its current form because the theory has not yet been chosen. Joyce is conducting the literature review (`theory_review.md`) to pick one of: Moral Foundations Theory, Schwartz's Universal Values, Bourdieu's Capitals, or Cultural Theory of Risk. Once a theory is selected, the variable→cluster mapping is locked in `gss_theory_taxonomy.json`, and §13 becomes lock-eligible.
+
+**Pre-reg sequencing**:
+- The atheoretical 4-bin LOO (§§4–12) IS lock-ready and can go to OSF immediately.
+- §13 requires either (a) Joyce's theory pick + mapping JSON before pre-reg, OR (b) §13 being explicitly listed in the OSF pre-reg as "exploratory secondary analysis to be specified in a pre-reg amendment before any 1c re-aggregation runs."
+- Default: option (b) — file the OSF pre-reg now with the 4-bin primary locked, and amend with the locked theory mapping before Phase 1c re-aggregation.
+
+🔒 **Pending Joyce's literature review** (deliberate). Candidate theories surveyed in `theory_review.md`; the chosen theory's mapping to GSS items will be locked in `gss_theory_taxonomy.json` before Phase 1c re-aggregation runs.
 
 ### What this adds
 
@@ -310,16 +350,24 @@ After the 4-bin LOO produces the atheoretical primary headline, **the same perso
 
 Almost zero. The theoretical secondary analysis re-uses the same LLM outputs from Phase 1a/1b — it's a re-aggregation, not a re-run. Only cost is the 2-3 days of Joyce's literature work to lock the mapping.
 
-### Pre-registration
+### Pre-registration — staged via amendment
 
-Before Phase 1a launches:
-- Lock candidate theory in `theory_review.md` (literature decision)
-- Lock variable→theory-cluster mapping in `gss_theory_taxonomy.json`
-- OSF pre-reg includes both 4-bin and theory-bin LOO as primary-paired analyses
+The initial OSF pre-registration (filed *before Phase 1a fires*) locks the **4-bin primary LOO only**. It does NOT include the theory-bin LOO, because the theory has not yet been chosen.
+
+The theory-bin LOO enters via an **OSF pre-reg amendment**, filed *before any 1c re-aggregation runs*, once the following are committed:
+1. A locked candidate theory in `theory_review.md` §8 (`_locked_theory` field set)
+2. A locked variable → theory-cluster mapping in `gss_theory_taxonomy.json`
+3. A locked Holm-Bonferroni multiplicity rule for the theory-bin family (independent of the 4-bin primary family — see §8.8)
+
+Until the amendment is filed, the theory-bin LOO is **exploratory** and is NOT reported as a confirmatory result in the Phase 1a/1b primary writeup. Re-aggregating the existing LLM outputs under a theory-bin grouping *before* the amendment is research-degrees-of-freedom misuse and must be avoided.
 
 ### Joyce's next step
 
-Read `theory_review.md` for the candidate-theory survey. Pick one. Update the `_locked_theory` field at the top of that doc. Then I'll build the mapping JSON and extend the aggregation code to handle theory-bin LOO.
+Read `theory_review.md` for the candidate-theory survey. Pick one. Update the `_locked_theory` field at the top of that doc. Once locked, the next steps are:
+1. Build `gss_theory_taxonomy.json` mapping each attitudinal GSS variable → theory cluster
+2. Extend `compute_phase1_headline_multimodel` to compute LOO on theory-cluster groups
+3. **File the OSF pre-reg amendment** introducing the theory-bin family BEFORE running any theory-bin re-aggregation
+4. Re-aggregate Phase 1a/1b outputs under the theory grouping; report theory-bin LOO as a secondary confirmation
 
 ---
 
