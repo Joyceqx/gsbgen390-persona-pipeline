@@ -9,9 +9,13 @@
 
 ## 1. Research question
 
-**Within the GSS-attitudes outcome dimension, which of four survey-collectible feature categories (demographic / behavioral / psychological / attitudinal) most contribute to LLM-persona prediction of held-out attitudinal items, in a single-wave snapshot setting?**
+**Phase 1 question** (the specific question this design doc covers):
+> Within attitude prediction (single-wave snapshot setting), which of four survey-collectible feature categories (demographic / behavioral / psychological / attitudinal) most contributes to LLM-persona prediction of held-out attitudinal items?
 
-This is the **GSS-attitudes cell** of the (feature category × outcome dimension) thesis matrix. It is the cheapest cell to attack first because GSS public data is free and N is in the thousands. BFI-personality and behavioral-game outcome dimensions are deferred to Phase 2 (Cookiy collection).
+**Project-level question** (the larger research direction this design feeds):
+> In LLM persona synthesis, which input feature categories drive prediction quality, and how does that contribution vary across outcome dimensions?
+
+Phase 1 is the **first piece** of this project-level program. It targets attitude prediction (the cheapest outcome dimension to attack first — GSS public data is free, N in the thousands). Phase 2 extends to personality (BFI-44) and behavioral economic games via targeted Cookiy collection. Future phases may extend to other outcome dimensions (long-term behavior, open-ended responses, multimodal personas, etc.).
 
 ### What this study estimates (estimand)
 

@@ -1,12 +1,18 @@
-# GSBGEN390 — Mini-Replication of Park et al. (2024)
+# GSBGEN390 — Feature Attribution for LLM Persona Synthesis
 
 Independent research project, Spring 2026, Stanford GSB. Faculty advisor: **Prof. Mohsen Bayati.** Lead: **Joyce Yu.**
 
 ## What this is
 
-A small-scale replication of [Park, Bernstein, Liang et al. (2024) "Generative Agent Simulations of 1,000 People"](https://arxiv.org/abs/2411.10109), the foundational paper for the Stanford spinout Simile. Park's original study built LLM-based personas from 2-hour voice-to-voice interviews — conducted by a custom AI interviewer they built specifically around the American Voices Project (AVP) protocol with adaptive follow-ups — with 1,052 U.S. adults, and showed those personas could predict the same individuals' GSS, BFI, and behavioral-game responses at ~83% of test-retest reliability. **This pilot reproduces the pipeline architecture at small scale (N=2 interview arm, N=1 survey arm) using AI-moderated Cookiy interviews** in place of Park's custom AVP-protocol agent.
+A research project investigating **feature attribution for LLM persona synthesis**: when a language model is prompted to respond as a specific human individual (for survey simulation, agent-based modeling, in-silico RCTs, or commercial synthetic-respondent panels), which input feature categories actually drive prediction quality, and how does that contribution vary across outcome dimensions?
 
-The pilot is the first step of a larger thesis question: **which survey-collectible features (demographic, behavioral, psychological, attitudinal) most predict persona fidelity, and on which outcome dimensions?** Park's v2 paper finds that surveys-only nearly matches interview-only on GSS-style attitudinal items (0.82 vs 0.83 normalized accuracy) but lags meaningfully on BFI personality (0.65 vs 0.80) and behavioral economic games (0.38 vs 0.66). That pattern motivates a feature-importance analysis Park did not run: not just "can surveys substitute for interviews?" but *"which survey-collectible feature categories close which parts of the gap on which outcomes?"* This pilot establishes the evaluation infrastructure for that follow-up.
+The thesis is structured in two phases plus a completed pilot:
+
+- **Pilot** (completed 2026-04-30): N=2 interview + N=1 survey via Cookiy → GPT-4o → eval, with manual leakage audit. Pipeline + dashboard + audit shipped. Scale supports feasibility demonstration only, not statistical inference.
+- **Phase 1** (in progress, lean-design locked 2026-05-09): N≈1500 from GSS 2024 cross-section. Answers the project-level question for the **attitude** outcome dimension. 4-bin LOO ablation as primary; Shapley decomposition + attitudinal-bin Battery LOO as secondary; R1 (battery exclusion) + R2 (regression-baseline partition) as leakage hygiene; multi-model OpenRouter panel + GPT-4o anchor; budget ~$215.
+- **Phase 2** (planned): N=20-30 Prolific respondents, 30-45 min modular interview (4 modules ↔ 4 feature bins) with **2-week separation** for test-retest baseline, BFI-44 + behavioral-game vignettes + GSS held-out outcomes. Extends feature attribution to **personality** and **behavior** outcome dimensions; ~$1,500-1,750.
+
+[Park, Bernstein, Liang et al. (2024) "Generative Agent Simulations of 1,000 People"](https://arxiv.org/abs/2411.10109) (the Stanford-spinout-Simile paper) is the most-cited prior work in this area. This project anchors against Park for cross-paper benchmarking — a GPT-4o anchor on N=100 subset gives per-item raw accuracy directly comparable to Park v2 SI Table 3 — but the research question stands independently. Park studied aggregate "interview vs surveys"; this project studies feature attribution within survey-style persona prompts at scale, with leakage-stringency that goes beyond Park's reported defenses.
 
 ## Quick orientation
 

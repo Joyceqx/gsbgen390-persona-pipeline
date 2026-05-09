@@ -1,6 +1,7 @@
 # Project File Index
 
 **Project**: GSBGEN390 thesis-track research, Stanford GSB, Spring 2026
+**Research direction**: feature attribution for LLM persona synthesis (Phase 1: attitude prediction; Phase 2 planned: personality + behavioral games)
 **Lead**: Joyce Yu · **Advisor**: Prof. Mohsen Bayati
 **Last housekeeping**: 2026-05-09
 

@@ -12,7 +12,9 @@ This document is the changelog-style single-source-of-truth for what's done, wha
 
 **Phase 1 design is LEAN-LOCKED as of 2026-05-09.** The full pipeline is built and tested; only paid runs (smoke + 1a + 1b) are pending an OpenRouter API key.
 
-**Phase 1 has ONE clean primary contribution**: *which survey-collectible feature categories actually improve LLM persona prediction of GSS attitude outcomes?* — answered by the **4-bin LOO ablation** (demographic / behavioral / psychological / attitudinal).
+**Project-level research question**: *In LLM persona synthesis, which input feature categories drive prediction quality, and how does that contribution vary across outcome dimensions?* No prior published work has done large-N, leakage-clean, multi-model feature attribution at scale; this project fills that area-level methodological gap. Park et al. 2024 is the most-cited prior work in LLM persona simulation and serves here as a **cross-paper benchmarking anchor**, not as the project's defining framework.
+
+**Phase 1 has ONE clean primary contribution** (the attitude-dimension answer to the project-level question): *which survey-collectible feature categories actually improve LLM persona prediction of attitude outcomes?* — answered by the **4-bin LOO ablation** (demographic / behavioral / psychological / attitudinal) on GSS 2024 (N=1500).
 
 Two **secondary analyses** support the primary:
 1. **Bin-level Shapley decomposition** (16 conditions) — robustness check on the 4-bin LOO ranking against bin-bin interactions.

@@ -14,7 +14,11 @@
 
 ## 0. 执行摘要
 
-本项目的核心目标是**为 Park et al. 2024（"Generative Agent Simulations of 1,000 People"）填补一个论文里**暗示但从未实证填补的空白**：将 Park 那个 "调查 vs 访谈" 的人格保真度差距按 **(特征类别 × 输出维度) 的 4×3 矩阵**分解。Phase 1 攻击 GSS-态度这一行（最便宜、最易验证的一格），用 N≈1,500 公开 GSS 2024 数据 + 4 个便宜 OpenRouter 模型 panel + GPT-4o anchor 做 LOO ablation。Phase 2 用定向 Cookiy 收集补齐 BFI 人格 + 行为博弈两行（小 N + 2 周复测 baseline）。
+本项目研究 **LLM persona synthesis 的特征价值归因问题**——当我们让大语言模型假装是某个具体的人去做预测时，给它哪类输入信息（人口学 / 行为 / 心理 / 态度）最有效？这是 LLM persona simulation 这个 research area 的一个核心方法学问题，但目前**没有任何论文做过大-N 的系统归因**。
+
+Phase 1 在**态度预测**这一 outcome 维度上回答这个问题，用 GSS 2024 cross-section（N≈1,500），4-bin leave-one-out ablation 作 primary，加 Shapley 16-condition robustness + attitudinal-bin Battery LOO interpretability。多模型 panel（4 个便宜 OpenRouter 模型 + GPT-4o anchor）控制 model-specific bias。R1 (battery exclusion) + R2 (regression baseline partition) 作泄漏防御和 auto-correlation 分割。Phase 2 扩展到**人格**（BFI-44）+ **行为博弈**两个 outcome 维度，用定向 Cookiy 收集 + 2-周复测 baseline。
+
+Park et al. 2024（"Generative Agent Simulations of 1,000 People"）是当前 area 内被引最多的 prior work——本项目以其作为 cross-paper benchmarking 的 anchor（GPT-4o subset 上 N=100 的 per-item raw accuracy 直接对照 Park v2 SI Table），但研究问题独立成立，不依赖 Park 的具体框架。
 
 整个 Phase 1 设计经过 **3 轮独立 Codex 审计 + 1 轮研究层 Codex 审计**，共修复 27 项发现。当前代码库通过 `validate_taxonomy.py`（10 个检查项）+ 5 个 AUDIT 智能测试 + §12.2 选择器 5 分支测试 + R2 回归基线 self-test，全部绿灯。OSF 预注册可在 N=10 烟雾测试通过后立即起草。
 
@@ -22,13 +26,15 @@
 
 ### 1.1 核心研究问题
 
-**在 GSS 态度这一输出维度上，4 类调研可采集的特征（人口学 / 行为 / 心理 / 态度）中，哪一类对 LLM 人格预测的贡献最大？**
+**在 LLM persona synthesis 中，4 类调研可采集的特征（人口学 / 行为 / 心理 / 态度）中，哪一类对人格预测准确度的贡献最大？这种贡献又如何随 outcome 维度（态度 / 人格 / 行为）变化？**
 
-这是 (特征类别 × 输出维度) 论文矩阵的 GSS-态度格。它最便宜——GSS 公共数据免费、N 上千。BFI 人格与行为博弈两个输出维度推迟到 Phase 2（Cookiy 定向收集）。
+LLM persona synthesis 已经被广泛用于 synthetic survey panels (Argyle 2023, Aher 2023, Bisbee 2024)、agent-based simulation (Park 2023, 2024)、商用合成 panel (Aaru, Voicepanel, Synthetic Users)、in-silico RCT 预测 (Hewitt 2024, Manning et al. 2024) 等场景。但**当前没有任何论文做过大-N 的、leakage-clean 的、多模型 robust 的特征价值归因**。本项目填这个 area-level methodological gap。
+
+Phase 1 在 **态度预测**这一 outcome 维度上回答这个问题（最便宜——GSS 公共数据免费、N 上千）。Phase 2 扩展到**人格**（BFI-44）+ **行为博弈**两个 outcome 维度，用 Cookiy 定向收集 + 2-周复测 baseline。
 
 ### 1.2 研究估计量（estimand）
 
-> Phase 1 估计的是 **GSS 2024 单波次预测**：从同波次 GSS 特征变量预测 12 个留出 `primary_eval` 题目（外加 ~118 个 Park-comparable sensitivity_eval 题目），按 4 个预先注册的特征类别贡献分解。
+> Phase 1 估计的是 **GSS 2024 单波次预测**：从同波次 GSS 特征变量预测 12 个留出 `primary_eval` 题目（外加 ~118 个 sensitivity_eval 题目用作 cross-paper benchmarking），按 4 个预先注册的特征类别贡献分解。
 
 **它显式不是**：
 - 复测预测（GSS 2024 没有 recontact baseline）
@@ -38,14 +44,13 @@
 
 它**是**：在单波次 GSS 态度预测内部，对 4 个特征类别贡献做的归因分析。
 
-### 1.3 与 Park v2 的对照标定
+### 1.3 Park v2 作 benchmarking anchor（不是研究框架）
 
-Park v2（arXiv:2411.10109 v2）是活基准。Park 的输出按维度分层：
-- GSS 态度：surveys ≈ interviews（0.82 vs 0.83 归一化精度）
-- BFI 人格：surveys 落后 interviews 0.15
-- 行为博弈：surveys 落后 interviews 0.28
+Park et al. 2024（"Generative Agent Simulations of 1,000 People"，arXiv:2411.10109 v2）是 LLM persona synthesis area 当前被引最多的 prior work。本项目以其作为 **cross-paper benchmarking anchor**：在 N=100 的 GPT-4o anchor 子集上，per-item raw accuracy 直接对照 Park v2 SI Table 3，使我们的 GSS-attitude prediction 结果可与现有文献基准互校。
 
-整个项目的论点是：**Park 这个 0.15 / 0.28 的差距不是"interview 普遍更优"，而是"interview 在不同特征 → 不同输出维度的组合上有结构性优势"。** 4×3 矩阵把这个论点变成可证伪。
+Park 的 outcome-stratified observation（surveys ≈ interviews on GSS attitudes 0.82 vs 0.83；surveys lag interviews by 0.15 on BFI personality, 0.28 on behavioral games）是本项目的**经验先验之一**——它提示不同 outcome 维度可能需要不同 input feature mixture，但本项目的 feature-importance 估计**不依赖**这个先验是否准确。
+
+**关键 framing 声明**：本项目的研究问题（"feature attribution for LLM persona synthesis"）独立于 Park 而存在；Park 是 area 内的重要 prior work，不是本项目的定义框架。本项目 Phase 2 + 后续工作可能扩展到 Park 没覆盖的 outcome 维度（例如开放式回答、多轮决策、long-term behavior）。
 
 ## 2. 项目阶段全图
 
@@ -306,23 +311,23 @@ Phase 1 当前的 LOO families：
 
 ### 5.1 概念贡献
 
-- **Park 4×3 矩阵的首次系统填充**：Park 的 (interview / survey / demo) × (GSS / BFI / 行为博弈) 在论文里只填了对角线和总平均；Phase 1 + Phase 2 一起填满 12 格中的 4 格（4 特征类别 × 3 输出维度）。这是个二阶导数贡献——不重新发明 Park 的框架，而是细化它。
-- **Park 的 0.15 / 0.28 差距是结构性的，不是偶然**：通过证明特征类别贡献在 BFI / 行为博弈输出上分布不同（Phase 2），可以告诉别人"哪些特征不该再被忽视"。
+- **第一篇大-N 的 LLM persona synthesis feature attribution**：在 attitude prediction 上 N=1500 的系统归因，回答"persona 输入的哪类信息最有效"——这是 LLM persona simulation area 内的方法学核心问题，但当前没有论文做过这种规模、这种泄漏防御严格度、这种 multi-model robust 的归因。
+- **(input feature × outcome dimension) 二维 feature-importance map 的 first instance**：Phase 1 提供 attitude 维度的 4-bin 归因；Phase 2 扩展到 personality + behavior。最终 deliverable 是 (feature × outcome) 二维 map——这个结构是心理学测量传统的自然产物（attitude / personality / behavior 是三个独立测量传统），不依赖任何单一 prior work 的框架。
+- **持续 research program 的第一篇**：本项目设定的研究方向（feature attribution for LLM persona synthesis）天然外推到 long-term behavior、cross-cultural validation、多模态 persona、开放式回答等 outcome 维度。Phase 1 + Phase 2 是 program 的前两篇。
 
-### 5.2 方法学贡献（更强）
+### 5.2 方法学贡献（独立成立）
 
-三个可迁移的工件：
+四个可被任何后续 LLM persona synthesis 论文借走的工件，**每个都不依赖 Park 的存在**：
 
-1. **泄漏审计 + strict/broad-clean rescoring 流程**（pilot 阶段已落地）
-2. **多模型便宜 panel + §12.2 quality-primary 选择规则 + 命名 fallback OSF 模板** —— 任何后续 LLM-persona 论文都可借鉴
-3. **R1 + R2 dual defense（battery 排除 + 回归基线分割）—— Park v2 自己没做的 partition test**
-
-R2 是这次审计修复后**新增的方法学贡献**——Park v2 用两种 hold-out 策略 *bracket* 偏差范围，我们用 regression baseline *partition* 偏差。这是真正"超越 Park"的一步。
+1. **R1 — Battery-level structural exclusion** (`gss_battery_map.json` + `build_persona_prompt(exclude_vars=...)`)：在 LLM persona prompt 中预测某 within-construct cluster 的 item 时，整个 cluster 必须从 prompt 移除。Park v2 在 BFI 上做了 trait-block hold-out 但在 GSS 上是松策略；R1 把更严的 hold-out 标准应用到 GSS（也对应到任何后续基于其它 survey instrument 的 persona 工作）。
+2. **R2 — Regression-baseline partition** (`regression_baseline.py`)：与 LLM panel 平行跑非-LLM regression baseline，把 LLM 准确率拆成 (auto-correlation 任何模型都能榨出) + (LLM persona reasoning gain) 两部分。这是**新方法**——prior work 都是 *bracket* inflation 范围；R2 直接 *partition*。
+3. **Multi-model cheap-panel + §12.2 quality-primary selection rule + named fallback** (`select_phase1b_model.py`)：给预算受限的研究者一个不靠 GPT-4o 也能做严肃 LLM persona 论文的预算控制 + 模型选择 OSF 模板。Self-test 5 个 branch 全过。
+4. **DQ-3 per-item relative variance threshold** (`outputs/primary_eval_human_variance_2024.json`)：mode-collapse 检测的 item-level 相对阈值，比绝对阈值更稳——在偏态 item（如 FEPOL 82/18）和宽分布 item（PARTYID 8-point）上都正确判别。
 
 ### 5.3 行业关联
 
-- Stanford 出来的 Simile 把 Park 的流水线产品化；4×3 矩阵是当下最接近"哪些输入对哪些输出有用"的公开 artifact
-- Aaru / Voicepanel / Synthetic Users 全是商用合成 panel，但商用压力让他们都是 "more data, more models" 工程视角——没人做 careful feature attribution + leakage hygiene。Phase 1 的 R1+R2 + Shapley + Battery LOO 工具链是这个 niche 的清晰公共贡献。
+- 商用合成 panel（Aaru / Voicepanel / Synthetic Users）受商业压力都走"more data, more models"工程视角——没人做 careful feature attribution + leakage hygiene。Phase 1 的 R1+R2 + Shapley + Battery LOO 工具链是这个 niche 的清晰公共贡献。
+- Stanford spinout Simile 把 LLM persona 流水线产品化；本项目的 (input feature × outcome dimension) 归因 map 是当下最接近"哪些输入对哪些输出有用"的公开 artifact——可被产品化的 persona service 直接借用作 input recommendation。
 
 ### 5.4 学术贡献定位
 
@@ -430,7 +435,11 @@ LOO ΔMAE 是 marginal estimator；Shapley 补 interaction-aware 估计；Batter
 
 ## 0. Executive Summary
 
-This project's central goal is to **fill an empirical gap implied but never delivered by Park et al. 2024 ("Generative Agent Simulations of 1,000 People")**: decompose Park's aggregate "interview vs surveys" persona-fidelity gap along a **(feature category × outcome dimension) 4×3 matrix**. Phase 1 attacks the GSS-attitudes row (cheapest, most verifiable cell) using N≈1,500 of the public GSS 2024 cross-section + a 4-cheap-OpenRouter-model panel + GPT-4o anchor in a leave-one-out (LOO) ablation. Phase 2 uses targeted Cookiy collection at smaller N with a 2-week recontact to fill the BFI personality and behavioral-economic-game rows.
+This project investigates **feature attribution for LLM persona synthesis** — when we prompt a language model to respond as a specific human individual for prediction, simulation, or modeling tasks, which input feature categories (demographic, behavioral, psychological, attitudinal) drive prediction quality? This is a core methodological question for LLM persona simulation as a research area, but **no prior published work has performed large-N, leakage-clean, multi-model-robust attribution at scale**.
+
+Phase 1 answers this question for **attitude prediction** using GSS 2024 cross-section (N≈1,500), with a 4-bin leave-one-out ablation as primary, plus Shapley 16-condition robustness and attitudinal-bin Battery LOO interpretability. A multi-model panel (4 cheap OpenRouter models + GPT-4o anchor) controls for model-specific bias. R1 (battery exclusion) + R2 (regression-baseline partition) provide leakage hygiene and auto-correlation partition. Phase 2 extends to **personality** (BFI-44) + **behavioral economic games** outcome dimensions via targeted Cookiy collection with 2-week recontact baseline.
+
+Park et al. 2024 ("Generative Agent Simulations of 1,000 People") is the most-cited prior work in this area — this project uses Park as a **cross-paper benchmarking anchor** (per-item raw accuracy on N=100 GPT-4o anchor subset compared directly to Park v2 SI Table 3) but the research question stands independently of Park's specific framework.
 
 The Phase 1 design has been hardened by **3 rounds of independent Codex audit + 1 research-layer Codex audit**, fixing 27 distinct findings. The codebase passes `validate_taxonomy.py` (10 checks) + 5 AUDIT smoke tests + the §12.2 selector's 5-branch self-test + the R2 regression-baseline self-test, all green. The OSF pre-registration can be drafted immediately after the N=10 paid smoke test passes.
 
@@ -438,13 +447,15 @@ The Phase 1 design has been hardened by **3 rounds of independent Codex audit + 
 
 ### 1.1 Research question
 
-**Among four survey-collectible feature categories (demographic / behavioral / psychological / attitudinal), which contributes most to LLM-persona prediction of GSS attitudes?**
+**In LLM persona synthesis, which of four survey-collectible feature categories (demographic / behavioral / psychological / attitudinal) contributes most to persona prediction accuracy, and how does this contribution vary across outcome dimensions (attitudes / personality / behavior)?**
 
-This is the GSS-attitudes cell of the (feature × outcome) thesis matrix. It's the cheapest cell to attack first — GSS public data is free and N is in the thousands. The BFI-personality and behavioral-game outcome dimensions are deferred to Phase 2 (targeted Cookiy collection).
+LLM persona synthesis is increasingly used for synthetic survey panels (Argyle et al. 2023; Aher et al. 2023; Bisbee et al. 2024), agent-based simulation (Park et al. 2023, 2024), commercial synthetic-respondent panels (Aaru, Voicepanel, Synthetic Users), and in-silico RCT prediction (Hewitt et al. 2024; Manning et al. 2024). But **no published work has performed a large-N, leakage-clean, multi-model attribution at the feature-category level**. This project fills that area-level methodological gap.
+
+Phase 1 answers the question for the **attitude** outcome dimension (cheapest — GSS public data is free, N in the thousands). Phase 2 extends to **personality** (BFI-44) + **behavioral economic games** via Cookiy collection + 2-week recontact baseline.
 
 ### 1.2 Estimand
 
-> Phase 1 estimates **single-wave GSS 2024 prediction** of held-out items (the 12 in `primary_eval`, plus per-item Park-comparable sensitivity over ~118 items) **from same-wave GSS feature variables**, decomposed into the contribution of four pre-registered feature categories.
+> Phase 1 estimates **single-wave GSS 2024 prediction** of held-out items (the 12 in `primary_eval`, plus ~118 sensitivity_eval items used for cross-paper benchmarking) **from same-wave GSS feature variables**, decomposed into the contribution of four pre-registered feature categories.
 
 This is **explicitly NOT**:
 - Test-retest prediction (no GSS 2024 recontact baseline)
@@ -454,14 +465,13 @@ This is **explicitly NOT**:
 
 It **is**: feature-category contribution analysis within single-wave GSS-attitudinal-item prediction.
 
-### 1.3 Park v2 reference
+### 1.3 Park v2 as benchmarking anchor (not research framework)
 
-Park v2 (arXiv:2411.10109 v2) is the live benchmark. Park's headline is outcome-stratified:
-- GSS attitudes: surveys ≈ interviews (0.82 vs 0.83 normalized accuracy)
-- BFI personality: surveys lag interviews by 0.15
-- Behavioral games: surveys lag interviews by 0.28
+Park et al. 2024 ("Generative Agent Simulations of 1,000 People", arXiv:2411.10109 v2) is the most-cited prior work in LLM persona synthesis. This project uses Park as a **cross-paper benchmarking anchor**: on the N=100 GPT-4o anchor subset, per-item raw accuracy is directly comparable to Park v2 SI Table 3, allowing our GSS-attitude prediction results to be cross-checked against the leading existing benchmark.
 
-The thesis-level claim: **Park's 0.15 / 0.28 gap is not "interviews are universally better" but "interviews have structural advantages on specific feature → outcome combinations."** The 4×3 matrix renders this falsifiable.
+Park's outcome-stratified observation (surveys ≈ interviews on GSS attitudes 0.82 vs 0.83; surveys lag interviews by 0.15 on BFI personality, 0.28 on behavioral games) serves as **one of several empirical priors** for this project — it suggests that different outcome dimensions may require different input feature mixtures. But the project's feature-importance estimates **do not depend** on whether this prior is correct.
+
+**Critical framing statement**: This project's research question (*"feature attribution for LLM persona synthesis"*) exists independently of Park; Park is an important prior work, not the project's defining framework. Phase 2 + future extensions may cover outcome dimensions Park did not (e.g., open-ended responses, multi-turn decisions, long-term behavior).
 
 ## 2. Phase landscape
 
@@ -667,23 +677,23 @@ The complete mapping is in `gss_battery_map.json`.
 
 ### 5.1 Conceptual contribution
 
-- **First systematic filling of the Park 4×3 matrix**: Park's (interview / survey / demo) × (GSS / BFI / games) is filled only along the diagonal and aggregate; Phase 1 + Phase 2 together populate 4 of 12 cells (4 feature categories × 3 outcome dimensions). This is a second-derivative contribution — it doesn't reinvent Park's framework, it refines it.
-- **Park's 0.15 / 0.28 gap is structural, not incidental**: by demonstrating that feature-category contributions distribute differently across BFI / games (Phase 2), the paper tells future researchers "these features can no longer be ignored on these outcomes."
+- **First large-N feature attribution for LLM persona synthesis**: N=1500 systematic attribution on attitude prediction, answering "which input feature category most effectively drives LLM persona accuracy" — a core methodological question for the LLM persona simulation research area, but no prior published work has done this at this scale, leakage-stringency, or multi-model robustness.
+- **First instance of an (input feature × outcome dimension) two-dimensional feature-importance map**: Phase 1 provides the attitude-dimension 4-bin attribution; Phase 2 extends to personality + behavior. The final deliverable is a 2D map — this structure follows naturally from the three independent measurement traditions in psychology (attitude / personality / behavior), not from any single prior work's framework.
+- **First paper of an ongoing research program**: the research direction this project sets up (feature attribution for LLM persona synthesis) extends naturally to long-term behavior, cross-cultural validation, multimodal personas, open-ended responses, and other outcome dimensions. Phase 1 + Phase 2 are the first two papers of this program.
 
-### 5.2 Methodological contribution (stronger than conceptual)
+### 5.2 Methodological contribution (independent of Park)
 
-Three transferable artifacts:
+Four transferable artifacts that **stand alone without Park as a frame**:
 
-1. **Leakage audit + strict/broad-clean rescoring procedure** (delivered in pilot)
-2. **Multi-model cheap panel + §12.2 quality-primary selection rule + named fallback OSF template** — directly reusable by any subsequent LLM-persona paper
-3. **R1 + R2 dual defense (battery exclusion + regression-baseline partition) — a partition test Park v2 itself does not run**
-
-R2 is the genuine **methodological gain after this audit**: Park brackets inflation between two hold-out strategies; we partition it via a regression baseline. This is the actual "step beyond Park."
+1. **R1 — Battery-level structural exclusion** (`gss_battery_map.json` + `build_persona_prompt(exclude_vars=...)`): when an LLM persona prompt is used to predict any item in a within-construct cluster, the entire cluster must be removed from the prompt. Park v2 applies trait-block hold-out for BFI but uses the lenient single-item strategy for GSS; R1 applies the stricter standard to GSS (and to any subsequent persona work using other survey instruments).
+2. **R2 — Regression-baseline partition** (`regression_baseline.py`): a non-LLM regression baseline runs in parallel with the LLM panel, partitioning LLM accuracy into (auto-correlation any predictor can exploit) + (LLM persona-reasoning gain). This is **a new method** — prior work *brackets* inflation ranges; R2 directly *partitions* it.
+3. **Multi-model cheap-panel + §12.2 quality-primary selection rule + named fallback** (`select_phase1b_model.py`): a budget-constrained model-selection OSF template for serious LLM persona research that doesn't rely on GPT-4o. 5-branch self-test passes.
+4. **DQ-3 per-item relative variance threshold** (`outputs/primary_eval_human_variance_2024.json`): item-level relative threshold for mode-collapse detection, more robust than absolute thresholds — correctly discriminates on both skewed items (e.g., FEPOL 82/18) and wide-distribution items (e.g., PARTYID 8-point).
 
 ### 5.3 Industry adjacency
 
-- Stanford-spinout Simile productionizes Park's pipeline; the 4×3 matrix is the closest public artifact to "which inputs matter for which outputs"
-- Aaru / Voicepanel / Synthetic Users are all commercial synthetic-respondent panels, but commercial pressure pushes them toward "more data, more models" engineering — **none are doing theory-driven input organization** — exactly the Phase 1c (theory-driven LOO) niche
+- Commercial synthetic-respondent panels (Aaru / Voicepanel / Synthetic Users) under commercial pressure converge on "more data, more models" engineering — none do careful feature attribution + leakage hygiene. Phase 1's R1+R2 + Shapley + Battery LOO toolchain is a clean public contribution to this niche.
+- Stanford spinout Simile productionizes LLM persona pipelines; this project's (input feature × outcome dimension) attribution map is the closest public artifact to "which inputs matter for which outputs" — directly usable by productized persona services as input recommendation guidance.
 
 ### 5.4 Academic placement
 
