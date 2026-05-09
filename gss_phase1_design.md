@@ -330,7 +330,7 @@ choose argmin
 - Qwen fallback ensures the rule is fully deterministic and OSF-eligible — no judgment call required after 1a completes.
 
 **The selection rule in one sentence (for the abstract / writeup):**
-> "We selected the Phase 1b model as the lowest-MAE Phase 1a candidate among models passing pre-registered parse-failure (≤30%) and output-variance (≥0.5) gates; cost served as a within-5% tie-break, with Qwen-2.5-72B-Instruct as the named fallback."
+> "We selected the Phase 1b model as the lowest-MAE Phase 1a candidate among models passing pre-registered parse-failure (≤30%) and per-item relative-variance gates (`var(model_i) ≥ 0.30 × var(human_2024_i)` for ≥50% of primary_eval items); cost served as a within-5% tie-break, with Qwen-2.5-72B-Instruct as the named fallback."
 
 **Scope** — Phase 1b reports remain valid as "predictive findings on the quality-selected model." Multi-model robustness is established by the 1a comparison itself (published alongside 1b). The thesis claim becomes:
 > "On Phase 1a (N=100, 4 cheap models), feature-category contribution rankings agreed within bootstrap noise across all 4 models. We selected {model_X} for Phase 1b under the §12.2 quality-primary criterion (with parse-failure and mode-collapse gates, cost tie-break, and Qwen fallback); the N=1500 results on {model_X} are reported alongside the 1a multi-model robustness panel."

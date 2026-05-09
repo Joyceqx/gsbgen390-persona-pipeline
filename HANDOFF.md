@@ -122,16 +122,13 @@ Also flagged for Joyce: Inglehart-Welzel + Hofstede textbook citations in Round-
 
 ## 6. Immediate next actions (in order)
 
-For Joyce:
-1. **Read Tier 1 of `theory_review_round2.md`** (~5.5 h): Pellert 2024 + Ye 2025 + Centaur 2025 + Hewitt 2024 + Salecha 2024.
-2. **Read Tier 2 for the theory she's leaning toward** (~3-5 h).
-3. **Lock §8 of `theory_review.md`** with theory + factor structure + lock date + rationale. Discuss with Bayati if non-trivial.
-4. **Get an OpenRouter API key** at https://openrouter.ai/keys (load $5 in credits) → drop in `OpenRouter_api.txt` (gitignored).
+For Joyce (gating Phase 1a):
+1. **Get an OpenRouter API key** at https://openrouter.ai/keys (load $5 in credits) → drop in `OpenRouter_api.txt` (gitignored). This is the most important blocker — paid smoke tests cannot start without it.
+2. **Sign off on `theory_interpretation_guide.md` open items** (4 items in §"Open items for Joyce / Bayati before Phase 1a"): theory candidate list, null-alignment reporting commitment, Discussion structure (data-organized vs theory-organized), Inglehart-Welzel citation verification.
+3. **Optional reading for context** (NOT blocking): `theory_review_round2.md` Tier 1 (~5.5 h: Pellert 2024 + Ye 2025 + Centaur 2025 + Hewitt 2024 + Salecha 2024). Helpful for the Discussion section but not for the OSF pre-reg under the lean lock.
 
-For the next Claude session, after Joyce locks the theory:
-5. **Build `gss_theory_taxonomy.json`** mapping each attitudinal GSS variable → theory cluster. Validate with a new `_audit_f_print()` smoke test.
-6. **Extend `gss_pipeline.py::compute_phase1_headline_multimodel`** to compute LOO ΔMAE on theory clusters in addition to the 4 atheoretical bins.
-7. **Run smoke tests** in this exact order:
+For the next Claude session, after Joyce drops the API key:
+4. **Run smoke tests** in this exact order:
    ```
    python3 llm_router.py --smoke-one          # ~$0.001 / 5s
    python3 llm_router.py --smoke-panel        # ~$0.005 / 30s
@@ -139,11 +136,14 @@ For the next Claude session, after Joyce locks the theory:
    python3 gss_driver.py --n 10 --primary-only  # ~$0.70 / 30-60 min
    python3 gss_driver.py --n 10               # ~$2.00 / 2-3 hours (with sensitivity)
    ```
-8. **Draft OSF pre-reg** with all four families locked: 4-bin LOO (primary), theory-bin LOO (secondary, with Holm-Bonferroni across families), §12.2 quality-primary model-selection rule, multiplicity correction.
-9. **Phase 1a** (N=100, ~$25) → produces the model selection.
-10. **Phase 1b** (N=1500, ~$215) → primary analysis.
+5. **Draft OSF pre-registration** under the lean lock. Locked items: 4-bin LOO primary + Shapley robustness + attitudinal Battery LOO (conditional, secondary) + §12.2 quality-primary selection rule + Holm-Bonferroni multiplicity within each family + R1+R2 leakage hygiene + §11.1 abstract language template + null-alignment reporting commitment from `theory_interpretation_guide.md`. Source template: `PROJECT_SYNTHESIS.md` §3 + §4 (decision log).
+6. **Phase 1a** (N=100, ~$65 with anchor) → §12.2 selector picks Phase 1b model.
+7. **Phase 1b** (N=1500, ~$95 selected model + ~$50 anchor) → primary analysis.
+8. **Implement secondary tools** (`shapley_decomposition.py`, `battery_loo.py`) per `tier1_tool_schemas.md` schemas. Shapley runs on Phase 1a; Battery LOO runs on Phase 1c **only if attitudinal-bin dominance is confirmed**.
 
-Also outstanding (lower priority): Codex-deferred I-6 concurrency in `call_panel`; I-7 finer resume granularity. Both irrelevant to N=10 smoke; flag for pre-Phase-1b implementation.
+**NOT in the lean Phase 1 plan** (deferred to future work — see `gss_phase1_design.md` §13.4): theory-bin LOO as confirmatory family, building `gss_theory_taxonomy.json`, RSA, permutation importance theory adjudication, Stage 3 refinement experiments, six-theory horse race with hard numeric thresholds.
+
+Also outstanding (lower priority): Codex-deferred I-6 concurrency in `call_panel`. Irrelevant to N=10 smoke; flag for pre-Phase-1b implementation.
 
 ---
 
@@ -187,16 +187,21 @@ GSBGEN390/
 │   └── EXPLAIN_ZH.md, CODE_WALKTHROUGH_ZH.md, COLAB_RUN_GUIDE.md
 │
 ├── PHASE 1 (GSS PUBLIC) DESIGN + ARTIFACTS
-│   ├── gss_phase1_design.md         ← locked design (§10/§12/§12.2/§13 most relevant)
-│   ├── theory_review.md             ← Round-1 lit review starter (§8 LOCK EMPTY)
-│   ├── theory_review_round2.md      ← Round-2 lit review (NEW 2026-05-07)
+│   ├── gss_phase1_design.md         ← LEAN-LOCKED design (§4/§9c/§10/§11.1/§12.2/§13 most relevant)
+│   ├── theory_review.md             ← Round-1 lit review (informational under lean lock; §8 lock unused)
+│   ├── theory_review_round2.md      ← Round-2 lit review (Inglehart-Welzel + Big Five + verified 2024-2026 LLM-applied work)
+│   ├── theory_interpretation_guide.md ← Discussion-section memo for 6 candidate frameworks (lean replacement)
+│   ├── tier1_tool_schemas.md        ← schemas for Shapley + Battery LOO secondary tools
 │   ├── gss_variables_to_download.md
-│   ├── gss_feature_taxonomy.json    ← v0.3 locked
-│   ├── gss_theory_taxonomy.json     ← TO BE BUILT after lock
-│   ├── gss_loader.py, validate_taxonomy.py
-│   ├── gss_pipeline.py              ← AUDIT primitives + multi-model panel synthesis
+│   ├── gss_feature_taxonomy.json    ← v0.3 LOCKED
+│   ├── gss_battery_map.json         ← v0.1 LOCKED (15 batteries + 9 singletons; for R1 + Battery LOO)
+│   ├── outputs/primary_eval_human_variance_2024.json ← LOCKED DQ-3 reference
+│   ├── gss_loader.py, validate_taxonomy.py (10-check incl. 7c battery map)
+│   ├── gss_pipeline.py              ← AUDIT primitives + R1 battery exclusion + multi-model panel synthesis
 │   ├── llm_router.py                ← OpenRouter / OpenAI client + 8-attempt backoff
-│   └── gss_driver.py                ← top-level orchestrator with atomic-write resumability
+│   ├── gss_driver.py                ← top-level orchestrator with atomic-write resumability + item-level sensitivity resume + I-10 reproducibility guard
+│   ├── select_phase1b_model.py      ← §12.2 quality-primary rule executable + 5-branch self-test
+│   └── regression_baseline.py       ← R2 regression baseline (Layer 4 leakage hygiene partition)
 │
 ├── PHASE 2 DESIGN
 │   └── thesis_phase2_design.md

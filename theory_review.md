@@ -1,10 +1,12 @@
 # Theory-driven feature-engineering: literature review starter
 
+> ⚠️ **Status update 2026-05-09 (lean-design lock)**: this file was originally written under the assumption that one theory would be **locked** and that locked theory would drive a confirmatory theory-bin LOO secondary family. **Under the 2026-05-09 lean lock, that plan was removed.** Theory framing now enters the Discussion section only as interpretive secondary analysis across 6 candidate frameworks — see `theory_interpretation_guide.md` for the live spec. **§6 / §8 / §9 of this file (which still talk about "lock §8 before Phase 1a runs", building `gss_theory_taxonomy.json`, and OSF amendment) are stale relative to the lean lock.** They are preserved for historical context but do NOT describe the current plan. Joyce's literature review continues as Discussion-writing input.
+
 **Author:** Joyce Yu (literature review owner)
 **Created:** 2026-05-06 by collaborating Claude session (scaffold only — Joyce owns the actual review)
-**Status:** Open. Decision needed before Phase 1a launches.
-**Locked theory:** _(not yet locked — see §6 below)_
-**See also:** `theory_review_round2.md` (2026-05-07) — adds 5 cog-sci/behavioral-science candidates Round-1 missed (Big Five/HEXACO, Inglehart-Welzel, Hofstede, Theory of Planned Behavior, Self-Determination, Dual-Process), verified 2024-2026 LLM-applied work, and a tiered reading list. Read Round 2 alongside this file before locking §8.
+**Status under lean lock**: informational; not gating Phase 1a or OSF.
+**Locked theory:** N/A under lean lock — no single theory is selected; 6 candidates are discussed in `theory_interpretation_guide.md`.
+**See also:** `theory_review_round2.md` (2026-05-07) — adds 5 cog-sci/behavioral-science candidates Round-1 missed (Big Five/HEXACO, Inglehart-Welzel, Hofstede, Theory of Planned Behavior, Self-Determination, Dual-Process), verified 2024-2026 LLM-applied work, and a tiered reading list. Read Round 2 alongside this file for full context; for the live design see `theory_interpretation_guide.md`.
 
 This document is a structured starter for the literature review committed to in `gss_phase1_design.md` §13. The goal: pick ONE theoretical framework that maps cleanly onto GSS-attitudinal items, and lock the GSS-variable → theory-cluster mapping in `gss_theory_taxonomy.json` before Phase 1a runs.
 

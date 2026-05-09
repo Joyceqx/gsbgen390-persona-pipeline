@@ -413,11 +413,9 @@ LOO ΔMAE 是 marginal estimator；Shapley 补 interaction-aware 估计；Batter
 9. 计算 LLM-vs-regression partition (R2)
 10. 出 sensitivity table（Park v2 ~118-item per-item raw accuracy 对照 GPT-4o anchor）
 
-### 7.4 Theory-bin amendment（Joyce 文献完成后）
+### 7.4 ~~Theory-bin amendment~~（已撤掉 — lean lock 2026-05-09）
 
-11. 锁定 `gss_theory_taxonomy.json`
-12. OSF amendment for theory-bin LOO
-13. Re-aggregate 既有 1a/1b 输出，出 secondary headline
+原计划 (§4.7) 是"Joyce 文献综述完成 → 锁 `gss_theory_taxonomy.json` → OSF amendment → theory-bin LOO 作 secondary headline"。**lean-design lock 撤掉了整个这条路径**（§4.8）。理论解释只进 Discussion section，不需要 amendment、不需要 taxonomy 构建、不需要 secondary headline。Joyce 的文献综述继续，但仅作 Discussion 写作输入，不阻塞 OSF 或 Phase 1c。
 
 ### 7.5 Phase 2（2026 暑期）
 
@@ -551,13 +549,14 @@ LLM-panel MAE on item X = (regression MAE on X) + (LLM gain over regression)
 
 The third-party audit's citation of std=0.13 is incorrect (true values are 0.18 and 0.12 respectively), but the core ~0.05 inflation argument holds — **so the R1 + R2 Park-precedent foundation is sound**.
 
-### 3.6 Multiplicity (FWER control)
+### 3.6 Multiplicity (FWER control; 2026-05-09 lean-design revision)
 
-Phase 1 has TWO LOO families:
+Phase 1's current LOO families:
 - **4-bin primary family** (4 ΔMAE tests) — Holm-Bonferroni at α=0.05 within family.
-- **Theory-bin secondary family** (~5-10 tests, depending on theory choice) — entered via OSF amendment after Joyce's literature lock; reported only as secondary confirmation, never as co-primary headline.
+- **Attitudinal-bin Battery LOO secondary family** (~10-11 tests) — only run if 4-bin LOO confirms attitudinal dominance; Holm-Bonferroni applied independently. Reporting role is descriptive within-bin decomposition, not co-primary headline.
+- **Bin-level Shapley decomposition** — robustness re-aggregation of the same 4-bin estimand; no separate Holm correction (shares the 4-bin family).
 
-The initial OSF pre-reg locks **the 4-bin family only**; theory-bin enters via amendment.
+**Removed under 2026-05-09 lean-design lock**: theory-bin LOO is no longer a confirmatory family. Theory interpretation enters Discussion section only and does NOT drive any primary claim. See §3.8 + `theory_interpretation_guide.md`.
 
 ### 3.7 §11.1 Writeup language template (mandatory)
 
@@ -647,12 +646,22 @@ The complete mapping is in `gss_battery_map.json`.
 
 ### 4.7 Theory-bin via OSF amendment (2026-05-08)
 
-**Decision**: Initial OSF locks 4-bin LOO only; theory-bin LOO enters via amendment after Joyce's literature lock.
+**Decision (interim, superseded by §4.8)**: Initial OSF locks 4-bin LOO only; theory-bin LOO enters via amendment after Joyce's literature lock.
 
 **Evidence**:
 - Theory not yet selected (Round 1 + Round 2 literature reviews ongoing: 6 candidates — MFT / Schwartz / Bourdieu / Cultural Theory / Inglehart-Welzel / Big Five)
 - Locking theory-bin alongside 4-bin would be false locking — committing to "some analysis on a theory not yet chosen"
 - Amendment path is fully compliant — what matters is that any theory-bin re-aggregation occurs only after the amendment is filed
+
+### 4.8 Lean-design lock: theory-bin removed entirely from confirmatory plan (2026-05-09)
+
+**Decision**: Theory-bin LOO is removed as a confirmatory family entirely (it is NOT entering the OSF pre-reg, neither initially nor via amendment). Theory framing enters Discussion section only as interpretive secondary analysis across 6 candidate frameworks.
+
+**Evidence**:
+- Codex's lean-design audit (2026-05-09) flagged that a 6-theory horse-race confirmatory framework would push the paper toward "tool-stack paper" territory and overshadow its clean primary contribution.
+- The paper's primary question is engineering (*"which feature categories drive LLM persona prediction?"*), not theoretical (*"which cognitive theory wins?"*) — the methodology should match.
+- Anti-HARKing discipline is preserved through (a) theory-list pre-commitment in `theory_interpretation_guide.md`, (b) primary findings stand alone in atheoretical engineering language, (c) null-alignment reporting commitment.
+- See `gss_phase1_design.md` §13.3 + §13.4 for the full deferred-to-future-work list.
 
 ## 5. Innovation + impact
 
@@ -712,12 +721,11 @@ If Y/X ≈ 1, the attitudinal bin's "contribution" is fully auto-correlation; if
 
 ### 6.4 "LOO on unbalanced bins is a known weak attribution method"
 
-**Response**: Accepted in third-party audit §3.2. Three complements:
-- Leave-one-in (reported in sensitivity, ~$25 incremental)
-- Bin-size-balanced subsampling (Phase 2 / post-1a sensitivity)
-- Shapley 16-condition decomposition (post-1a sensitivity, ~$15)
+**Response (lean-design revision)**: Accepted. The two secondary tools in the lean lock directly respond:
+- **Bin-level Shapley decomposition (§3.8.1)** — 16-condition full enumeration, automatically captures bin-bin interactions; compared against 4-bin LOO ranking for consistency. Runs on Phase 1a.
+- **Attitudinal-bin Battery LOO (§3.8.2)** — within-bin decomposition at battery granularity, conditional on attitudinal dominance. Runs on Phase 1c.
 
-These do not enter primary headline because pre-reg conditions are locked; they enter the sensitivity section as a robustness triangle.
+LOO ΔMAE is a marginal estimator; Shapley adds interaction-aware estimates; Battery LOO adds within-bin granularity. The three together are robustness + interpretability. Other approaches (Bin-size-balanced subsampling / leave-one-in / RSA) are deferred to future work (see §3.8.4).
 
 ### 6.5 "DQ-3 threshold is arbitrary"
 
@@ -733,7 +741,17 @@ These do not enter primary headline because pre-reg conditions are locked; they 
 
 ### 6.8 "Theory-driven LOO needs a chosen theory"
 
-**Response**: §13 explicitly NOT-LOCK-READY; the initial OSF doesn't include theory-bin LOO; entry via amendment. Joyce is conducting Round 1 + Round 2 literature reviews (candidates: MFT / Schwartz / Bourdieu / Cultural Theory / Inglehart-Welzel / Big Five).
+**Response (revised under lean lock)**: Under the 2026-05-09 lean-design lock, theory is no longer a confirmatory family. Theory interpretation enters **Discussion section only** (see `theory_interpretation_guide.md`); primary findings do not depend on theory alignment. This revision dissolves the "needs a chosen theory" objection — the Discussion discusses 6 candidate frameworks qualitatively, with no requirement to declare a winner.
+
+### 6.9 "Lean design = thin paper" (potential criticism)
+
+**Response**: Lean ≠ thin. The primary 4-bin LOO + Shapley + Battery LOO together form a 4-stage attribution answer:
+- Stage 1: Which bin matters (4-bin LOO)
+- Stage 2: Whether the 4-bin ranking is robust to interactions (Shapley)
+- Stage 3: When attitudinal dominates, which batteries drive it (Battery LOO)
+- Stage 4: How the empirical pattern is interpreted across 6 candidate frameworks (Discussion via `theory_interpretation_guide.md`)
+
+Add R1 + R2 leakage hygiene + §12.2 quality-primary multi-model selection + GPT-4o anchor for Park comparability, and the methodological contribution itself is half the paper's value. The paper does not need a 6-theory horse race to be publishable — a clear, verifiable, reproducible ablation outweighs a tool stack at peer review.
 
 ## 7. Follow-up plans + timeline
 
@@ -756,11 +774,9 @@ These do not enter primary headline because pre-reg conditions are locked; they 
 9. Compute LLM-vs-regression partition (R2)
 10. Produce sensitivity table: per-item raw accuracy on ~118 Park-comparable items, N=100 GPT-4o anchor
 
-### 7.4 Theory-bin amendment (after Joyce's literature lock)
+### 7.4 ~~Theory-bin amendment~~ (REMOVED under lean lock 2026-05-09)
 
-11. Lock `gss_theory_taxonomy.json`
-12. File OSF amendment for theory-bin LOO
-13. Re-aggregate existing 1a/1b outputs; produce secondary headline
+The original §4.7 plan ("after Joyce's literature lock → build `gss_theory_taxonomy.json` → file OSF amendment → run theory-bin LOO as secondary headline") **was removed entirely under the lean-design lock** (see §4.8). Theory interpretation now enters Discussion only — no amendment, no taxonomy build, no secondary headline. Joyce's literature review continues, but as Discussion-writing input only, NOT as a Phase 1c gating activity.
 
 ### 7.5 Phase 2 (Summer 2026)
 

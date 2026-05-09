@@ -168,18 +168,16 @@ Codex audited the AUDIT-E + multi-model build and found 2 critical + 10 importan
 - Pre-registration must lock the rule BEFORE 1a runs.
 - See `gss_phase1_design.md` §12.2.
 
-**Q2 (pending Joyce's literature review) — Theory-driven secondary analysis**:
-- The atheoretical 4-bin LOO will be paired with a theoretically-grounded secondary LOO using one of: Moral Foundations Theory (Haidt), Schwartz Values, Bourdieu's Capitals, or Cultural Theory of Risk (Douglas/Wildavsky).
-- Same persona prompts + same eval items; only the cluster organization differs. Almost zero extra LLM cost.
-- Paper claim shifts from "engineering result on GSS data" to "psychological theoretical claim about LLM persona-internal feature representation."
-- Joyce's literature review starter scaffolded in `theory_review.md` (NEW file). 4 candidates surveyed; Joyce reads foundational papers + recent LLM-persona applications + decides + locks in §8 of that doc.
-- After lock: build `gss_theory_taxonomy.json`, extend aggregation to compute theory-cluster LOO. Pre-register alongside 4-bin LOO.
-- See `gss_phase1_design.md` §13.
+**Q2 (revised under 2026-05-09 lean lock) — Theory interpretation moved to Discussion-only**:
+- Originally proposed: theory-driven secondary LOO as a confirmatory family alongside the 4-bin primary, with Joyce locking one theory (MFT / Schwartz / Bourdieu / Cultural Theory) and building `gss_theory_taxonomy.json`.
+- Reverted under Codex's lean-design audit (2026-05-09): theory framing now enters the Discussion section only, as **interpretive secondary analysis** across 6 candidate frameworks. NO confirmatory horse race, NO `gss_theory_taxonomy.json` build, NO theory-bin LOO ΔMAE in the OSF pre-reg.
+- Live spec: `theory_interpretation_guide.md` (replaces the planned theory-bin appendix).
+- See `gss_phase1_design.md` §13.3 (theory interpretation in Discussion) + §13.4 (deferred to future work).
 
-### Tasks updated
-- #14 (model-selection script) — depends on 1a complete
-- #15 (Joyce's literature review) — Joyce's work; blocks #7 OSF pre-reg
-- #16 (theory-bin LOO build) — blocked by #15
+### Tasks updated (under lean lock)
+- #14 (§12.2 selector) — DONE; `select_phase1b_model.py` + 5-branch self-test pass.
+- #15 (Joyce's literature review) — Joyce's work; informational only under lean lock (no longer blocks OSF pre-reg).
+- #16 (theory-bin LOO build) — DEFERRED to future work; not in lean Phase 1.
 
 ---
 
@@ -331,16 +329,22 @@ GSBGEN390/
 ├── COLAB_RUN_GUIDE.md                 ← Colab fallback instructions
 │
 ├── ── PHASE 1 (GSS-PUBLIC) DESIGN + ARTIFACTS ──
-├── gss_phase1_design.md               ← Phase 1 locked design (Path A*, snapshot, raw acc, multi-model panel §12, model-selection §12.2, theory-driven §13)
-├── theory_review.md                   ← LITERATURE REVIEW STARTER for theory-driven feature engineering (Joyce's review pending; lock in §8)
+├── gss_phase1_design.md               ← Phase 1 LEAN-LOCKED design (2026-05-09); §4 method, §9c 4-layer leakage hygiene, §10 aggregation, §11.1 abstract language template, §12 multi-model panel, §12.2 quality-primary selection rule, §13.1 Shapley, §13.2 Battery LOO, §13.3 theory interpretation (Discussion only), §13.4 deferred-to-future-work list
+├── theory_review.md                   ← Round 1 lit review (informational under lean lock; §8 lock unused)
+├── theory_review_round2.md            ← Round 2 lit review (Inglehart-Welzel + Big Five + verified 2024-2026 LLM-applied work)
+├── theory_interpretation_guide.md     ← Discussion-section memo (lean replacement for the deprecated theory-bin appendix)
+├── tier1_tool_schemas.md              ← output schemas for Shapley + Battery LOO secondary tools
 ├── gss_variables_to_download.md       ← record of GSS Data Explorer variable list
 ├── gss_feature_taxonomy.json          ← LOCKED v0.3: 12 primary_eval, 118 sensitivity_eval, 140 features × 4 bins
-├── gss_theory_taxonomy.json (PENDING) ← will lock theory-cluster mapping after Joyce's review
+├── gss_battery_map.json               ← LOCKED v0.1: 15 batteries + 9 singletons (R1 leakage exclusion + Battery LOO)
+├── outputs/primary_eval_human_variance_2024.json ← LOCKED DQ-3 reference (per-item human variance from GSS 2024)
 ├── gss_loader.py                      ← reads 3-batch GSS extract → pandas DataFrame; label-set namespacing
-├── validate_taxonomy.py               ← 9-check validator: vars exist, bins disjoint, coverage, missingness
-├── gss_pipeline.py                    ← AUDIT primitives: persona prompt builder, eval question formatter, scorer, aggregation, multi-model panel synthesis
+├── validate_taxonomy.py               ← 10-check validator (incl. 7c battery map): vars exist, bins disjoint, coverage, missingness, override-vs-truth-codes, battery map well-formedness
+├── gss_pipeline.py                    ← AUDIT primitives: persona prompt builder, eval question formatter, scorer, aggregation, multi-model panel synthesis, battery exclusion (R1)
 ├── llm_router.py                      ← OpenRouter / OpenAI client with retry+backoff; locked model panel
-├── gss_driver.py                      ← top-level orchestrator: respondents × conditions × items × models loop with atomic-write resumability
+├── gss_driver.py                      ← top-level orchestrator: respondents × conditions × items × models loop with atomic-write resumability + R1 per-item battery exclusion + item-level sensitivity resume + I-10 reproducibility guard
+├── select_phase1b_model.py            ← §12.2 quality-primary rule executable; DQ-1 + DQ-3 (per-item relative ≥30% × human var) + cost tie-break + Qwen fallback; 5-branch self-test
+├── regression_baseline.py             ← R2 leakage-hygiene partition (Layer 4): non-LLM regression baseline; LLM gain over regression = persona-reasoning contribution
 │
 ├── ── EXPECTED-AT-RUNTIME (after smoke test, gitignored where appropriate) ──
 │   outputs/gss_phase1_records_n{N}_*.json          ← raw LLM outputs + scores per (resp, cond, model)
