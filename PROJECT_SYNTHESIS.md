@@ -419,10 +419,10 @@ LOO ΔMAE 是 marginal estimator；Shapley 补 interaction-aware 估计；Batter
 
 ### 7.5 Phase 2（2026 暑期）
 
-14. 用 Phase 1 经验 seed power calc，预先披露可检测格
-15. Cookiy + Prolific 收 N=20-30 with 2-周 recontact
-16. 填充 BFI 行 + 行为博弈行
-17. 写论文
+11. 用 Phase 1 经验 seed power calc，预先披露可检测格
+12. Cookiy + Prolific 收 N=20-30 with 2-周 recontact
+13. 填充 BFI 行 + 行为博弈行
+14. 写论文
 
 ---
 
@@ -780,10 +780,10 @@ The original §4.7 plan ("after Joyce's literature lock → build `gss_theory_ta
 
 ### 7.5 Phase 2 (Summer 2026)
 
-14. Use Phase 1 empirics to seed power calc, pre-disclose detectable cells
-15. Cookiy + Prolific collect N=20-30 with 2-week recontact
-16. Fill BFI row + behavioral-game row of the 4×3 matrix
-17. Write paper
+11. Use Phase 1 empirics to seed power calc, pre-disclose detectable cells
+12. Cookiy + Prolific collect N=20-30 with 2-week recontact
+13. Fill BFI row + behavioral-game row of the 4×3 matrix
+14. Write paper
 
 ---
 

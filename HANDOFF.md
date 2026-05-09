@@ -85,7 +85,7 @@ RSA, permutation importance theory adjudication, Stage 3 refinement experiments,
 
 ---
 
-## 5. Literature review state (the reason Q2 is blocked)
+## 5. Literature review state (informational under lean lock)
 
 ### Round 1 — `theory_review.md` (2026-05-06, scaffold by AI)
 4 candidates surveyed, all foundational citations + GSS-item mapping sketched:
@@ -160,11 +160,10 @@ Also outstanding (lower priority): Codex-deferred I-6 concurrency in `call_panel
 
 ## 8. Open questions for Bayati (queue for next meeting)
 
-From `theory_review_round2.md` §6:
-1. Theory choice steer — Inglehart-Welzel (cross-cultural values, 4 quadrants) vs Schwartz (10 values / 4 quadrants) vs MFT (5-6 foundations) vs Big Five (5 traits)?
-2. Symmetric input/output design — using Big Five as Phase-1 *input* organization when Phase-2 will measure BFI as *outcome*: methodologically clean or unfair advantage?
-3. Multi-theory pre-registration — comfortable pre-registering 4-bin + Inglehart-Welzel + Big Five LOOs as a *family* with Holm-Bonferroni? Buys insurance against single bad theory choice and enables a "which framework predicts best" comparison.
-4. Salecha 2024 social-desirability bias — relevant for Phase 1 (BFI is only Phase-2 outcome) or just discussion-section caveat?
+From `theory_review_round2.md` §6 (rephrased under lean lock — theory is Discussion-only, not pre-registered):
+1. **Discussion-section emphasis** — among the 6 candidate frameworks listed in `theory_interpretation_guide.md` (MFT / Schwartz / Bourdieu / Cultural Theory / Inglehart-Welzel / Big Five), which 1–2 does Bayati want featured most prominently in the Discussion's interpretive subsection? (No pre-registered horse race — qualitative interpretation only.)
+2. **Symmetric input/output design** — if Big Five is featured in the Discussion as a Phase-1 *input* organization, Phase-2 will measure BFI as an *outcome*: methodologically clean or creates an unfair advantage at Phase-2 eval?
+3. **Salecha 2024 social-desirability bias** — relevant for Phase 1 (BFI is only Phase-2 outcome) or just a Discussion-section caveat?
 
 From `STATUS.md` open methodological questions:
 - Leakage-filtered analysis sufficient defense of pilot's C-condition result, or needs 2-week-separated collection?
@@ -278,11 +277,9 @@ All 6 audit smoke tests must continue to pass.
 
 ---
 
-## 12. The one-paragraph paper claim (current, before theory lock)
+## 12. The one-paragraph paper claim (lean lock 2026-05-09)
 
-*Park et al. 2024 v2 demonstrates that 2-hour AVP-style interview transcripts produce LLM personas whose GSS-attitude predictions reach ~0.83 (vs ~0.82 for demographic-only surveys). Phase 1 of this thesis tests the cheaper survey-style condition at scale (N=1500) using public GSS data, organizes the persona's input features into 4 atheoretical bins (demographic / behavioral / psychological / attitudinal), and runs a leave-one-out ablation across a 4-cheap-OpenRouter-model panel + GPT-4o anchor (N=100). Pre-registered secondary analysis re-organizes the same features under a single locked theoretical framework (TBD — candidates: MFT / Schwartz / Bourdieu / Cultural Theory of Risk / Inglehart-Welzel / Big Five) and runs the same LOO. The contribution is: (a) the first systematic feature-importance ablation on Park's GSS-attitudes outcome row at N=1500 with cross-model robustness, and (b) the first published empirical comparison of an atheoretical vs. theoretically-grounded organization of LLM persona input features.*
-
-After theory lock, the second sentence collapses to the chosen theory.
+*Park et al. 2024 v2 demonstrates that 2-hour AVP-style interview transcripts produce LLM personas whose GSS-attitude predictions reach ~0.83 (vs ~0.82 for demographic-only surveys). Phase 1 of this thesis tests the cheaper survey-style condition at scale (N=1500) using public GSS 2024 data, organizes the persona's input features into 4 pre-registered bins (demographic / behavioral / psychological / attitudinal), and runs a leave-one-out ablation on the §12.2 quality-selected model + GPT-4o anchor (N=100), with cross-model robustness from the Phase 1a 4-cheap-OpenRouter-model panel. Two pre-registered secondary analyses extend the primary: bin-level Shapley decomposition (16-condition robustness on the 4-bin LOO ranking) and attitudinal-bin Battery LOO (within-bin interpretability, conditional on attitudinal-bin dominance). The contribution is: (a) the first systematic feature-importance ablation on Park's GSS-attitudes outcome row at N=1500 with R1 battery-level structural exclusion + R2 regression-baseline partition (a partition test Park v2 itself does not run); (b) a reusable §12.2 quality-primary multi-model selection rule with named Qwen-2.5-72B fallback; and (c) Discussion-section qualitative interpretation across 6 candidate cognitive/sociological frameworks (per `theory_interpretation_guide.md`) — null or mixed alignment reported with equal prominence.*
 
 ---
 

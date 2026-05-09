@@ -30,7 +30,7 @@ If you (or future-Claude) walked in cold, read these in order:
 ```bash
 cd ~/Documents/GSBGEN390
 python3 gss_loader.py             # loader smoke
-python3 validate_taxonomy.py      # 9-check validator
+python3 validate_taxonomy.py      # 10-check validator (incl. 7c battery map)
 python3 gss_pipeline.py --print-prompt          # AUDIT-A
 python3 gss_pipeline.py --print-questions       # AUDIT-B
 python3 gss_pipeline.py --test-scoring          # AUDIT-C
@@ -46,7 +46,7 @@ python3 llm_router.py --smoke-panel             # ~$0.005 — verify all 4 model
 python3 gss_driver.py --smoke                   # ~$0.02 — 1 resp / 1 model / primary
 python3 gss_driver.py --n 10 --primary-only     # ~$0.70 — full panel, primary only
 python3 gss_driver.py --n 10                    # ~$2.00 — primary + sensitivity
-python3 gss_driver.py --anchor --n 50           # GPT-4o anchor on N=50
+python3 gss_driver.py --anchor --n 100          # GPT-4o anchor on N=100, primary only, n=2
 python3 gss_driver.py --n 1500                  # Phase 1b primary (after OSF pre-reg)
 ```
 
@@ -80,7 +80,7 @@ python3 build_site_data.py               # → docs/data/*.json
 
 The eventual thesis fills a 4 (feature category) × 3 (outcome dimension) feature-importance matrix that Park v2 implies but does not produce. The pilot establishes the architecture; **two phases** carry it to publishable scale:
 
-- **Phase 1 — GSS public-data analysis** (IN PROGRESS, [`gss_phase1_design.md`](gss_phase1_design.md)). N≈1,500 from GSS 2024 cross-section. **Snapshot prediction** (no panel for prediction; raw accuracy as primary metric, no normalization in Phase 1). Path A* design: Path B 12-item curated eval as primary (supports 4-bin LOO); Path A Park's full ~118 items as sensitivity (per-item Park-comparability). Covers GSS-attitudes outcome row only. Budget ~$300-500, ~1-4 weeks.
+- **Phase 1 — GSS public-data analysis** (IN PROGRESS, lean-design locked 2026-05-09; [`gss_phase1_design.md`](gss_phase1_design.md)). N≈1,500 from GSS 2024 cross-section. **Snapshot prediction** (no panel for prediction; raw accuracy as primary metric, no normalization in Phase 1). Path A* design: Path B 12-item curated eval as primary (supports 4-bin LOO); Path A Park's full ~118 items as sensitivity (per-item Park-comparability). Covers GSS-attitudes outcome row only. Budget ~$215 (within original $300-500 envelope), ~1-4 weeks.
 - **Phase 2 — Interview-decomposed study** ([`thesis_phase2_design.md`](thesis_phase2_design.md)). N=20-30 Prolific respondents, 30-45 min modular long interview (4 modules ↔ 4 feature bins) with **2-week separation** (recovers test-retest baseline GSS can't provide), BFI-44 + behavioral-game vignettes + GSS held-out outcomes. LOO ablation operates at the **interview-content level** — directly decomposes Park's "interview-only" condition. Budget ~$1,500-1,750, ~7-9 weeks.
 
 **Composed thesis output**: the full feature × outcome feature-importance matrix in one semester, ~$2,000 total.

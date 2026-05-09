@@ -243,7 +243,7 @@ All Bayati-endorsed direction (Phase split / 4-bin taxonomy / pre-registration c
 ### Open work (not started yet)
 - **#10 `gss_pipeline.py`** — persona-prompt builder + LLM dispatcher + scorer adapted for GSS rows. Reuses pilot's retry/backoff and self-consistency machinery. Needed before any LLM calls.
 - **#6 N=10 smoke test** — verify pipeline end-to-end at minimum scale (~$1).
-- **#7 OSF pre-registration** — drafted **before Phase 1a**; locks taxonomy, eval list, primary metric, exclusion rules, secondary analyses, the 4-cheap-model panel, the §12.2 **quality-primary** selection rule (argmin 1a MAE among DQ-passers; DQ-1 parse-fail ≤30%; DQ-3 output-variance ≥0.5; cost as tie-break; Qwen fallback), and the Holm-Bonferroni multiplicity correction.
+- **#7 OSF pre-registration** — drafted **before Phase 1a**; locks taxonomy, eval list, primary metric, exclusion rules, secondary analyses, the 4-cheap-model panel, the §12.2 **quality-primary** selection rule (argmin 1a MAE among DQ-passers; DQ-1 parse-fail ≤30%; DQ-3 per-item relative variance ≥30% of human var; cost as tie-break; Qwen fallback), and the Holm-Bonferroni multiplicity correction.
 - **#8 Phase 1a (N=100)** — sanity check.
 - **#9 Phase 1b (N=1,500)** — primary analysis.
 
@@ -306,7 +306,7 @@ All Bayati-endorsed direction (Phase split / 4-bin taxonomy / pre-registration c
 
 ---
 
-## Current work tree (updated 2026-05-05)
+## Current work tree (updated 2026-05-09)
 
 ```
 GSBGEN390/
@@ -576,19 +576,22 @@ python3 build_site_data.py
 
 ## Pending work (post-meeting decisions)
 
+> **Frozen 2026-04-30 (pilot wrap state).** The bullets below were the open list at the end of the pilot, before the 2026-05-02 Phase 1 lock and the 2026-05-09 lean-lock. Phase 1 design questions are now settled in `gss_phase1_design.md`; Phase 2 questions live in `thesis_phase2_design.md`; current next-actions are in HANDOFF §6 + the TL;DR at the top of this file. Kept here as historical context.
 
 1. **3-5 page formal writeup** — methods, pipeline, results, leakage audit, comparison to Park v2's per-outcome 74/83/82/86% (with caveats: ≈ tie on GSS only; surveys lag by 0.15 BFI / 0.28 games), limitations, next steps. Awaits Bayati feedback.
-1a. **Phase 1 — GSS public-data feature-importance analysis** (proposed; see [`gss_phase1_design.md`](gss_phase1_design.md)). Uses GSS Three-Wave Panel 2010-2014 (N≈1,500), provides first test-retest-normalized-accuracy comparison to Park's 0.82-0.83. Covers GSS-attitudes outcome row only. Budget ~$300-500, timeline 1-4 weeks. Awaiting Bayati endorsement.
+1a. **Phase 1 — GSS public-data feature-importance analysis** (proposed; see [`gss_phase1_design.md`](gss_phase1_design.md)). Uses GSS Three-Wave Panel 2010-2014 (N≈1,500), provides first test-retest-normalized-accuracy comparison to Park's 0.82-0.83. Covers GSS-attitudes outcome row only. Budget ~$300-500, timeline 1-4 weeks. Awaiting Bayati endorsement. *[Endorsed 2026-05-02; design subsequently revised to GSS 2024 single-wave snapshot, raw-only, ~$215 — see TL;DR.]*
 1b. **Phase 2 — Interview-decomposed feature-importance study** (proposed; see [`thesis_phase2_design.md`](thesis_phase2_design.md)). Prolific N=20-30, 30-45 min modular long interview (4 modules ↔ 4 feature bins), 2-week wait, BFI-44 + behavioral-game vignettes + GSS as held-out outcomes. LOO ablation operates **at the interview-content level** — decomposes Park's "interview-only" condition into pre-registered content bins. Covers BFI (0.15 gap) and games (0.28 gap) rows that Phase 1 cannot. Requires platform pivot to Prolific + self-hosted OpenAI Realtime API moderator (Cookiy 15-min cap incompatible). Budget ~$1,500-1,750, timeline 7-9 weeks. Awaiting Bayati endorsement of platform pivot + N + module structure.
 2. **Multi-seed run-variance estimate** — re-run pipeline 5-10 times with different seeds to bound LOO ranking instability at N=1. Honest answer to "how reliable is this LOO?"
-3. **2-week-separated re-collection (likely needed)** — Cookiy can't recontact panel respondents, so this requires a different platform (Prolific custom script, or recruiting in-house). Without this, the C-condition's win is technically defensible only via the leakage-audit argument, not via Park-protocol comparability.
-4. **BFI-44 upgrade** — at 2 items/trait, BFI trait RMSE is statistically meaningless. Real study should use BFI-44.
-5. **Larger N** — pilot N=2+1 → thesis target probably N≥30 per arm based on what's needed for stable LOO ranking + ablation effect estimation.
-6. **Survey-instrument design for thesis** — 8-15 items per category × 4 categories = 60+ construction items. Pilot's 5/5/4/4 split is illustrative only.
+3. **2-week-separated re-collection (likely needed)** — Cookiy can't recontact panel respondents, so this requires a different platform (Prolific custom script, or recruiting in-house). Without this, the C-condition's win is technically defensible only via the leakage-audit argument, not via Park-protocol comparability. *[Absorbed into Phase 2 design.]*
+4. **BFI-44 upgrade** — at 2 items/trait, BFI trait RMSE is statistically meaningless. Real study should use BFI-44. *[Absorbed into Phase 2 design.]*
+5. **Larger N** — pilot N=2+1 → thesis target probably N≥30 per arm based on what's needed for stable LOO ranking + ablation effect estimation. *[Phase 1: N=1500 GSS; Phase 2: N=20-30 with power calc.]*
+6. **Survey-instrument design for thesis** — 8-15 items per category × 4 categories = 60+ construction items. Pilot's 5/5/4/4 split is illustrative only. *[Absorbed into Phase 2 design.]*
 
 ---
 
 ## Open methodological questions for Bayati meeting
+
+> **Frozen 2026-04-30.** These were the questions queued for the 2026-05-02 Bayati meeting; that meeting locked the Phase 1 direction (GSS-first → Phase 2 Cookiy + 4-bin taxonomy + pre-reg before Phase 1a). Most items below are now answered or absorbed into Phase 2 (`thesis_phase2_design.md`). Current open items for Bayati are in HANDOFF §8.
 
 1. Is the leakage-filtered analysis (manual STRONG-tagging + strict-clean MAE column) sufficient defense of the C-condition result, or does the thesis-stage replication need 2-week-separated collection regardless?
 2. **LOO ranking instability at N=1**: across two pipeline runs at temp 0.7, the "most-important-when-dropped" category changed (psychological → demographic). What N + how many seeds buy a stable ranking?
