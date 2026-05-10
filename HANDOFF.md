@@ -25,7 +25,7 @@ GSBGEN390 is a Stanford GSB master's thesis on **feature attribution for LLM per
 7. PROJECT_SYNTHESIS.md            — paper-ready bilingual synthesis (ZH then EN; comprehensive design, decisions, criticisms)
 8. tier1_tool_schemas.md           — schemas for the 2 secondary tools (Shapley + Battery LOO)
 9. gss_feature_taxonomy.json       — v0.3 locked (12 primary_eval, 118 sensitivity_eval, 140 features × 4 bins)
-10. gss_battery_map.json            — v0.1 locked (15 batteries + 9 singletons; for R1 + Battery LOO)
+10. gss_battery_map.json            — **v0.2 locked 2026-05-09** (34 batteries: 7 D + 10 B + 2 P + 15 A; 17 singletons; for R1 + co-primary Battery LOO)
 11. theory_review.md / theory_review_round2.md — literature scaffolds (informational, not driving primary findings under lean lock)
 ```
 
@@ -39,14 +39,14 @@ For Phase 2 / pilot context, also: `thesis_phase2_design.md`, `MEETING_HANDOUT.m
 |---|---|---|
 | Pilot (Cookiy N=2+1) | ✅ done; GitHub repo + GitHub Pages dashboard live | — |
 | Phase 1 pipeline (loader, audit primitives, multi-model orchestrator, atomic-write driver, R1+R2 leakage hygiene, §12.2 selector, R2 regression baseline) | ✅ 100% built, all tests pass | — |
-| Phase 1 design lock | ✅ LEAN-LOCKED 2026-05-09 (4-bin LOO primary + Shapley + Battery LOO + theory-as-Discussion) | — |
+| Phase 1 design lock | ✅ LEAN-LOCKED 2026-05-09 + Battery LOO promoted to co-primary 2026-05-09 evening (4-bin LOO + 34-battery LOO across all 4 bins co-primary; Shapley robustness; theory-as-Discussion) | — |
 | Phase 1 N=10 smoke test on real LLMs | 🟡 awaiting OpenRouter API key | needs key in `OpenRouter_api.txt` |
 | OSF pre-registration | 🔒 awaiting (a) Joyce + Bayati signoff on `theory_interpretation_guide.md` open items + (b) smoke green | blocks Phase 1a |
 | Phase 1a (N=100, ~$65 with anchor) | 🔒 blocked on pre-reg | — |
 | §12.2 selector run on 1a output | 🔒 blocked on 1a complete | — |
 | Phase 1b (N=1500, ~$95 selected model + ~$50 anchor) | 🔒 blocked on §12.2 selector | — |
 | Shapley decomposition (Phase 1a) | 🔒 tool to be implemented (~Day 3-4 of forward plan) | — |
-| Attitudinal Battery LOO (Phase 1c, conditional) | 🔒 tool to be implemented; ~$25-30; conditional on attitudinal-bin dominance from primary | — |
+| Battery LOO (Phase 1c, all 4 bins, **co-primary**) | 🔒 tool to be implemented (`battery_loo.py`); ~$50-60; **unconditional**; nested Holm per-bin (D=7/B=10/P=2/A=15) | — |
 | Phase 2 (Cookiy + Prolific, BFI + behavioral games) | 📅 planned, not started; design in `thesis_phase2_design.md` | awaits Phase 1 wrap + power calc |
 
 **Phase 1 budget:** ~$215 total at N=1500 (within original $300-500 envelope).
@@ -60,10 +60,13 @@ For Phase 2 / pilot context, also: `thesis_phase2_design.md`, `MEETING_HANDOUT.m
 ### Primary contribution
 *Which survey-collectible feature categories actually improve LLM persona prediction of GSS attitude outcomes?* — answered by **4-bin LOO ablation** (demographic / behavioral / psychological / attitudinal).
 
-### Secondary analyses (in lean lock)
-- **Bin-level Shapley decomposition** (16 conditions) — robustness on 4-bin LOO ranking against bin interactions (`gss_phase1_design.md` §13.1)
-- **Attitudinal-bin Battery LOO** (~10-11 batteries) — within-bin interpretability, conditional on attitudinal dominance (`gss_phase1_design.md` §13.2)
-- **Theory interpretation** — 6 candidate frameworks discussed qualitatively in Discussion section only; NOT a horse race, NO preregistered numeric thresholds (`theory_interpretation_guide.md`)
+### Co-primary analyses (locked 2026-05-09 evening)
+- **Primary headline #1 — 4-bin LOO** (broad finding): which feature category contributes most? `gss_phase1_design.md` §4 + §10
+- **Primary headline #2 — 34-battery LOO across all 4 bins** (mechanistic finding): which construct-level clusters drive the signal within each bin? Nested Holm per-bin (D=7 / B=10 / P=2 / A=15). `gss_phase1_design.md` §13.2 + `gss_battery_map.json` v0.2
+
+### Secondary analyses
+- **Bin-level Shapley decomposition** (16 conditions) — robustness on 4-bin LOO ranking against bin interactions (shares 4-bin family multiplicity). `gss_phase1_design.md` §13.1
+- **Theory interpretation** — 6 candidate frameworks discussed qualitatively in Discussion section only; NOT a horse race, NO preregistered numeric thresholds. `theory_interpretation_guide.md`
 
 ### §12.2 quality-primary model-selection rule (locked)
 Phase 1a runs all 4 cheap OpenRouter models on N=100 + GPT-4o anchor. The §12.2 selector picks the Phase 1b model:
@@ -136,10 +139,10 @@ For the next Claude session, after Joyce drops the API key:
    python3 gss_driver.py --n 10 --primary-only  # ~$0.70 / 30-60 min
    python3 gss_driver.py --n 10               # ~$2.00 / 2-3 hours (with sensitivity)
    ```
-5. **Draft OSF pre-registration** under the lean lock. Locked items: 4-bin LOO primary + Shapley robustness + attitudinal Battery LOO (conditional, secondary) + §12.2 quality-primary selection rule + Holm-Bonferroni multiplicity within each family + R1+R2 leakage hygiene + §11.1 abstract language template + null-alignment reporting commitment from `theory_interpretation_guide.md`. Source template: `PROJECT_SYNTHESIS.md` §3 + §4 (decision log).
+5. **Draft OSF pre-registration** under the lean lock + Battery-LOO-co-primary upgrade. Locked items: **two co-primary analyses** (4-bin LOO + 34-battery LOO across all 4 bins with nested Holm per-bin) + Shapley robustness on 4-bin + §12.2 quality-primary selection rule + R1+R2 leakage hygiene + §11.1 abstract language template + null-alignment reporting commitment from `theory_interpretation_guide.md`. Source template: `PROJECT_SYNTHESIS.md` §3 + §4 (decision log).
 6. **Phase 1a** (N=100, ~$65 with anchor) → §12.2 selector picks Phase 1b model.
 7. **Phase 1b** (N=1500, ~$95 selected model + ~$50 anchor) → primary analysis.
-8. **Implement secondary tools** (`shapley_decomposition.py`, `battery_loo.py`) per `tier1_tool_schemas.md` schemas. Shapley runs on Phase 1a; Battery LOO runs on Phase 1c **only if attitudinal-bin dominance is confirmed**.
+8. **Implement Tier 1 tools** (`shapley_decomposition.py` for 4-bin robustness, `battery_loo.py` for 34-battery co-primary across all 4 bins) per `tier1_tool_schemas.md` schemas. Shapley runs on Phase 1a (~$25 incremental); Battery LOO runs on Phase 1c **unconditionally** (~$50-60 incremental).
 
 **NOT in the lean Phase 1 plan** (deferred to future work — see `gss_phase1_design.md` §13.4): theory-bin LOO as confirmatory family, building `gss_theory_taxonomy.json`, RSA, permutation importance theory adjudication, Stage 3 refinement experiments, six-theory horse race with hard numeric thresholds.
 
@@ -193,7 +196,7 @@ GSBGEN390/
 │   ├── tier1_tool_schemas.md        ← schemas for Shapley + Battery LOO secondary tools
 │   ├── gss_variables_to_download.md
 │   ├── gss_feature_taxonomy.json    ← v0.3 LOCKED
-│   ├── gss_battery_map.json         ← v0.1 LOCKED (15 batteries + 9 singletons; for R1 + Battery LOO)
+│   ├── gss_battery_map.json         ← **v0.2 LOCKED 2026-05-09** (34 batteries: D=7/B=10/P=2/A=15; 17 singletons; for R1 + co-primary Battery LOO)
 │   ├── outputs/primary_eval_human_variance_2024.json ← LOCKED DQ-3 reference
 │   ├── gss_loader.py, validate_taxonomy.py (10-check incl. 7c battery map)
 │   ├── gss_pipeline.py              ← AUDIT primitives + R1 battery exclusion + multi-model panel synthesis

@@ -7,6 +7,8 @@
 **文档定位 / Document role**: 烟雾测试前的综合审阅文档；包含全部进展、决策依据、创新论证、可能的质疑、后续方案 / Pre-smoke-test comprehensive review; covers full progress, decision rationale, innovation argument, anticipated criticisms, follow-up plans
 
 > **Revision note (2026-05-09)**: Per Codex's lean-design audit, the Phase 1 design was slimmed from a six-theory horse-race confirmatory framework to a leaner structure with 4-bin LOO as primary, Shapley as robustness, attitudinal-bin Battery LOO as interpretability, and theory framing as Discussion-section interpretation only. RSA / permutation importance / Stage 3 refinement / Friedman's H were all explicitly deferred to future work. See `gss_phase1_design.md` §13 + `theory_interpretation_guide.md` for the live spec.
+>
+> **Further revision 2026-05-09 evening**: Battery LOO promoted from "conditional secondary, attitudinal-only" to **"unconditional co-primary across all 4 bins"** with nested Holm-Bonferroni per bin. `gss_battery_map.json` expanded v0.1 → v0.2: 15 batteries (attitudinal only) → 34 batteries (D=7 / B=10 / P=2 / A=15). Phase 1 now has **two co-primary findings**: broad (4-bin LOO) + mechanistic (34-battery LOO). See `gss_phase1_design.md` §8.8 + §13.2 for the live spec.
 
 ---
 
@@ -16,7 +18,7 @@
 
 本项目研究 **LLM persona synthesis 的特征价值归因问题**——当我们让大语言模型假装是某个具体的人去做预测时，给它哪类输入信息（人口学 / 行为 / 心理 / 态度）最有效？这是 LLM persona simulation 这个 research area 的一个核心方法学问题，但目前**没有任何论文做过大-N 的系统归因**。
 
-Phase 1 在**态度预测**这一 outcome 维度上回答这个问题，用 GSS 2024 cross-section（N≈1,500），4-bin leave-one-out ablation 作 primary，加 Shapley 16-condition robustness + attitudinal-bin Battery LOO interpretability。多模型 panel（4 个便宜 OpenRouter 模型 + GPT-4o anchor）控制 model-specific bias。R1 (battery exclusion) + R2 (regression baseline partition) 作泄漏防御和 auto-correlation 分割。Phase 2 扩展到**人格**（BFI-44）+ **行为博弈**两个 outcome 维度，用定向 Cookiy 收集 + 2-周复测 baseline。
+Phase 1 在**态度预测**这一 outcome 维度上回答这个问题，用 GSS 2024 cross-section（N≈1,500），**两个 co-primary 分析**：(1) 4-bin LOO ablation（broad finding：哪类 feature 重要）；(2) **34-battery LOO across all 4 bins** with nested Holm per-bin（mechanistic finding：每 bin 内具体哪些 cluster 重要；2026-05-09 evening 从 conditional secondary 升级为 co-primary）。Bin-level Shapley 16-condition 作 4-bin robustness。多模型 panel（4 个便宜 OpenRouter 模型 + GPT-4o anchor）控制 model-specific bias。R1 (battery exclusion) + R2 (regression baseline partition) 作泄漏防御和 auto-correlation 分割。Phase 2 扩展到**人格**（BFI-44）+ **行为博弈**两个 outcome 维度，用定向 Cookiy 收集 + 2-周复测 baseline。
 
 Park et al. 2024（"Generative Agent Simulations of 1,000 People"）是当前 area 内被引最多的 prior work——本项目以其作为 cross-paper benchmarking 的 anchor（GPT-4o subset 上 N=100 的 per-item raw accuracy 直接对照 Park v2 SI Table），但研究问题独立成立，不依赖 Park 的具体框架。
 
@@ -138,12 +140,19 @@ LLM-panel MAE on item X = (regression MAE on X) + (LLM gain over regression)
 
 第三方审计的 std=0.13 引用是错的（应是 0.18 vs 0.12），但核心 ~0.05 inflation 论证站得住——**所以 R1 + R2 的 Park-precedent 论证可信**。
 
-### 3.6 多重比较（FWER 控制；2026-05-09 lean-design 修订）
+### 3.6 多重比较（FWER 控制；2026-05-09 lean-design + 同日傍晚 Battery LOO 升 co-primary）
 
-Phase 1 当前的 LOO families：
-- **4-bin primary family** (4 ΔMAE tests) — Holm-Bonferroni at α=0.05 within family.
-- **Attitudinal-bin battery LOO secondary family**（~10-11 tests）—— 仅在 4-bin LOO 确认 attitudinal 主导后启动；Holm-Bonferroni 独立校正。Reporting role 是描述性 within-bin decomposition，不是 co-primary headline。
+Phase 1 当前的 5 个独立 Holm families（**nested**, 不是 joint）：
+
+- **4-bin LOO primary family** (4 ΔMAE tests) — Holm at α=0.05 within family.
+- **Battery LOO co-primary, nested per bin（2026-05-09 evening 升级）**：
+  - Demographic battery family (n=7): smallest p < α/7 = 0.0071
+  - Behavioral battery family (n=10): smallest p < α/10 = 0.0050
+  - Psychological battery family (n=2): smallest p < α/2 = 0.025
+  - Attitudinal battery family (n=15): smallest p < α/15 = 0.0033
 - **Bin-level Shapley decomposition** —— 4-bin LOO 同一估计量的 robustness re-aggregation；不需要单独 Holm 校正（共享 4-bin family）。
+
+**为什么 nested 而不是 joint**：bin 是 pre-registered 的有意义边界；joint Holm 在 n=34 上会让 psychological 的 2-battery family 必须 clear α/34=0.0015——不切实际，会让一个预注册 arm 失声。Nested 在每 bin 内部独立校正，每 bin 的 within-bin 归因可以独立成立，不被其他 bin 的 multiplicity 拖累。
 
 **已撤掉**（2026-05-09 lean-design lock）：theory-bin LOO 不再是 confirmatory family。理论解释只进 Discussion 章节，不驱动任何 primary claim。详见 §3.8 + `theory_interpretation_guide.md`。
 
@@ -172,13 +181,20 @@ Phase 1 当前的 LOO families：
 - **Reporting role**：与 4-bin LOO 同一估计量的 robustness re-aggregation；不是单独的 confirmatory family；不需独立 Holm 校正。
 - **明确禁用**：custom variance-share 量绝对**不**叫 "Friedman's H"——重命名为 `interaction_variance_share`，因为 Friedman & Popescu (2008) 的 H-statistic 有特定的 partial-dependence-on-tree-models 定义，我们没实现那个。
 
-#### 3.8.2 Attitudinal-bin battery LOO（secondary — interpretability）
+#### 3.8.2 Battery LOO 跨全 4 bins（**co-primary**，2026-05-09 evening 从 conditional secondary 升级）
 
-- **目的**：**条件依赖于** 4-bin LOO 确认 attitudinal 主导，确定 bin 内具体哪些 batteries 驱动 prediction 信号。
-- **触发条件**：仅在 `shapley_per_bin.attitudinal.rank == 1` AND attitudinal-bin LOO ΔMAE > 其他三 bin LOO ΔMAE 时跑。否则报告 "attitudinal 不主导，battery decomposition 未跑"。
-- **算法**：对 attitudinal bin 的 ~10-11 个 batteries（per `gss_battery_map.json`），drop 整个 battery（外加 R1 per-item battery exclusion 已经应用），re-run prediction，computer respondent-macro Likert ΔMAE vs FULL。Bootstrap CI + Holm-Bonferroni at α=0.05 within attitudinal-bin battery family。
-- **何时跑**：Phase 1c (post Phase 1b headline) 在 §12.2-selected 1b 模型上。增量 ~$25-30。
-- **Reporting role**：descriptive within-bin decomposition；不是 co-primary headline。
+- **目的**：mechanistic 归因——每 bin 内部具体哪些 construct-level cluster 驱动 LLM persona prediction 的信号。与 4-bin LOO（broad）共同构成 paper 两个 co-primary findings。
+- **范围**：全部 34 个 batteries 跨 4 个 bins（per `gss_battery_map.json` v0.2: 7 demographic + 10 behavioral + 2 psychological + 15 attitudinal）。Singletons 不进 LOO 测试（per §3.8.4 deferred list）。
+- **算法**：对每个 battery B，把整个 battery 从 persona prompt 移除（外加 R1 per-item battery exclusion 已应用——两者独立操作），re-run prediction on all 12 primary_eval items，compute respondent-macro Likert ΔMAE vs FULL。Bootstrap CI at respondent level (B=1000, seed=42)。
+- **Multiplicity**：**Nested Holm-Bonferroni** within each bin's battery family（NOT joint）：
+  - Demographic family (n=7): smallest p < α/7 = 0.0071
+  - Behavioral family (n=10): smallest p < α/10 = 0.0050
+  - Psychological family (n=2): smallest p < α/2 = 0.025
+  - Attitudinal family (n=15): smallest p < α/15 = 0.0033
+- **为什么 nested 不是 joint**：bin 是 pre-registered 边界；joint Holm 在 n=34 上会让 psychological 2-battery family 必须 clear α/34=0.0015，practically impossible，会 silence 一个预注册 arm。
+- **何时跑**：Phase 1c (post Phase 1b headline) 在 §12.2-selected 1b 模型上。增量 ~$50-60（升级前 ~$25-30 是 attitudinal-only 的 conditional 设计）。
+- **Reporting role**：**co-primary mechanistic finding**——abstract 与 4-bin LOO 同等显著性。论文 Headline #1 (broad) + Headline #2 (mechanistic) 并列。
+- **Anti-overclaim**：battery size 不平衡（2-15 items），ΔMAE 必须与 `n_items_in_battery` + `delta_mae_per_item` 一起报告，让 size-aware 解读成为可能。Cross-bin rank 比较是描述性的（不是 jointly Holm-corrected）。
 
 #### 3.8.3 Theory interpretation（Discussion 章节）
 
@@ -298,7 +314,7 @@ Phase 1 当前的 LOO families：
 **保留**：
 - 4-bin LOO 作 primary
 - Shapley decomposition 作 robustness
-- Attitudinal-bin Battery LOO 作 secondary interpretability（trigger 条件：attitudinal 主导）
+- ~~Attitudinal-bin Battery LOO 作 secondary interpretability（trigger 条件：attitudinal 主导）~~ → 2026-05-09 evening 升级为 **34-battery co-primary，unconditional，跨全 4 bins，nested Holm per-bin**（详见 §3.8.2 修订版）
 - R1 + R2 leakage hygiene（locked, 不变）
 - §11.1 abstract 措辞模板（locked, 不变）
 - §12.2 quality-primary 选择规则（locked, 不变）
@@ -367,9 +383,9 @@ Phase 1 当前的 LOO families：
 
 **应对**：admitted。lean 设计的两个 secondary 工具直接回应：
 - **Bin-level Shapley decomposition (§3.8.1)** —— 16-condition 全枚举，自动捕捉 bin 间 interactions；与 4-bin LOO 对比看 ranking 一致性。Phase 1a 上跑。
-- **Attitudinal-bin Battery LOO (§3.8.2)** —— attitudinal 主导时，within-bin battery-level decomposition。Phase 1c 上跑。
+- **34-battery LOO across all 4 bins (§3.8.2)** —— **co-primary mechanistic finding**, unconditional, nested Holm per-bin. Phase 1c 上跑。
 
-LOO ΔMAE 是 marginal estimator；Shapley 补 interaction-aware 估计；Battery LOO 补 within-bin 颗粒度。三者互为 robustness 与 interpretability。其他方法（Bin-size-balanced subsampling / leave-one-in / RSA）defer 到 future work（详见 §3.8.4）。
+LOO ΔMAE 是 marginal estimator；Shapley 补 interaction-aware 估计 (4-bin only)；Battery LOO 补 cross-bin within-construct 颗粒度。三者**互补不重叠**：4-bin 答 broad bin-level question；Shapley 答 bin interaction question；Battery LOO 答 mechanistic cluster-level question。其他方法（Bin-size-balanced subsampling / leave-one-in / RSA / sampled Shapley on batteries）defer 到 future work（详见 §3.8.4）。
 
 ### 6.5 "DQ-3 阈值是任意选的"
 
@@ -389,11 +405,11 @@ LOO ΔMAE 是 marginal estimator；Shapley 补 interaction-aware 估计；Batter
 
 ### 6.9 "Lean 设计 = 论文太薄"（潜在批评）
 
-**应对**：lean 设计 ≠ 论文薄。primary 4-bin LOO + Shapley + Battery LOO 三者一起仍然是 4-stage 归因的 well-defined 答案：
-- Stage 1：哪个 bin 重要（4-bin LOO）
-- Stage 2：4-bin ranking 是否 robust to interactions（Shapley）
-- Stage 3：attitudinal 主导时哪些 batteries 出力（Battery LOO）
-- Stage 4：哪些 framework 在 Discussion 解读这个 pattern（theory_interpretation_guide.md）
+**应对**：lean 设计 ≠ 论文薄。两个 co-primary 分析 + Shapley robustness 一起是 4-stage 归因的 well-defined 答案：
+- Stage 1（co-primary #1，broad）：哪个 bin 重要（4-bin LOO）
+- Stage 2（robustness）：4-bin ranking 是否 robust to interactions（Shapley）
+- Stage 3（**co-primary #2，mechanistic**）：每 bin 内具体哪些 batteries 出力（**34-battery LOO 跨全 4 bins, nested Holm per-bin**）
+- Stage 4（Discussion）：哪些 framework 在 Discussion 解读这个 pattern（theory_interpretation_guide.md）
 
 加上 R1 + R2 leakage hygiene + §12.2 quality-primary multi-model selection + GPT-4o anchor 的 Park comparability，方法学贡献本身就是论文的一半价值。论文不需要"6-theory horse race"才能 publishable——清晰、可验证、reproducible 的 ablation 比 tool-stack 更可投。
 
@@ -437,7 +453,7 @@ LOO ΔMAE 是 marginal estimator；Shapley 补 interaction-aware 估计；Batter
 
 This project investigates **feature attribution for LLM persona synthesis** — when we prompt a language model to respond as a specific human individual for prediction, simulation, or modeling tasks, which input feature categories (demographic, behavioral, psychological, attitudinal) drive prediction quality? This is a core methodological question for LLM persona simulation as a research area, but **no prior published work has performed large-N, leakage-clean, multi-model-robust attribution at scale**.
 
-Phase 1 answers this question for **attitude prediction** using GSS 2024 cross-section (N≈1,500), with a 4-bin leave-one-out ablation as primary, plus Shapley 16-condition robustness and attitudinal-bin Battery LOO interpretability. A multi-model panel (4 cheap OpenRouter models + GPT-4o anchor) controls for model-specific bias. R1 (battery exclusion) + R2 (regression-baseline partition) provide leakage hygiene and auto-correlation partition. Phase 2 extends to **personality** (BFI-44) + **behavioral economic games** outcome dimensions via targeted Cookiy collection with 2-week recontact baseline.
+Phase 1 answers this question for **attitude prediction** using GSS 2024 cross-section (N≈1,500), with **two co-primary analyses**: (1) a 4-bin leave-one-out ablation (broad finding: which feature category contributes most); (2) **a 34-battery LOO across all 4 bins with nested Holm per-bin** (mechanistic finding: which construct-level clusters drive the signal within each bin; promoted from conditional secondary to co-primary on 2026-05-09 evening). A bin-level Shapley 16-condition decomposition serves as 4-bin LOO robustness. A multi-model panel (4 cheap OpenRouter models + GPT-4o anchor) controls for model-specific bias. R1 (battery exclusion) + R2 (regression-baseline partition) provide leakage hygiene and auto-correlation partition. Phase 2 extends to **personality** (BFI-44) + **behavioral economic games** outcome dimensions via targeted Cookiy collection with 2-week recontact baseline.
 
 Park et al. 2024 ("Generative Agent Simulations of 1,000 People") is the most-cited prior work in this area — this project uses Park as a **cross-paper benchmarking anchor** (per-item raw accuracy on N=100 GPT-4o anchor subset compared directly to Park v2 SI Table 3) but the research question stands independently of Park's specific framework.
 
@@ -563,7 +579,12 @@ The third-party audit's citation of std=0.13 is incorrect (true values are 0.18 
 
 Phase 1's current LOO families:
 - **4-bin primary family** (4 ΔMAE tests) — Holm-Bonferroni at α=0.05 within family.
-- **Attitudinal-bin Battery LOO secondary family** (~10-11 tests) — only run if 4-bin LOO confirms attitudinal dominance; Holm-Bonferroni applied independently. Reporting role is descriptive within-bin decomposition, not co-primary headline.
+- **Battery LOO co-primary family across all 4 bins, nested Holm per bin (revised 2026-05-09 evening)**:
+  - Demographic battery family (n=7): smallest p < α/7 = 0.0071
+  - Behavioral battery family (n=10): smallest p < α/10 = 0.0050
+  - Psychological battery family (n=2): smallest p < α/2 = 0.025
+  - Attitudinal battery family (n=15): smallest p < α/15 = 0.0033
+  - Reporting role: **co-primary mechanistic finding**, equal prominence to 4-bin LOO. Cross-bin rank comparisons are descriptive only (not jointly Holm-corrected).
 - **Bin-level Shapley decomposition** — robustness re-aggregation of the same 4-bin estimand; no separate Holm correction (shares the 4-bin family).
 
 **Removed under 2026-05-09 lean-design lock**: theory-bin LOO is no longer a confirmatory family. Theory interpretation enters Discussion section only and does NOT drive any primary claim. See §3.8 + `theory_interpretation_guide.md`.
@@ -733,9 +754,9 @@ If Y/X ≈ 1, the attitudinal bin's "contribution" is fully auto-correlation; if
 
 **Response (lean-design revision)**: Accepted. The two secondary tools in the lean lock directly respond:
 - **Bin-level Shapley decomposition (§3.8.1)** — 16-condition full enumeration, automatically captures bin-bin interactions; compared against 4-bin LOO ranking for consistency. Runs on Phase 1a.
-- **Attitudinal-bin Battery LOO (§3.8.2)** — within-bin decomposition at battery granularity, conditional on attitudinal dominance. Runs on Phase 1c.
+- **34-battery LOO across all 4 bins (§3.8.2)** — **co-primary mechanistic finding**, unconditional, nested Holm per-bin. Runs on Phase 1c.
 
-LOO ΔMAE is a marginal estimator; Shapley adds interaction-aware estimates; Battery LOO adds within-bin granularity. The three together are robustness + interpretability. Other approaches (Bin-size-balanced subsampling / leave-one-in / RSA) are deferred to future work (see §3.8.4).
+LOO ΔMAE is a marginal estimator; Shapley adds interaction-aware estimates (4-bin only); Battery LOO adds construct-level granularity across all 4 bins. The three are **complementary, not redundant**: 4-bin answers the bin-level question; Shapley answers the bin-interaction question; Battery LOO answers the cluster-level mechanistic question. Other approaches (Bin-size-balanced subsampling / leave-one-in / RSA / sampled Shapley on batteries) are deferred to future work (see §3.8.4).
 
 ### 6.5 "DQ-3 threshold is arbitrary"
 
@@ -755,11 +776,11 @@ LOO ΔMAE is a marginal estimator; Shapley adds interaction-aware estimates; Bat
 
 ### 6.9 "Lean design = thin paper" (potential criticism)
 
-**Response**: Lean ≠ thin. The primary 4-bin LOO + Shapley + Battery LOO together form a 4-stage attribution answer:
-- Stage 1: Which bin matters (4-bin LOO)
-- Stage 2: Whether the 4-bin ranking is robust to interactions (Shapley)
-- Stage 3: When attitudinal dominates, which batteries drive it (Battery LOO)
-- Stage 4: How the empirical pattern is interpreted across 6 candidate frameworks (Discussion via `theory_interpretation_guide.md`)
+**Response**: Lean ≠ thin. Two co-primary analyses + Shapley robustness together form a 4-stage attribution answer:
+- Stage 1 (co-primary #1, broad): Which bin matters (4-bin LOO)
+- Stage 2 (robustness): Whether the 4-bin ranking is robust to bin-bin interactions (Shapley)
+- Stage 3 (**co-primary #2, mechanistic**): Which construct-level clusters drive the signal within each bin (**34-battery LOO across all 4 bins, nested Holm per-bin**)
+- Stage 4 (Discussion): How the empirical pattern is interpreted across 6 candidate frameworks (`theory_interpretation_guide.md`)
 
 Add R1 + R2 leakage hygiene + §12.2 quality-primary multi-model selection + GPT-4o anchor for Park comparability, and the methodological contribution itself is half the paper's value. The paper does not need a 6-theory horse race to be publishable — a clear, verifiable, reproducible ablation outweighs a tool stack at peer review.
 

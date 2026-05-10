@@ -1,77 +1,220 @@
 {
-  "_version": "0.1",
-  "_locked": "2026-05-08",
-  "_purpose": "Maps GSS variables to construct-level batteries. Used by R1 (battery-level exclusion) — when predicting any item in a battery, the entire battery is dropped from the persona prompt for that prediction. Mirrors Park v2's BFI whole-trait-block hold-out rule (PDF p.37 SI §5).",
-  "_design_notes": [
-    "Battery boundaries are domain decisions, not statistical clusters. We pick the set such that within-battery items share question wording, response scale, and underlying construct closely enough that they are 'effectively asked twice' relative to the predicted item.",
-    "Items NOT listed in any battery are 'singletons' — they get no battery exclusion (R1 is a no-op for them).",
-    "Civil-liberties items are split into 3 batteries by target group (atheists / racists / communists) rather than collapsed into one mega-battery. Rationale: knowing R's view of racists' free-speech tells you very little about R's view of atheists' free-speech, but knowing R's view of one racist-related question tells you a lot about R's view of the others.",
-    "Locked decisions (Joyce 2026-05-08): R3 (whole-attitudinal-bin hold-out) NOT implemented; R1 alone is the structural defense; R2 (regression baseline) provides the partition test."
+  "_version": "0.2",
+  "_locked": "2026-05-09 (expansion to all 4 bins for Battery LOO co-primary)",
+  "_history": [
+    {
+      "version": "0.1",
+      "date": "2026-05-08",
+      "scope": "attitudinal bin only (15 batteries)",
+      "purpose": "R1 leakage exclusion + conditional secondary Battery LOO"
+    },
+    {
+      "version": "0.2",
+      "date": "2026-05-09",
+      "scope": "all 4 bins (34 batteries: 7 demographic + 10 behavioral + 2 psychological + 15 attitudinal)",
+      "purpose": "R1 leakage exclusion + UNCONDITIONAL co-primary Battery LOO with nested Holm correction across 4 bin-families"
+    }
   ],
+  "_purpose": "Maps GSS variables to construct-level batteries. Used by (a) R1 leakage exclusion in the primary 4-bin LOO; (b) Battery LOO co-primary analysis with nested Holm correction.",
+  "_design_principles": [
+    "A battery groups variables that measure the SAME UNDERLYING CONSTRUCT closely enough that a Battery LOO must drop them together.",
+    "SPLIT criterion: split when sub-construct, target, time point, or response scale differs sufficiently to conflate distinct signals.",
+    "Items NOT listed in any battery are 'singletons' — R1 is a no-op for them; they are NOT included in Battery LOO testing.",
+    "Locked decisions (Joyce 2026-05-08): R3 NOT implemented; R1 is the structural defense; R2 (regression baseline) provides the partition test."
+  ],
+  "_holm_correction": "Nested Holm-Bonferroni at α=0.05 separately within each bin's battery family. Demographic family (n=7), Behavioral family (n=10), Psychological family (n=2), Attitudinal family (n=15). Joint Holm across all 34 was rejected because (a) bin is a meaningful pre-registered boundary; (b) joint Holm at n=34 would force the psychological 2-battery family to clear α/34=0.0015, which is impractical.",
   "batteries": {
+    "own_education": {
+      "bin": "demographic",
+      "items": ["EDUC", "DEGREE"],
+      "construct": "Respondent's own educational attainment (years completed + highest degree)."
+    },
+    "parental_education": {
+      "bin": "demographic",
+      "items": ["PAEDUC", "MAEDUC", "PADEG", "MADEG"],
+      "construct": "Parental educational attainment (both parents, both years and degree). Single battery for 'family-of-origin SES' construct; not split by parent gender (assortative mating + co-residence make father's and mother's education tightly correlated)."
+    },
+    "marital_status": {
+      "bin": "demographic",
+      "items": ["MARITAL", "MARTYPE", "WIDOWED"],
+      "construct": "Current marital position: status + type + widowhood history."
+    },
+    "racial_ethnic_origin": {
+      "bin": "demographic",
+      "items": ["RACE", "HISPANIC", "ETHNIC", "BORN"],
+      "construct": "Racial / ethnic identity + nativity. Lumped because in 2024 GSS these are highly correlated and form one identity construct."
+    },
+    "family_of_origin_economic": {
+      "bin": "demographic",
+      "items": ["INCOM16", "DWELOWN16"],
+      "construct": "Age-16 family economic position (family income at 16 + dwelling ownership at 16). NOTE: INCOME16 (current family income) is a singleton, NOT in this battery — different time point."
+    },
+    "growing_up_geography": {
+      "bin": "demographic",
+      "items": ["REG16", "MOBILE16"],
+      "construct": "Geographic context of growing up: region at 16 + mobility since 16."
+    },
+    "growing_up_family_structure": {
+      "bin": "demographic",
+      "items": ["FAMILY16", "FAMDIF16"],
+      "construct": "Family structure at age 16: living arrangement + reason if not with parents."
+    },
+    "current_religious_intensity": {
+      "bin": "behavioral",
+      "items": ["ATTEND", "PRAY", "RELITEN", "FUND"],
+      "construct": "Current religious practice intensity: attendance + prayer frequency + affiliation strength + fundamentalism. Likert/frequency-flavored scales. Split from denominational_identity because that is categorical denomination (different scale + sub-construct)."
+    },
+    "denominational_identity": {
+      "bin": "behavioral",
+      "items": ["RELIG", "RELIG16"],
+      "construct": "Religious denomination labels (current + raised in). Categorical scale, distinct from intensity."
+    },
+    "voting_turnout": {
+      "bin": "behavioral",
+      "items": ["VOTE16", "VOTE20"],
+      "construct": "Did respondent vote (binary)? 2016 + 2020. Split from voting_choice because turnout (binary) and choice (categorical) are different scales + sub-constructs."
+    },
+    "voting_choice": {
+      "bin": "behavioral",
+      "items": ["PRES16", "PRES20"],
+      "construct": "Whom did respondent vote for (categorical)? 2016 + 2020. Split from voting_turnout per scale + sub-construct."
+    },
+    "current_employment": {
+      "bin": "behavioral",
+      "items": ["WRKSTAT", "HRS1", "PARTFULL"],
+      "construct": "Current work load: labor force status + hours last week + part-time/full-time."
+    },
+    "work_history": {
+      "bin": "behavioral",
+      "items": ["EVWORK", "UNEMP"],
+      "construct": "Work history: ever-worked + ever-unemployed (last 10 years). Both binary, both retrospective."
+    },
+    "job_security_perception": {
+      "bin": "behavioral",
+      "items": ["JOBLOSE", "JOBFIND"],
+      "construct": "Subjective labor-market security: likelihood of losing job + ease of finding equivalent. Likert subjective perception, distinct from current_employment (objective) and work_history (factual retrospective)."
+    },
+    "traditional_media": {
+      "bin": "behavioral",
+      "items": ["TVHOURS", "NEWS"],
+      "construct": "Traditional broadcast/print media exposure: TV hours + newspaper frequency."
+    },
+    "digital_media": {
+      "bin": "behavioral",
+      "items": ["COMPUSE", "WEBMOB"],
+      "construct": "Digital media usage: computer use + mobile internet. Split from traditional_media because medium type (broadcast vs digital) defines distinct sub-construct."
+    },
+    "gun_related": {
+      "bin": "behavioral",
+      "items": ["OWNGUN", "HUNT1"],
+      "construct": "Gun-culture participation behaviors: gun ownership + hunting activity (self or spouse/partner)."
+    },
+    "subjective_wellbeing": {
+      "bin": "psychological",
+      "items": ["HAPPY", "HAPMAR", "SATJOB", "LIFE"],
+      "construct": "GSS classic satisfaction/wellbeing battery — general happiness + marital happiness + job satisfaction + life-as-experience evaluation. Same Likert family across 4 life domains."
+    },
+    "interpersonal_trust": {
+      "bin": "psychological",
+      "items": ["FAIR", "HELPFUL", "TRUST"],
+      "construct": "GSS classic 'trust triad' — three items measuring generalized social trust (people fair / helpful / trustworthy). Same scale, same construct."
+    },
     "abortion": {
+      "bin": "attitudinal",
       "items": ["ABANY", "ABDEFECT", "ABNOMORE", "ABHLTH", "ABPOOR", "ABRAPE", "ABSINGLE"],
       "construct": "Conditions under which legal abortion should be available. All 7 items are binary YES/NO and share canonical 1972-onward GSS wording."
     },
     "confidence_in_institutions": {
+      "bin": "attitudinal",
       "items": ["CONFINAN", "CONLEGIS", "CONARMY", "CONBUS", "CONCLERG", "CONEDUC", "CONFED", "CONJUDGE", "CONLABOR", "CONMEDIC", "CONPRESS", "CONSCI", "CONTV"],
       "construct": "Institutional confidence battery — same 3-point Likert scale (great deal / only some / hardly any) across all 13 institutions."
     },
     "national_priorities": {
+      "bin": "attitudinal",
       "items": ["NATSPAC", "NATENVIR", "NATHEAL", "NATCITY", "NATDRUG", "NATEDUC", "NATRACE", "NATARMS", "NATAID", "NATFARE", "NATROAD", "NATSOC", "NATCHLD", "NATSCI", "NATENRGY"],
       "construct": "Spending priority battery — same 3-point scale (too little / about right / too much) across all 15 domains."
     },
     "racial_inequality_perception": {
+      "bin": "attitudinal",
       "items": ["RACDIF1", "RACDIF2", "RACDIF3", "RACDIF4", "WLTHWHTS", "WLTHBLKS", "WLTHHSPS", "DISCAFF", "DISCAFFW", "DISCAFFM"],
       "construct": "Causes-of-racial-inequality + group-wealth-attribution + affirmative-action-perception. Tightly correlated cluster covering the same construct (perceived racial inequality)."
     },
     "gender_role_attitudes": {
+      "bin": "attitudinal",
       "items": ["FECHLD", "FEPOL", "FEHIRE", "FEPRESCH", "FEFAM"],
       "construct": "Gender-role attitudes battery — same 4-point agree/disagree scale on 5 gender-role propositions."
     },
     "civil_lib_atheists": {
+      "bin": "attitudinal",
       "items": ["SPKATH", "COLATH"],
       "construct": "Civil-liberty extension to anti-religionists (free speech + teaching)."
     },
     "civil_lib_racists": {
+      "bin": "attitudinal",
       "items": ["SPKRAC", "COLRAC", "LIBRAC"],
       "construct": "Civil-liberty extension to racists (free speech + teaching + library access)."
     },
     "civil_lib_communists": {
+      "bin": "attitudinal",
       "items": ["SPKCOM", "COLCOM", "LIBCOM"],
       "construct": "Civil-liberty extension to communists (free speech + employment + library access)."
     },
     "sexual_morality": {
+      "bin": "attitudinal",
       "items": ["XMARSEX", "HOMOSEX"],
       "construct": "Same 4-point ALWAYS/NOT WRONG scale on extramarital and same-sex relations."
     },
     "moral_legalization": {
+      "bin": "attitudinal",
       "items": ["GRASS", "PORNLAW"],
       "construct": "Should-be-legal stance on marijuana and pornography — both are 'should the state regulate this?' items."
     },
     "adolescent_sex_policy": {
+      "bin": "attitudinal",
       "items": ["PILLOK", "SEXEDUC"],
       "construct": "Adolescent sex policy — birth-control access for teens + sex-education in schools."
     },
     "religious_belief": {
+      "bin": "attitudinal",
       "items": ["BIBLE", "POSTLIFE", "REBORN", "SPRTPRSN", "RELPERSN"],
       "construct": "Personal religious / spiritual belief intensity (5 distinct measures of the same latent)."
     },
     "economic_help": {
+      "bin": "attitudinal",
       "items": ["HELPPOOR", "HELPSICK", "HELPNOT", "HELPBLK", "EQWLTH", "GETAHEAD", "PARSOL", "KIDSSOL", "TAX"],
       "construct": "Government redistribution + economic-mobility beliefs. Tightly correlated 'redistribution attitude' cluster."
     },
     "end_of_life": {
+      "bin": "attitudinal",
       "items": ["LETDIE1", "SUICIDE1", "SUICIDE2", "SUICIDE4"],
       "construct": "Right-to-die / suicide-acceptance battery."
     },
     "police_use_of_force": {
+      "bin": "attitudinal",
       "items": ["POLHITOK", "POLABUSE", "POLATTAK"],
       "construct": "When may police strike a citizen? — three scenarios with same 1-2 scale."
     }
   },
   "singletons": [
     "PARTYID", "POLVIEWS", "SATFIN", "CAPPUN", "GUNLAW",
+    "AGE", "SEX", "REGION", "HOMPOP", "INCOME16",
+    "UNION1", "XMOVIE",
+    "HEALTH",
     "SPANKING", "DIVLAW", "COURTS", "PRAYER"
-  ]
+  ],
+  "_battery_count_summary": {
+    "demographic": 7,
+    "behavioral": 10,
+    "psychological": 2,
+    "attitudinal": 15,
+    "total": 34
+  },
+  "_singleton_count_summary": {
+    "primary_eval_items": 5,
+    "demographic_features": 5,
+    "behavioral_features": 2,
+    "psychological_features": 1,
+    "attitudinal_features": 4,
+    "total": 17
+  }
 }

@@ -151,13 +151,18 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 4. **GSS-attitudinal outcome only.** Does NOT generalize to BFI-personality or behavioral-game prediction. Phase 2 covers those.
 5. **Snapshot prediction.** Does NOT measure stability over time, longitudinal change, or causal direction.
 6. **GSS sampling design** is a complex multi-stage probability sample with weights (`WTSSALL`, `WTSSPS_NEXT`, etc.). Primary analysis is unweighted; a weighted-reanalysis robustness check is in §10.
-7. **Pre-registration on OSF before Phase 1a.** The pre-reg (filed *before* 1a fires) locks: taxonomy, primary + sensitivity eval sets, primary metric, exclusion rules (R1 battery exclusion + sensitivity per-item exclusion), R2 regression-baseline partition, the 4-cheap-model panel, the §12.2 quality-primary selection rule, the §10 aggregation + paired-bootstrap rules, the **4-bin LOO** as primary analysis, the **bin-level Shapley decomposition** as a robustness re-aggregation, the **attitudinal-bin battery LOO** as a secondary interpretability analysis, and the §11.1 writeup language template. No post-hoc adjustment of the 4-bin assignments after 1a fires.
+7. **Pre-registration on OSF before Phase 1a.** The pre-reg (filed *before* 1a fires) locks: taxonomy, primary + sensitivity eval sets, primary metric, exclusion rules (R1 battery exclusion + sensitivity per-item exclusion), R2 regression-baseline partition, the 4-cheap-model panel, the §12.2 quality-primary selection rule, the §10 aggregation + paired-bootstrap rules, **two co-primary analyses** — the **4-bin LOO** (broad feature-category attribution) and the **34-battery LOO across all 4 bins** (mechanistic cluster-level attribution) — the **bin-level Shapley decomposition** as 4-bin LOO robustness, and the §11.1 writeup language template. No post-hoc adjustment of the 4-bin assignments OR the battery map (`gss_battery_map.json` v0.2) after 1a fires.
 
-8. **Multiplicity / multiple-LOO control.**
-   - The 4-bin primary family has 4 ΔMAE tests. **Holm-Bonferroni at α=0.05** is applied within this family. Adjusted-significant findings are reported as "primary"; unadjusted bin contributions are reported descriptively.
-   - The attitudinal-bin battery LOO (§13) is a *secondary interpretability* family of ~10-11 ΔMAE tests, **only run if the 4-bin LOO confirms attitudinal-bin dominance**. Holm-Bonferroni applied within this secondary family independently. Reported as descriptive within-bin decomposition, not as a co-primary headline.
-   - Bin-level Shapley decomposition (16-condition) is a *robustness* readout of the same primary 4-bin estimand; no separate multiplicity correction needed (it shares the 4-bin family).
-   - **Theory-bin LOO is NOT a confirmatory family in this slimmed design.** Theory framing enters in the Discussion section as interpretive secondary analysis only (see §13). If a future amendment adds theory-bin LOO as a confirmatory family, that amendment will introduce its own Holm correction at that time.
+8. **Multiplicity / multiple-LOO control (nested Holm-Bonferroni; revised 2026-05-09 for co-primary Battery LOO).**
+   - **4-bin primary family** (4 ΔMAE tests): Holm-Bonferroni at α=0.05 within family. Adjusted-significant findings reported as "primary headline #1"; unadjusted bin contributions reported descriptively.
+   - **Battery LOO co-primary** uses **nested Holm-Bonferroni** — one Holm family per bin, applied independently:
+     - Demographic battery family (n=7): smallest p < α/7 = 0.0071
+     - Behavioral battery family (n=10): smallest p < α/10 = 0.0050
+     - Psychological battery family (n=2): smallest p < α/2 = 0.025
+     - Attitudinal battery family (n=15): smallest p < α/15 = 0.0033
+   - Nested (rather than joint Holm across all 34) is principled because (a) bin is a meaningful pre-registered boundary; (b) joint Holm at n=34 would force the psychological 2-battery family to clear α/34 = 0.0015, which is impractical and would silence a pre-registered analysis arm.
+   - **Bin-level Shapley** (16 conditions) is a *robustness re-aggregation* of the same 4-bin estimand; no separate multiplicity correction (it shares the 4-bin primary family).
+   - **Theory-bin LOO is NOT a confirmatory family.** Theory framing enters the Discussion section as interpretive secondary analysis only (see §13.3). If a future amendment adds theory-bin LOO as a confirmatory family, that amendment will introduce its own Holm correction at that time.
 
 ## 9. Decisions locked (post-Bayati 2026-05-02; audit-fix 2026-05-05)
 
@@ -345,11 +350,15 @@ This is honest, internally consistent with the paper's primary metric, and avoid
 
 ---
 
-## 13. Secondary analyses (locked 2026-05-09: lean structure)
+## 13. Secondary analyses (locked 2026-05-09 lean → 2026-05-09 evening: Battery LOO promoted to co-primary)
 
-**Design philosophy** (locked 2026-05-09 per Codex slim-down audit): the paper has ONE clean primary contribution — *which survey-collectible feature categories actually improve LLM persona prediction of GSS attitude outcomes?* — answered by the 4-bin LOO. Two secondary analyses extend that contribution; theoretical interpretation enters the Discussion section but is NOT a parallel confirmatory analysis.
+**Design philosophy** (locked 2026-05-09 evening): the paper has TWO co-primary contributions:
+1. **Broad finding** (4-bin LOO): which feature category contributes most to LLM persona prediction of attitude outcomes?
+2. **Mechanistic finding** (34-battery LOO across all 4 bins, nested Holm): which specific construct-level clusters drive the signal within each bin?
 
-### 13.1 Bin-level Shapley decomposition (secondary — robustness)
+Bin-level Shapley is robustness on the broad finding. Theory interpretation enters Discussion only.
+
+### 13.1 Bin-level Shapley decomposition (secondary — robustness on 4-bin LOO)
 
 **Purpose**: check whether the 4-bin LOO ranking is robust to feature-bin interactions that LOO (a marginal-effects estimator) cannot capture.
 
@@ -359,19 +368,32 @@ This is honest, internally consistent with the paper's primary metric, and avoid
 
 **Reporting role**: **robustness re-aggregation of the same primary 4-bin estimand**, not a separate confirmatory family. The 4-bin Shapley values + their interaction terms are reported alongside the LOO ΔMAE as evidence of robustness. No separate Holm correction (shares the 4-bin family).
 
+**Why Shapley does NOT extend to batteries**: 2³⁴ ≈ 17 billion coalitions on 34 batteries; even sampled Shapley would produce 561 pairwise interaction terms that are uninterpretable. Battery LOO operates as a marginal estimator (R1 already isolates each battery's contribution from same-construct redundancy); interaction-aware battery analysis is deferred to future work.
+
 **Anti-overclaim**: Shapley is a decomposition tool, NOT a "new theory engine." We do not interpret 2-way / 3-way interaction terms as theoretical findings unless they survive bootstrap CI; they are reported as descriptive numbers with their CIs. **We do not call any custom variance-share statistic "Friedman's H"** unless we explicitly implement Friedman & Popescu (2008)'s definition; we use a clearly-named non-standard metric (`interaction_variance_share`) defined in the schema.
 
-### 13.2 Attitudinal-bin battery LOO (secondary — interpretability)
+### 13.2 Battery LOO (co-primary — mechanistic across all 4 bins, locked 2026-05-09 evening)
 
-**Purpose**: **conditional on** the 4-bin LOO confirming attitudinal-bin dominance, identify which specific attitude batteries within the bin drive the result.
+**Purpose**: identify which **construct-level clusters** within each feature bin drive LLM persona prediction. This is the mechanistic complement to the 4-bin LOO's broad finding.
 
-**Trigger**: only run if `shapley_per_bin.attitudinal.rank == 1` (or 4-bin LOO ΔMAE for attitudinal exceeds the other three bins). If attitudinal does not dominate, this analysis is skipped and reported as "not applicable to the observed pattern."
+**Scope**: all 34 batteries across all 4 bins (per `gss_battery_map.json` v0.2: 7 demographic + 10 behavioral + 2 psychological + 15 attitudinal). **Singletons are NOT tested in Battery LOO** (variable-level LOO has too low statistical power; they are absorbed into the 4-bin LOO via their parent bin). **Unconditional run** (no longer gated on attitudinal-bin dominance).
 
-**Algorithm**: for each of the ~10-11 attitudinal-bin batteries (per `gss_battery_map.json`), drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1's per-item battery exclusion). Re-run prediction; compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level (B=1000, seed=42). Apply Holm-Bonferroni at α=0.05 across the ~10-11 within-attitudinal battery family.
+**Battery design principles** (from `gss_battery_map.json` v0.2):
+- A battery groups variables that measure the same underlying construct closely enough that LOO must drop them together — otherwise residual same-construct siblings fill the signal back in and undercount the construct's contribution.
+- SPLIT criterion: when sub-construct, target group, time point, or response scale differs sufficiently to conflate distinct signals (mirrors civil_liberties' 3-way split by target group).
+- Symmetry across all 4 bins prevents asymmetric leakage hygiene where attitudinal is fine-grained but other bins are coarse.
 
-**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. ~$25-30 incremental.
+**Algorithm**: for each of the 34 batteries B, drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1's per-item battery exclusion which already applies — these are independent operations). Re-run prediction; compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level (B=1000, seed=42). Apply **nested Holm-Bonferroni** within each bin's battery family (see §8.8).
 
-**Reporting role**: **descriptive within-bin decomposition**, not a co-primary headline. The paper says *"if attitudinal features drive prediction, the contribution is concentrated in the [X, Y, Z] batteries (Holm-significant); battery-LOO ΔMAE rankings are reported in Table 4."*
+**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. ~34 batteries × N=1500 × 12 items × 1 model ≈ ~$50-60 incremental (up from ~$25-30 of the previous attitudinal-only conditional design).
+
+**Reporting role**: **co-primary mechanistic finding**, equal prominence to 4-bin LOO in the abstract. The paper reports both:
+- Headline #1 (broad): "[Bin] contributes the most to attitude prediction" + Shapley robustness
+- Headline #2 (mechanistic): "Within each bin, the following batteries are Holm-significant: ..." + per-bin family-significant ΔMAE table
+
+**Anti-overclaim**:
+- Battery size is unbalanced (2-15 items per battery); ΔMAE magnitudes are reported alongside battery size to enable size-aware interpretation. Per-variable mean importance (ΔMAE / n_items_in_battery) is reported as a sensitivity column.
+- Holm correction is per-bin (nested), so cross-bin comparisons of "which battery overall ranks highest" are descriptive only, not confirmatory.
 
 **Output schema** in `tier1_tool_schemas.md` Tool 2.
 
@@ -400,7 +422,7 @@ The 4-bin taxonomy is atheoretical — a sorting convention, not derived from co
 
 ### 13.4 Deferred to future work
 
-The following analyses were considered for Phase 1 but **explicitly deferred** under the 2026-05-09 lean-design lock. They may appear as future-work bullet points in the paper's Discussion or as optional appendix material, but are NOT in the primary OSF pre-registration:
+The following analyses were considered for Phase 1 but **explicitly deferred**. They may appear as future-work bullet points in the paper's Discussion or as optional appendix material, but are NOT in the primary OSF pre-registration:
 
 - **Theory-bin LOO as confirmatory family** (re-aggregating LLM outputs under a locked theoretical grouping; would require `gss_theory_taxonomy.json` lock + OSF amendment)
 - **Representational Similarity Analysis (RSA)** (theory-derived similarity matrices vs LLM-output similarity)
@@ -408,6 +430,9 @@ The following analyses were considered for Phase 1 but **explicitly deferred** u
 - **Stage 3 refinement experiments** (theory-organized prompts; counterfactual perturbation; theory-derived feature subsets)
 - **Six-theory horse race with hard numeric thresholds**
 - **Friedman & Popescu (2008) H-statistic** (proper implementation; the slimmed design uses a clearly-named non-standard `interaction_variance_share` instead)
+- **Sampled Shapley on 34 batteries** (2³⁴ ≈ 17 billion exact coalitions infeasible; sampled Shapley would produce 561 uninterpretable pairwise interaction terms; deferred until a future paper specifically targeting battery-battery interaction structure)
+- **Variable-level LOO** (per-variable single-drop within each battery; variable-level statistical power too low at N=1500 with 140 features × multiplicity correction; deferred to a future paper with N≥5000)
+- **Singleton-level LOO testing** (the 17 singletons in `gss_battery_map.json` are not tested as Battery LOO units — testing each as a 1-variable "battery" would inflate multiplicity without comparable statistical power; their contribution is absorbed into the 4-bin LOO via parent bin)
 
 These are listed here so future Joyce + Bayati discussions know what was considered and explicitly chosen against.
 

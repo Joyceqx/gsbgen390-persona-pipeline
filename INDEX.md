@@ -27,7 +27,7 @@ For "what changed and when", see `STATUS.md` changelog. For "the comprehensive p
 |---|---|---|
 | `gss_phase1_design.md` | **THE design doc.** Locked decisions: §4 method, §10 aggregation, §12 multi-model panel, §12.2 quality-primary selection rule, §13.1 Shapley, §13.2 Battery LOO, §13.3 theory interpretation | Lean-locked 2026-05-09 |
 | `gss_feature_taxonomy.json` | v0.3 — 12 primary_eval, 118 sensitivity_eval, 140 features × 4 bins | Locked 2026-05-05 |
-| `gss_battery_map.json` | v0.1 — 15 batteries + 9 singletons; used by R1 + Battery LOO | Locked 2026-05-08 |
+| `gss_battery_map.json` | **v0.2** — 34 batteries (D=7/B=10/P=2/A=15) + 17 singletons; used by R1 leakage exclusion AND co-primary Battery LOO across all 4 bins | Locked 2026-05-08 (v0.1) → 2026-05-09 (v0.2 expansion) |
 | `tier1_tool_schemas.md` | Output schemas for the 2 secondary tools (Shapley + Battery LOO) | Lean v0.2 locked 2026-05-09 |
 | `theory_interpretation_guide.md` | Discussion-section memo: 6 candidate frameworks for interpretive secondary analysis (NOT a horse race) | Lean v0.1 locked 2026-05-09 |
 | `theory_review.md` | Round 1 lit review: MFT / Schwartz / Bourdieu / Cultural Theory of Risk | Stable; §8 lock empty (theory choice deferred to amendment-only) |

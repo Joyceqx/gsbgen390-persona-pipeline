@@ -103,52 +103,96 @@ Each schema below is fully specified: every field name, every type, every aggreg
 
 ---
 
-## Tool 2 — `battery_loo.py` (attitudinal bin only; conditional)
+## Tool 2 — `battery_loo.py` (all 4 bins; unconditional co-primary, locked 2026-05-09 evening)
 
-**Purpose**: Conditional on the 4-bin LOO confirming attitudinal-bin dominance, identify which specific attitude batteries within the bin drive the prediction signal. Within-bin interpretability — answers "if attitudinal matters most, which attitudes specifically?"
+**Purpose**: Identify which **construct-level clusters** within each feature bin drive LLM persona prediction. Co-primary mechanistic finding alongside the 4-bin LOO's broad finding.
 
-**Trigger condition** (locked): only run if `shapley_per_bin.attitudinal.rank == 1` AND attitudinal-bin LOO ΔMAE > LOO ΔMAE for each of the other three bins. If attitudinal does NOT dominate, this tool is skipped and the paper reports "battery-level decomposition not run because attitudinal-bin dominance was not observed."
+**Scope**: 34 batteries across all 4 bins per `gss_battery_map.json` v0.2 (7 demographic + 10 behavioral + 2 psychological + 15 attitudinal). Singletons (17 items) are NOT tested per `gss_phase1_design.md` §13.4 (variable-level statistical power too low + would inflate multiplicity).
 
-**Algorithm**: For each of the ~10-11 attitudinal-bin batteries (per `gss_battery_map.json`), drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1 per-item battery exclusion which already applies). Re-run prediction. Compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level (paired bootstrap, B=1000, seed=42). Apply Holm-Bonferroni at α=0.05 across the within-attitudinal battery family.
+**Unconditional**: runs regardless of which bin dominates the 4-bin LOO. The previous "conditional on attitudinal dominance" trigger was removed 2026-05-09 evening when Battery LOO was promoted to co-primary.
 
-**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. ~10 batteries × 1500 respondents × 12 items × 1 model ≈ $25-30 incremental.
+**Algorithm**: For each of the 34 batteries B, drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1 per-item battery exclusion — these are independent operations). Re-run prediction. Compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level (paired bootstrap, B=1000, seed=42). Apply **nested Holm-Bonferroni** within each bin's battery family — 4 separate corrections, NOT joint:
+- Demographic family: 7 tests, smallest p < α/7 = 0.0071
+- Behavioral family: 10 tests, smallest p < α/10 = 0.0050
+- Psychological family: 2 tests, smallest p < α/2 = 0.025
+- Attitudinal family: 15 tests, smallest p < α/15 = 0.0033
+
+**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. 34 batteries × 1500 respondents × 12 items × 1 model ≈ ~$50-60 incremental (up from ~$25-30 of the prior attitudinal-only conditional design).
 
 **Output schema** (one JSON file per `(model, n_respondents, seed)`):
 
 ```json
 {
-  "_version": "0.2",
-  "_run_id": "phase1c_battery_loo_attitudinal_qwen-2.5_n1500_seed42",
+  "_version": "0.3",
+  "_run_id": "phase1c_battery_loo_qwen-2.5_n1500_seed42",
   "_locked_spec_path": "tier1_tool_schemas.md",
   "model": "qwen/qwen-2.5-72b-instruct",
   "n_respondents": 1500,
   "seed": 42,
-  "scope": "attitudinal_bin_only",
-  "trigger_satisfied": true,
-  "_trigger_definition": "shapley_per_bin.attitudinal.rank == 1 in Phase 1a Shapley output AND 4-bin LOO ΔMAE for attitudinal > each other bin's LOO ΔMAE",
+  "scope": "all_4_bins_34_batteries",
+  "_scope_definition": "All 34 batteries per gss_battery_map.json v0.2: 7 demographic + 10 behavioral + 2 psychological + 15 attitudinal. Singletons NOT tested (deferred per §13.4).",
 
-  "battery_loo_delta": {
-    "abortion":                     {"delta_mae": 0.041, "ci_lo": 0.022, "ci_hi": 0.061, "rank": 1, "holm_significant": true,  "p_holm_adjusted": 0.003},
-    "confidence_in_institutions":   {"delta_mae": 0.029, "ci_lo": 0.012, "ci_hi": 0.045, "rank": 2, "holm_significant": true,  "p_holm_adjusted": 0.018},
-    "national_priorities":          {"delta_mae": 0.024, "ci_lo": 0.008, "ci_hi": 0.041, "rank": 3, "holm_significant": true,  "p_holm_adjusted": 0.029},
-    "racial_inequality_perception": {"delta_mae": 0.018, "ci_lo": 0.001, "ci_hi": 0.034, "rank": 4, "holm_significant": false, "p_holm_adjusted": 0.071},
-    "economic_help":                {"delta_mae": 0.015, "ci_lo": -0.002,"ci_hi": 0.031, "rank": 5, "holm_significant": false, "p_holm_adjusted": 0.142},
-    "...": "(all attitudinal-bin batteries)"
+  "battery_loo_per_bin": {
+    "demographic": {
+      "n_batteries": 7,
+      "alpha_after_holm": 0.05,
+      "holm_critical_smallest_p": 0.00714,
+      "results": {
+        "own_education":              {"delta_mae": 0.022, "ci_lo": 0.008,  "ci_hi": 0.038, "rank_in_bin": 1, "holm_significant": true,  "p_holm_adjusted": 0.003, "n_items_in_battery": 2,  "delta_mae_per_item": 0.0110},
+        "parental_education":         {"delta_mae": 0.018, "ci_lo": 0.005,  "ci_hi": 0.032, "rank_in_bin": 2, "holm_significant": true,  "p_holm_adjusted": 0.012, "n_items_in_battery": 4,  "delta_mae_per_item": 0.0045},
+        "marital_status":             {"delta_mae": 0.011, "ci_lo": -0.001, "ci_hi": 0.024, "rank_in_bin": 3, "holm_significant": false, "p_holm_adjusted": 0.061, "n_items_in_battery": 3,  "delta_mae_per_item": 0.0037},
+        "...":                        "(all 7 demographic batteries)"
+      }
+    },
+    "behavioral": {
+      "n_batteries": 10,
+      "alpha_after_holm": 0.05,
+      "holm_critical_smallest_p": 0.005,
+      "results": {
+        "current_religious_intensity": {"delta_mae": 0.034, "ci_lo": 0.018, "ci_hi": 0.052, "rank_in_bin": 1, "holm_significant": true, "p_holm_adjusted": 0.001, "n_items_in_battery": 4, "delta_mae_per_item": 0.0085},
+        "...":                         "(all 10 behavioral batteries)"
+      }
+    },
+    "psychological": {
+      "n_batteries": 2,
+      "alpha_after_holm": 0.05,
+      "holm_critical_smallest_p": 0.025,
+      "results": {
+        "subjective_wellbeing":  {"delta_mae": 0.029, "ci_lo": 0.014, "ci_hi": 0.046, "rank_in_bin": 1, "holm_significant": true, "p_holm_adjusted": 0.005, "n_items_in_battery": 4, "delta_mae_per_item": 0.0073},
+        "interpersonal_trust":   {"delta_mae": 0.016, "ci_lo": 0.001, "ci_hi": 0.032, "rank_in_bin": 2, "holm_significant": true, "p_holm_adjusted": 0.022, "n_items_in_battery": 3, "delta_mae_per_item": 0.0053}
+      }
+    },
+    "attitudinal": {
+      "n_batteries": 15,
+      "alpha_after_holm": 0.05,
+      "holm_critical_smallest_p": 0.00333,
+      "results": {
+        "abortion":                     {"delta_mae": 0.041, "ci_lo": 0.022, "ci_hi": 0.061, "rank_in_bin": 1, "holm_significant": true, "p_holm_adjusted": 0.003, "n_items_in_battery": 7, "delta_mae_per_item": 0.0059},
+        "...":                          "(all 15 attitudinal batteries)"
+      }
+    }
   },
 
-  "n_batteries_holm_significant": 3,
-  "n_batteries_tested": 11,
-  "alpha_after_holm_correction": "0.05 within attitudinal-bin battery family",
+  "summary": {
+    "n_batteries_tested_total": 34,
+    "n_batteries_holm_significant_per_bin": {"demographic": 2, "behavioral": 5, "psychological": 2, "attitudinal": 6},
+    "n_batteries_holm_significant_total": 15
+  },
 
-  "ci_method": "paired_bootstrap_respondent_level_B1000_seed42"
+  "ci_method": "paired_bootstrap_respondent_level_B1000_seed42",
+  "multiplicity_correction": "nested_holm_bonferroni_per_bin",
+  "_multiplicity_definition": "Holm-Bonferroni at α=0.05 applied independently within each bin's battery family. Cross-bin comparisons of ranks are descriptive only (not multiplicity-corrected jointly)."
 }
 ```
 
-**Reporting role**: descriptive within-bin decomposition. The paper's Table 4 reports the Holm-significant batteries with their ΔMAE + CIs. The Discussion qualitatively notes which batteries dominate. NOT a co-primary headline — the paper's primary claim is the bin-level finding from §10.
+**Reporting role**: **co-primary mechanistic finding**, equal prominence to 4-bin LOO. The abstract reports both:
+- Headline #1 (broad): from 4-bin LOO + Shapley
+- Headline #2 (mechanistic): "Within each bin, the following batteries are Holm-significant: ..." with per-bin tables
 
 **Forbidden uses** (anti-overclaim per §13.2):
-- Do NOT run this tool if the trigger condition is not met. Reporting "we considered battery LOO but the precondition was not met" is the correct null behavior.
-- Do NOT interpret battery-level findings as theoretical claims — that goes through §13.3 / `theory_interpretation_guide.md` as discussion-level interpretation.
+- Do NOT compare ranks across bins as if jointly corrected. The nested Holm controls FWER WITHIN each bin only; cross-bin comparisons require descriptive language.
+- Do NOT interpret battery-level findings as theoretical claims — that goes through `theory_interpretation_guide.md` as Discussion-level interpretation.
+- Do NOT report `delta_mae` without alongside `n_items_in_battery` and `delta_mae_per_item` — battery-size matters for interpretation.
 
 ---
 

@@ -14,27 +14,28 @@ This document is the changelog-style single-source-of-truth for what's done, wha
 
 **Project-level research question**: *In LLM persona synthesis, which input feature categories drive prediction quality, and how does that contribution vary across outcome dimensions?* No prior published work has done large-N, leakage-clean, multi-model feature attribution at scale; this project fills that area-level methodological gap. Park et al. 2024 is the most-cited prior work in LLM persona simulation and serves here as a **cross-paper benchmarking anchor**, not as the project's defining framework.
 
-**Phase 1 has ONE clean primary contribution** (the attitude-dimension answer to the project-level question): *which survey-collectible feature categories actually improve LLM persona prediction of attitude outcomes?* — answered by the **4-bin LOO ablation** (demographic / behavioral / psychological / attitudinal) on GSS 2024 (N=1500).
+**Phase 1 has TWO co-primary contributions** (locked 2026-05-09 evening — Battery LOO promoted from conditional secondary to unconditional co-primary across all 4 bins):
+1. **Broad finding (4-bin LOO)**: which feature category contributes most to LLM persona prediction of attitude outcomes? — answered by 4-bin leave-one-out (demographic / behavioral / psychological / attitudinal) on GSS 2024 (N=1500).
+2. **Mechanistic finding (34-battery LOO across all 4 bins, nested Holm)**: which specific construct-level clusters drive the signal within each bin? — answered by Battery LOO across the 34 batteries in `gss_battery_map.json` v0.2 (7 demographic + 10 behavioral + 2 psychological + 15 attitudinal), with **nested Holm-Bonferroni** within each bin's battery family.
 
-Two **secondary analyses** support the primary:
-1. **Bin-level Shapley decomposition** (16 conditions) — robustness check on the 4-bin LOO ranking against bin-bin interactions.
-2. **Attitudinal-bin Battery LOO** (~10-11 batteries) — within-bin interpretability, **conditional** on attitudinal-bin dominance from primary.
+One **secondary analysis** supports primary #1:
+- **Bin-level Shapley decomposition** (16 conditions) — robustness check on the 4-bin LOO ranking against bin-bin interactions. Shares the 4-bin family multiplicity, no separate Holm correction.
 
 **Theory interpretation** (6 candidate frameworks: MFT / Schwartz / Bourdieu / Cultural Theory / Inglehart-Welzel / Big Five) enters the Discussion section as **interpretive secondary analysis only** — NO horse race, no preregistered numeric thresholds, no Stage 3 refinement experiments. See `theory_interpretation_guide.md`.
 
 **Locked numerical and structural decisions**:
 - §12.2 quality-primary model-selection rule (DQ-1 parse-fail ≤30% + DQ-3 per-item relative variance ≥30% of human var + cost tie-break + Qwen fallback)
 - DQ-3 reference: `outputs/primary_eval_human_variance_2024.json` (frozen GSS 2024 per-item variance)
-- 4-layer leakage hygiene: §9c.1 disjointness + §9c.2 GSS-internal synonymy = none + §9c.3 R1 battery exclusion (15 batteries + 9 singletons in `gss_battery_map.json`) + §9c.4 R2 regression-baseline partition
+- 4-layer leakage hygiene: §9c.1 disjointness + §9c.2 GSS-internal synonymy = none + §9c.3 R1 battery exclusion (**34 batteries + 17 singletons in `gss_battery_map.json` v0.2**) + §9c.4 R2 regression-baseline partition
 - §11.1 abstract language template (forbidden mentalist claims; required scope qualifiers)
-- Holm-Bonferroni multiplicity within 4-bin family + within attitudinal-bin Battery LOO family (independent)
+- **Nested Holm-Bonferroni**: 4-bin family (n=4) + Battery LOO families per-bin (demographic n=7, behavioral n=10, psychological n=2, attitudinal n=15) — 5 independent Holm corrections, NOT joint
 
 **Joyce's path forward (lean version)**:
 - (a) Get OpenRouter API key + run N=10 smoke (~$2-3)
 - (b) Draft OSF pre-reg (4-bin primary scope; `PROJECT_SYNTHESIS.md` §3+§4 is the template; Joyce + Bayati signoff on items in `theory_interpretation_guide.md` §"Open items")
 - (c) Run Phase 1a (4 cheap models on N=100 + GPT-4o anchor) → §12.2 selector picks 1b model
 - (d) Run Phase 1b (single quality-selected model, N=1500) + GPT-4o anchor on N=100 subset
-- (e) Run Shapley decomposition on Phase 1a outputs; conditionally run attitudinal Battery LOO on Phase 1b
+- (e) Run Shapley decomposition on Phase 1a outputs; run 34-battery Battery LOO on Phase 1b (unconditional, all 4 bins)
 - (f) Write paper with theory framing as Discussion-only
 
 The project has **two sequential phases**, both scoped at the Bayati meeting (2026-05-02):
@@ -79,10 +80,34 @@ End-to-end replication of Park et al. at N=2 + N=1 via Cookiy. Pipeline + dashbo
 - 🔒 §12.2 selector run on 1a output → picks 1b model
 - 🔒 Phase 1b (N=1500, ~$95 selected model + ~$50 anchor)
 - 🔒 Shapley decomposition (Phase 1a; tool to be implemented)
-- 🔒 Attitudinal Battery LOO (Phase 1c, conditional on attitudinal dominance; tool to be implemented; ~$25-30)
+- 🔒 Battery LOO (Phase 1c, **co-primary, all 4 bins, unconditional**; nested Holm per-bin; tool to be implemented; ~$50-60)
 
 ### 🔮 Phase 2: targeted Cookiy collection (planned, not started)
 Will cover BFI-44 personality + behavioral game outcomes that GSS doesn't measure. Includes 2-week recontact for proper test-retest baseline. Smaller N (~20-30, with Phase-1-empirics-seeded power calc before launch). Design in `thesis_phase2_design.md`.
+
+---
+
+## What changed 2026-05-09 evening (Battery LOO promoted to co-primary across all 4 bins)
+
+After lean-lock + drift-fix + framing reset earlier today, Joyce flagged that the conditional-on-attitudinal-dominance Battery LOO was awkward and Battery-level findings should be more compelling than 4-bin alone. Promoted Battery LOO from "conditional secondary on attitudinal only" to "unconditional co-primary across all 4 bins" with nested Holm correction.
+
+### Changes
+1. **`gss_battery_map.json` v0.1 → v0.2**: expanded from 15 batteries (attitudinal only) to **34 batteries** across all 4 bins:
+   - **Demographic** (7): own_education, parental_education, marital_status, racial_ethnic_origin, family_of_origin_economic, growing_up_geography, growing_up_family_structure
+   - **Behavioral** (10): current_religious_intensity, denominational_identity, voting_turnout, voting_choice, current_employment, work_history, job_security_perception, traditional_media, digital_media, gun_related
+   - **Psychological** (2): subjective_wellbeing, interpersonal_trust
+   - **Attitudinal** (15): unchanged from v0.1
+   - Each battery now has explicit `bin` field; validator check 7c verifies `bin` matches actual taxonomy.
+2. **§13.2 Battery LOO** rewritten from "conditional secondary, attitudinal only" to "unconditional co-primary, all 4 bins, nested Holm per-bin."
+3. **§8.8 multiplicity** rewritten: 5 independent Holm families (1 for 4-bin LOO + 4 for Battery LOO per bin) instead of "4-bin + attitudinal Battery LOO."
+4. **§13.4 deferred list** updated: added `sampled Shapley on 34 batteries` + `variable-level LOO` + `singleton-level LOO testing` as explicit deferrals (each with rationale).
+5. **`tier1_tool_schemas.md` Tool 2** updated to v0.3 schema: scope is all 4 bins; output is bin-keyed with per-bin Holm; size-aware reporting fields (`n_items_in_battery`, `delta_mae_per_item`).
+6. **`validate_taxonomy.py` check 7c** extended: per-bin battery count + `bin` field consistency check. Currently passes with 7/10/2/15 = 34.
+7. **Budget**: Battery LOO incremental cost ~$50-60 (up from prior ~$25-30 for attitudinal-only conditional design). Total Phase 1 budget remains within ~$215-275 envelope.
+8. **STATUS.md / HANDOFF.md / PROJECT_SYNTHESIS.md / INDEX.md** updated to reflect co-primary structure.
+
+### Why this is an upgrade, not a re-litigation of the lean lock
+The lean-lock decision was "don't add tools we don't need; keep the paper focused." This change does NOT add a new tool — Battery LOO was already in the lean-lock design (as conditional secondary). It elevates an existing tool's reporting role and expands its scope. The motivation: "conditional on attitudinal dominance" was an awkward design that produced no mechanistic finding when attitudinal didn't dominate — and the paper would have a weaker story in that case. Always-on, all-bin Battery LOO produces a mechanistic finding regardless of which bin wins the broad LOO.
 
 ---
 

@@ -203,12 +203,14 @@ else:
     ok("sensitivity overrides", f"all {len(SENSITIVITY_FORMAT_OVERRIDES)} overrides cover observed truth codes")
 
 # ---------------------------------------------------------------------------
-# CHECK 7c: Battery map is well-formed (R1 — locked 2026-05-08)
+# CHECK 7c: Battery map is well-formed (R1 — locked 2026-05-08; expanded 2026-05-09)
 #   - Every battery item exists in the loaded data
 #   - Battery items are mutually disjoint (no item in 2 batteries)
 #   - Every primary_eval item is either in a battery OR in the singletons list
+#   - Every battery has an explicit `bin` field that matches the items' actual bin
+#   - Each bin has the expected battery count (7/10/2/15 = 34 total in v0.2)
 # ---------------------------------------------------------------------------
-print("\n=== 7c. Battery map (R1) is well-formed ===")
+print("\n=== 7c. Battery map (R1 + Battery LOO) is well-formed ===")
 try:
     from gss_pipeline import load_battery_map
     bm = load_battery_map()
@@ -225,19 +227,56 @@ try:
         elif not in_battery and not in_singleton:
             bm_failures.append(f"{vid} is a primary_eval item but appears in neither a battery nor singletons")
 
-    # Every battery item must exist in the loaded data
+    # Every battery item must exist in the loaded data + have a `bin` field
+    # that matches the items' actual taxonomy bin
+    feature_bin_for_var: dict[str, str] = {}
+    for bin_name, vars_in_bin in declared_features.items():
+        for v in vars_in_bin:
+            feature_bin_for_var[v] = bin_name
+
     for bname, bdef in bm["batteries"].items():
+        if "bin" not in bdef:
+            bm_failures.append(f"battery {bname} missing required 'bin' field")
+            continue
+        declared_bin = bdef["bin"]
         for v in bdef["items"]:
             if v not in df.columns:
                 bm_failures.append(f"battery {bname} references {v} which is not in the data")
+            # Items in primary_eval are excluded from feature_bins per the locked taxonomy.
+            # For non-primary_eval items, verify the battery's declared `bin` matches the
+            # item's actual taxonomy bin.
+            if v in primary_eval:
+                continue
+            actual_bin = feature_bin_for_var.get(v)
+            if actual_bin is None:
+                bm_failures.append(
+                    f"battery {bname} references {v} which is not in any feature bin"
+                )
+            elif actual_bin != declared_bin:
+                bm_failures.append(
+                    f"battery {bname} declared bin='{declared_bin}' but {v} is actually "
+                    f"in bin='{actual_bin}'"
+                )
+
+    # Per-bin battery count — expected 7/10/2/15 in v0.2
+    from collections import Counter
+    bin_counts = Counter(b["bin"] for b in bm["batteries"].values() if "bin" in b)
+    expected_counts = {"demographic": 7, "behavioral": 10, "psychological": 2, "attitudinal": 15}
+    for b, expected in expected_counts.items():
+        if bin_counts.get(b, 0) != expected:
+            bm_failures.append(
+                f"expected {expected} batteries in {b} bin (v0.2), got {bin_counts.get(b, 0)}"
+            )
 
     if bm_failures:
         for m in bm_failures:
             fail("battery map", m)
     else:
         ok("battery map",
-           f"{len(bm['batteries'])} batteries, {len(bm['singletons'])} singletons; "
-           f"all primary_eval items mapped exactly once")
+           f"{len(bm['batteries'])} batteries (D={bin_counts['demographic']} / "
+           f"B={bin_counts['behavioral']} / P={bin_counts['psychological']} / "
+           f"A={bin_counts['attitudinal']}), {len(bm['singletons'])} singletons; "
+           f"all primary_eval items mapped exactly once; all battery `bin` fields match.")
 except Exception as e:
     fail("battery map", f"could not load: {e}")
 
