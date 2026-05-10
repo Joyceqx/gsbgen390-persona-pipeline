@@ -38,8 +38,8 @@ One **secondary analysis** supports primary #1:
 - **Nested Holm-Bonferroni**: 4-bin family (n=4) + Battery LOO families per-bin (demographic n=7, behavioral n=10, psychological n=2, attitudinal n=15) — 5 independent Holm corrections, NOT joint
 
 **Joyce's path forward (lean version)**:
-- (a) Get OpenRouter API key + run N=10 smoke (~$2-3)
-- (b) Draft OSF pre-reg (4-bin primary scope; `PROJECT_SYNTHESIS.md` §3+§4 is the template; Joyce + Bayati signoff on items in `theory_interpretation_guide.md` §"Open items")
+- (a) ✅ OpenRouter API key obtained (2026-05-09 night)
+- (b) ✅ OSF v1 draft authored: `osf_preregistration_v1.md` (commit `b5a9779`-context). Walks through §9e 22-item checklist, includes locked-artifact SHA-256 hashes. **Pending: Joyce + Bayati signoff on §17 6 open items** (theory candidate list, null-alignment commitment, Discussion structure, Inglehart-Welzel verification, driver-runtime-extension timing, Bayati final approval).
 - (c) Run Phase 1a (4 cheap models on N=100 + GPT-4o anchor) → §12.2 selector picks 1b model
 - (d) Run Phase 1b (single quality-selected model, N=1500) + GPT-4o anchor on N=100 subset
 - (e) Run Shapley decomposition on Phase 1a outputs; run 34-battery Battery LOO on Phase 1b (unconditional, all 4 bins)

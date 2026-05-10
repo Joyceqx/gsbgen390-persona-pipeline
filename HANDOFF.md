@@ -42,8 +42,8 @@ For Phase 2 / pilot context, also: `thesis_phase2_design.md`, `MEETING_HANDOUT.m
 | Co-primary analysis tools (`shapley_decomposition.py` 4-bin + `battery_loo.py` 34-battery) | ✅ **implemented + self-tested on synthetic fixtures (2026-05-09 night)** | — |
 | Driver runtime extension (16-condition Shapley + 34-battery LOO conditions in `gss_driver.py`) | 🟡 NOT yet implemented; Phase 1a / 1c runtime work; needs API key | does not block N=10 smoke or Phase 1a primary |
 | Phase 1 design lock | ✅ LEAN-LOCKED 2026-05-09 + Battery LOO promoted to co-primary 2026-05-09 evening (4-bin LOO + 34-battery LOO across all 4 bins co-primary; Shapley robustness; theory-as-Discussion) | — |
-| Phase 1 N=10 smoke test on real LLMs | 🟡 awaiting OpenRouter API key | needs key in `OpenRouter_api.txt` |
-| OSF pre-registration | 🔒 awaiting (a) Joyce + Bayati signoff on `theory_interpretation_guide.md` open items + (b) smoke green | blocks Phase 1a |
+| Phase 1 N=10 smoke test on real LLMs | 🟡 ready to run (API key obtained 2026-05-09 night); awaiting Joyce's intentional `--primary-only` smoke command | needs `--primary-only` flag (per §9g operational risk) |
+| OSF pre-registration v1 draft | ✅ authored 2026-05-09 night: `osf_preregistration_v1.md` (locked-artifact SHA-256 hashes embedded; §9e 22-item checklist all addressed) | pending Joyce + Bayati signoff on §17 6 open items |
 | Phase 1a (N=100, ~$65 with anchor) | 🔒 blocked on pre-reg | — |
 | §12.2 selector run on 1a output | 🔒 blocked on 1a complete | — |
 | Phase 1b (N=1500, ~$95 selected model + ~$50 anchor) | 🔒 blocked on §12.2 selector | — |

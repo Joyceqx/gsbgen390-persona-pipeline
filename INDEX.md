@@ -30,6 +30,7 @@ For "what changed and when", see `STATUS.md` changelog. For "the comprehensive p
 | `gss_battery_map.json` | **v0.2** — 34 batteries (D=7/B=10/P=2/A=15) + 17 singletons; used by R1 leakage exclusion AND co-primary Battery LOO across all 4 bins | Locked 2026-05-08 (v0.1) → 2026-05-09 (v0.2 expansion) |
 | `tier1_tool_schemas.md` | Output schemas for the 2 secondary tools (Shapley + Battery LOO) | Lean v0.2 locked 2026-05-09 |
 | `theory_interpretation_guide.md` | Discussion-section memo: 6 candidate frameworks for interpretive secondary analysis (NOT a horse race) | Lean v0.1 locked 2026-05-09 |
+| `osf_preregistration_v1.md` | **OSF v1 draft** — full preregistration document with locked artifact SHA-256 hashes, walks through §9e 22-item checklist; 6 open items pending Joyce + Bayati signoff before final lock | v1 DRAFT 2026-05-09 night |
 | `theory_review.md` | Round 1 lit review: MFT / Schwartz / Bourdieu / Cultural Theory of Risk | Stable; §8 lock empty (theory choice deferred to amendment-only) |
 | `theory_review_round2.md` | Round 2 lit review: + Inglehart-Welzel / Big Five + verified 2024-2026 LLM-applied work | Stable |
 | `outputs/primary_eval_human_variance_2024.json` | Locked GSS-2024 per-item human variance reference for DQ-3 | Locked 2026-05-08 |
