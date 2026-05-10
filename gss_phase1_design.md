@@ -392,7 +392,7 @@ A small GPT-4o anchor on a 100-respondent subset preserves direct Park v2 Table 
 
 The aggregation in §10 is computed:
 - **Per model**: each cheap-panel model gets its own respondent-macro / item-macro / pooled headline + bootstrap CIs. Reported alongside in the writeup.
-- **Panel median**: for each (respondent, condition, item, sample-position-equivalent), take the median (Likert) or mode (categorical) across the 4 models. Re-run aggregation on this synthetic "panel respondent." Reported as the primary headline; per-model deltas in supplementary.
+- **Panel median (Phase 1a robustness summary, NOT the N=1500 headline)**: for each (respondent, condition, item, sample-position-equivalent), take the median (Likert) or mode (categorical) across the 4 cheap-panel models. Re-run aggregation on this synthetic "panel respondent." **Reported as a Phase 1a (N=100) robustness summary** for cross-model coherence; per-model deltas in supplementary. The N=1500 Phase 1b headline is the §12.2-selected single model, NOT the panel median (Phase 1b runs only one selected model — see §12.2 + line 401 below + §13's writeup constraint).
 - **GPT-4o anchor**: per-item raw accuracy table on N=100 subset, side-by-side with Park v2 Table 3.
 - **Cross-model agreement**: % of (respondent, item, condition) tuples where all 4 cheap models output the same integer code. Reported as the new "consistency QA metric" replacing within-model self-consistency.
 
