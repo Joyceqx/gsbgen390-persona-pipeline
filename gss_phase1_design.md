@@ -278,6 +278,8 @@ The following items must be in the OSF pre-registration document, locked before 
 - [ ] **Writeup language template (§11.1)**: forbidden mentalist claims; required scope qualifiers
 - [ ] **Decisions log appendix**: PROJECT_SYNTHESIS.md §4 (locked, when, against what evidence)
 
+> ⚠️ **OSF copy-source rule (locked 2026-05-09 night)**: when drafting the OSF preregistration, copy text ONLY from current live-design sections of `gss_phase1_design.md` (§1.0, §4, §8.8, §8.9, §9c, §9e, §10, §11.1, §12.2, §13.0–§13.2) and from `PROJECT_SYNTHESIS.md` §3 + §5 (which are aligned to the live design). Do **NOT** copy from any "What changed YYYY-MM-DD" changelog block in `STATUS.md`, the top-of-file revision-note paragraph in `PROJECT_SYNTHESIS.md`, or the `*.SUPERSEDED-*.md` files — those preserve historical wording (e.g., "attitudinal-bin Battery LOO", "panel median primary headline", "v0.1 15 batteries", "conditional on attitudinal dominance") that contradicts the live spec and would confuse OSF reviewers.
+
 ### 9f. Readiness gates before paid runs (locked 2026-05-09 evening)
 
 **Before N=10 paid smoke test**:
