@@ -9,6 +9,8 @@
 > **Revision note (2026-05-09)**: Per Codex's lean-design audit, the Phase 1 design was slimmed from a six-theory horse-race confirmatory framework to a leaner structure with 4-bin LOO as primary, Shapley as robustness, attitudinal-bin Battery LOO as interpretability, and theory framing as Discussion-section interpretation only. RSA / permutation importance / Stage 3 refinement / Friedman's H were all explicitly deferred to future work. See `gss_phase1_design.md` §13 + `theory_interpretation_guide.md` for the live spec.
 >
 > **Further revision 2026-05-09 evening**: Battery LOO promoted from "conditional secondary, attitudinal-only" to **"unconditional co-primary across all 4 bins"** with nested Holm-Bonferroni per bin. `gss_battery_map.json` expanded v0.1 → v0.2: 15 batteries (attitudinal only) → 34 batteries (D=7 / B=10 / P=2 / A=15). Phase 1 now has **two co-primary findings**: broad (4-bin LOO) + mechanistic (34-battery LOO). See `gss_phase1_design.md` §8.8 + §13.2 for the live spec.
+>
+> **Comprehensive cleanup 2026-05-09 night**: 16-item Codex re-audit absorbed. Adds joint-34 Holm sensitivity layer for cross-bin claims; practical-effect-size thresholds (small <0.02 / modest 0.02-0.05 / substantive ≥0.05); explicit hierarchical justification §13.0 (4-bin and Battery LOO answer DIFFERENT LEVELS of the same attribution-question family, not unrelated multiplicity-inflating tests); Battery LOO estimand caveat (predictive dependence under fixed prompt-construction procedure, NOT causal importance); R2 framed as rhetorical comparator NOT causal partition; honest impact framing §1.0 (forbidden language list); OSF lock checklist §9e + readiness gate §9f; operational-risk note about accidental sensitivity-pass on all 4 cheap models (§9g). Implementation status corrected: base pipeline tested, Battery LOO + Shapley *specified but not implemented*. See `gss_phase1_design.md` §1.0 / §8.8 / §8.9 / §13.0 / §13.2 / §9e-g for the revised spec.
 
 ---
 
@@ -273,7 +275,9 @@ Phase 1 当前的 5 个独立 Holm families（**nested**, 不是 joint）：
 
 ### 4.5 R1 battery boundaries（2026-05-08）
 
-**决策**：15 batteries + 9 singletons，civil_liberties 按 target group 分 3 个（atheists / racists / communists），不合成 1 个。
+**决策（v0.1, 2026-05-08）**：15 batteries + 9 singletons（attitudinal-only 范围），civil_liberties 按 target group 分 3 个（atheists / racists / communists），不合成 1 个。
+
+**后续扩展（v0.2, 2026-05-09 evening）**：扩展到全 4 bins，34 batteries + 17 singletons（demographic 7 + behavioral 10 + psychological 2 + attitudinal 15 不变），用于支持 co-primary Battery LOO。详见 §3.6 + §3.8.2。
 
 **依据**：
 - 知道 R 对种族主义者的态度，对预测堕胎几乎没帮助；但对种族主义者 vs 共产主义者 vs 无神论者三类内部强相关
@@ -556,7 +560,7 @@ Per third-party research-layer audit §3.1, with Park v2 PDF p.10/37/39 citation
 
 1. **Layer 1 (direct, prevented)**: `feature_bins ⊥ primary_eval` (validator-enforced); per-item exclusion in sensitivity pass.
 2. **Layer 2 (synonymous, GSS-internal absent)**: Park v2 SI §9 empirically shows GSS-internal synonymy is empty.
-3. **Layer 3 — R1 (battery-level structural exclusion, NEW)**: When predicting any primary_eval item in a battery, the entire battery is dropped from the persona prompt for that prediction. Mirrors Park v2's BFI whole-trait-block hold-out (Park v2 PDF p.37). Battery map locked in `gss_battery_map.json` (15 batteries + 9 singletons). Validated by `validate_taxonomy.py` check 7c.
+3. **Layer 3 — R1 (battery-level structural exclusion, NEW; battery map expanded to v0.2 on 2026-05-09 evening)**: When predicting any primary_eval item in a battery, the entire battery is dropped from the persona prompt for that prediction. Mirrors Park v2's BFI whole-trait-block hold-out (Park v2 PDF p.37). Battery map locked in `gss_battery_map.json` **v0.2** (34 batteries + 17 singletons across all 4 bins; expanded from v0.1's 15 attitudinal-only batteries to support co-primary Battery LOO). Validated by `validate_taxonomy.py` check 7c.
 4. **Layer 4 — R2 (regression-baseline partition, NEW)**: In parallel with the LLM panel, run a non-LLM regression (Ridge for Likert, multinomial Logistic for binary; 5-fold respondent-level CV; same R1 battery exclusion applied symmetrically). Per-item MAE is the auto-correlation upper bound any feature-to-item predictor can extract.
 
 **Headline partition equation**:
@@ -656,7 +660,9 @@ The locked reference is at `outputs/primary_eval_human_variance_2024.json`, OSF-
 
 ### 4.5 R1 battery boundaries (2026-05-08)
 
-**Decision**: 15 batteries + 9 singletons. Civil-liberties split into 3 batteries by target group (atheists / racists / communists), not collapsed into one.
+**Decision (v0.1, 2026-05-08)**: 15 batteries + 9 singletons (attitudinal-only scope). Civil-liberties split into 3 batteries by target group (atheists / racists / communists), not collapsed into one.
+
+**Subsequent expansion (v0.2, 2026-05-09 evening)**: expanded to all 4 bins, 34 batteries + 17 singletons (demographic 7 + behavioral 10 + psychological 2 + attitudinal 15 unchanged), to support co-primary Battery LOO. See §3.6 + §3.8.2.
 
 **Evidence**:
 - Knowing R's view of racists' free-speech tells you very little about R's view of atheists' free-speech, but lots about R's other racism-related views

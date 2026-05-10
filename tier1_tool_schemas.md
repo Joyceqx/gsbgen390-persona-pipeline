@@ -7,7 +7,7 @@
 This file is the commitment device for Phase 1's secondary analyses. The primary 4-bin LOO is locked elsewhere (`gss_phase1_design.md` §4 + §10); this file covers only the two secondary tools Codex's lean-design audit (2026-05-09) endorsed:
 
 1. **Bin-level Shapley decomposition** — robustness re-aggregation of the 4-bin LOO
-2. **Attitudinal-bin battery LOO** — within-bin interpretability, conditional on attitudinal dominance
+2. **Battery LOO across all 4 bins** — co-primary mechanistic, unconditional, nested Holm + joint-34 sensitivity
 
 Tools considered and **explicitly deferred** (with their schemas removed from this lean version): RSA, permutation importance, theory-derived similarity, "Friedman's H"-style interaction variance from custom definitions. See `gss_phase1_design.md` §13.4 for the explicit deferral list.
 
@@ -111,19 +111,31 @@ Each schema below is fully specified: every field name, every type, every aggreg
 
 **Unconditional**: runs regardless of which bin dominates the 4-bin LOO. The previous "conditional on attitudinal dominance" trigger was removed 2026-05-09 evening when Battery LOO was promoted to co-primary.
 
-**Algorithm**: For each of the 34 batteries B, drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1 per-item battery exclusion — these are independent operations). Re-run prediction. Compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level (paired bootstrap, B=1000, seed=42). Apply **nested Holm-Bonferroni** within each bin's battery family — 4 separate corrections, NOT joint:
-- Demographic family: 7 tests, smallest p < α/7 = 0.0071
-- Behavioral family: 10 tests, smallest p < α/10 = 0.0050
-- Psychological family: 2 tests, smallest p < α/2 = 0.025
-- Attitudinal family: 15 tests, smallest p < α/15 = 0.0033
+**Algorithm**: For each of the 34 batteries B, drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1 per-item battery exclusion — these are independent operations). Re-run prediction. Compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level (paired bootstrap, B=1000, seed=42). Apply **two Holm corrections in parallel**:
+1. **Nested Holm-Bonferroni primary** within each bin's battery family — 4 separate corrections, NOT joint:
+   - Demographic family: 7 tests, smallest p < α/7 = 0.0071
+   - Behavioral family: 10 tests, smallest p < α/10 = 0.0050
+   - Psychological family: 2 tests, smallest p < α/2 = 0.025
+   - Attitudinal family: 15 tests, smallest p < α/15 = 0.0033
+2. **Joint-34 Holm sensitivity** across all 34 batteries simultaneously — smallest p < α/34 = 0.00147. Used as a gate for cross-bin claims (per `gss_phase1_design.md` §8.8).
 
-**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. 34 batteries × 1500 respondents × 12 items × 1 model ≈ ~$50-60 incremental (up from ~$25-30 of the prior attitudinal-only conditional design).
+**Within-bin claims** (e.g., *"abortion is the strongest battery in the attitudinal bin"*) use the **nested Holm** primary correction.
+**Cross-bin claims** (e.g., *"abortion is the strongest battery overall"*) require **joint-34 Holm sensitivity** support; without it, cross-bin language is descriptive only.
+
+**Practical-effect-size thresholds** (per `gss_phase1_design.md` §8.9; locked 2026-05-09 evening):
+- `small / descriptive`: ΔMAE < 0.02
+- `modest`: 0.02 ≤ ΔMAE < 0.05
+- `substantive`: ΔMAE ≥ 0.05
+
+A finding is "substantively meaningful" only if **both** Holm-significant within its family AND practical-effect ≥ "modest" with bootstrap CI excluding the small-effect boundary.
+
+**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. 34 batteries × 1500 respondents × 12 items × 1 model ≈ ~$50-60 incremental.
 
 **Output schema** (one JSON file per `(model, n_respondents, seed)`):
 
 ```json
 {
-  "_version": "0.3",
+  "_version": "0.4",
   "_run_id": "phase1c_battery_loo_qwen-2.5_n1500_seed42",
   "_locked_spec_path": "tier1_tool_schemas.md",
   "model": "qwen/qwen-2.5-72b-instruct",
@@ -132,67 +144,78 @@ Each schema below is fully specified: every field name, every type, every aggreg
   "scope": "all_4_bins_34_batteries",
   "_scope_definition": "All 34 batteries per gss_battery_map.json v0.2: 7 demographic + 10 behavioral + 2 psychological + 15 attitudinal. Singletons NOT tested (deferred per §13.4).",
 
+  "practical_thresholds": {
+    "small_lt": 0.02,
+    "modest_range": [0.02, 0.05],
+    "substantive_gte": 0.05
+  },
+
   "battery_loo_per_bin": {
     "demographic": {
       "n_batteries": 7,
-      "alpha_after_holm": 0.05,
-      "holm_critical_smallest_p": 0.00714,
+      "alpha_within_bin_holm": 0.05,
+      "holm_critical_smallest_p_within_bin": 0.00714,
       "results": {
-        "own_education":              {"delta_mae": 0.022, "ci_lo": 0.008,  "ci_hi": 0.038, "rank_in_bin": 1, "holm_significant": true,  "p_holm_adjusted": 0.003, "n_items_in_battery": 2,  "delta_mae_per_item": 0.0110},
-        "parental_education":         {"delta_mae": 0.018, "ci_lo": 0.005,  "ci_hi": 0.032, "rank_in_bin": 2, "holm_significant": true,  "p_holm_adjusted": 0.012, "n_items_in_battery": 4,  "delta_mae_per_item": 0.0045},
-        "marital_status":             {"delta_mae": 0.011, "ci_lo": -0.001, "ci_hi": 0.024, "rank_in_bin": 3, "holm_significant": false, "p_holm_adjusted": 0.061, "n_items_in_battery": 3,  "delta_mae_per_item": 0.0037},
-        "...":                        "(all 7 demographic batteries)"
+        "own_education": {
+          "delta_mae": 0.022, "ci_lo": 0.008, "ci_hi": 0.038,
+          "rank_in_bin": 1,
+          "p_holm_within_bin": 0.003, "holm_significant_within_bin": true,
+          "p_holm_joint_34": 0.041, "holm_significant_joint_34": true,
+          "effect_size_label": "modest",
+          "substantively_meaningful": true,
+          "n_items_in_battery": 2, "delta_mae_per_item": 0.0110
+        },
+        "parental_education": {
+          "delta_mae": 0.018, "ci_lo": 0.005, "ci_hi": 0.032,
+          "rank_in_bin": 2,
+          "p_holm_within_bin": 0.012, "holm_significant_within_bin": true,
+          "p_holm_joint_34": 0.071, "holm_significant_joint_34": false,
+          "effect_size_label": "small",
+          "substantively_meaningful": false,
+          "n_items_in_battery": 4, "delta_mae_per_item": 0.0045
+        },
+        "...": "(all 7 demographic batteries)"
       }
     },
-    "behavioral": {
-      "n_batteries": 10,
-      "alpha_after_holm": 0.05,
-      "holm_critical_smallest_p": 0.005,
-      "results": {
-        "current_religious_intensity": {"delta_mae": 0.034, "ci_lo": 0.018, "ci_hi": 0.052, "rank_in_bin": 1, "holm_significant": true, "p_holm_adjusted": 0.001, "n_items_in_battery": 4, "delta_mae_per_item": 0.0085},
-        "...":                         "(all 10 behavioral batteries)"
-      }
-    },
-    "psychological": {
-      "n_batteries": 2,
-      "alpha_after_holm": 0.05,
-      "holm_critical_smallest_p": 0.025,
-      "results": {
-        "subjective_wellbeing":  {"delta_mae": 0.029, "ci_lo": 0.014, "ci_hi": 0.046, "rank_in_bin": 1, "holm_significant": true, "p_holm_adjusted": 0.005, "n_items_in_battery": 4, "delta_mae_per_item": 0.0073},
-        "interpersonal_trust":   {"delta_mae": 0.016, "ci_lo": 0.001, "ci_hi": 0.032, "rank_in_bin": 2, "holm_significant": true, "p_holm_adjusted": 0.022, "n_items_in_battery": 3, "delta_mae_per_item": 0.0053}
-      }
-    },
-    "attitudinal": {
-      "n_batteries": 15,
-      "alpha_after_holm": 0.05,
-      "holm_critical_smallest_p": 0.00333,
-      "results": {
-        "abortion":                     {"delta_mae": 0.041, "ci_lo": 0.022, "ci_hi": 0.061, "rank_in_bin": 1, "holm_significant": true, "p_holm_adjusted": 0.003, "n_items_in_battery": 7, "delta_mae_per_item": 0.0059},
-        "...":                          "(all 15 attitudinal batteries)"
-      }
-    }
+    "behavioral":    {"n_batteries": 10, "alpha_within_bin_holm": 0.05, "holm_critical_smallest_p_within_bin": 0.005,   "results": "(see schema pattern above)"},
+    "psychological": {"n_batteries":  2, "alpha_within_bin_holm": 0.05, "holm_critical_smallest_p_within_bin": 0.025,   "results": "(see schema pattern above)"},
+    "attitudinal":   {"n_batteries": 15, "alpha_within_bin_holm": 0.05, "holm_critical_smallest_p_within_bin": 0.00333, "results": "(see schema pattern above)"}
+  },
+
+  "joint_34_holm_correction": {
+    "n_tests_total": 34,
+    "alpha": 0.05,
+    "holm_critical_smallest_p_joint": 0.00147,
+    "purpose": "cross-bin claim sensitivity gate per gss_phase1_design.md §8.8"
   },
 
   "summary": {
     "n_batteries_tested_total": 34,
-    "n_batteries_holm_significant_per_bin": {"demographic": 2, "behavioral": 5, "psychological": 2, "attitudinal": 6},
-    "n_batteries_holm_significant_total": 15
+    "n_batteries_holm_significant_within_bin_per_bin": {"demographic": 2, "behavioral": 5, "psychological": 2, "attitudinal": 6},
+    "n_batteries_holm_significant_within_bin_total": 15,
+    "n_batteries_holm_significant_joint_34": 7,
+    "n_batteries_substantively_meaningful": 5,
+    "_substantively_meaningful_definition": "Holm-significant WITHIN BIN AND effect_size_label in {modest, substantive} AND ci_lo ≥ 0.02 (CI excludes small-effect boundary)."
   },
 
   "ci_method": "paired_bootstrap_respondent_level_B1000_seed42",
-  "multiplicity_correction": "nested_holm_bonferroni_per_bin",
-  "_multiplicity_definition": "Holm-Bonferroni at α=0.05 applied independently within each bin's battery family. Cross-bin comparisons of ranks are descriptive only (not multiplicity-corrected jointly)."
+  "multiplicity_correction": "nested_holm_per_bin_primary_plus_joint34_sensitivity",
+  "_multiplicity_definition": "Two corrections in parallel. Nested Holm within each bin's battery family is the PRIMARY correction (controls within-bin FWER). Joint Holm across all 34 batteries is the SENSITIVITY correction used to gate cross-bin claims. Within-bin claims need only nested Holm; cross-bin claims need both."
 }
 ```
 
 **Reporting role**: **co-primary mechanistic finding**, equal prominence to 4-bin LOO. The abstract reports both:
 - Headline #1 (broad): from 4-bin LOO + Shapley
-- Headline #2 (mechanistic): "Within each bin, the following batteries are Holm-significant: ..." with per-bin tables
+- Headline #2 (mechanistic): "Within each bin, the following batteries are Holm-significant **within-bin**: ..." with per-bin tables. Cross-bin "strongest battery overall" claims require joint-34 Holm sensitivity support.
+
+**Estimand caveat**: Battery LOO estimates **predictive dependence under a fixed prompt-construction procedure** (R1 + locked persona prompt template), NOT causal feature importance. Because R1 already excludes the predicted item's own battery, Battery LOO measures **cross-construct contribution after direct same-battery leakage is already blocked**. See `gss_phase1_design.md` §13.2 for the full estimand statement.
 
 **Forbidden uses** (anti-overclaim per §13.2):
-- Do NOT compare ranks across bins as if jointly corrected. The nested Holm controls FWER WITHIN each bin only; cross-bin comparisons require descriptive language.
+- Do NOT compare ranks across bins as confirmatory unless joint-34 Holm sensitivity also passes. The nested Holm controls FWER WITHIN each bin only; cross-bin comparisons require either joint-34 support or explicitly descriptive language.
 - Do NOT interpret battery-level findings as theoretical claims — that goes through `theory_interpretation_guide.md` as Discussion-level interpretation.
 - Do NOT report `delta_mae` without alongside `n_items_in_battery` and `delta_mae_per_item` — battery-size matters for interpretation.
+- Do NOT report `holm_significant_within_bin == true` as "substantively meaningful" without checking `effect_size_label` AND `substantively_meaningful` flag (§13.2 anti-overclaim rule).
+- Do NOT interpret Battery LOO as causal — it estimates predictive dependence under a fixed prompt-construction procedure.
 
 ---
 

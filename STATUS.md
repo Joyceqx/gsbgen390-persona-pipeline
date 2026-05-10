@@ -10,7 +10,14 @@ This document is the changelog-style single-source-of-truth for what's done, wha
 
 ## TL;DR for a fresh session
 
-**Phase 1 design is LEAN-LOCKED as of 2026-05-09.** The full pipeline is built and tested; only paid runs (smoke + 1a + 1b) are pending an OpenRouter API key.
+**Phase 1 design is LEAN-LOCKED as of 2026-05-09 + Battery LOO co-primary upgrade 2026-05-09 evening + comprehensive cleanup 2026-05-09 night.**
+
+Implementation status (be precise about this):
+- **Implemented + tested**: `gss_loader.py`, `validate_taxonomy.py` (10 checks), `gss_pipeline.py` AUDIT A-E + B-regression, `gss_driver.py`, `select_phase1b_model.py` (5-branch self-test), `regression_baseline.py` (12/12 items self-test) — all passing.
+- **Designed + locked but NOT yet implemented**: `shapley_decomposition.py` (4-bin Shapley; spec in `tier1_tool_schemas.md` Tool 1), `battery_loo.py` (34-battery co-primary; spec in `tier1_tool_schemas.md` Tool 2).
+- **Pending paid runs**: N=10 smoke / Phase 1a N=100 / Phase 1b N=1500 / GPT-4o anchor N=100 — all blocked on OpenRouter API key.
+
+The base Phase 1 driver and audit pipeline are implemented and tested. The two co-primary Battery LOO and 4-bin Shapley robustness tools are specified but not yet implemented.
 
 **Project-level research question**: *In LLM persona synthesis, which input feature categories drive prediction quality, and how does that contribution vary across outcome dimensions?* No prior published work has done large-N, leakage-clean, multi-model feature attribution at scale; this project fills that area-level methodological gap. Park et al. 2024 is the most-cited prior work in LLM persona simulation and serves here as a **cross-paper benchmarking anchor**, not as the project's defining framework.
 
@@ -66,7 +73,7 @@ End-to-end replication of Park et al. at N=2 + N=1 via Cookiy. Pipeline + dashbo
 - ✅ GSS 2024 data downloaded (3-batch fixed-width extract)
 - ✅ `gss_loader.py` reads → 3,309 × 973 DataFrame; 22/22 key Park variables verified
 - ✅ `gss_feature_taxonomy.json` v0.3 locked + `validate_taxonomy.py` 10 checks pass (incl. 7c battery map well-formedness)
-- ✅ `gss_battery_map.json` v0.1 locked (15 batteries + 9 singletons)
+- ✅ `gss_battery_map.json` **v0.2** locked (34 batteries: 7 D / 10 B / 2 P / 15 A; 17 singletons) — expanded from v0.1 (15 attitudinal-only batteries) on 2026-05-09 evening for co-primary Battery LOO
 - ✅ AUDIT-A through AUDIT-E (5 audit smoke tests) all pass
 - ✅ AUDIT-B regression: no non-substantive options exposed (12 primary + 118 sensitivity items)
 - ✅ Multi-model extension to AUDIT-E: per-model + panel-median + cross-model agreement
@@ -84,6 +91,60 @@ End-to-end replication of Park et al. at N=2 + N=1 via Cookiy. Pipeline + dashbo
 
 ### 🔮 Phase 2: targeted Cookiy collection (planned, not started)
 Will cover BFI-44 personality + behavioral game outcomes that GSS doesn't measure. Includes 2-week recontact for proper test-retest baseline. Smaller N (~20-30, with Phase-1-empirics-seeded power calc before launch). Design in `thesis_phase2_design.md`.
+
+---
+
+## What changed 2026-05-09 night (comprehensive pre-OSF cleanup audit)
+
+Codex re-audited the full design after the Battery LOO co-primary promotion and identified 16 cleanup items. All implemented as documentation/design changes — no code re-architecture, no locked artifact regenerated.
+
+### Multiplicity strengthening
+- **Joint-34 Holm sensitivity layer added** (`gss_phase1_design.md` §8.8): nested Holm primary + joint-34 sensitivity for cross-bin claims. Within-bin claims confirmatory under nested; cross-bin claims need joint-34 support otherwise descriptive only.
+- **Practical-effect-size thresholds added** (§8.9): small <0.02 / modest 0.02-0.05 / substantive ≥0.05. Substantive interpretation requires Holm-significance AND modest+ effect size with CI excluding small boundary.
+- **Battery LOO schema v0.3 → v0.4** (`tier1_tool_schemas.md`): per-battery now reports `p_holm_within_bin` + `p_holm_joint_34` + `effect_size_label` + `substantively_meaningful` flag.
+
+### Estimand + framing precision
+- **Battery LOO estimand caveat** (§13.2): explicit statement that LOO measures "predictive dependence under fixed prompt-construction procedure, after R1 already blocks direct same-battery leakage" — NOT causal importance, NOT raw self-predictive value.
+- **R2 regression baseline caveat** (§9c.4): the "LLM MAE = regression MAE + LLM gain" decomposition explicitly relabeled as **rhetorical**, not causal partition. "LLM gain" framed as "model-specific predictive value beyond a simple supervised baseline," not "persona reasoning."
+- **Hierarchical justification §13.0 added**: explicit explanation that 4-bin LOO + Battery LOO are different LEVELS of the same attribution-question family, not two unrelated multiplicity-inflating tests. Reviewer rebuttal language drafted.
+
+### Honest impact / scope framing (§1.0)
+- Added explicit "what this paper is not" list: NOT general human simulation, NOT causal feature importance, NOT normalized Park-style fidelity, NOT robust cross-LLM-family generalization beyond N=100 panel.
+- Honest contribution: "leakage-clean preregistered attribution framework showing what kinds of survey information drive LLM persona prediction accuracy" — not "LLM personas understand humans."
+- Phase 1 alone = strong empirical/methodological paper; Phase 1+2 = higher-impact complete thesis.
+
+### OSF + readiness procedural infrastructure
+- **§9e OSF lock checklist** added: 22-item checklist with exact pre-reg locked items.
+- **§9f readiness gates** added: pre-N=10 / pre-Phase-1a / pre-Phase-1b checklists.
+- **§9g operational risk** added: documented that `gss_driver.py --n N` defaults to running sensitivity across all 4 cheap models (could blow budget); mitigation = always pass `--primary-only` for Phase 1a; future low-risk fix = explicit `--phase1a / --phase1b / --anchor / --battery-loo` modes.
+
+### Stale-phrase cleanup (Fix 6)
+Removed or replaced across docs:
+- "attitudinal-bin Battery LOO" → "Battery LOO across all 4 bins" (HANDOFF, README, PROJECT_SYNTHESIS)
+- "conditional on attitudinal dominance" — historical-context preserved in changelog; live-spec wording removed
+- "15 batteries + 9 singletons" → "34 batteries + 17 singletons" (5 places: gss_phase1_design.md §9c.3, HANDOFF.md §4, PROJECT_SYNTHESIS Chinese §4.5 + English §3.5 + §4.5, STATUS.md 3 places)
+- "panel median is the headline" — fixed in `gss_phase1_design.md` §12.4 (panel median is Phase 1a robustness, NOT N=1500 headline; Phase 1b headline is the §12.2-selected single model)
+- "$215" budget — clarified as "core Phase 1 LLM run; total with Battery LOO + Shapley = ~$280-300"
+- "Phase 1c theory-driven" — historical-context preserved in changelog; replaced in §5 budget paragraph with "co-primary Battery LOO + Shapley" allocation
+- "pipeline is 100% built and tested" → "base pipeline implemented + tested; Battery LOO + Shapley specified, not yet implemented"
+
+### Other documentation consistency
+- README.md "What this is" budget line updated; "attitudinal-bin Battery LOO" replaced.
+- HANDOFF.md §1 "100% built" qualified; §4 design-summary corrected; old paper-claim paragraph at the bottom rewritten with co-primary narrative.
+- PROJECT_SYNTHESIS.md Chinese §4.5 + English §4.5 (R1 battery boundaries decision log entries) updated to reflect v0.2 expansion that came AFTER v0.1's 15-battery decision.
+- INDEX.md `gss_battery_map.json` description was already on v0.2 (no change).
+
+### R2 regression baseline numerical-warnings note (Fix 11)
+- Documented in `regression_baseline.py` docstring: sklearn emits divide-by-zero / overflow / invalid-value warnings during the self-test even with the existing zero-variance column filter. The 12/12-item MAE output is internally consistent and reproducible, but warnings indicate numerical fragility that should be diagnosed before R2 results enter a published paper.
+- Suggested follow-up (NOT done now): replace `StandardScaler(with_mean=False)` with a more robust scaler; pipe scaling inside CV folds; consider `with_warnings_as_errors=True` for regression tests.
+
+### What was NOT changed (intentional)
+- Locked taxonomy v0.3 — not touched.
+- Locked battery map v0.2 — not touched.
+- Locked DQ-3 reference (`outputs/primary_eval_human_variance_2024.json`) — not touched.
+- §12.2 quality-primary selection rule + 5-branch self-test — not touched.
+- AUDIT A-E + B-regression scoring rules — not touched.
+- All locked code modules' core behavior — not touched (only docstrings clarified for R2).
 
 ---
 
@@ -363,7 +424,7 @@ GSBGEN390/
 ├── tier1_tool_schemas.md              ← output schemas for Shapley + Battery LOO secondary tools
 ├── gss_variables_to_download.md       ← record of GSS Data Explorer variable list
 ├── gss_feature_taxonomy.json          ← LOCKED v0.3: 12 primary_eval, 118 sensitivity_eval, 140 features × 4 bins
-├── gss_battery_map.json               ← LOCKED v0.1: 15 batteries + 9 singletons (R1 leakage exclusion + Battery LOO)
+├── gss_battery_map.json               ← LOCKED **v0.2** (2026-05-09 evening): 34 batteries (D=7 / B=10 / P=2 / A=15) + 17 singletons (R1 leakage exclusion + co-primary Battery LOO across all 4 bins)
 ├── outputs/primary_eval_human_variance_2024.json ← LOCKED DQ-3 reference (per-item human variance from GSS 2024)
 ├── gss_loader.py                      ← reads 3-batch GSS extract → pandas DataFrame; label-set namespacing
 ├── validate_taxonomy.py               ← 10-check validator (incl. 7c battery map): vars exist, bins disjoint, coverage, missingness, override-vs-truth-codes, battery map well-formedness

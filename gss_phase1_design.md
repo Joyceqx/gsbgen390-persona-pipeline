@@ -17,6 +17,28 @@
 
 Phase 1 is the **first piece** of this project-level program. It targets attitude prediction (the cheapest outcome dimension to attack first — GSS public data is free, N in the thousands). Phase 2 extends to personality (BFI-44) and behavioral economic games via targeted Cookiy collection. Future phases may extend to other outcome dimensions (long-term behavior, open-ended responses, multimodal personas, etc.).
 
+### 1.0 Honest impact / scope framing (locked 2026-05-09 evening)
+
+**What this paper is**:
+> Phase 1 is a large-N feature-attribution study for LLM persona prediction of GSS attitude outcomes. It estimates which survey-collectible feature categories and construct batteries improve same-wave attitude prediction, under leakage-clean and pre-registered aggregation.
+
+**The contribution**:
+> The contribution is **not** that LLM personas "understand humans." The contribution is a **leakage-clean, preregistered attribution framework showing what kinds of survey information drive LLM persona prediction accuracy in a large public survey setting** — including (a) two-level hierarchical attribution (broad bin + mechanistic battery), (b) battery-level structural exclusion (R1) that mirrors Park v2's BFI rule applied to GSS, (c) regression-baseline comparator (R2) on the same input pool, and (d) a quality-primary multi-model selection rule with named fallback (§12.2).
+
+**Honest impact assessment**:
+- Phase 1 alone is a strong empirical/methodological paper if executed cleanly.
+- It is **not** a full test of persona fidelity because it lacks test-retest normalization and non-attitude outcomes.
+- The higher-impact thesis comes from **Phase 1 + Phase 2 together**: attitude / personality / behavioral-game outcome-stratified feature attribution.
+
+**Language we deliberately AVOID** in Phase 1 abstract / headline / dashboard / README:
+- ❌ "normalized Park-style fidelity" (we report raw metrics; no test-retest denominator)
+- ❌ "causal feature importance" (LOO + Battery LOO estimate predictive dependence under a fixed prompt-construction procedure, not causal effects)
+- ❌ "general human simulation ability" (single-wave attitude prediction does not generalize to BFI / games / long-term behavior)
+- ❌ "robust generalization across LLM families" beyond the N=100 1a comparison (the 4-cheap-panel is all China-trained organizations; the GPT-4o anchor is the only Western reference; cross-family generalization is bounded by panel composition)
+- ❌ "LLM persona reasoning" without the §9c.4 R2-comparator caveat in scope
+
+The exhaustive forbidden/required language template lives in §11.1.
+
 ### What this study estimates (estimand)
 
 > Phase 1 estimates **single-wave GSS 2024 prediction** of held-out attitudinal items (the 12 items in `primary_eval`, plus per-item Park-comparable sensitivity over ~118 items) **from same-wave GSS feature variables**, decomposed into the contribution of four pre-registered feature categories.
@@ -111,7 +133,16 @@ The N=1,500 sample is drawn from the 3,309 GSS 2024 respondents. Sampling rule (
 | 1b GPT-4o anchor | 100 (subset of 1b) | 60 (primary only, n=2) | ~$0.50 | **~$50** |
 | **Total Phase 1** | | | | **~$215** |
 
-Roughly halves the previous $440 budget (which assumed all-4-cheap-models for the full 1b run). The savings (~$225) are reserved for Phase 1c — the theory-driven secondary analysis (§13) — and any post-hoc concurrency / robustness extensions.
+Roughly halves the previous $440 budget (which assumed all-4-cheap-models for the full 1b run). The savings (~$225) cover (a) the Phase 1c **co-primary 34-battery LOO** (~$50-60 incremental, see §13.2), (b) the Phase 1a Shapley decomposition (~$25 incremental), and (c) post-hoc concurrency / robustness extensions.
+
+**Updated total Phase 1 budget under co-primary Battery LOO** (locked 2026-05-09 evening):
+- **Core Phase 1 LLM run (smoke + 1a + 1b + GPT-4o anchor)**: ~$215
+- **Phase 1c Battery LOO (co-primary, 34 batteries × N=1500 × 1 model)**: +$50-60
+- **Phase 1c Shapley decomposition (16 conditions on 1a panel)**: +$15-25
+- **Total Phase 1 with co-primary Battery LOO**: **~$280-300** (within original $300-500 envelope)
+- All cost estimates assume **no prompt caching** and must be re-verified against OpenRouter prices at smoke-test time.
+
+Avoid quoting "~$215" without explicitly noting it is the *pre-Battery-LOO core run* total.
 
 **Cost estimate caveats**: (a) per-token rates above are May-2026 OpenRouter approximations and must be verified at smoke-test time before scaling. (b) These estimates assume **no prompt caching** (the persona prompt repeats across the 12 items × 2 samples within a (respondent, condition); caching would discount input tokens by ~50%). Implementing prompt caching is deferred but could halve costs further if needed.
 
@@ -153,16 +184,27 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 6. **GSS sampling design** is a complex multi-stage probability sample with weights (`WTSSALL`, `WTSSPS_NEXT`, etc.). Primary analysis is unweighted; a weighted-reanalysis robustness check is in §10.
 7. **Pre-registration on OSF before Phase 1a.** The pre-reg (filed *before* 1a fires) locks: taxonomy, primary + sensitivity eval sets, primary metric, exclusion rules (R1 battery exclusion + sensitivity per-item exclusion), R2 regression-baseline partition, the 4-cheap-model panel, the §12.2 quality-primary selection rule, the §10 aggregation + paired-bootstrap rules, **two co-primary analyses** — the **4-bin LOO** (broad feature-category attribution) and the **34-battery LOO across all 4 bins** (mechanistic cluster-level attribution) — the **bin-level Shapley decomposition** as 4-bin LOO robustness, and the §11.1 writeup language template. No post-hoc adjustment of the 4-bin assignments OR the battery map (`gss_battery_map.json` v0.2) after 1a fires.
 
-8. **Multiplicity / multiple-LOO control (nested Holm-Bonferroni; revised 2026-05-09 for co-primary Battery LOO).**
+8. **Multiplicity / multiple-LOO control (nested Holm-Bonferroni primary + joint-34 sensitivity; revised 2026-05-09 evening for co-primary Battery LOO).**
    - **4-bin primary family** (4 ΔMAE tests): Holm-Bonferroni at α=0.05 within family. Adjusted-significant findings reported as "primary headline #1"; unadjusted bin contributions reported descriptively.
-   - **Battery LOO co-primary** uses **nested Holm-Bonferroni** — one Holm family per bin, applied independently:
+   - **Battery LOO co-primary** uses **nested Holm-Bonferroni primary correction** — one Holm family per bin, applied independently:
      - Demographic battery family (n=7): smallest p < α/7 = 0.0071
      - Behavioral battery family (n=10): smallest p < α/10 = 0.0050
      - Psychological battery family (n=2): smallest p < α/2 = 0.025
      - Attitudinal battery family (n=15): smallest p < α/15 = 0.0033
-   - Nested (rather than joint Holm across all 34) is principled because (a) bin is a meaningful pre-registered boundary; (b) joint Holm at n=34 would force the psychological 2-battery family to clear α/34 = 0.0015, which is impractical and would silence a pre-registered analysis arm.
+   - **Joint-34 Holm sensitivity layer (added 2026-05-09 evening)**: in addition to within-bin nested Holm, every battery is also tested against a joint Holm-Bonferroni at α=0.05 across all 34 batteries (smallest p < α/34 = 0.00147). This stricter correction is reported as a sensitivity layer used to gate **cross-bin claims**.
+   - **Within-bin claims** (e.g., *"abortion is the strongest battery in the attitudinal bin"*): use **nested Holm only** — confirmatory within-bin.
+   - **Cross-bin claims** (e.g., *"abortion is the strongest battery overall, ahead of subjective_wellbeing"*): require **joint-34 Holm sensitivity support**. Without joint-34 support, cross-bin rankings are descriptive only and the paper must use language like "rank-ordered" rather than "significantly stronger than."
+   - Why nested-primary + joint-sensitivity: nested respects the pre-registered bin structure and gives each bin's mechanistic question fair statistical power; joint-34 prevents inflated cross-bin headlines. Joint-34 alone would force the psychological 2-battery family to clear α/34 = 0.00147 — practically impossible — and silence a pre-registered analysis arm.
    - **Bin-level Shapley** (16 conditions) is a *robustness re-aggregation* of the same 4-bin estimand; no separate multiplicity correction (it shares the 4-bin primary family).
    - **Theory-bin LOO is NOT a confirmatory family.** Theory framing enters the Discussion section as interpretive secondary analysis only (see §13.3). If a future amendment adds theory-bin LOO as a confirmatory family, that amendment will introduce its own Holm correction at that time.
+
+9. **Practical-effect-size thresholds (locked 2026-05-09 evening).** Because N=1500 can render very small ΔMAE values statistically significant under Holm correction, every Battery LOO and 4-bin LOO ΔMAE is reported alongside a **practical effect-size label**:
+   - **small / descriptive**: ΔMAE < 0.02
+   - **modest**: 0.02 ≤ ΔMAE < 0.05
+   - **substantive**: ΔMAE ≥ 0.05
+   - These thresholds are pre-registered. A finding is reported as substantively meaningful only if it is **both** (a) Holm-significant within its family AND (b) practical-effect ≥ "modest" with a 95% bootstrap CI that excludes the "small/descriptive" boundary. Statistical significance alone is not sufficient for headline-strength substantive interpretation.
+   - Bootstrap CIs are respondent-level paired CIs (B=1000, seed=42).
+   - Battery size must always be reported alongside ΔMAE; `delta_mae_per_item` (ΔMAE / n_items_in_battery) is reported as a size-aware **descriptive sensitivity column**, not the primary inferential metric.
 
 ## 9. Decisions locked (post-Bayati 2026-05-02; audit-fix 2026-05-05)
 
@@ -186,11 +228,13 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 
 1. **Layer 1 (direct, prevented)**: declared feature bins are disjoint from `primary_eval` (validator enforces); per-item exclusion in the sensitivity pass prevents direct leakage there too.
 2. **Layer 2 (synonymous, not present in GSS-only design)**: Park's 27-item AVP-overlap removal does not apply to us (no AVP interview in Phase 1). Within-GSS, Park v2 SI §9 (PDF p.10 / SI p.42) argues no synonymous pairs in the cross-instrument audit.
-3. **Layer 3 — R1 (battery-level structural exclusion, NEWLY ENFORCED 2026-05-08)**: when predicting any primary_eval item that belongs to a battery (per `gss_battery_map.json` v0.1, 15 batteries + 9 singletons), the entire battery is dropped from the persona prompt for that prediction. Mirrors Park v2's BFI whole-trait-block hold-out (Park v2 SI §5, PDF p.37: *"For the Big-5 we always hold-out the whole block of questions asking about a particular personality trait when predicting an outcome question within that trait"*). Implemented in `run_primary_one_respondent` and validated by `validate_taxonomy.py` check 7c.
-4. **Layer 4 — R2 (regression-baseline partition, NEWLY ADDED 2026-05-08)**: alongside the LLM panel, run a non-LLM regression baseline (`regression_baseline.py`: Ridge for Likert, multinomial Logistic for binary, 5-fold CV at the respondent level, same R1 battery exclusion applied symmetrically). The regression's per-item MAE is the "auto-correlation upper bound" any feature-to-item predictor can extract from the same input. The headline partition becomes:
-   - LLM-panel MAE on item X = (regression MAE on X) + (LLM gain over regression)
-   - The first term is pure auto-correlation; the second is the persona-reasoning contribution.
-   - This is methodologically a step *past* Park v2: Park brackets the inflation between two hold-out strategies (single-item gives 0.82, whole-module gives 0.77 — Park v2 SI §6, PDF p.39 *"average normalized accuracy of 0.77 (std = 0.12)"* under whole-module hold-out vs *"0.82 (std = 0.18)"* under single-item); we partition it by introducing a regression comparator the same input pool can produce.
+3. **Layer 3 — R1 (battery-level structural exclusion, NEWLY ENFORCED 2026-05-08; battery map expanded v0.1 → v0.2 on 2026-05-09 evening for co-primary Battery LOO)**: when predicting any primary_eval item that belongs to a battery (per `gss_battery_map.json` v0.2, **34 batteries + 17 singletons** across all 4 bins), the entire battery is dropped from the persona prompt for that prediction. Mirrors Park v2's BFI whole-trait-block hold-out (Park v2 SI §5, PDF p.37: *"For the Big-5 we always hold-out the whole block of questions asking about a particular personality trait when predicting an outcome question within that trait"*). Implemented in `run_primary_one_respondent` and validated by `validate_taxonomy.py` check 7c.
+4. **Layer 4 — R2 (regression-baseline comparator, NEWLY ADDED 2026-05-08; rhetorical caveat added 2026-05-09 evening)**: alongside the LLM panel, run a non-LLM regression baseline (`regression_baseline.py`: Ridge for Likert, multinomial Logistic for binary, 5-fold CV at the respondent level, same R1 battery exclusion applied symmetrically). The regression's per-item MAE is the "auto-correlation upper bound" any feature-to-item predictor can extract from the same input. The headline comparator approximates:
+   - LLM-panel MAE on item X ≈ (regression MAE on X) + (LLM gain over regression)
+
+   **Caveat (locked 2026-05-09 evening)**: this is a useful rhetorical decomposition, **not a literal causal partition** of LLM behavior. The regression baseline is a non-LLM predictive comparator using the same feature pool and R1 exclusions; it helps distinguish predictable survey auto-correlation from LLM-specific gains, but "LLM gain over regression" is **evidence of model-specific predictive value beyond a simple supervised baseline**, not direct proof of human-like reasoning. We report the gain as an empirical magnitude with its bootstrap CI, and do not claim it isolates any specific LLM mechanism. Avoid abstract / Discussion language like "LLM persona reasoning" without this caveat in scope.
+   - The first term is the auto-correlation upper bound a non-LLM predictor can extract; the second term is empirical model-specific predictive gain (NOT a causal partition).
+   - This is methodologically a step *past* Park v2: Park brackets the inflation between two hold-out strategies (single-item gives 0.82, whole-module gives 0.77 — Park v2 SI §6, PDF p.39 *"average normalized accuracy of 0.77 (std = 0.12)"* under whole-module hold-out vs *"0.82 (std = 0.18)"* under single-item); we add a regression comparator on the same input pool. The result is a richer descriptive comparison, not a literal causal decomposition.
 
 **R3 (whole-attitudinal-bin Park-strict reanalysis) was considered and explicitly NOT IMPLEMENTED** (decision 2026-05-08): R3 would globally remove every variable in any primary_eval battery from the attitudinal bin before any LOO ran, leaving an artificially-thin bin. Joyce's call: R1 already provides per-item structural exclusion at the right granularity (the predicted item's own battery, not all batteries), and R3 would conflate two effects (battery-level redundancy + bin-level information capacity), making the LOO ranking uninterpretable. R1 + R2 together provide the structural defense (R1) and the partition test (R2) that R3 was meant to triangulate.
 
@@ -200,11 +244,69 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 2. (✅ done) Build feature-taxonomy JSON
 3. (✅ done) Joyce: download GSS data
 4. (✅ done) Build GSS loader
-5. Build `gss_pipeline.py` (persona-prompt builder, LLM dispatcher, scorer for GSS rows)
+5. (✅ done) Build `gss_pipeline.py` (persona-prompt builder, LLM dispatcher, scorer for GSS rows)
 6. End-to-end smoke test on N=10
 7. Draft OSF pre-registration
 8. Run Phase 1a (N=100) sanity check
 9. Present 1a results to Bayati before launching 1b
+
+### 9e. OSF pre-registration lock checklist (locked 2026-05-09 evening)
+
+The following items must be in the OSF pre-registration document, locked before Phase 1a fires. This list IS the OSF table of contents.
+
+- [ ] **Data**: GSS 2024 cross-section, 3-batch fixed-width extract path documented
+- [ ] **Sampling**: random sample without replacement, **seed = 42**, N=1500 from 3,309 (gss_pipeline.py:sample_respondents)
+- [ ] **Eval items**: 12 `primary_eval` items locked in `gss_feature_taxonomy.json` v0.3
+- [ ] **Sensitivity items**: 118 `sensitivity_eval` items locked in `gss_feature_taxonomy.json` v0.3
+- [ ] **Feature taxonomy**: v0.3 (140 features, 24/25/8/83 across 4 bins; locked 2026-05-05)
+- [ ] **Battery map**: v0.2 (34 batteries + 17 singletons; locked 2026-05-09 evening)
+- [ ] **Leakage hygiene Layer 3 — R1 battery exclusion**: per-item battery drop using `gss_battery_map.json` v0.2
+- [ ] **Leakage hygiene Layer 4 — R2 regression baseline comparator** (with rhetorical-decomposition caveat per §9c.4)
+- [ ] **Primary metrics**: Likert MAE (respondent-macro), % within ±1, categorical exact-match
+- [ ] **Aggregation rules**: §10 (respondent-macro primary, item-macro secondary, paired-bootstrap LOO ΔMAE)
+- [ ] **Bootstrap**: B=1000, respondent-level paired, seed=42
+- [ ] **4-bin LOO family Holm**: α=0.05 within family (4 tests)
+- [ ] **Battery LOO nested Holm primary**: per-bin (D=7 / B=10 / P=2 / A=15 tests)
+- [ ] **Battery LOO joint-34 Holm sensitivity gate**: required for cross-bin claims
+- [ ] **Practical-effect-size thresholds**: small <0.02, modest 0.02-0.05, substantive ≥0.05; significance + magnitude both required for headline claims
+- [ ] **Phase 1a model panel**: Qwen-2.5-72B + DeepSeek-V3.1 + MiniMax-M1 + Kimi K2 + GPT-4o anchor (locked in `llm_router.py::MODEL_PANEL_PRIMARY`)
+- [ ] **§12.2 model-selection rule**: quality-primary, DQ-1 + DQ-3 + cost tie-break + Qwen fallback (locked, executable in `select_phase1b_model.py`)
+- [ ] **DQ-3 reference**: `outputs/primary_eval_human_variance_2024.json` (locked GSS 2024 per-item human variance)
+- [ ] **GPT-4o anchor scope**: N=100 subset, primary conditions only, n_samples=2 — used for Park-comparable per-item raw accuracy, NOT the N=1500 headline
+- [ ] **Theory interpretation**: Discussion-section only, no horse race, no theory-bin LOO, no Stage 3 refinement, no hard supports/refutes thresholds (per `theory_interpretation_guide.md`)
+- [ ] **Implementation status disclosure**: Shapley + Battery LOO are *specified but not yet implemented* (`shapley_decomposition.py` + `battery_loo.py` pending); 4-bin LOO + R1 + R2 + §12.2 selector + audit primitives are *implemented and tested* (per STATUS.md)
+- [ ] **Writeup language template (§11.1)**: forbidden mentalist claims; required scope qualifiers
+- [ ] **Decisions log appendix**: PROJECT_SYNTHESIS.md §4 (locked, when, against what evidence)
+
+### 9f. Readiness gates before paid runs (locked 2026-05-09 evening)
+
+**Before N=10 paid smoke test**:
+- [ ] OpenRouter API key set in `OpenRouter_api.txt` (gitignored)
+- [ ] Smoke command **chosen intentionally** — verify no flag accidentally triggers full sensitivity pass across all 4 cheap models (operational risk, see §9g)
+- [ ] Expected dollar cost printed and understood (~$2-3 for `--n 10`)
+- [ ] All non-paid tests green (validate_taxonomy + audit A-E + selector + R2 baseline)
+
+**Before Phase 1a (N=100)**:
+- [ ] OSF pre-registration draft locked (per §9e)
+- [ ] All documentation drift resolved (no stale references to old battery counts, panel-median-as-headline, conditional Battery LOO, theory-bin confirmatory)
+- [ ] Shapley / Battery LOO implementation status disclosed accurately in OSF
+- [ ] Model panel + §12.2 selector locked in OSF
+- [ ] Cost estimate verified against current OpenRouter prices
+
+**Before Phase 1b (N=1500)**:
+- [ ] Phase 1a complete; results reviewed
+- [ ] §12.2 selector run on Phase 1a output → selected model recorded in commit + OSF amendment if any
+- [ ] N=10 + N=100 parse-failure rates and DQ-3 mode-collapse checks within acceptable range (per §12.2 DQ-1/DQ-3)
+- [ ] Phase 1b CLI command chosen intentionally; no accidental sensitivity-pass-on-all-cheap-models
+
+### 9g. Operational risk — accidental sensitivity-pass on all 4 cheap models
+
+**Current `gss_driver.py` default**: when run as `gss_driver.py --n 100`, the driver runs primary + sensitivity for ALL models in `MODEL_PANEL_PRIMARY` unless `--primary-only` is passed. For Phase 1a (N=100, primary-only-on-cheap-panel design), this default could **accidentally trigger sensitivity across 4 cheap models** = ~4× the planned cost.
+
+**Mitigations**:
+- For Phase 1a: always run with `--primary-only` flag explicitly; confirm in stdout banner that `sensitivity: False` before paid execution.
+- For Phase 1b: sensitivity pass is intended ONLY for the §12.2-selected single model + GPT-4o anchor — NOT all 4 cheap models. Use `--models qwen/qwen-2.5-72b-instruct --primary-only` (or the selector-chosen slug) on the explicit slug, NOT the default panel.
+- Future low-risk improvement (Phase 1c): add explicit CLI mode flags `--phase1a` / `--phase1b` / `--anchor` / `--battery-loo` that hard-code the right combination and refuse if mismatched. Tracked as a non-paid prep item.
 
 ## 10. Aggregation & weighting (pre-registered)
 
@@ -296,7 +398,7 @@ The aggregation in §10 is computed:
 
 ### What the writeup must say (extension to §11 constraints)
 
-- "Our headline is the panel median of 4 models (Qwen, DeepSeek, MiniMax, Kimi). Per-model results are in the supplementary."
+- "The N=1500 headline is the §12.2-selected single model. Phase 1a (N=100) reports per-model and panel-synthesized robustness for cross-model coherence; the panel median is a Phase 1a robustness summary, NOT the N=1500 headline because Phase 1b runs only one selected model."
 - "Direct comparability to Park v2 Table 3 is via the N=100 GPT-4o anchor subset, not via the cheap-model panel. The cheap-model panel addresses generalization across LLM families; the anchor addresses model-comparability with the established benchmark."
 - "Cross-model agreement at temperature 0.7 (4 cheap models on the same item) is reported as a stability QA metric in lieu of within-model self-consistency. The two are different concepts."
 
@@ -358,6 +460,36 @@ This is honest, internally consistent with the paper's primary metric, and avoid
 
 Bin-level Shapley is robustness on the broad finding. Theory interpretation enters Discussion only.
 
+### 13.0 Hierarchical justification — why two co-primary analyses are NOT a multiplicity sin
+
+A reviewer will reasonably ask: *"You tested 4 broad bins and then 34 batteries. Is this just many chances to find significance?"*
+
+The honest answer: **No, the design is hierarchical, and multiplicity is controlled within each pre-registered level.**
+
+```
+LEVEL 1 — 4-bin LOO (broad)
+    Question: Which broad feature category contributes most to LLM
+              prediction of held-out GSS attitude items?
+    Tests:    4 ΔMAE tests, one per bin
+    Holm:     within-family α=0.05 (smallest p < 0.0125)
+
+LEVEL 2 — Battery LOO (mechanistic), nested inside Level 1's pre-registered bins
+    Question: Within each pre-registered bin, which construct batteries
+              drive the predictive signal?
+    Tests:    34 ΔMAE tests, partitioned per bin (D=7 / B=10 / P=2 / A=15)
+    Holm:     nested-Holm primary correction per bin
+              + joint-34 Holm sensitivity gate for cross-bin claims (§8.8)
+```
+
+**The two co-primary analyses answer different levels of the same attribution-question family**:
+- The 4-bin LOO identifies which broad feature category matters.
+- The Battery LOO identifies which pre-registered construct-level clusters account for signal within each category.
+
+Battery LOO is **not** a fishing expedition across 34 unrelated tests. **Batteries are nested inside pre-registered bins.** Co-primary status is justified because the paper has two linked questions — broad category attribution + within-category mechanism — and a single broad answer ("attitudinal dominates") is not an answer to "what mechanistically drives the attitudinal signal."
+
+**Rebuttal language for the paper / reviewer response**:
+> "The 4-bin LOO and Battery LOO answer different levels of the same attribution question. The former identifies which broad feature category matters; the latter identifies which pre-registered construct batteries account for signal within each category. Battery LOO is therefore a mechanistic co-primary analysis nested inside pre-registered bin boundaries, not a post-hoc exploratory scan. Multiplicity is controlled within each bin via nested Holm-Bonferroni; cross-bin claims additionally require joint-34 Holm sensitivity support (§8.8)."
+
 ### 13.1 Bin-level Shapley decomposition (secondary — robustness on 4-bin LOO)
 
 **Purpose**: check whether the 4-bin LOO ranking is robust to feature-bin interactions that LOO (a marginal-effects estimator) cannot capture.
@@ -383,19 +515,26 @@ Bin-level Shapley is robustness on the broad finding. Theory interpretation ente
 - SPLIT criterion: when sub-construct, target group, time point, or response scale differs sufficiently to conflate distinct signals (mirrors civil_liberties' 3-way split by target group).
 - Symmetry across all 4 bins prevents asymmetric leakage hygiene where attitudinal is fine-grained but other bins are coarse.
 
-**Algorithm**: for each of the 34 batteries B, drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1's per-item battery exclusion which already applies — these are independent operations). Re-run prediction; compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level (B=1000, seed=42). Apply **nested Holm-Bonferroni** within each bin's battery family (see §8.8).
+**Algorithm**: for each of the 34 batteries B, drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1's per-item battery exclusion which already applies — these are independent operations). Re-run prediction; compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level (B=1000, seed=42). Apply **nested Holm-Bonferroni primary** within each bin's battery family + **joint-34 Holm sensitivity** for cross-bin claims (see §8.8).
 
-**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. ~34 batteries × N=1500 × 12 items × 1 model ≈ ~$50-60 incremental (up from ~$25-30 of the previous attitudinal-only conditional design).
+**Estimand clarification (locked 2026-05-09 evening)**: because R1 already excludes the predicted item's own battery for each primary_eval item, Battery LOO estimates **cross-construct predictive contribution after direct same-construct leakage is already blocked** — i.e., how much removing battery B *additionally* harms prediction of held-out primary_eval items relative to the FULL condition (which already has the predicted item's own battery R1-excluded). It does **not** estimate the raw self-predictive value of a battery. Concretely:
+- Battery LOO does NOT estimate causal importance of a construct.
+- Battery LOO estimates **predictive dependence** of the held-out primary_eval items on a battery, **under a fixed prompt-construction procedure** (R1 + the locked persona prompt template).
+- Battery LOO is sensitive to battery size, item coverage (GSS ballot rotation), and prompt-design choices — these are reported alongside ΔMAE.
+
+**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. ~34 batteries × N=1500 × 12 items × 1 model ≈ ~$50-60 incremental.
 
 **Reporting role**: **co-primary mechanistic finding**, equal prominence to 4-bin LOO in the abstract. The paper reports both:
 - Headline #1 (broad): "[Bin] contributes the most to attitude prediction" + Shapley robustness
 - Headline #2 (mechanistic): "Within each bin, the following batteries are Holm-significant: ..." + per-bin family-significant ΔMAE table
 
-**Anti-overclaim**:
-- Battery size is unbalanced (2-15 items per battery); ΔMAE magnitudes are reported alongside battery size to enable size-aware interpretation. Per-variable mean importance (ΔMAE / n_items_in_battery) is reported as a sensitivity column.
-- Holm correction is per-bin (nested), so cross-bin comparisons of "which battery overall ranks highest" are descriptive only, not confirmatory.
+**Anti-overclaim** (locked 2026-05-09 evening):
+- **Within-bin claims** use nested Holm only and are confirmatory.
+- **Cross-bin claims** ("battery X is the strongest battery overall") require joint-34 Holm sensitivity support (§8.8). Without joint-34 support, cross-bin language must be descriptive (e.g., "rank-ordered" rather than "significantly stronger").
+- **Practical-effect threshold gate** (§8.9): a battery is reported as substantively meaningful only if Holm-significant AND practical-effect ≥ "modest" (ΔMAE ≥ 0.02) with bootstrap CI excluding the small-effect boundary. Statistical significance alone is insufficient.
+- Battery size is unbalanced (2-15 items per battery); ΔMAE magnitudes are reported alongside `n_items_in_battery` and `delta_mae_per_item` for size-aware interpretation. `delta_mae_per_item` is a descriptive sensitivity column, NOT the primary inferential metric.
 
-**Output schema** in `tier1_tool_schemas.md` Tool 2.
+**Output schema** in `tier1_tool_schemas.md` Tool 2 — includes `p_holm_within_bin`, `p_holm_joint_34`, `holm_significant_within_bin`, `holm_significant_joint_34`, `effect_size_label`, and `n_items_in_battery` / `delta_mae_per_item`.
 
 ### 13.3 Theory interpretation (Discussion section only)
 

@@ -191,6 +191,30 @@ def regression_baseline_per_item(
             "regression_baseline.py needs scikit-learn. Install with: pip install scikit-learn"
         ) from e
 
+    # Numerical-stability hardening (added 2026-05-09 night per Codex Fix 11).
+    # Earlier self-test runs emitted divide-by-zero / overflow / invalid-value
+    # RuntimeWarnings from sklearn's matmul calls when imputed feature columns
+    # produced very small std after StandardScaler(with_mean=False). The
+    # 12/12-item self-test outputs were unaffected (numerically equivalent to
+    # the warning-suppressed run), but the warnings indicated numerical
+    # fragility that a replication auditor would care about. We now:
+    #   (a) tighten the zero-variance filter from > 1e-9 to > 1e-6 (catches
+    #       columns where imputation left near-constant values);
+    #   (b) clip post-scaling outliers to ±50 (defends against overflow if a
+    #       rare-value column gets a huge scaled value);
+    #   (c) suppress the specific RuntimeWarnings from sklearn's matmul as a
+    #       last-resort guard, with an explicit note that the test's 12/12
+    #       MAE output is reproducibility-stable.
+    # If R2 results enter a published paper, replace this scaffolding with a
+    # Pipeline-based fit-inside-CV approach using RobustScaler — see TODO at
+    # bottom of file.
+    import warnings
+    warnings.filterwarnings(
+        "ignore",
+        message=r"(divide by zero|overflow|invalid value) encountered in matmul",
+        category=RuntimeWarning,
+    )
+
     battery_map = load_battery_map() if use_battery_exclusion else None
     feature_pool = sorted(taxonomy["_all_features_set"])
     out: dict[str, dict[str, Any]] = {}
@@ -216,10 +240,10 @@ def regression_baseline_per_item(
             out[vid] = {"mae": None, "reason": "no_features", "n_train": len(y)}
             continue
 
-        # Drop zero-variance columns (e.g., one-hot levels with no observations
-        # in the train sample). Avoids divide-by-zero in StandardScaler.
+        # Drop near-constant columns (tighter than v0.1: 1e-9 → 1e-6 to catch
+        # imputation-flat columns; 2026-05-09 night Codex Fix 11).
         col_std = X.std(axis=0)
-        nonconst = col_std > 1e-9
+        nonconst = col_std > 1e-6
         X = X[:, nonconst]
         col_names = [c for c, k in zip(col_names, nonconst) if k]
         if X.shape[1] == 0:
@@ -228,6 +252,13 @@ def regression_baseline_per_item(
 
         scaler = StandardScaler(with_mean=False)
         X = scaler.fit_transform(X)
+        # Clip post-scaling outliers to defend against matmul overflow on
+        # rare-value columns (2026-05-09 night).
+        X = np.clip(X, -50.0, 50.0)
+        # Replace any remaining non-finite values that slipped through the
+        # near-constant filter (e.g., divide-by-zero produced inf during
+        # StandardScaler fit_transform on edge cases).
+        X = np.nan_to_num(X, nan=0.0, posinf=50.0, neginf=-50.0)
 
         is_likert = fmt.startswith("likert")
         is_binary = fmt == "binary"
@@ -252,9 +283,10 @@ def regression_baseline_per_item(
                 # Multinomial logistic
                 if len(set(ytr.tolist())) < 2:
                     continue
+                # NOTE: removed `multi_class="auto"` — deprecated in sklearn 1.5
+                # (default is now "multinomial" which is what we want anyway).
                 m = LogisticRegression(
-                    max_iter=2000, multi_class="auto", random_state=seed,
-                    solver="lbfgs",
+                    max_iter=2000, random_state=seed, solver="lbfgs",
                 )
                 m.fit(Xtr, ytr.astype(int))
                 yhat = m.predict(Xte).astype(float)
