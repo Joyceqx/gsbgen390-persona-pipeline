@@ -77,7 +77,7 @@ Pilot is **done**. These files are functional but archive-eligible — they docu
 | `leakage_audit.json` | Pilot manual leakage audit |
 | `cookiy_brief*.md`, `cookiy_guide*.md` | Cookiy moderator briefs |
 | `interview_quality_audit.md`, `survey_quality_audit.md` | Pilot quality audits (gitignored if PII present) |
-| `MEETING_HANDOUT.md`, `WRITEUP.md`, `progress_report.md` | Pilot writeups |
+| `archive/MEETING_HANDOUT.md`, `WRITEUP.md`, `progress_report.md` | Pilot writeups |
 | `EXPLAIN_ZH.md`, `CODE_WALKTHROUGH_ZH.md`, `COLAB_RUN_GUIDE.md` | Pilot user guides |
 | `outputs/persona_answers_full.json` (gitignored), `metrics_with_leakage_audit.csv`, `chart_robustness.png` | Pilot outputs |
 

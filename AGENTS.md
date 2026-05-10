@@ -66,5 +66,5 @@ These supersede any default helpfulness instinct toward speed over rigor.
 - **Design doc**: `replication_scoping.md`, `gss_phase1_design.md`, `thesis_phase2_design.md`, `FUTURE_DESIGN.md`
 - **Pipeline canonical**: `persona_pipeline.ipynb` (notebook); `run_notebook_local.py` (local runner); `rescore_with_leakage_audit.py`, `make_robustness_chart.py`, `build_site_data.py` (post-pipeline)
 - **Status**: `STATUS.md` (single source of truth for work-tree state)
-- **Meeting prep**: `MEETING_HANDOUT.md`, `WRITEUP.md`
+- **Meeting prep**: `archive/MEETING_HANDOUT.md`, `WRITEUP.md`
 - **Park reference**: `2411.10109v2.pdf` (gitignored, kept local; v2 retitled "LLM Agents Grounded in Self-Reports...")

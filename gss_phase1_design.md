@@ -30,11 +30,21 @@ Phase 1 is the **first piece** of this project-level program. It targets attitud
 - It is **not** a full test of persona fidelity because it lacks test-retest normalization and non-attitude outcomes.
 - The higher-impact thesis comes from **Phase 1 + Phase 2 together**: attitude / personality / behavioral-game outcome-stratified feature attribution.
 
+**Anticipated reviewer objection — auto-correlation tautology (locked 2026-05-09 night per Audit-3 M-new-1 review)**:
+> *"How is your finding 'attitudinal features dominate within-attitude prediction' meaningfully different from 'related items correlate'?"*
+
+This is the strongest single-paper attack on the Phase 1 framing. Our defenses:
+1. **R1 battery exclusion structurally blocks within-construct same-item leakage** — when predicting `ABANY`, the entire abortion battery (`ABDEFECT`, `ABNOMORE`, `ABRAPE`, etc.) is dropped. The bin-level "attitudinal" contribution is therefore **cross-construct attitudinal information**, not auto-correlation within the construct.
+2. **R2 regression baseline quantifies the auto-correlation upper bound** any non-LLM predictor can extract from the same R1-excluded feature pool. "LLM gain over regression" measures incremental model-specific predictive value past supervised auto-correlation. (Caveat per §9c.4: this is a *rhetorical* decomposition with an asymmetric-N caveat per N3, not a literal causal partition.)
+3. **The cross-outcome contrast in Phase 1 + Phase 2 is the structural answer**: if attitudinal features dominate attitudinal prediction but NOT BFI / behavioral-game prediction (Phase 2), the Phase 1 finding is a real outcome-stratified attribution and the tautology framing fails. **Phase 1 alone cannot fully defang this objection — Phase 2's outcome contrast is the load-bearing rebuttal.** Authors who choose to publish Phase 1 alone must reframe the contribution as a **methods paper** (the leakage hygiene framework + §12.2 selector + dual-headline split) rather than a feature-importance headline. Authors who publish Phase 1+2 together can foreground the attribution claim with the cross-outcome contrast as the defense.
+
+The §1.0 / §11 / §11.1 framing is currently consistent with EITHER publication path. Joyce + Bayati must commit to a path before Phase 2 recruitment locks (see §17 OSF open item #6 for the strategic decision).
+
 **Language we deliberately AVOID** in Phase 1 abstract / headline / dashboard / README:
 - ❌ "normalized Park-style fidelity" (we report raw metrics; no test-retest denominator)
 - ❌ "causal feature importance" (LOO + Battery LOO estimate predictive dependence under a fixed prompt-construction procedure, not causal effects)
 - ❌ "general human simulation ability" (single-wave attitude prediction does not generalize to BFI / games / long-term behavior)
-- ❌ "robust generalization across LLM families" beyond the N=100 1a comparison (the 4-cheap-panel is all China-trained organizations; the GPT-4o anchor is the only Western reference; cross-family generalization is bounded by panel composition)
+- ❌ "robust generalization across LLM families" beyond the N=200 Phase 1a comparison (after the 2026-05-09 MiniMax→Llama swap the cheap panel is 3 China-trained + 1 Western-trained; the GPT-4o anchor is a second Western reference on N=100 subset; cross-family generalization is bounded by panel composition)
 - ❌ "LLM persona reasoning" without the §9c.4 R2-comparator caveat in scope
 
 The exhaustive forbidden/required language template lives in §11.1.
@@ -91,18 +101,18 @@ For each respondent in the locked sample:
    - `loo_drop_demographic` / `loo_drop_behavioral` / `loo_drop_psychological` / `loo_drop_attitudinal` — drop one bin
 
 4. **Run the LLM panel** on each (respondent, condition, item):
-   - **Phase 1a (N=100)**: 4 cheap OpenRouter models from the locked panel (Qwen-2.5-72B / DeepSeek-V3.1 / MiniMax-M1 / Kimi K2), n_samples=1 each, temperature=0.7 → 4 codes per (respondent, condition, item).
-   - **Phase 1b (N=1500)**: ONE model selected via the §12.2 quality-primary rule (lowest 1a Likert MAE among DQ-passers, cost as tie-break), n_samples=1, temperature=0.7.
-   - **Anchor (N=100 subset of 1b)**: GPT-4o, primary conditions only, n_samples=2, temperature=0.7. The anchor preserves Park-comparable per-item accuracy AND restores within-model self-consistency on the directly-comparable subset.
+   - **Phase 1a (N=200)**: 4 cheap OpenRouter models from the locked panel (Qwen-2.5-72B / DeepSeek-V3.1 / Llama-3.3-70B-Instruct / Kimi K2), n_samples=1 each, temperature=0.7 → 4 codes per (respondent, condition, item). Panel composition revised 2026-05-09 night per Audit-3 cross-family balance review (MiniMax-M1 → Llama-3.3-70B-Instruct, Meta) to introduce one Western-trained model into the headline panel. Phase 1a N also expanded from 100 → 200 to support the §12.2 selector's 100/100 selection/validation split (see §12.2).
+   - **Phase 1b (N=3309)**: ONE model selected via the §12.2 quality-primary rule (lowest 1a Likert MAE among DQ-passers, cost as tie-break), n_samples=1, temperature=0.7.
+   - **Anchor (N=100 subset = the §12.2 selection split)**: GPT-4o, **primary + sensitivity**, n_samples=2, temperature=0.7. The anchor preserves Park-comparable per-item accuracy AND restores within-model self-consistency on the directly-comparable subset. Single anchor invocation serves both Phase 1a and Phase 1b reporting purposes (locked 2026-05-10 Joyce decision Option A).
 
-5. **Sensitivity pass (Path A, Park-comparable)** — only on the selected 1b model + anchor: for each of the ~118 sensitivity-eval items X, build a persona prompt from the full feature set MINUS X (per-item exclusion to prevent direct leakage), predict X, score.
+5. **Sensitivity pass (Path A, Park-comparable; locked 2026-05-10 Joyce decision Option A)** — **only on the GPT-4o anchor (N=100)**: for each of the ~118 sensitivity-eval items X, build a persona prompt from the full feature set MINUS X (per-item exclusion to prevent direct leakage — mirrors Park v2 SI §6 single-item hold-out yielding 0.82), predict X, score. **Cheap panel models (Qwen / DeepSeek / Llama-3.3 / Kimi) do NOT run the sensitivity pass** — sensitivity_eval is purely the Park-comparable anchor table input, not used by the §12.2 selector or the headline LOO/Battery LOO analyses. (Earlier drafts ran sensitivity on cheap panel + anchor; reverted to OSF §3.2 literal wording 2026-05-10 per Audit-fresh-2 P1 sensitivity-scope review.)
 
 6. **Score each (respondent, condition, model, item, sample)** via the rules locked in AUDIT-C (`gss_pipeline.py`):
    - Likert items (likert3-7): absolute error vs. truth code
    - Binary / categorical items: exact match
    - PARTYID contingent: Likert on 0-6, categorical when either side outputs 7
 
-7. **Aggregate** per §10 (respondent-macro primary; bootstrap CIs at respondent level B=1000; LOO ΔMAE via paired bootstrap). Multi-model panel synthesis per §12 (median for Likert, mode for categorical, with `_panel_aggregate_code`).
+7. **Aggregate** per §10 (respondent-macro primary; bootstrap CIs at respondent level B=10000 with BCa via scipy + percentile fallback — locked 2026-05-09 night per Codex N5/N6; LOO ΔMAE via paired bootstrap). Multi-model panel synthesis per §12 (median for Likert, mode for categorical, with `_panel_aggregate_code`).
 
 **Primary metrics — raw, NOT normalized**:
 - **Likert MAE** (mean absolute error on Likert items)
@@ -117,32 +127,46 @@ For each respondent in the locked sample:
 
 ## 5. Sample size, budget, timeline
 
-The N=1,500 sample is drawn from the 3,309 GSS 2024 respondents. Sampling rule (pre-registered): random sample without replacement, **fixed seed = 42**, no oversampling on demographics. The same seed governs the bootstrap CI (B=1000, seed=42) and the paired-bootstrap LOO ΔMAE. Optional weighted reanalysis using GSS sampling weights as a robustness check (see §10).
+**The full GSS 2024 cross-section is used (N=3,309 respondents)** — locked 2026-05-09 night per Audit-3 + Joyce decision. The previous N=1,500 random-sample design (seed=42, without replacement) was a budget-driven choice; expanding to the full N=3,309 dataset removes the "sampled to a budget" framing and costs ~$380 more under the co-primary Battery LOO design (see budget table below). Phase 1a uses **N=200** (also expanded from N=100) to support the §12.2 100/100 selection/validation split. The same seed=42 governs the bootstrap CI **(B=10000, seed=42, BCa via scipy with percentile fallback — locked 2026-05-09 night per Codex N5/N6 audit)** and the paired-bootstrap LOO ΔMAE. Optional weighted reanalysis using GSS sampling weights as a robustness check (see §10).
 
 **Seed reproducibility (Codex I-10)**: every output artifact (ndjson, summary JSON, plots) MUST encode the seed in its filename suffix (e.g., `phase1a_panel_seed42.ndjson`). The driver emits a `WARNING` to stderr when the runtime seed is anything other than 42, and refuses to overwrite a seed-42 artifact with a non-42 run unless `--force-non-canonical-seed` is passed. This guards against silent reproducibility drift if a future contributor changes the seed.
 
-**Two-stage model strategy** (locked 2026-05-06; see §12 for the multi-model-then-single rationale):
-- **Phase 1a (N=100)**: run all 4 cheap OpenRouter models in parallel + GPT-4o anchor. Use this as a model-selection step under a pre-registered criterion.
-- **Phase 1b (N=1500)**: run the single cheap model selected by the Phase-1a criterion + GPT-4o anchor on N=100 subset. The other 3 cheap models are NOT carried forward to 1b.
+**Two-stage model strategy** (locked 2026-05-06; expanded 2026-05-09 night per Audit-3 + Joyce decision; see §12 for the multi-model-then-single rationale):
+- **Phase 1a (N=200)**: run all 4 cheap OpenRouter models in parallel + GPT-4o anchor on N=100 subset. The 200 respondents are split 100/100 (selection / held-out validation) per §12.2; selector scores ONLY on the first 100; the held-out 100 yields a validation MAE reported alongside the Phase 1b headline.
+- **Phase 1b (N=3,309)**: run the single cheap model selected by the §12.2 quality-primary rule + GPT-4o anchor on N=100 subset. The other 3 cheap models are NOT carried forward to 1b.
 
 | Sub-phase | N | LLM calls per respondent | Cost / respondent | Total budget |
 |---|---|---|---|---|
-| Smoke | 10 | ~712 (primary + sensitivity, 4 cheap, n=1) | ~$0.24 | **~$2-3** |
-| 1a — sanity + model selection | 100 | ~712 × 4 cheap models + 60 × GPT-4o = ~3000 | ~$0.65 | **~$65** |
-| 1b — primary | 1,500 | ~712 (1 selected cheap model only, n=1) | ~$0.06 | **~$95** |
-| 1b GPT-4o anchor | 100 (subset of 1b) | 60 (primary only, n=2) | ~$0.50 | **~$50** |
-| **Total Phase 1** | | | | **~$215** |
+| Smoke | 10 | ~240 (60 primary prompts × 4 cheap, n=1) | ~$0.085 | **~$1** |
+| 1a — cheap panel (N=200, 100/100 split) | 200 | ~240 (4 cheap × 60 primary) | ~$0.085 | **~$17** |
+| 1b — primary (single §12.2-selected model) | 3,309 | ~60 (1 cheap × 60 primary, n=1) | ~$0.021 | **~$71** |
+| 1a + 1b GPT-4o anchor (one run, serves both) | 100 | ~356 (178 prompts × n=2) | ~$1.48 | **~$148** |
+| **Total Phase 1 core (pre-Battery LOO)** | | | | **~$237** |
 
-Roughly halves the previous $440 budget (which assumed all-4-cheap-models for the full 1b run). The savings (~$225) cover (a) the Phase 1c **co-primary 34-battery LOO** (~$50-60 incremental, see §13.2), (b) the Phase 1a Shapley decomposition (~$25 incremental), and (c) post-hoc concurrency / robustness extensions.
+**Per-prompt math (locked 2026-05-10 per Joyce decision Option A; supersedes the Codex N8 numbers under the new sensitivity scope)**:
 
-**Updated total Phase 1 budget under co-primary Battery LOO** (locked 2026-05-09 evening):
-- **Core Phase 1 LLM run (smoke + 1a + 1b + GPT-4o anchor)**: ~$215
-- **Phase 1c Battery LOO (co-primary, 34 batteries × N=1500 × 1 model)**: +$50-60
-- **Phase 1c Shapley decomposition (16 conditions on 1a panel)**: +$15-25
-- **Total Phase 1 with co-primary Battery LOO**: **~$280-300** (within original $300-500 envelope)
+   - **Cheap panel** (Qwen / DeepSeek / Llama-3.3 / Kimi): **60 prompts/respondent** = 12 primary_eval items × 5 conditions (Full + 4 single-bin LOO). **Cheap panel does NOT run sensitivity** — sensitivity_eval is anchor-only per OSF §3.2 (Park-comparable per-item raw-accuracy table on GPT-4o).
+   - **GPT-4o anchor** (N=100 selection-split subset): **178 prompts × n_samples=2 = 356 calls/respondent** = 60 primary + 118 sensitivity (per-item exclusion). One anchor run serves both Phase 1a and Phase 1b reporting.
+
+Cost rates: cheap models ~$0.000356/call (OpenRouter mid-2026 snapshot); GPT-4o ~$0.00417/call (verified against original $50 anchor quote at 12,000 calls, recomputed for 35,600 calls = $148).
+
+**Updated total Phase 1 budget** (locked 2026-05-10 per Joyce decision Option A; supersedes the 2026-05-09 ~$875 estimate which had cheap panel running sensitivity):
+
+- **Core Phase 1 LLM run** (smoke + 1a cheap + 1b cheap + GPT-4o anchor): ~$237
+- **Phase 1c Battery LOO** (co-primary): 34 batteries × 12 primary_eval items × **3,309 respondents** × 1 sample = **~1,350,000 LLM calls** at the §12.2-selected cheap model (~$0.000356/call) ≈ **~$481**.
+- **Phase 1c Shapley decomposition** (16 conditions on Phase 1a's N=200 panel; primary only — Shapley shares 4-bin LOO conditions): +~$38 incremental (11 multi-bin LOO × 12 items × 200 respondents × 4 cheap models = ~105,600 calls × ~$0.000356).
+- **Total Phase 1**: **~$237 + $481 + $38 ≈ $756**.
 - All cost estimates assume **no prompt caching** and must be re-verified against OpenRouter prices at smoke-test time.
 
-Avoid quoting "~$215" without explicitly noting it is the *pre-Battery-LOO core run* total.
+**Budget evolution log** (so the OSF history reads cleanly):
+- Earlier draft (~$280-300): incorrect Battery LOO enumeration, fixed by Codex N9 audit.
+- Codex-N9-fixed (~$450): correct math, but assumed N=1,500 + N=100 Phase 1a + all-China panel.
+- Audit-3 + Joyce-decisions-2026-05-09 (~$875): full sample (N=3,309), 100/100 Phase 1a split (N=200), Llama swap, **cheap panel running sensitivity**.
+- **Current (~$756; locked 2026-05-10 per Joyce decision Option A)**: cheap panel reverts to primary-only per OSF §3.2 literal; sensitivity_eval anchor-only. Drop of ~$120 from the $875 figure (saves cheap-panel sensitivity calls; bumps anchor cost from $50 → $148 since anchor now runs sensitivity). Net ~$120 savings vs Audit-3-locked plan.
+
+If budget is tight, reduction options: (i) Battery LOO at N=1,500 subsample → saves ~$263, (ii) Battery LOO restricted to attitudinal-bin batteries only (15 of 34) → saves ~$209, or (iii) defer Battery LOO to Phase 1d after Phase 1b headline.
+
+Avoid quoting "~$237" without explicitly noting it is the *pre-Battery-LOO core run* total at N=3,309 under Option A. The full-pipeline figure including co-primary Battery LOO is ~$756.
 
 **Cost estimate caveats**: (a) per-token rates above are May-2026 OpenRouter approximations and must be verified at smoke-test time before scaling. (b) These estimates assume **no prompt caching** (the persona prompt repeats across the 12 items × 2 samples within a (respondent, condition); caching would discount input tokens by ~50%). Implementing prompt caching is deferred but could halve costs further if needed.
 
@@ -151,7 +175,7 @@ Wall-clock: smoke in 1-2 hours; 1a in ~1 day at sequential rates (~10 min / resp
 ## 6. What Phase 1 produces (and what it does not)
 
 **Produces** (publishable on its own, Phase 1-only):
-- **Confidence-intervaled feature-category contribution ranking** on GSS-attitudinal-item prediction (the 4-bin LOO ΔMAE per category, with bootstrap CIs at N=1,500)
+- **Confidence-intervaled feature-category contribution ranking** on GSS-attitudinal-item prediction (the 4-bin LOO ΔMAE per category, with bootstrap CIs at N=3,309)
 - **Per-item raw accuracy table** on the ~118 Park-comparable sensitivity_eval items, side-by-side with the corresponding entries in Park v2 Table 3 (raw accuracy only — see §11 on what is NOT a valid comparison)
 - **Cross-model agreement %** as the primary stability QA metric for the cheap panel (4 models on the same item) — replaces within-model self-consistency for cost reasons. Within-model self-consistency (n_samples=2) is restored for the GPT-4o anchor subset only. See §12.
 - A pre-registered feature taxonomy → standardized vocabulary for Phase 2 and for any later survey-instrument design
@@ -184,7 +208,8 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 6. **GSS sampling design** is a complex multi-stage probability sample with weights (`WTSSALL`, `WTSSPS_NEXT`, etc.). Primary analysis is unweighted; a weighted-reanalysis robustness check is in §10.
 7. **Pre-registration on OSF before Phase 1a.** The pre-reg (filed *before* 1a fires) locks: taxonomy, primary + sensitivity eval sets, primary metric, exclusion rules (R1 battery exclusion + sensitivity per-item exclusion), R2 regression-baseline partition, the 4-cheap-model panel, the §12.2 quality-primary selection rule, the §10 aggregation + paired-bootstrap rules, **two co-primary analyses** — the **4-bin LOO** (broad feature-category attribution) and the **34-battery LOO across all 4 bins** (mechanistic cluster-level attribution) — the **bin-level Shapley decomposition** as 4-bin LOO robustness, and the §11.1 writeup language template. No post-hoc adjustment of the 4-bin assignments OR the battery map (`gss_battery_map.json` v0.2) after 1a fires.
 
-8. **Multiplicity / multiple-LOO control (nested Holm-Bonferroni primary + joint-34 sensitivity; revised 2026-05-09 evening for co-primary Battery LOO).**
+### 8.8 Multiplicity / multiple-LOO control (nested Holm-Bonferroni primary + joint-34 sensitivity; revised 2026-05-09 evening for co-primary Battery LOO; sub-header normalized 2026-05-09 night per Codex N10)
+
    - **4-bin primary family** (4 ΔMAE tests): Holm-Bonferroni at α=0.05 within family. Adjusted-significant findings reported as "primary headline #1"; unadjusted bin contributions reported descriptively.
    - **Battery LOO co-primary** uses **nested Holm-Bonferroni primary correction** — one Holm family per bin, applied independently:
      - Demographic battery family (n=7): smallest p < α/7 = 0.0071
@@ -198,14 +223,18 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
    - **Bin-level Shapley** (16 conditions) is a *robustness re-aggregation* of the same 4-bin estimand; no separate multiplicity correction (it shares the 4-bin primary family).
    - **Theory-bin LOO is NOT a confirmatory family.** Theory framing enters the Discussion section as interpretive secondary analysis only (see §13.3). If a future amendment adds theory-bin LOO as a confirmatory family, that amendment will introduce its own Holm correction at that time.
 
-9. **Practical-effect-size thresholds (locked 2026-05-09 evening; anchored to Funder & Ozer 2019 effect-size taxonomy 2026-05-09 night).** Because N=1500 can render very small ΔMAE values statistically significant under Holm correction, every Battery LOO and 4-bin LOO ΔMAE is reported alongside a **practical effect-size label**:
+### 8.9 Practical-effect-size thresholds (locked 2026-05-09 evening; anchored to Funder & Ozer 2019 effect-size taxonomy 2026-05-09 night; sub-header normalized 2026-05-09 night per Codex N10)
+
+Because N=3309 can render very small ΔMAE values statistically significant under Holm correction, every Battery LOO and 4-bin LOO ΔMAE is reported alongside a **practical effect-size label**:
+
    - **small / descriptive**: ΔMAE < 0.02
    - **modest**: 0.02 ≤ ΔMAE < 0.05
    - **substantive**: ΔMAE ≥ 0.05
 
-   **Anchor to existing literature**: these thresholds correspond to *"small-but-consequential"* (~0.02 on a 1-5 Likert MAE) and *"medium"* (~0.05) in **Funder & Ozer (2019)** *"Evaluating Effect Sizes in Psychological Research: Sense and Nonsense"* (AMPPS, DOI: 10.1177/2515245919847202)'s effect-size taxonomy applied to MAE on Likert scales. The 0.02 threshold deliberately includes effects Funder & Ozer call "small but consequential at scale" — meaningful for a public-survey LLM persona deployment context where small per-item ΔMAEs translate to large aggregate prediction shifts. See `LIT_REVIEW.md` §2.4 for the Funder & Ozer entry and supporting citation logic.
+   **Anchor to existing literature (revised wording 2026-05-09 night per Audit-2 review)**: these thresholds are *inspired by* — not strictly mapped to — the small-but-consequential (~0.02 on a 1-5 Likert MAE) and medium (~0.05) reasoning in **Funder & Ozer (2019)** *"Evaluating Effect Sizes in Psychological Research: Sense and Nonsense"* (AMPPS, DOI: 10.1177/2515245919847202). Funder & Ozer's taxonomy applies to correlation coefficients and standardized effect sizes; we re-anchor the qualitative framing (small-but-consequential at scale, medium-when-considered-in-context) onto MAE on Likert scales for our persona-prediction context. The 0.02 threshold reflects the Funder & Ozer principle that small effects can be consequential at deployment scale — small per-item ΔMAE in an LLM persona pipeline translates to large aggregate prediction shifts across thousands of users. The mapping is conceptual, not a literal correspondence. See `LIT_REVIEW.md` §2.4 for the Funder & Ozer entry and supporting citation logic.
+
    - These thresholds are pre-registered. A finding is reported as substantively meaningful only if it is **both** (a) Holm-significant within its family AND (b) practical-effect ≥ "modest" with a 95% bootstrap CI that excludes the "small/descriptive" boundary. Statistical significance alone is not sufficient for headline-strength substantive interpretation.
-   - Bootstrap CIs are respondent-level paired CIs (B=1000, seed=42).
+   - Bootstrap CIs are respondent-level paired CIs **(B=10000, seed=42, BCa via scipy with percentile fallback for degenerate inputs — locked 2026-05-09 night per Codex N5/N6 audit)**. B was bumped from 1000 to keep the bootstrap-p floor (1/B) below the joint-34 Holm critical p (α/34 ≈ 0.00147); BCa is preferred over raw percentile because BCa is more accurate near zero, where many ΔMAEs sit relative to the small/modest practical-effect boundary.
    - Battery size must always be reported alongside ΔMAE; `delta_mae_per_item` (ΔMAE / n_items_in_battery) is reported as a size-aware **descriptive sensitivity column**, not the primary inferential metric.
 
 ## 9. Decisions locked (post-Bayati 2026-05-02; audit-fix 2026-05-05)
@@ -235,6 +264,13 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
    - LLM-panel MAE on item X ≈ (regression MAE on X) + (LLM gain over regression)
 
    **Caveat (locked 2026-05-09 evening)**: this is a useful rhetorical decomposition, **not a literal causal partition** of LLM behavior. The regression baseline is a non-LLM predictive comparator using the same feature pool and R1 exclusions; it helps distinguish predictable survey auto-correlation from LLM-specific gains, but "LLM gain over regression" is **evidence of model-specific predictive value beyond a simple supervised baseline**, not direct proof of human-like reasoning. We report the gain as an empirical magnitude with its bootstrap CI, and do not claim it isolates any specific LLM mechanism. Avoid abstract / Discussion language like "LLM persona reasoning" without this caveat in scope.
+
+   **Missing-data asymmetry (locked 2026-05-09 night per Codex N3 audit)**: R1 LLM-panel and R2 regression-baseline see *different* effective N for the same item, and this asymmetry must be disclosed alongside any LLM-vs-regression comparison:
+   - **LLM panel** receives the persona prompt with whatever feature codes the respondent has (missing values shown as "missing"/"not asked"), and predicts the item regardless of feature completeness — so the LLM produces a prediction for nearly all 3,309 respondents per primary_eval item (excluding only those who have no truth value for that item, or who opt out of the prompted question via R/refused).
+   - **Regression baseline** uses sklearn estimators that drop respondents with missing covariates (or imputes them to a median, depending on the configured strategy in `regression_baseline.py`); ballot rotation makes this attrition substantial in some bins (e.g., behavioral and attitudinal items asked on only 1 of 3 ballots → ~33% per-item coverage before R1 exclusions).
+   - **Net effect**: R2's effective N per item is typically a fraction of R1's, so the comparison is not strictly apples-to-apples — the regression bound is conditioned on a denser-feature subsample. This asymmetry **biases the comparison in favor of the regression baseline** (denser inputs → lower MAE bound), making "LLM gain over regression" a *conservative* lower bound on model-specific predictive value rather than an unbiased estimate.
+   - **Reporting requirement**: every R1-vs-R2 panel/table must list `n_R1_paired` and `n_R2_paired` per item, and the Phase 1 writeup must explicitly note that the gain estimate is conservative under this asymmetry. A sensitivity reanalysis restricting both R1 and R2 to the R2-eligible subsample (intersection-N) is reported as a robustness column.
+
    - The first term is the auto-correlation upper bound a non-LLM predictor can extract; the second term is empirical model-specific predictive gain (NOT a causal partition).
    - This is methodologically a step *past* Park v2: Park brackets the inflation between two hold-out strategies (single-item gives 0.82, whole-module gives 0.77 — Park v2 SI §6, PDF p.39 *"average normalized accuracy of 0.77 (std = 0.12)"* under whole-module hold-out vs *"0.82 (std = 0.18)"* under single-item); we add a regression comparator on the same input pool. The result is a richer descriptive comparison, not a literal causal decomposition.
 
@@ -249,7 +285,7 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 5. (✅ done) Build `gss_pipeline.py` (persona-prompt builder, LLM dispatcher, scorer for GSS rows)
 6. End-to-end smoke test on N=10
 7. Draft OSF pre-registration
-8. Run Phase 1a (N=100) sanity check
+8. Run Phase 1a (N=200, 100/100 selection/validation split per §12.2) sanity check
 9. Present 1a results to Bayati before launching 1b
 
 ### 9e. OSF pre-registration lock checklist (locked 2026-05-09 evening)
@@ -257,7 +293,7 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
 The following items must be in the OSF pre-registration document, locked before Phase 1a fires. This list IS the OSF table of contents.
 
 - [ ] **Data**: GSS 2024 cross-section, 3-batch fixed-width extract path documented
-- [ ] **Sampling**: random sample without replacement, **seed = 42**, N=1500 from 3,309 (gss_pipeline.py:sample_respondents)
+- [ ] **Sampling**: random sample without replacement, **seed = 42**, N=3309 from 3,309 (gss_pipeline.py:sample_respondents)
 - [ ] **Eval items**: 12 `primary_eval` items locked in `gss_feature_taxonomy.json` v0.3
 - [ ] **Sensitivity items**: 118 `sensitivity_eval` items locked in `gss_feature_taxonomy.json` v0.3
 - [ ] **Feature taxonomy**: v0.3 (140 features, 24/25/8/83 across 4 bins; locked 2026-05-05)
@@ -266,17 +302,17 @@ The following items must be in the OSF pre-registration document, locked before 
 - [ ] **Leakage hygiene Layer 4 — R2 regression baseline comparator** (with rhetorical-decomposition caveat per §9c.4)
 - [ ] **Primary metrics**: Likert MAE (respondent-macro), % within ±1, categorical exact-match
 - [ ] **Aggregation rules**: §10 (respondent-macro primary, item-macro secondary, paired-bootstrap LOO ΔMAE)
-- [ ] **Bootstrap**: B=1000, respondent-level paired, seed=42
+- [ ] **Bootstrap**: B=10000, respondent-level paired, seed=42, BCa via scipy with percentile fallback for degenerate inputs (locked 2026-05-09 night per Codex N5/N6)
 - [ ] **4-bin LOO family Holm**: α=0.05 within family (4 tests)
 - [ ] **Battery LOO nested Holm primary**: per-bin (D=7 / B=10 / P=2 / A=15 tests)
 - [ ] **Battery LOO joint-34 Holm sensitivity gate**: required for cross-bin claims
 - [ ] **Practical-effect-size thresholds**: small <0.02, modest 0.02-0.05, substantive ≥0.05; significance + magnitude both required for headline claims
-- [ ] **Phase 1a model panel**: Qwen-2.5-72B + DeepSeek-V3.1 + MiniMax-M1 + Kimi K2 + GPT-4o anchor (locked in `llm_router.py::MODEL_PANEL_PRIMARY`)
+- [ ] **Phase 1a model panel**: Qwen-2.5-72B + DeepSeek-V3.1 + **Llama-3.3-70B-Instruct (Meta)** + Kimi K2 + GPT-4o anchor (locked in `llm_router.py::MODEL_PANEL_PRIMARY`; MiniMax → Llama swap 2026-05-09 night for cross-family balance per Audit-3)
 - [ ] **§12.2 model-selection rule**: quality-primary, DQ-1 + DQ-3 + cost tie-break + Qwen fallback (locked, executable in `select_phase1b_model.py`)
 - [ ] **DQ-3 reference**: `outputs/primary_eval_human_variance_2024.json` (locked GSS 2024 per-item human variance)
-- [ ] **GPT-4o anchor scope**: N=100 subset, primary conditions only, n_samples=2 — used for Park-comparable per-item raw accuracy, NOT the N=1500 headline
+- [ ] **GPT-4o anchor scope**: N=100 selection-split subset, **primary + sensitivity** (n_samples=2; locked 2026-05-10 Joyce decision Option A — anchor is the only run for Park-comparable sensitivity_eval per OSF §3.2), used for the per-item Park v2 SI Table 3 raw-accuracy anchor table; NOT the N=3309 headline
 - [ ] **Theory interpretation**: Discussion-section only, no horse race, no theory-bin LOO, no Stage 3 refinement, no hard supports/refutes thresholds (per `theory_interpretation_guide.md`)
-- [ ] **Implementation status disclosure** (this is the *lock-first defense* per Codex audit 2026-05-09 night addition A — used CONFIDENTLY, not apologetically): Shapley decomposition + Battery LOO are *specified at schema level (`tier1_tool_schemas.md` Tools 1-2) but not yet implemented in code* (`shapley_decomposition.py` + `battery_loo.py` pending). 4-bin LOO + R1 + R2 + §12.2 selector + audit primitives + battery map v0.2 + DQ-3 reference are *implemented and self-tested* (validate_taxonomy 10-check + AUDIT A-E + §12.2 5-branch + R2 12/12 self-test, all green). **Pre-registration commitment**: these analyses were locked at the analysis-plan level prior to implementation; the implementations will pass self-tests on synthetic fixtures (matching Tools 1-2 schema output exactly) BEFORE any paid Phase 1c run. This is conventional OSF practice for analysis-plan preregistration.
+- [ ] **Implementation status disclosure** (this is the *lock-first defense* per Codex audit 2026-05-09 night addition A — used CONFIDENTLY, not apologetically; revised 2026-05-09 night per Audit-fresh review to drop the contradictory "not yet implemented" wording — the analyzers ARE implemented; only the orchestration drivers are not): **Shapley decomposition + Battery LOO analyzers ARE implemented and self-tested** (`shapley_decomposition.py` 8-assertion test + `battery_loo.py` 8-assertion test, both green; consume records-JSON in `gss_driver.py` format and produce locked-schema outputs). The **orchestration drivers** that actually emit `condition="shapley_*"` and `condition="battery_loo_drop_*"` records (i.e., `gss_driver.py` extension to enumerate the 16 Shapley conditions and 34-battery LOO conditions) are NOT yet implemented and remain to be built before Phase 1c. 4-bin LOO + R1 + R2 + §12.2 selector + audit primitives + battery map v0.2 + DQ-3 reference are also *implemented and self-tested* (validate_taxonomy 10-check + AUDIT A-E + §12.2 7-branch + R2 12/12 self-test, all green). **Pre-registration commitment**: these analyses were locked at the analysis-plan and analyzer-implementation levels prior to OSF lock; the orchestration runtime will pass self-tests on synthetic fixtures (matching Tools 1-2 schema output exactly) BEFORE any paid Phase 1c run. This is conventional OSF practice for analysis-plan preregistration.
 - [ ] **Writeup language template (§11.1)**: forbidden mentalist claims; required scope qualifiers
 - [ ] **Decisions log appendix**: PROJECT_SYNTHESIS.md §4 (locked, when, against what evidence)
 
@@ -296,14 +332,14 @@ The following items must be in the OSF pre-registration document, locked before 
 
 This rule is enforced by the maintainer (Joyce) only — there's no automated check. If a future commit shows changes to prompt wording / parsing rule / model panel / battery map between the smoke run and the Phase 1a launch, that's a pre-registration deviation that must be filed as an OSF amendment with rationale.
 
-**Before Phase 1a (N=100)**:
+**Before Phase 1a (N=200, 100/100 split per §12.2)**:
 - [ ] OSF pre-registration draft locked (per §9e)
 - [ ] All documentation drift resolved (no stale references to old battery counts, panel-median-as-headline, conditional Battery LOO, theory-bin confirmatory)
-- [ ] Shapley / Battery LOO implementation status disclosed accurately in OSF
+- [ ] **Shapley / Battery LOO implementation status disclosed accurately in OSF.** *Locked 2026-05-09 night per Codex N2 audit; phrasing tightened per Audit-2 review 2026-05-09 night to remove "constrains design space" language*: at lock time, **the analyzers (`shapley_decomposition.py`, `battery_loo.py`) ARE implemented and self-tested** (synthetic-fixture self-tests pass; see §13.1 of `osf_preregistration_v1.md`); what is NOT implemented is the **orchestration runtime** in `gss_driver.py` that emits `condition="shapley_*"` / `condition="battery_loo_drop_*"` records the analyzers consume. The OSF lock declares the **analysis contract** (input schema + output schema + math) AND the orchestration design (battery enumeration list, Shapley 16-condition mapping, R1 interaction with battery-level drop); these are frozen at lock time. **Only the runtime implementation timing is deferred** — `tier1_tool_schemas.md` Tools 1-2 contain the precise spec the orchestration code must satisfy. **Schema and design cannot change post-OSF without a logged amendment**; runtime can complete after Phase 1a but only as a faithful implementation of the locked spec. The Phase 1a → 1c gate is "orchestration drivers ready, byte-identical to spec" before any 16-condition or 34-battery paid run fires.
 - [ ] Model panel + §12.2 selector locked in OSF
 - [ ] Cost estimate verified against current OpenRouter prices
 
-**Before Phase 1b (N=1500)**:
+**Before Phase 1b (N=3309)**:
 - [ ] Phase 1a complete; results reviewed
 - [ ] §12.2 selector run on Phase 1a output → selected model recorded in commit + OSF amendment if any
 - [ ] N=10 + N=100 parse-failure rates and DQ-3 mode-collapse checks within acceptable range (per §12.2 DQ-1/DQ-3)
@@ -311,12 +347,10 @@ This rule is enforced by the maintainer (Joyce) only — there's no automated ch
 
 ### 9g. Operational risk — accidental sensitivity-pass on all 4 cheap models
 
-**Current `gss_driver.py` default**: when run as `gss_driver.py --n 100`, the driver runs primary + sensitivity for ALL models in `MODEL_PANEL_PRIMARY` unless `--primary-only` is passed. For Phase 1a (N=100, primary-only-on-cheap-panel design), this default could **accidentally trigger sensitivity across 4 cheap models** = ~4× the planned cost.
-
-**Mitigations**:
-- For Phase 1a: always run with `--primary-only` flag explicitly; confirm in stdout banner that `sensitivity: False` before paid execution.
-- For Phase 1b: sensitivity pass is intended ONLY for the §12.2-selected single model + GPT-4o anchor — NOT all 4 cheap models. Use `--models qwen/qwen-2.5-72b-instruct --primary-only` (or the selector-chosen slug) on the explicit slug, NOT the default panel.
-- Future low-risk improvement (Phase 1c): add explicit CLI mode flags `--phase1a` / `--phase1b` / `--anchor` / `--battery-loo` that hard-code the right combination and refuse if mismatched. Tracked as a non-paid prep item.
+**Mitigations (all locked 2026-05-10 per Joyce decision Option A; previously a §9g manual-discipline risk, now codified)**:
+- **Use the named modes for paid runs** (locked 2026-05-09 night per Audit-fresh review; sensitivity scope locked 2026-05-10 per Option A): `--phase1a` (cheap panel × N=200, primary-only — sensitivity is anchor-only per OSF §3.2), `--phase1b --phase1b-model SLUG` (single §12.2-selected cheap model × N=3,309, primary-only), `--phase1b-anchor` (GPT-4o × N=100 selection-split subset, n=2, **primary + sensitivity** — produces the Park-comparable Table 3 anchor table). The named modes hard-code N + panel + sensitivity scope to the locked spec, eliminating the legacy manual-flag-composition risk.
+- **F9 cost guard (locked 2026-05-10 per Audit-fresh-2)**: the driver REFUSES to run --n ≥ 1000 with multiple models AND sensitivity unless `--allow-panel-wide-large-n` is explicitly passed (prints projected cost). This catches the operational accident where a manual `--n 3309` with the default 4-cheap panel + sensitivity would burn ~$839 instead of the locked ~$71 single-model 1b run.
+- **Stub modes**: `--battery-loo` and `--shapley` print clear NOT-IMPLEMENTED + pointer to OSF §13.2 (analyzer ready, orchestration runtime deferred until before Phase 1c).
 
 ## 10. Aggregation & weighting (pre-registered)
 
@@ -327,7 +361,13 @@ This rule is enforced by the maintainer (Joyce) only — there's no automated ch
 **Headline aggregation** — primary metric is **respondent-macro-averaged**:
 - Primary Likert MAE = mean over respondents of (per-respondent average Likert error). Each respondent contributes equally regardless of how many items they answered, provided they answered ≥1 Likert primary_eval item.
 - This treats each respondent as one observational unit, controlling for ballot-induced coverage variation.
-- Standard errors via bootstrap (B=1000) at the respondent level.
+- Standard errors via bootstrap (B=10000, BCa via scipy with percentile fallback — locked 2026-05-09 night per Codex N5/N6) at the respondent level.
+
+**Single-LLM-draw variance disclosure (locked 2026-05-09 night per Codex N4 audit).** Phase 1 uses `n_samples=1` per (respondent × condition × item) per the locked §12 panel design (rationale: budget; cross-model variance via the 4-model panel substitutes for cross-draw variance in §12.2 selection). One implication that must be disclosed in the writeup:
+- **The respondent-level paired bootstrap captures sampling variance over respondents, NOT generation variance over LLM stochastic draws.** A second draw at temperature=0.7 for the same (respondent, condition, item) would in general produce a different code; the bootstrap CI does not reflect this.
+- **Why this matters**: the *true* uncertainty around an LLM-MAE point estimate is the convolution of (a) sampling variability over respondents — captured — and (b) generation variability over LLM draws — NOT captured. Reported CIs are therefore **mildly under-stated** relative to a fully-honest CI that integrates both sources.
+- **Quantification commitment**: a small N=10-respondent re-draw audit at n_samples=5 (50 redundant calls per condition) is run during Phase 1a smoke testing; the resulting per-(respondent, item) standard deviation across draws is reported in the writeup methods section as an absolute bound on within-respondent generation noise. If the audit finds within-draw SD > 10% of the cross-respondent SD on the headline metric, the abstract must explicitly note "CIs reflect respondent variance only; ~X% relative inflation expected if generation variance were included."
+- **Why we do not pre-register full multi-draw**: at the locked panel size (1 selected model × 1 draw × 60 primary prompts × 3,309 respondents) Phase 1b cheap costs ~$71; running n_samples=5 panel-wide would 5× the headline run alone (~$355), and 5× the Battery LOO co-primary (~$2,400). Park et al. 2024 also use n_samples=1 for the analogous panel rows.
 
 **Secondary aggregation** — also reported for transparency:
 - **Item-macro-averaged**: mean MAE per item, then average over items. Useful when items differ systematically in difficulty.
@@ -335,7 +375,7 @@ This rule is enforced by the maintainer (Joyce) only — there's no automated ch
 
 **Inferential frame** — locked 2026-05-09 night per Codex M1 audit. Phase 1's bootstrap is paired-respondent-level, which assumes simple random sampling; GSS 2024 is a multi-stage probability sample with PSU + strata + WTSSALL weights. **We explicitly restrict the inferential frame to the GSS-2024 cross-section as a fixed dataset** — i.e., we estimate predictive properties on this specific 3,309-respondent extract, NOT population-level parameters of the U.S. adult attitude landscape. All "respondent-level" language refers to the sampled 1500/3309 from this fixed dataset. We do NOT claim population inference. A weighted/cluster-bootstrap robustness check using `WTSSALL` + PSU is a future-work extension; if pursued, reported as a separate sensitivity column with explicit "fixed-dataset vs population-inferential" framing.
 
-**LOO-condition delta** — primary inferential quantity per category bin: `ΔMAE_bin = MAE(LOO-drop-bin) − MAE(Full)`. Bootstrap CIs at respondent level via **paired bootstrap**: in each of the B=1000 resamples, draw one respondent set with replacement, then compute MAE(Full) and MAE(LOO-drop-bin) on **the same resample**, then take the delta. Do not bootstrap MAE(Full) and MAE(LOO) independently (would over-inflate Δ-CI variance).
+**LOO-condition delta** — primary inferential quantity per category bin: `ΔMAE_bin = MAE(LOO-drop-bin) − MAE(Full)`. Bootstrap CIs at respondent level via **paired bootstrap**: in each of the B=10000 resamples (BCa via scipy with percentile fallback — locked 2026-05-09 night per Codex N5/N6), draw one respondent set with replacement, then compute MAE(Full) and MAE(LOO-drop-bin) on **the same resample**, then take the delta. Do not bootstrap MAE(Full) and MAE(LOO) independently (would over-inflate Δ-CI variance).
 
 ### 10a. R1 asymmetric burden across primary_eval items (locked 2026-05-09 night per Codex M6)
 
@@ -369,7 +409,8 @@ This is a methodological asymmetry, NOT a confound. We disclose it explicitly be
 - "Attitudinal features dominate human-simulation fidelity" — they may dominate due to within-domain auto-correlation; with R1 + R2 in force we can quantify this, but the result remains GSS-attitude-prediction-internal, not a fidelity claim.
 - "Demographics don't matter for personas" — we measure demographics' contribution within GSS-attitude prediction, not their general informativeness for BFI personality or behavioral games.
 - Generalization to BFI personality or behavioral games — Phase 2 only.
-- "Robust across LLM families" — the 4 cheap-panel models are all China-trained (Qwen / DeepSeek / MiniMax / Kimi); the cross-family claim is restricted to "across four China-trained instruction-tuned models in a 100-respondent comparison" and does NOT apply to the N=1500 Phase 1b headline (which runs on a single quality-selected model). Cross-Western/Eastern robustness lives only on the GPT-4o anchor (N=100 subset).
+- "Robust across LLM families" — the cheap panel is now **3 China-trained + 1 Western-trained** (Qwen / DeepSeek / Llama-3.3-Meta / Kimi) after the 2026-05-09 night MiniMax→Llama swap; the cross-family claim is restricted to "across four instruction-tuned models spanning Western and Eastern training sources in a 200-respondent comparison" and does NOT apply to the N=3309 Phase 1b headline (which runs on a single §12.2-selected model). Cross-Western/Eastern robustness in the headline lives only on the GPT-4o anchor (N=100 subset).
+- **Bin-level claims about the psychological bin** — the psychological bin in `gss_feature_taxonomy.json` v0.3 contains only 8 GSS variables organized into **2 batteries** (`subjective_wellbeing` + `interpersonal_trust`, per the SHA-256-frozen `gss_battery_map.json` v0.2). Two batteries is structurally too thin for a category-level Phase 1 finding (added 2026-05-09 night per Audit-3 M-new-4 review). Bin-level psychological ΔMAEs are reported descriptively only; the inferential headline for psychological-feature contribution lives at the **battery level**, where the 2 batteries each have ≥4 items and the nested Holm correction inside `n=2` is comparatively weak (α/2 = 0.025). Reviewer-facing claims about psychology in the abstract should be Battery-LOO-level, never bin-level.
 
 These constraints carry over into the abstract, headline figures, and reviewer-facing claims of the Phase 1 writeup.
 
@@ -381,7 +422,7 @@ The following sentence-level constraints are **mandatory** in any Phase 1 abstra
 |---|---|---|
 | "Persona fidelity" qualifier | "within-wave attitudinal prediction" / "single-wave GSS attitudes" | bare "persona fidelity" |
 | Cross-model robustness scope | "across four China-trained instruction-tuned models in a 100-respondent comparison" | bare "across LLM families" |
-| Headline-N model identity | "the {selected_model} reported under the §12.2 quality-primary rule, N=1500" | "the cheap panel" / "the LLM panel" |
+| Headline-N model identity | "the {selected_model} reported under the §12.2 quality-primary rule, N=3309" | "the cheap panel" / "the LLM panel" |
 | Park comparison anchor | "the GPT-4o anchor on the N=100 subset, with single-item hold-out matching Park v2 SI §6" | "matches Park's 82%" |
 | Auto-correlation framing | "after R1 battery-level exclusion and R2 regression-baseline partition" | bare "after leakage hygiene" |
 | Test-retest claim | (none — say nothing about test-retest) | "normalized accuracy" / "fidelity" |
@@ -392,7 +433,7 @@ The abstract and the dashboard / GitHub Pages footer must each be checked agains
 
 ### Rationale
 
-GPT-4o-only Phase 1 would cost ~$900 at N=1500, exceeding the $300-500 budget. More importantly, single-model results conflate "feature-category contribution" with "GPT-4o-specific quirks" — a reviewer could plausibly reject "X is the most predictive feature category" with "but maybe only on GPT-4o."
+GPT-4o-only Phase 1 would cost ~$900 at N=3309, exceeding the $300-500 budget. More importantly, single-model results conflate "feature-category contribution" with "GPT-4o-specific quirks" — a reviewer could plausibly reject "X is the most predictive feature category" with "but maybe only on GPT-4o."
 
 **Solution**: query the same persona prompts on a **panel of 4 cheap, diverse OpenRouter-available models** as the primary analysis. The headline finding becomes "feature-category contribution to GSS-attitude prediction is robust **across LLM families**" — a stronger claim than single-model GPT-4o.
 
@@ -404,30 +445,30 @@ A small GPT-4o anchor on a 100-respondent subset preserves direct Park v2 Table 
 |---|---|---|---|---|---|
 | Cheap-panel primary | **Qwen-2.5-72B-Instruct** | Alibaba | 0.40 | 0.40 | strong instruction-following; multilingual |
 | Cheap-panel primary | **DeepSeek-V3.1** | DeepSeek | 0.20 | 0.80 | very cheap, strong reasoning |
-| Cheap-panel primary | **MiniMax-M1** (Hailuo) | MiniMax | 0.20 | 1.00 | different RLHF philosophy from above |
+| Cheap-panel primary | **Llama-3.3-70B-Instruct** | Meta (US) | 0.30 | 0.50 | **Western-trained;** swapped in pre-OSF 2026-05-09 night per Audit-3 cross-family balance review (formerly MiniMax-M1) |
 | Cheap-panel primary | **Kimi K2** | Moonshot | 0.40 | 1.00 | long-context strong; 4th distinct family |
 | Anchor | **GPT-4o** | OpenAI | 2.50 | 10.00 | Park v2 used this; direct Table 3 comparability |
 
-**Panel diversity argument**: 4 different teams, 4 different RLHF philosophies. Convergence across all 4 = result generalizes beyond any single model's bias.
+**Panel diversity argument**: 4 different teams, 4 different RLHF philosophies, **3 China-trained + 1 Western-trained**. Convergence across all 4 = result generalizes beyond any single model's bias AND past single-region training-data biases.
 
-**Honest caveat about diversity scope**: All 4 cheap-panel models are trained by China-based organizations (Alibaba, DeepSeek, MiniMax, Moonshot). The diversity is real *across teams and RLHF philosophies* but is NOT a Western-vs-Eastern training-data robustness check. The GPT-4o anchor (N=100 subset) provides a single Western-trained reference; for stronger diversity claims at thesis-stage, swap one slot for Llama-3.3-70B (Meta) or Mistral-Large-2 in a sensitivity reanalysis.
+**Honest caveat about diversity scope (revised 2026-05-09 night)**: After the MiniMax→Llama-3.3 swap, the cheap panel is **3 China-trained (Alibaba, DeepSeek, Moonshot) + 1 Western-trained (Meta-Llama)**. The Western-trained slot defangs the "all-China cross-family-bias" reviewer attack on the headline panel. The GPT-4o anchor (N=100 subset) remains a separate Western-trained reference for direct Park v2 Table 3 anchoring. For even-stronger Western-vs-Eastern robustness claims (e.g., Mistral-Large-2 swap), reserve as a future sensitivity reanalysis.
 
 ### Sampling rules
 
 - **Cheap models**: `n_samples = 1` per (respondent, item, condition). Cross-model agreement (% of items where all 4 models gave the same code) replaces within-model self-consistency as the primary stability metric.
-- **GPT-4o anchor**: `n_samples = 2` per (respondent, item) on **N=100** subset, primary conditions only. Restores Park-style within-model self-consistency for the directly-comparable subset. Sensitivity pass NOT run on GPT-4o (cost reasons). N=100 (bumped from N=50 per Codex audit 2026-05-06) gives wider per-item CIs but still tight enough for per-item Park v2 Table 3 anchoring.
+- **GPT-4o anchor**: `n_samples = 2` per (respondent, item) on the **N=100 selection-split subset**, **primary + sensitivity** (locked 2026-05-10 Joyce decision Option A; supersedes earlier "primary-only" wording). Restores Park-style within-model self-consistency for the directly-comparable subset AND **runs the 118 sensitivity_eval items per-item-excluded** to produce the Park-comparable per-item raw-accuracy table side-by-side with Park v2 SI Table 3 — the anchor is the ONLY run that produces this Park-comparable sensitivity table; cheap panel does not run sensitivity (anchor-only per OSF §3.2). N=100 (bumped from N=50 per Codex audit 2026-05-06) gives wider per-item CIs but still tight enough for per-item Park v2 Table 3 anchoring. One anchor invocation serves both Phase 1a and Phase 1b reporting purposes (same N=100 selection-split respondents).
 
 ### Headline output extension to multi-model
 
 The aggregation in §10 is computed:
 - **Per model**: each cheap-panel model gets its own respondent-macro / item-macro / pooled headline + bootstrap CIs. Reported alongside in the writeup.
-- **Panel median (Phase 1a robustness summary, NOT the N=1500 headline)**: for each (respondent, condition, item, sample-position-equivalent), take the median (Likert) or mode (categorical) across the 4 cheap-panel models. Re-run aggregation on this synthetic "panel respondent." **Reported as a Phase 1a (N=100) robustness summary** for cross-model coherence; per-model deltas in supplementary. The N=1500 Phase 1b headline is the §12.2-selected single model, NOT the panel median (Phase 1b runs only one selected model — see §12.2 + line 401 below + §13's writeup constraint).
-- **GPT-4o anchor**: per-item raw accuracy table on N=100 subset, side-by-side with Park v2 Table 3.
+- **Panel median (Phase 1a robustness summary, NOT the N=3309 headline)**: for each (respondent, condition, item, sample-position-equivalent), take the median (Likert) or mode (categorical) across the 4 cheap-panel models. Re-run aggregation on this synthetic "panel respondent." **Reported as a Phase 1a (N=100 selection split per §12.2) robustness summary** for cross-model coherence; per-model deltas in supplementary. The N=3309 Phase 1b headline is the §12.2-selected single model, NOT the panel median (Phase 1b runs only one selected model — see §12.2 + line 401 below + §13's writeup constraint).
+- **GPT-4o anchor**: per-item raw accuracy on the 12 primary_eval items + the 118 sensitivity_eval items on N=100 subset, n_samples=2, side-by-side with Park v2 SI Table 3 (locked 2026-05-10 Joyce decision Option A; sensitivity_eval is anchor-only per OSF §3.2).
 - **Cross-model agreement**: % of (respondent, item, condition) tuples where all 4 cheap models output the same integer code. Reported as the new "consistency QA metric" replacing within-model self-consistency.
 
 ### What the writeup must say (extension to §11 constraints)
 
-- "The N=1500 headline is the §12.2-selected single model. Phase 1a (N=100) reports per-model and panel-synthesized robustness for cross-model coherence; the panel median is a Phase 1a robustness summary, NOT the N=1500 headline because Phase 1b runs only one selected model."
+- "The N=3309 headline is the §12.2-selected single model. Phase 1a (N=200 with 100/100 selection/validation split; selection set N=100 reports per-model and panel-synthesized robustness for cross-model coherence) — the panel median is a Phase 1a robustness summary, NOT the N=3309 headline because Phase 1b runs only one selected model."
 - "Direct comparability to Park v2 Table 3 is via the N=100 GPT-4o anchor subset, not via the cheap-model panel. The cheap-model panel addresses generalization across LLM families; the anchor addresses model-comparability with the established benchmark."
 - "Cross-model agreement at temperature 0.7 (4 cheap models on the same item) is reported as a stability QA metric in lieu of within-model self-consistency. The two are different concepts."
 
@@ -436,22 +477,31 @@ The aggregation in §10 is computed:
 Before Phase 1a launches the OSF pre-reg locks:
 - The exact 4-cheap-model list for Phase 1a (prevents post-hoc cherry-picking)
 - The model-selection rule from 1a → 1b (locked below in §12.2)
-- The GPT-4o anchor scope (N=100 subset, primary conditions only, n_samples=2)
+- The GPT-4o anchor scope (N=100 selection-split subset, **primary + sensitivity**, n_samples=2 — locked 2026-05-10 Joyce decision Option A; anchor is the only run for Park-comparable sensitivity_eval per OSF §3.2)
 - Aggregation method (per-model + panel median/mode + cross-model agreement)
 - Cross-model agreement metric definition (strict: all expected models present + parsed + identical)
 
 ### §12.2  Locked model-selection rule (Phase 1a → Phase 1b) — quality-primary
 
-After Phase 1a (N=100) completes for all 4 cheap models, Phase 1b is run on the single cheap model that minimizes **respondent-macro Likert MAE on the Phase 1a primary_eval items, full condition only** — i.e., the model whose persona predictions are most accurate on the headline metric of the paper.
+**Phase 1a sample structure (locked 2026-05-09 night per Audit-3 + Joyce decision)**: Phase 1a runs at N=200 with a **pre-registered 100/100 selection/validation split** (seed=42 deterministic). The first 100 respondents are the **selection set** — all selector quality scoring (MAE, DQ-1, DQ-3, tie-break) operates ONLY on these 100. The other 100 respondents are the **validation set** — held out from selection entirely. After the selector picks a model on the selection set, the chosen model's MAE is **also reported on the held-out 100 validation respondents** alongside the N=3309 Phase 1b headline. Rationale: prevents post-selection-inference / overfit-on-eval-set attack — a reviewer asking "of course your selected model has low MAE; it was selected on the same items you headline on" is rebutted by the validation-N MAE which the selector never saw.
+
+After the selection set scores all 4 cheap models, Phase 1b is run at N=3309 on the single cheap model that minimizes **respondent-macro Likert MAE on the Phase 1a SELECTION primary_eval items, full condition only** — i.e., the model whose persona predictions are most accurate on the headline metric of the paper, on the selection-half only.
 
 ```
-primary_score(model) = respondent_macro_Likert_MAE_on_1a_primary_full
+selection_set      = sample[:100]   # respondents 0..99 of seed-42 sample
+validation_set     = sample[100:200]  # respondents 100..199 (HELD OUT from selection)
+
+primary_score(model) = respondent_macro_Likert_MAE_on_SELECTION_primary_full
                        (parse-failed items excluded from the per-respondent average;
                         a respondent contributes only if they have ≥1 valid Likert item)
 choose argmin
+
+# After selection, ALSO report:
+validation_mae(selected_model) = respondent_macro_Likert_MAE_on_VALIDATION_primary_full
+# This number must appear in §11.1 abstract template alongside the N=3309 headline.
 ```
 
-**Why quality-primary, not cost-primary** (locked decision 2026-05-06): the 4-cheap-panel members differ in per-call cost by at most ~2× (~$50-80 swing on the entire N=1500 1b run), but can differ in MAE by considerably more. Optimizing the selection criterion on a $50 axis when the *paper's headline metric is MAE* is internally inconsistent — the rule should pick the model that is best at the thing the paper measures. Cost is preserved as a tie-break, not as the primary score.
+**Why quality-primary, not cost-primary** (locked decision 2026-05-06): the 4-cheap-panel members differ in per-call cost by at most ~2× (~$50-80 swing on the entire N=3309 1b run), but can differ in MAE by considerably more. Optimizing the selection criterion on a $50 axis when the *paper's headline metric is MAE* is internally inconsistent — the rule should pick the model that is best at the thing the paper measures. Cost is preserved as a tie-break, not as the primary score.
 
 **Pre-registered guard rails (all locked in OSF before Phase 1a fires):**
 
@@ -461,19 +511,22 @@ choose argmin
 
 3. **Tie-break — cost.** Among models within **5% of the best primary_score** (i.e., `MAE_model ≤ 1.05 × MAE_best`), select the one with the **lowest `cost_per_call_USD × (1 + parse_failure_rate)`** score. Rationale: when quality is statistically indistinguishable, the cost-pre-registered framing of the cheap panel still informs the choice.
 
-4. **Deterministic fallback — Qwen-2.5-72B-Instruct.** If after DQ-1 + DQ-3 the candidate set is empty (all 4 models failed gates), OR ≥2 candidates tie on both quality (within 5%) AND cost (within 1%), **Qwen-2.5-72B-Instruct** is used. Reason: it is the most stable instruction-following baseline of the four and is the panel's documented "default" provider. The OSF pre-reg names Qwen explicitly so there is no post-hoc judgment.
+4. **All-DQ-fail PAUSE for human review (locked 2026-05-09 night per Audit-2 + Joyce decision).** If after DQ-1 + DQ-3 the candidate set is empty (all 4 models failed gates), the selector returns `selected=None, rationale="all_dq_fail_pause_for_review"`. Phase 1b does NOT proceed. Rationale: all-DQ-fail is a SIGNAL that something structural is wrong (the prompt template, the parser, or the entire model panel is broken at the current OpenRouter snapshot); silently bypassing the quality gate to a named-Qwen fallback would waste $209 of paid Phase 1b runs on a model that already failed quality checks. The pause requires diagnosing the failure and either rerunning Phase 1a, swapping the panel, or filing an OSF amendment. **Earlier drafts had a Qwen-fallback-on-all-DQ-fail rule; that was removed pre-OSF after Audit-2 review pointed out it bypasses the gate.**
+
+5. **Deterministic Qwen tie-break fallback — narrow scope.** If ≥2 candidates pass DQ AND tie on both quality (within 5%) AND cost (within 1%), **Qwen-2.5-72B-Instruct** is named. Reason: when models are statistically and economically indistinguishable, a deterministic named choice avoids a coin-flip; Qwen is the most stable instruction-following baseline of the four. The OSF pre-reg names Qwen explicitly so there is no post-hoc judgment. (Note: this is the ONLY remaining Qwen-fallback path. The all-DQ-fail path is now PAUSE.)
 
 **Why each guard rail**:
 - DQ-1 prevents picking a parse-broken model that scored a fluke MAE on its small parsed subset.
 - DQ-3 is the critical anti-cheat. Without it, a model that always outputs "4" on every item would beat a model that genuinely tries to predict each respondent — because most GSS attitudes cluster centrally and "always 4" has lower MAE than calibrated guesses on outliers. With DQ-3, mode-collapsed models are filtered out before the quality comparison.
 - Cost as tie-break (not primary) preserves the budget framing in the noise-equivalent regime without letting it override a real quality difference.
-- Qwen fallback ensures the rule is fully deterministic and OSF-eligible — no judgment call required after 1a completes.
+- All-DQ-fail PAUSE keeps the quality gate honest: a failed DQ pass means rerun-or-amend, not silent override.
+- Qwen tie-break-only fallback keeps the rule fully deterministic in the indistinguishable-models case — no judgment call required.
 
-**The selection rule in one sentence (for the abstract / writeup):**
-> "We selected the Phase 1b model as the lowest-MAE Phase 1a candidate among models passing pre-registered parse-failure (≤30%) and per-item relative-variance gates (`var(model_i) ≥ 0.30 × var(human_2024_i)` for ≥50% of primary_eval items); cost served as a within-5% tie-break, with Qwen-2.5-72B-Instruct as the named fallback."
+**The selection rule in one sentence (for the abstract / writeup; revised 2026-05-09 night):**
+> "We selected the Phase 1b model as the lowest-MAE Phase 1a candidate on the pre-registered N=100 selection split, among models passing parse-failure (≤30%) and per-item relative-variance gates (`var(model_i) ≥ 0.30 × var(human_2024_i)` for ≥50% of primary_eval items); cost served as a within-5% tie-break, with Qwen-2.5-72B-Instruct as the named tie-break fallback. All models failing DQ triggers a pre-registered pause for human review rather than a quality-gate override. The selected model's MAE on a held-out N=100 validation split is reported alongside the N=3309 headline."
 
 **Scope** — Phase 1b reports remain valid as "predictive findings on the quality-selected model." Multi-model robustness is established by the 1a comparison itself (published alongside 1b). The thesis claim becomes:
-> "On Phase 1a (N=100, 4 cheap models), feature-category contribution rankings agreed within bootstrap noise across all 4 models. We selected {model_X} for Phase 1b under the §12.2 quality-primary criterion (with parse-failure and mode-collapse gates, cost tie-break, and Qwen fallback); the N=1500 results on {model_X} are reported alongside the 1a multi-model robustness panel."
+> "On Phase 1a (N=200 with a pre-registered 100/100 selection/validation split, 4 cheap models), feature-category contribution rankings agreed within bootstrap noise across all 4 models. We selected {model_X} for Phase 1b under the §12.2 quality-primary criterion (with parse-failure and mode-collapse gates, cost tie-break, and a named-Qwen tie-break-only fallback; all-DQ-fail returns a pause-for-review verdict rather than a silent override); the N=3,309 results on {model_X} are reported alongside both the 1a multi-model robustness panel AND {model_X}'s held-out validation MAE on the N=100 validation split — a pre-registered post-selection-inference defense."
 
 This is honest, internally consistent with the paper's primary metric, and avoids the cherry-picking objection.
 
@@ -525,7 +578,7 @@ Battery LOO is **not** a fishing expedition across 34 unrelated tests. **Batteri
 
 **Algorithm**: enumerate all 2⁴ = 16 conditions (include/exclude each of the 4 bins). Compute respondent-macro Likert MAE under each condition. Shapley value for bin B = average of `MAE(coalition without B) − MAE(coalition ∪ {B})` over all 8 coalitions not already containing B. Output schema in `tier1_tool_schemas.md`.
 
-**When run**: Phase 1a (N=100), once per cheap-panel model. Optionally re-run on Phase 1b selected model.
+**When run**: Phase 1a (N=200, on the N=100 selection split per §12.2), once per cheap-panel model. Optionally re-run on Phase 1b selected model.
 
 **Reporting role**: **robustness re-aggregation of the same primary 4-bin estimand**, not a separate confirmatory family. The 4-bin Shapley values + their interaction terms are reported alongside the LOO ΔMAE as evidence of robustness. No separate Holm correction (shares the 4-bin family).
 
@@ -544,14 +597,14 @@ Battery LOO is **not** a fishing expedition across 34 unrelated tests. **Batteri
 - SPLIT criterion: when sub-construct, target group, time point, or response scale differs sufficiently to conflate distinct signals (mirrors civil_liberties' 3-way split by target group).
 - Symmetry across all 4 bins prevents asymmetric leakage hygiene where attitudinal is fine-grained but other bins are coarse.
 
-**Algorithm**: for each of the 34 batteries B, drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1's per-item battery exclusion which already applies — these are independent operations). Re-run prediction; compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level (B=1000, seed=42). Apply **nested Holm-Bonferroni primary** within each bin's battery family + **joint-34 Holm sensitivity** for cross-bin claims (see §8.8).
+**Algorithm**: for each of the 34 batteries B, drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1's per-item battery exclusion which already applies — these are independent operations). Re-run prediction; compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level **(B=10000, seed=42, BCa via scipy with percentile fallback — locked 2026-05-09 night per Codex N5/N6 audit)**. Apply **nested Holm-Bonferroni primary** within each bin's battery family + **joint-34 Holm sensitivity** for cross-bin claims (see §8.8).
 
 **Estimand clarification (locked 2026-05-09 evening)**: because R1 already excludes the predicted item's own battery for each primary_eval item, Battery LOO estimates **cross-construct predictive contribution after direct same-construct leakage is already blocked** — i.e., how much removing battery B *additionally* harms prediction of held-out primary_eval items relative to the FULL condition (which already has the predicted item's own battery R1-excluded). It does **not** estimate the raw self-predictive value of a battery. Concretely:
 - Battery LOO does NOT estimate causal importance of a construct.
 - Battery LOO estimates **predictive dependence** of the held-out primary_eval items on a battery, **under a fixed prompt-construction procedure** (R1 + the locked persona prompt template).
 - Battery LOO is sensitive to battery size, item coverage (GSS ballot rotation), and prompt-design choices — these are reported alongside ΔMAE.
 
-**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. ~34 batteries × N=1500 × 12 items × 1 model ≈ ~$50-60 incremental.
+**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. **Honest budget (locked 2026-05-09 night per Audit-3 + Joyce decision; supersedes earlier ~$218 estimate which assumed N=1,500)**: 34 batteries × 12 items × **3,309 respondents** × 1 model × 1 sample = **~1,350,000 calls × ~$0.000356/call ≈ ~$481 incremental**. See §5 for the full Phase 1 budget (~$756 total under Option A: cheap panel primary-only; sensitivity_eval anchor-only).
 
 **Reporting role**: **co-primary mechanistic finding**, equal prominence to 4-bin LOO in the abstract. The paper reports both:
 - Headline #1 (broad): "[Bin] contributes the most to attitude prediction" + Shapley robustness
@@ -599,7 +652,7 @@ The following analyses were considered for Phase 1 but **explicitly deferred**. 
 - **Six-theory horse race with hard numeric thresholds**
 - **Friedman & Popescu (2008) H-statistic** (proper implementation; the slimmed design uses a clearly-named non-standard `interaction_variance_share` instead)
 - **Sampled Shapley on 34 batteries** (2³⁴ ≈ 17 billion exact coalitions infeasible; sampled Shapley would produce 561 uninterpretable pairwise interaction terms; deferred until a future paper specifically targeting battery-battery interaction structure)
-- **Variable-level LOO** (per-variable single-drop within each battery; variable-level statistical power too low at N=1500 with 140 features × multiplicity correction; deferred to a future paper with N≥5000)
+- **Variable-level LOO** (per-variable single-drop within each battery; variable-level statistical power too low at N=3309 with 140 features × multiplicity correction; deferred to a future paper with N≥5000)
 - **Singleton-level LOO testing** (the 17 singletons in `gss_battery_map.json` are not tested as Battery LOO units — testing each as a 1-variable "battery" would inflate multiplicity without comparable statistical power; their contribution is absorbed into the 4-bin LOO via parent bin)
 
 These are listed here so future Joyce + Bayati discussions know what was considered and explicitly chosen against.

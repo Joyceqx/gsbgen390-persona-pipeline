@@ -1,10 +1,30 @@
 # Project Status — GSBGEN390 Phase 1 (Lean Design Locked)
 
-**Last updated:** 2026-05-09 (lean-design lock + housekeeping)
-**Maintained by:** Joyce Yu + collaborating Claude session
-**See also:** `INDEX.md` (file map), `HANDOFF.md` (fresh-session quickstart), `PROJECT_SYNTHESIS.md` (paper-ready synthesis)
+> ⚠️ **PARTIALLY SUPERSEDED** (banner added 2026-05-09 night per Audit-fresh review).
+> The body of this STATUS file lists progress as of 2026-05-09 evening; later that night, three Audit-2/3/fresh sweeps landed material design changes. **For current canonical state, always read** `gss_phase1_design.md` (live design) and `osf_preregistration_v1.md` (OSF lock); for the post-2026-05-09-night change log, see the OSF v1 §16 decision log.
+>
+> **Quick-reference deltas vs. body of this doc**:
+> - Phase 1a: N=100 → **N=200 with 100/100 selection/validation split**
+> - Phase 1b: N=1,500 → **N=3,309 (full GSS 2024 cross-section)**
+> - Cheap panel: MiniMax-M1 → **Llama-3.3-70B-Instruct** (3 China + 1 Western)
+> - All-DQ-fail: Qwen fallback → **PAUSE for human review**
+> - Bootstrap: B=1000 percentile → **B=10000 BCa with percentile fallback**
+> - Phase 1 budget: ~$450 → ~$875 → **~$756** (Option A: cheap panel primary-only; sensitivity_eval anchor-only per OSF §3.2; locked 2026-05-10 Joyce decision)
+> - Shapley + Battery LOO **analyzers ARE implemented**; orchestration drivers pending.
+> - Per-call seed: hardcoded seed=42 → **SHA-256 hash of (rid, condition, item, model, sample_idx)** to prevent GPT-4o n_samples=2 collapsing to identical replies.
+> - Sensitivity resume: previously had a silent data-loss bug; now pre-populates from existing partials + deep-merges on upsert.
 
-This document is the changelog-style single-source-of-truth for what's done, what's pending, and how to pick up the project in a fresh terminal. Per-decision rationale is in `PROJECT_SYNTHESIS.md` §4; per-section locked design is in `gss_phase1_design.md`.
+**Last updated:** 2026-05-09 night (Audit-2/3/fresh fixes landed; partially supersedes the body below)
+**Maintained by:** Joyce Yu + collaborating Claude session
+**See also:** `INDEX.md` (file map), `HANDOFF.md` (fresh-session quickstart), `PROJECT_SYNTHESIS.md` (paper-ready synthesis — also banner-marked as partially superseded)
+
+This document was originally the changelog-style single-source-of-truth, but as of 2026-05-10 night (per Audit-fresh-6 review) it is **historical / partially superseded** — see banner above for current numbers, and read these in order for canonical state:
+
+1. `gss_phase1_design.md` (canonical live design — sample sizes / panel / sensitivity scope all current)
+2. `osf_preregistration_v1.md` (OSF preregistration; mirrors design doc)
+3. `RUNBOOK.md` (paid-run sequence, exact commands, costs, expected outputs)
+
+Use STATUS.md only as a dated changelog of past states + project-history index. Per-decision rationale is in `PROJECT_SYNTHESIS.md` §4 (also banner'd partially-superseded).
 
 ---
 
@@ -401,11 +421,11 @@ GSBGEN390/
 │
 ├── ── DESIGN + NARRATIVE DOCS ──
 ├── README.md                          ← front door
-├── STATUS.md                          ← this file (single-source-of-truth)
+├── STATUS.md                          ← this file (HISTORICAL changelog; see banner)
 ├── CLAUDE.md                          ← guidance for AI assistants in this folder
 ├── AGENTS.md                          ← guidance for Codex (parallel of CLAUDE.md)
 ├── PRIMER.md                          ← 1-2 page Joyce self-intro
-├── MEETING_HANDOUT.md                 ← one-page brief for Bayati meeting (pilot)
+├── archive/MEETING_HANDOUT.md         ← one-page brief for Bayati meeting (pilot; moved to archive/ 2026-05-10 per Audit-fresh-2 F4)
 ├── WRITEUP.md                         ← 3-5 page formal pilot write-up
 ├── progress_report.md                 ← pilot sprint narrative
 ├── replication_scoping.md             ← design rationale + Park's actual numbers
@@ -553,7 +573,7 @@ cd ~/Documents/GSBGEN390
 #   3. gss_phase1_design.md — Phase 1 locked design (esp. §10 aggregation, §12 multi-model panel)
 #   4. gss_feature_taxonomy.json — eval and feature lists (v0.3)
 # Then for pilot context:
-#   5. MEETING_HANDOUT.md, WRITEUP.md, progress_report.md
+#   5. archive/MEETING_HANDOUT.md (pilot one-pager), WRITEUP.md, progress_report.md
 ```
 
 ### Phase 1 — IMMEDIATE NEXT STEP (task #6: N=10 smoke test)
@@ -701,7 +721,7 @@ python3 build_site_data.py
 - **2026-04-30 evening**: 6 pre-flight fixes applied (paths, demographics, anchors, CSV truth, TypeError, splitter). Pipeline ran end-to-end on laptop with retry/backoff. Leakage audit + robustness chart produced. **Park-was-AI-not-human correction propagated through 5 docs.**
 - **2026-04-30 late evening**: GitHub repo created at `Joyceqx/gsbgen390-persona-pipeline` and pushed; GitHub Pages enabled on `/docs`. Project folder tidied: derivative outputs moved into `outputs/` (logs to `outputs/logs/`); pre-pivot stale files moved into `archive/`; code paths in `rescore_with_leakage_audit.py`, `make_robustness_chart.py`, `build_site_data.py`, `run_notebook_local.py` updated for new locations and verified by re-running the post-pipeline rescore + chart + site-build pipeline end-to-end.
 - **2026-04-30 late night — Thesis-stage two-phase plan committed.** Phase 1 = GSS public-data feature-importance (`gss_phase1_design.md`). Phase 2 = interview-decomposed study (`thesis_phase2_design.md`). Phase 2 replaces an earlier "paired structured survey" idea after Joyce noted that the actual question — *what's IN the interview that surveys can't capture* — requires interview decomposition, not survey-feature ablation. Phase 2 forces a platform pivot: Cookiy 15-min cap is incompatible with 30-45 min modular long interview, so Phase 2 will use Prolific + a self-hosted OpenAI Realtime API moderator. Composed deliverable = the full 4×3 feature-category × outcome-dimension matrix.
-- **2026-04-30 night — Park v1 vs v2 reconciliation + outcome-stratified narrative pivot.** Verified directly from both v1 and v2 PDFs that the proposal's "85%" headline came from v1's interview-based normalized accuracy (~0.85), while v2 reorganized conditions and reports the four numbers we now cite (74/82/83/86%). Both versions live at the same arXiv ID; we adopt v2 framing throughout. **Critical refinement**: the "surveys ≈ interview" tie holds only on GSS attitudes — v2 also reports surveys lagging interviews by 0.15 on BFI-44 personality and by 0.28 on behavioral economic games. Thesis question reframed from "can surveys substitute for interviews?" to **outcome-stratified** "which feature categories close which parts of that gap on which outcomes?" Batch update propagated through `MEETING_HANDOUT.md`, `README.md`, `replication_scoping.md`, `EXPLAIN_ZH.md`, `LIT_REVIEW.md`, `PRIMER.md`, `FUTURE_DESIGN.md`, `progress_report.md`, `docs/index.html`, and this STATUS file.
+- **2026-04-30 night — Park v1 vs v2 reconciliation + outcome-stratified narrative pivot.** Verified directly from both v1 and v2 PDFs that the proposal's "85%" headline came from v1's interview-based normalized accuracy (~0.85), while v2 reorganized conditions and reports the four numbers we now cite (74/82/83/86%). Both versions live at the same arXiv ID; we adopt v2 framing throughout. **Critical refinement**: the "surveys ≈ interview" tie holds only on GSS attitudes — v2 also reports surveys lagging interviews by 0.15 on BFI-44 personality and by 0.28 on behavioral economic games. Thesis question reframed from "can surveys substitute for interviews?" to **outcome-stratified** "which feature categories close which parts of that gap on which outcomes?" Batch update propagated through `archive/MEETING_HANDOUT.md`, `README.md`, `replication_scoping.md`, `EXPLAIN_ZH.md`, `LIT_REVIEW.md`, `PRIMER.md`, `FUTURE_DESIGN.md`, `progress_report.md`, `docs/index.html`, and this STATUS file.
 - **2026-05-02 — Bayati meeting; Phase 1 design locked.** Direction confirmed: GSS-first then targeted Cookiy. **Path A\* locked**: Path B (12 curated items) as primary for the LOO; Path A (Park's full ~118 items) as sensitivity. Snapshot prediction on a single GSS wave (no panel for prediction). Raw accuracy as primary metric — no test-retest normalization in Phase 1; deferred to Phase 2's recontact arm. Persona self-consistency reported as supplementary stability check. Resolution rule for disjoint sets: features = (declared bin lists) MINUS primary_eval (only); sensitivity-pass handles per-item leakage separately. This rule preserves a populated psychological feature bin in GSS, which would otherwise be empty.
 - **2026-05-02 — Phase 1 data + tooling shipped.** GSS 2024 cross-section (3,309 respondents × 973 unique variables) downloaded via GSS Data Explorer in 3-batch fixed-width format. `gss_loader.py` written: parses each batch's `.do` script for column specs + variable labels + value labels, reads the corresponding `.dat` fixed-width file, namespaces label-set names per batch (avoids cross-batch label collisions), merges 3 batches horizontally. Verified 22/22 key Park variables present with correct labels. `gss_feature_taxonomy.json` initially locked at 23/29/8/80 (140 total); subsequently revised to v0.3 final counts 24/25/8/83 after the AUDIT-A reclassifications of 2026-05-05. `validate_taxonomy.py` confirms variable presence, bin disjointness, per-respondent coverage.
 - **2026-05-05 morning — Codex audit fixes (1st round).** 5 critical issues fixed: (a) gss_phase1_design.md rewritten end-to-end to match locked snapshot/raw-accuracy design (was internally inconsistent, mixing old 2010-2014 panel design with new 2024 snapshot); (b) Park comparability claims softened to "raw / per-item" only ("not directly numerically comparable to Park's normalized accuracy"); (c) feature-bin leakage rule rewritten to be self-consistent — declared bins disjoint from primary_eval, sensitivity items may be in features with per-item exclusion; (d) PARTYID removed from attitudinal feature bin (it's in primary_eval); (e) loader batch merge now verifies row alignment via per-row YEAR + ID_ equality, fixed ID_ vs ID column drop bug (final shape now correctly 973). validate_taxonomy.py rewritten with 9 explicit checks; raises SystemExit(1) on failure.

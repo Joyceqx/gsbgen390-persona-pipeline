@@ -27,7 +27,7 @@ Each schema below is fully specified: every field name, every type, every aggreg
 
 **Algorithm**: Enumerate all 2⁴ = 16 conditions (include/exclude each of the 4 bins). For each condition, compute respondent-macro Likert MAE on the Phase 1a primary_eval items. Shapley value for bin B is the average of `MAE(coalition without B) - MAE(coalition ∪ {B})` over all 8 coalitions that don't already contain B. Interaction terms come from standard ANOVA-style decomposition of the 16 condition MAEs.
 
-**When run**: Phase 1a (N=100), once per cheap-panel model (4× total). Optionally re-run after Phase 1b (N=1500) on the §12.2-selected model for stronger CIs.
+**When run**: Phase 1a (N=200), once per cheap-panel model (4× total). Optionally re-run after Phase 1b (N=3,309) on the §12.2-selected model for stronger CIs.
 
 **Output schema** (one JSON file per `(model, n_respondents, seed)`):
 
@@ -89,7 +89,7 @@ Each schema below is fully specified: every field name, every type, every aggreg
     }
   },
 
-  "ci_method": "paired_bootstrap_respondent_level_B1000",
+  "ci_method": "paired_bootstrap_respondent_level_B10000_BCa",
   "alpha": 0.05
 }
 ```
@@ -111,7 +111,7 @@ Each schema below is fully specified: every field name, every type, every aggreg
 
 **Unconditional**: runs regardless of which bin dominates the 4-bin LOO. The previous "conditional on attitudinal dominance" trigger was removed 2026-05-09 evening when Battery LOO was promoted to co-primary.
 
-**Algorithm**: For each of the 34 batteries B, drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1 per-item battery exclusion — these are independent operations). Re-run prediction. Compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level (paired bootstrap, B=1000, seed=42). Apply **two Holm corrections in parallel**:
+**Algorithm**: For each of the 34 batteries B, drop the entire battery from the persona prompt for ALL 12 primary_eval items (in addition to R1 per-item battery exclusion — these are independent operations). Re-run prediction. Compute respondent-macro Likert ΔMAE vs FULL. Bootstrap CI at respondent level (paired bootstrap, **B=10000, seed=42, BCa via scipy with percentile fallback for degenerate inputs** — locked 2026-05-09 night per Codex N5/N6 audit). Apply **two Holm corrections in parallel**:
 1. **Nested Holm-Bonferroni primary** within each bin's battery family — 4 separate corrections, NOT joint:
    - Demographic family: 7 tests, smallest p < α/7 = 0.0071
    - Behavioral family: 10 tests, smallest p < α/10 = 0.0050
@@ -129,17 +129,17 @@ Each schema below is fully specified: every field name, every type, every aggreg
 
 A finding is "substantively meaningful" only if **both** Holm-significant within its family AND practical-effect ≥ "modest" with bootstrap CI excluding the small-effect boundary.
 
-**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. 34 batteries × 1500 respondents × 12 items × 1 model ≈ ~$50-60 incremental.
+**When run**: Phase 1c (post Phase 1b headline) on the §12.2-selected 1b model only. 34 batteries × **3,309 respondents** × 12 items × 1 model ≈ **~$481 incremental** (locked 2026-05-09 night per Audit-3 + Joyce decision; supersedes the earlier ~$218 estimate at N=1,500 and the original ~$50-60 back-of-envelope). See `gss_phase1_design.md` §5 for the full Phase 1 budget (~$756 total under Option A: cheap panel primary-only; sensitivity_eval anchor-only).
 
 **Output schema** (one JSON file per `(model, n_respondents, seed)`):
 
 ```json
 {
   "_version": "0.4",
-  "_run_id": "phase1c_battery_loo_qwen-2.5_n1500_seed42",
+  "_run_id": "phase1c_battery_loo_qwen-2.5_n3309_seed42",
   "_locked_spec_path": "tier1_tool_schemas.md",
   "model": "qwen/qwen-2.5-72b-instruct",
-  "n_respondents": 1500,
+  "n_respondents": 3309,
   "seed": 42,
   "scope": "all_4_bins_34_batteries",
   "_scope_definition": "All 34 batteries per gss_battery_map.json v0.2: 7 demographic + 10 behavioral + 2 psychological + 15 attitudinal. Singletons NOT tested (deferred per §13.4).",
@@ -198,7 +198,7 @@ A finding is "substantively meaningful" only if **both** Holm-significant within
     "_substantively_meaningful_definition": "Holm-significant WITHIN BIN AND effect_size_label in {modest, substantive} AND ci_lo ≥ 0.02 (CI excludes small-effect boundary)."
   },
 
-  "ci_method": "paired_bootstrap_respondent_level_B1000_seed42",
+  "ci_method": "paired_bootstrap_respondent_level_B10000_BCa_seed42",
   "multiplicity_correction": "nested_holm_per_bin_primary_plus_joint34_sensitivity",
   "_multiplicity_definition": "Two corrections in parallel. Nested Holm within each bin's battery family is the PRIMARY correction (controls within-bin FWER). Joint Holm across all 34 batteries is the SENSITIVITY correction used to gate cross-bin claims. Within-bin claims need only nested Holm; cross-bin claims need both."
 }
@@ -225,12 +225,12 @@ A finding is "substantively meaningful" only if **both** Holm-significant within
 - **Battery names**: lowercase, underscored, matches `gss_battery_map.json` keys
 - **Run-id format**: `{phase}_{tool}_{model_short}_{n}_{seed}` — matches the locked I-10 reproducibility filename convention
 - **Seed**: always 42 unless `--force-non-canonical-seed` (per `gss_driver.py`)
-- **CI method**: `paired_bootstrap_respondent_level_B1000` for ablation deltas
+- **CI method**: `paired_bootstrap_respondent_level_B10000_BCa` for ablation deltas (BCa via scipy with percentile fallback for degenerate inputs; locked 2026-05-09 night per Codex N5/N6 audit)
 
 ## Implementation order (Day 3-4 of slim build)
 
 1. Build `shapley_decomposition.py` — needs the `gss_driver.py` 16-condition enumeration and the standard ANOVA-style interaction decomposition.
-2. Build `battery_loo.py` — wraps existing `gss_driver.py` with battery-level exclude_vars; runs only post-1b after trigger condition is checked.
+2. Build `battery_loo.py` — wraps existing `gss_driver.py` with battery-level exclude_vars; runs **unconditionally as a co-primary analysis** post-Phase-1b (locked 2026-05-09 evening — the previous "after attitudinal-dominance trigger" gating was removed when Battery LOO was promoted to co-primary).
 
 ## What this file does NOT do
 

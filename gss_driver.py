@@ -5,29 +5,71 @@ persists results.
 Audit primitives (prompts / scoring / aggregation) live in gss_pipeline.py.
 LLM network layer lives in llm_router.py. This module only orchestrates.
 
-Locked design (gss_phase1_design.md §12):
-  - Phase 1a (N=100): 4 cheap OpenRouter models × n_samples=1
-  - Phase 1b (N=1500): single quality-selected model × n_samples=1 (per §12.2: argmin 1a MAE among DQ-passers; cost is tie-break only)
-  - GPT-4o anchor: N=100 subset, n_samples=2, primary conditions only
-  - Sensitivity pass: per-item exclusion (1b model + anchor only)
+Locked design (gss_phase1_design.md §12; sample sizes revised 2026-05-09 night
+per Audit-3 + Joyce decision; sensitivity scope revised 2026-05-10 per Joyce
+decision Option A):
+  - Phase 1a (N=200): 4 cheap OpenRouter models × n_samples=1, **primary_eval
+    ONLY** (12 items × 5 conditions = 60 prompts/model/respondent), with a
+    locked 100/100 selection/validation split per §12.2 (selector scores ONLY
+    on the selection-half; validation-half held out for post-selection-
+    inference defense).
+  - Phase 1b (N=3,309 — full GSS 2024 cross-section): single §12.2-quality-
+    selected model × n_samples=1, **primary_eval ONLY** (60 prompts/respondent;
+    argmin selection-MAE among DQ-passers; cost is tie-break only; all-DQ-fail
+    PAUSES for human review rather than silently bypassing the gate to Qwen).
+  - GPT-4o anchor: N=100 selection-split subset, n_samples=2, **primary +
+    sensitivity** (60 + 118 = 178 prompts × n=2 = 356 calls/respondent — the
+    ONLY Park-comparable run; produces the per-item raw-accuracy anchor table
+    side-by-side with Park v2 SI Table 3 per OSF §3.2). One anchor invocation
+    serves both Phase 1a and Phase 1b reporting purposes.
+  - Sensitivity pass scope (locked 2026-05-10 Option A): **anchor-only**.
+    Cheap panel + selected 1b model do NOT run sensitivity_eval — those
+    headline runs are primary_eval only. Earlier docs that listed sensitivity
+    on cheap models or 1b model are superseded by Option A.
+  - 4-cheap panel: Qwen-2.5-72B / DeepSeek-V3.1 / Llama-3.3-70B-Instruct (Meta) /
+    Kimi K2 (3 China-trained + 1 Western-trained for cross-family balance;
+    MiniMax-M1 → Llama swap locked pre-OSF per Audit-3).
 
-Usage:
-    # Smoke test — 1 respondent, 1 model, primary conditions only
-    python3 gss_driver.py --smoke
+Usage (LOCKED Phase 1 paid runs — use named modes; locked 2026-05-10 per
+Audit-fresh-4 review; legacy --smoke / --anchor flags below are debug-only
+and DO NOT match the OSF Option A scope):
 
-    # Full N=10 smoke — 4 cheap models, primary + sensitivity
-    python3 gss_driver.py --n 10
+    # Phase 1a — N=200 cheap-panel × primary-only (sensitivity is anchor-only).
+    # 100/100 selection/validation split is enforced downstream by
+    # select_phase1b_model.py CLI. Cost: ~$17 cheap.
+    python3 gss_driver.py --phase1a
 
-    # Full N=10 primary only (skip sensitivity to save cost)
-    python3 gss_driver.py --n 10 --primary-only
+    # §12.2 selector — produces Phase 1b model slug + held-out validation_mae:
+    python3 select_phase1b_model.py outputs/gss_phase1_records_n200_*.json
 
-    # GPT-4o anchor on N=100 subset (only after cheap-panel run is in)
-    python3 gss_driver.py --anchor --n 100
+    # Phase 1b — N=3,309 × single §12.2-selected model × primary-only.
+    # Cost: ~$71 (single cheap model).
+    python3 gss_driver.py --phase1b --phase1b-model qwen/qwen-2.5-72b-instruct
+    # (replace slug with the actual selector output)
+
+    # GPT-4o anchor — N=100 selection-split subset × primary + sensitivity
+    # (the only Park-comparable run; produces the Park v2 SI Table 3 anchor
+    # table). One invocation serves both Phase 1a and Phase 1b reporting.
+    # Cost: ~$148.
+    python3 gss_driver.py --phase1b-anchor
+
+    # Phase 1c stubs (orchestration runtime not yet implemented; analyzer
+    # ready — see osf_preregistration_v1.md §13.2).
+    python3 gss_driver.py --battery-loo  # NOT IMPLEMENTED — prints OSF pointer
+    python3 gss_driver.py --shapley      # NOT IMPLEMENTED — same status
+
+DEBUG / smoke (NOT for paid runs; sensitivity scope here is legacy):
+    python3 gss_driver.py --smoke        # 1 respondent × 1 model × primary
+
+See `RUNBOOK.md` for the full step-by-step paid-run sequence + expected
+output paths + cost projection per step.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -65,6 +107,26 @@ CONDITIONS_PRIMARY = [
     ("loo_drop_psychological", "psychological"),
     ("loo_drop_attitudinal", "attitudinal"),
 ]
+
+
+# ---------------------------------------------------------------------------
+# Per-call seed derivation (locked 2026-05-09 night per Audit-2 critical fix)
+# ---------------------------------------------------------------------------
+# A single hardcoded seed=42 across all calls would collapse GPT-4o n_samples=2
+# self-consistency to deterministic identity (same prompt + same seed → same
+# reply, if the provider honors seed). We derive a per-call seed from a stable
+# hash of (rid, condition, item_id, model, sample_idx) so:
+#   - same (rid, cond, item, model, sample_idx) → same seed → reproducible.
+#   - different sample_idx → different seed → genuine within-prompt variation
+#     when n_samples > 1 (e.g., GPT-4o anchor with n_samples=2).
+# Seed is a hint per llm_router.py docstring; provider honoring is verified at
+# smoke-test time.
+SEED_BASE = 42
+
+def _derive_seed(rid: int, condition: str, item_id: str, model: str, sample_idx: int) -> int:
+    payload = f"{SEED_BASE}|{rid}|{condition}|{item_id}|{model}|{sample_idx}".encode("utf-8")
+    h = hashlib.sha256(payload).digest()
+    return int.from_bytes(h[:4], "big") & 0x7FFFFFFF
 
 
 # ---------------------------------------------------------------------------
@@ -192,13 +254,16 @@ def run_primary_one_respondent(
             for m in models:
                 samples: list[dict] = []
                 for s_idx in range(n_samples):
+                    seed = _derive_seed(rid, cond_name, item["id"], m, s_idx)
                     try:
-                        raw = call_llm(system, question, model=m, temperature=temperature)
+                        raw = call_llm(system, question, model=m,
+                                        temperature=temperature, seed=seed)
                     except LLMError as e:
                         raw = f"<<LLM_ERROR: {e}>>"
                     score = score_item(
                         item["id"], item["format"], meta["valid_codes"], raw, truth
                     )
+                    score["seed"] = seed  # record for reproducibility audit
                     samples.append(score)
                 per_model_scores[m][item["id"]] = samples
             if verbose:
@@ -226,15 +291,20 @@ def run_sensitivity_one_respondent(
     temperature: float = 0.7,
     verbose: bool = True,
     done_items_by_model: dict[str, set[str]] | None = None,
+    existing_per_model_scores: dict[str, dict[str, list[dict]]] | None = None,
     persist_after_each_item: "Callable[[list[dict]], None] | None" = None,
 ) -> list[dict]:
     """For one respondent: each sensitivity item gets its own per-item-excluded
     persona prompt. Returns one record per model, with per_item_scores keyed
     by sensitivity_item_id.
 
-    Item-level resume (P2.1):
+    Item-level resume (P2.1, fix locked 2026-05-09 night per Audit-2 critical):
       - `done_items_by_model[m]` lists item ids ALREADY scored for model m on
         this respondent; those items are skipped per model.
+      - `existing_per_model_scores[m]` carries the previously-scored item-list
+        dicts so the snapshot/upsert preserves them. If absent, the snapshot
+        contains only newly-completed items and the caller's REPLACE-style
+        upsert silently nukes the prior items (the bug the audit flagged).
       - If `persist_after_each_item` is supplied, it's called after every
         sensitivity item (across all models) finishes, with the current
         partial-records snapshot. The caller persists. This bounds the worst-
@@ -243,7 +313,14 @@ def run_sensitivity_one_respondent(
     """
     rid = int(respondent.get("ID_", -1))
     skip = done_items_by_model or {m: set() for m in models}
+    # Pre-populate with previously-scored items so the snapshot carries them
+    # forward across resume + persist cycles. Deep-copy the per-item lists so
+    # the caller's records aren't mutated.
     per_model_scores: dict[str, dict[str, list[dict]]] = {m: {} for m in models}
+    if existing_per_model_scores:
+        for m, items_done in existing_per_model_scores.items():
+            if m in per_model_scores:
+                per_model_scores[m] = {k: list(v) for k, v in items_done.items()}
 
     def _snapshot() -> list[dict]:
         # Build the records snapshot for this respondent right now.
@@ -280,11 +357,14 @@ def run_sensitivity_one_respondent(
                 continue
             samples: list[dict] = []
             for s_idx in range(n_samples):
+                seed = _derive_seed(rid, "sensitivity", vid, m, s_idx)
                 try:
-                    raw = call_llm(system, question, model=m, temperature=temperature)
+                    raw = call_llm(system, question, model=m,
+                                    temperature=temperature, seed=seed)
                 except LLMError as e:
                     raw = f"<<LLM_ERROR: {e}>>"
                 score = score_item(vid, item["format"], meta["valid_codes"], raw, truth)
+                score["seed"] = seed  # record for reproducibility audit
                 samples.append(score)
             per_model_scores[m][vid] = samples
 
@@ -332,11 +412,34 @@ def _completed_sensitivity_items(records: list[dict], rid: int) -> dict[str, set
     return out
 
 
+def _existing_sensitivity_per_model_scores(
+    records: list[dict], rid: int
+) -> dict[str, dict[str, list[dict]]]:
+    """For respondent rid, return {model: {item_id: [score_dicts...]}} of
+    previously-completed sensitivity items. Used to pre-populate the runner
+    so the upsert preserves prior items across resume cycles (Audit-2 fix).
+    """
+    out: dict[str, dict[str, list[dict]]] = {}
+    for r in records:
+        if r.get("condition") != "sensitivity" or r.get("respondent_id") != rid:
+            continue
+        m = r.get("model")
+        if m is None:
+            continue
+        existing = r.get("per_item_scores") or {}
+        out.setdefault(m, {}).update(existing)
+    return out
+
+
 def _upsert_sensitivity_records(all_records: list[dict], new_partial: list[dict]) -> None:
     """In-place upsert: for each (rid, 'sensitivity', model) record in
-    new_partial, replace the matching record in all_records (or append).
-    Item-level merging (per_item_scores union) is handled by the caller —
-    new_partial already carries the union for the in-flight respondent.
+    new_partial, MERGE the per_item_scores into the matching record in
+    all_records (or append). Locked 2026-05-09 night per Audit-2 critical fix:
+    previously this REPLACED the old record with `new`, silently dropping
+    items that had been completed in earlier resume cycles. Deep-merge the
+    per_item_scores dicts (new wins on key conflict, which only matters if
+    the same item was scored twice — should not happen in a correctly-resuming
+    run, and if it does, the most recent score is kept).
     """
     index: dict[tuple, int] = {}
     for i, r in enumerate(all_records):
@@ -345,7 +448,14 @@ def _upsert_sensitivity_records(all_records: list[dict], new_partial: list[dict]
     for new in new_partial:
         key = (new["respondent_id"], new["model"])
         if key in index:
-            all_records[index[key]] = new
+            old = all_records[index[key]]
+            old_items = old.get("per_item_scores") or {}
+            new_items = new.get("per_item_scores") or {}
+            merged = dict(old_items)
+            merged.update(new_items)  # new wins on collision (rare; same-item rerun)
+            merged_record = dict(new)
+            merged_record["per_item_scores"] = merged
+            all_records[index[key]] = merged_record
         else:
             all_records.append(new)
             index[key] = len(all_records) - 1
@@ -361,6 +471,7 @@ def run_phase1(
     do_sensitivity: bool = True,
     resume: bool = True,
     verbose: bool = True,
+    force_resume_partial: bool = False,
 ) -> Path:
     """Top-level driver. Sequential calls; resumable.
 
@@ -382,6 +493,62 @@ def run_phase1(
         output_path = OUTPUTS / f"gss_phase1_records_n{n}_{model_tag}_seed{seed}.json"
 
     existing = _load_partial(output_path) if resume else []
+
+    # Audit-fresh-4 P1 partial-resume guard (locked 2026-05-10 night).
+    # If the driver finds an existing artifact at the canonical output path
+    # but its record count is suspiciously small for the planned (n × models ×
+    # conditions) shape, refuse to silently resume — most likely the file is
+    # a stray smoke/test partial. The user must explicitly confirm by either
+    # (a) deleting the file (and re-running with --no-resume implicit) OR
+    # (b) passing --force-resume-partial to acknowledge the partial state.
+    if existing and resume:
+        n_models = len(models) if models else 1
+        # Conservative lower-bound on expected records for a realistic resume
+        # of an interrupted full run: at least 5% of the full record count.
+        # Each respondent contributes one record per (condition × model):
+        #   - primary pass: 5 conditions (Full + 4 single-bin LOO)
+        #   - sensitivity pass: 1 condition ("sensitivity")
+        # Bug fix locked 2026-05-10 night per Audit-fresh-5 RevB P2 review:
+        # earlier formula was `n * n_models` (no condition factor), which made
+        # the 5% threshold equivalent to ~1% of real records — Phase 1a's true
+        # 4,000-record full run let stray ~200-record partials through. The
+        # corrected formula multiplies by the per-respondent record count.
+        records_per_respondent_per_model = (
+            (5 if do_primary else 0) + (1 if do_sensitivity else 0)
+        )
+        if records_per_respondent_per_model == 0:
+            # No primary AND no sensitivity → guard is moot; skip
+            records_per_respondent_per_model = 1
+        expected_full_records = n * n_models * records_per_respondent_per_model
+        partial_threshold = max(int(expected_full_records * 0.05), 20)
+        if (
+            len(existing) < partial_threshold
+            and len(existing) < expected_full_records
+            and not force_resume_partial
+        ):
+            cond_factor = records_per_respondent_per_model
+            print(
+                f"REFUSING [partial-resume guard]: existing artifact at\n"
+                f"    {output_path}\n"
+                f"  has only {len(existing)} record(s); the planned run "
+                f"shape (N={n} × {n_models} models × {cond_factor} "
+                f"condition-records/respondent) expects ~{expected_full_records} "
+                f"records when complete, so resume is meaningful only above "
+                f"{partial_threshold} (5% of expected). "
+                f"This suggests the file is a stray smoke/test partial that "
+                f"would silently corrupt a paid run.\n\n"
+                f"  Options:\n"
+                f"    1. Move/delete the partial file:\n"
+                f"         mv {output_path} {output_path}.partial-stray\n"
+                f"       Then re-run; the driver will start fresh.\n"
+                f"    2. Acknowledge and force resume from the partial:\n"
+                f"         (re-invoke with --force-resume-partial)\n"
+                f"    3. Run with --no-resume to ignore the file entirely\n"
+                f"       (NOTE: --no-resume will OVERWRITE the existing file).",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+
     done_keys = _completed_keys(existing)
     if existing:
         print(f"Resuming: {len(existing)} records already in {output_path.name}")
@@ -418,6 +585,7 @@ def run_phase1(
             # model has all 118 items done, skip; otherwise pass the per-model
             # done-set into the runner so only missing items are re-issued.
             done_items_by_model = _completed_sensitivity_items(all_records, rid)
+            existing_pms = _existing_sensitivity_per_model_scores(all_records, rid)
             n_total = len(sensitivity_eval_ids)
             all_models_complete = all(
                 len(done_items_by_model.get(m, set())) >= n_total for m in models
@@ -431,6 +599,7 @@ def run_phase1(
                     respondent, taxonomy, sensitivity_eval_ids,
                     models=models, n_samples=n_samples, verbose=verbose,
                     done_items_by_model=done_items_by_model,
+                    existing_per_model_scores=existing_pms,
                     persist_after_each_item=_persist_partial,
                 )
                 # Final upsert + persist for this respondent
@@ -456,14 +625,66 @@ def run_phase1(
 
 def _cli():
     p = argparse.ArgumentParser(
-        description="GSS Phase 1 driver — orchestrates LLM panel over GSS respondents."
+        description="GSS Phase 1 driver — orchestrates LLM panel over GSS respondents.",
+        epilog=(
+            "Locked Phase 1 named modes (recommended; locked 2026-05-09 night per "
+            "Audit-fresh review; sensitivity scope locked 2026-05-10 per Joyce "
+            "decision Option A): use --phase1a / --phase1b / --phase1b-anchor to "
+            "invoke the OSF-locked paid-run configuration in one flag. "
+            "(--battery-loo / --shapley are NOT-IMPLEMENTED stubs that print a "
+            "clear OSF §13.2 pointer — analyzer is ready, orchestration runtime "
+            "deferred until before Phase 1c.) Manual flag composition (--n, "
+            "--models, etc.) is preserved for debugging, but for paid runs at "
+            "the locked ~$756 budget (Option A: cheap-panel primary-only + "
+            "anchor with sensitivity), use the named modes — they pin N + panel "
+            "+ sensitivity scope to the locked spec. See RUNBOOK.md for the "
+            "step-by-step paid-run sequence with expected outputs + cost per step."
+        ),
     )
+
+    # Locked Phase 1 named modes (Audit-fresh fix; mutually exclusive).
+    # Sensitivity scope locked 2026-05-10 per Joyce decision Option A:
+    # cheap models = primary_eval only; GPT-4o anchor = primary + sensitivity_eval
+    # (the only Park-comparable run, per OSF §3.2).
+    mode = p.add_mutually_exclusive_group()
+    mode.add_argument("--phase1a", action="store_true",
+                      help="Phase 1a (N=200, 4 cheap panel, n_samples=1, "
+                           "PRIMARY ONLY — sensitivity_eval is anchor-only per "
+                           "OSF §3.2). The 100/100 selection/validation split is "
+                           "enforced downstream by select_phase1b_model.py CLI.")
+    mode.add_argument("--phase1b", action="store_true",
+                      help="Phase 1b (N=3,309 full GSS 2024 cross-section, single "
+                           "§12.2-selected model, n_samples=1, PRIMARY ONLY — "
+                           "sensitivity_eval is anchor-only per OSF §3.2). "
+                           "REQUIRES --phase1b-model SLUG (the §12.2 selector output).")
+    mode.add_argument("--phase1b-anchor", action="store_true",
+                      help="GPT-4o anchor (N=100 selection-split subset; one run "
+                           "serves both Phase 1a and Phase 1b reporting), "
+                           "n_samples=2, PRIMARY + SENSITIVITY (the only Park-"
+                           "comparable run per OSF §3.2; produces the per-item "
+                           "raw-accuracy table side-by-side with Park v2 SI Table 3).")
+    mode.add_argument("--battery-loo", action="store_true",
+                      help="Phase 1c Battery LOO orchestration. NOT YET IMPLEMENTED — "
+                           "the analyzer (battery_loo.py) is implemented and self-tested; "
+                           "the gss_driver.py runtime extension that emits "
+                           "condition='battery_loo_drop_<name>' records is the deferred "
+                           "implementation work disclosed in osf_preregistration_v1.md "
+                           "§13.2.")
+    mode.add_argument("--shapley", action="store_true",
+                      help="Phase 1c Shapley 16-condition enumeration. NOT YET "
+                           "IMPLEMENTED — same status as --battery-loo (analyzer "
+                           "implemented, driver runtime deferred per OSF §13.2).")
+
+    p.add_argument("--phase1b-model", default=None,
+                   help="Required with --phase1b. The §12.2-selected model slug.")
+
+    # Legacy / debugging flags (preserved).
     p.add_argument("--n", type=int, default=10, help="number of respondents to run")
     p.add_argument("--seed", type=int, default=42, help="sampling seed (locked at 42)")
     p.add_argument("--smoke", action="store_true",
                    help="single-respondent, single-model, primary-only (cheapest possible test)")
     p.add_argument("--anchor", action="store_true",
-                   help="GPT-4o anchor mode: 1 model (gpt-4o), n_samples=2, primary-only")
+                   help="LEGACY: GPT-4o anchor (use --phase1b-anchor for the locked Phase 1b anchor).")
     p.add_argument("--primary-only", action="store_true",
                    help="skip sensitivity pass (saves ~60%% of LLM calls)")
     p.add_argument("--sensitivity-only", action="store_true",
@@ -478,6 +699,21 @@ def _cli():
                    help="permit a non-42 seed run to overwrite an existing seed-42 "
                         "artifact (default: refuse). The locked Phase 1 seed is 42; "
                         "this flag exists ONLY for explicit reproducibility-drift tests.")
+    p.add_argument("--allow-panel-wide-large-n", action="store_true",
+                   help="bypass the panel-wide-large-N cost guard (Audit-fresh-2 F9). "
+                        "Default: refuse to run --n >= 1000 with >1 model + sensitivity "
+                        "since this would burn ~$836 for the 4-model × N=3309 × full-178-prompt "
+                        "panel-wide grid (Phase 1b is locked to a SINGLE §12.2-selected model). "
+                        "Pass this flag only for an intentional cross-panel reanalysis with "
+                        "explicit budget approval.")
+    p.add_argument("--force-resume-partial", action="store_true",
+                   help="bypass the partial-resume guard (Audit-fresh-4 P1). Default: "
+                        "refuse to resume from an existing artifact whose record count "
+                        "is suspiciously small for the planned (n × models) shape "
+                        "(<5%% of expected primary-pass records, with a floor of 20). "
+                        "Pass this flag ONLY when intentionally continuing a known-"
+                        "interrupted real run; for stray smoke artifacts, delete the "
+                        "file first instead.")
     return p.parse_args()
 
 
@@ -485,7 +721,92 @@ if __name__ == "__main__":
     import sys
     args = _cli()
 
-    if args.smoke:
+    # Stub modes (analyzer exists; orchestration runtime deferred per OSF §13.2).
+    if args.battery_loo or args.shapley:
+        which = "Battery LOO" if args.battery_loo else "Shapley 16-condition"
+        print(
+            f"NOT IMPLEMENTED: --{'battery-loo' if args.battery_loo else 'shapley'} "
+            f"orchestration is deferred runtime work.\n\n"
+            f"  Status (locked 2026-05-09 night, disclosed in osf_preregistration_v1.md\n"
+            f"  §13.2 + gss_phase1_design.md §9f):\n"
+            f"    - {which} ANALYZER is implemented and self-tested\n"
+            f"      ({'battery_loo.py' if args.battery_loo else 'shapley_decomposition.py'} "
+            f"--self-test passes).\n"
+            f"    - {which} ORCHESTRATION DRIVER (this file's extension to enumerate\n"
+            f"      condition='{('battery_loo_drop_<name>' if args.battery_loo else 'shapley_<subset>')}' \n"
+            f"      records) remains to be built before any paid Phase 1c run.\n\n"
+            f"  Why deferred: per OSF lock-first defense, the analysis contract\n"
+            f"  (analyzer + spec in tier1_tool_schemas.md Tools 1-2) is locked at\n"
+            f"  OSF time; the orchestration is implemented faithfully to that spec\n"
+            f"  before Phase 1c. Schema + design cannot change post-OSF; only the\n"
+            f"  runtime implementation timing.\n",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    # Locked Phase 1 named modes (Audit-fresh fix). Prefer these over manual
+    # composition for paid runs.
+    if args.phase1a:
+        models = list(MODEL_PANEL_PRIMARY)
+        n = 200
+        n_samples = 1
+        do_primary = True
+        # Locked Option A 2026-05-10 (Joyce decision per Audit-fresh-2 P1 sensitivity-
+        # scope review): cheap panel runs primary ONLY. sensitivity_eval is the 118-item
+        # Park-comparable benchmark, used only for the GPT-4o anchor side-by-side table
+        # against Park v2 SI Table 3 (per OSF §3.2). Cheap panel sensitivity adds
+        # nothing to the headline 4-bin LOO / Battery LOO / §12.2 selector and is
+        # excluded to keep budget honest (~$71 saved per Phase 1a + Phase 1b combined).
+        do_sensitivity = False
+        print(
+            "  [mode=--phase1a] N=200, 4-cheap panel locked from MODEL_PANEL_PRIMARY, "
+            "primary ONLY (sensitivity_eval is anchor-only per OSF §3.2).\n"
+            "  After this completes, run: python3 select_phase1b_model.py "
+            f"<output.json> (the CLI auto-derives the locked 100/100 split via "
+            "_derive_phase1a_split — do NOT pass --no-split for paid runs.)",
+            file=sys.stderr,
+        )
+    elif args.phase1b:
+        if not args.phase1b_model:
+            print(
+                "ERROR: --phase1b requires --phase1b-model SLUG (the §12.2-selected "
+                "model slug, e.g., 'qwen/qwen-2.5-72b-instruct'). Run "
+                "select_phase1b_model.py on Phase 1a output first to determine the "
+                "locked-rule selection.",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        models = [args.phase1b_model]
+        n = 3309
+        n_samples = 1
+        do_primary = True
+        # Locked Option A 2026-05-10: cheap panel sensitivity off (same rationale
+        # as --phase1a above; sensitivity_eval is anchor-only per OSF §3.2).
+        do_sensitivity = False
+        print(
+            f"  [mode=--phase1b] N=3,309 (full GSS 2024), single §12.2-selected "
+            f"model: {args.phase1b_model}, primary ONLY "
+            f"(sensitivity_eval is anchor-only per OSF §3.2).",
+            file=sys.stderr,
+        )
+    elif args.phase1b_anchor:
+        models = [MODEL_ANCHOR]
+        n = 100
+        n_samples = 2
+        do_primary = True
+        # Locked Option A 2026-05-10: ANCHOR runs sensitivity_eval (this is the
+        # only Park-comparable run; produces the side-by-side per-item raw
+        # accuracy table against Park v2 SI Table 3 per OSF §3.2). Single anchor
+        # invocation on the N=100 selection split serves both Phase 1a and
+        # Phase 1b reporting purposes.
+        do_sensitivity = True
+        print(
+            "  [mode=--phase1b-anchor] N=100 selection-split subset, GPT-4o, "
+            "n_samples=2, primary + sensitivity (Park-comparable Table 3 anchor "
+            "table per OSF §3.2; locked 2026-05-10 Joyce decision Option A).",
+            file=sys.stderr,
+        )
+    elif args.smoke:
         models = ["qwen/qwen-2.5-72b-instruct"]
         n = 1
         n_samples = 1
@@ -525,6 +846,37 @@ if __name__ == "__main__":
             f"NOT comparable to the pre-registered run.",
             file=sys.stderr,
         )
+
+    # Audit-fresh-2 F9: panel-wide large-N cost guard.
+    # Refuse to run >1 model at N>=1000 with sensitivity unless --allow-panel-
+    # wide-large-n is explicitly passed. The named --phase1b mode hard-codes a
+    # single model (so it bypasses this guard), but a manual command like
+    # `--n 3309` with the default 4-cheap panel + sensitivity would burn ~$836
+    # vs the planned ~$209 single-model 1b run.
+    if (
+        n >= 1000
+        and len(models) > 1
+        and do_sensitivity
+        and not args.allow_panel_wide_large_n
+    ):
+        # Approximate cost: per-respondent prompts × n × models × $/call
+        # 178 = 60 primary + 118 sensitivity per the locked design.
+        approx_calls = 178 * n * len(models)
+        approx_cost = approx_calls * 0.000356
+        print(
+            f"REFUSING [F9 cost guard]: --n={n} with {len(models)} models AND "
+            f"sensitivity pass would dispatch ~{approx_calls:,} LLM calls "
+            f"(~${approx_cost:,.0f}). The locked Phase 1b design (per §12.2) "
+            f"runs a SINGLE §12.2-selected model at N=3,309 (~$209). To "
+            f"replicate that, use:\n"
+            f"    python3 gss_driver.py --phase1b --phase1b-model SLUG\n"
+            f"\n"
+            f"If you intentionally want a cross-panel reanalysis at large N, "
+            f"pass --allow-panel-wide-large-n explicitly AND ensure the "
+            f"resulting cost is approved.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
 
     print(f"=== GSS Phase 1 driver ===")
     print(f"  N respondents: {n}")
@@ -577,4 +929,5 @@ if __name__ == "__main__":
         do_primary=do_primary,
         do_sensitivity=do_sensitivity,
         resume=not args.no_resume,
+        force_resume_partial=args.force_resume_partial,
     )

@@ -1,8 +1,31 @@
 # HANDOFF — GSBGEN390 (for a fresh Claude session)
 
-**Created:** 2026-05-08 · **Last refreshed:** 2026-05-09 (lean-design lock + housekeeping)
+> ⚠️ **PARTIALLY SUPERSEDED — body is from 2026-05-09 evening; sample sizes / panel / sensitivity scope / budget revised on 2026-05-09 night and 2026-05-10** (banner added 2026-05-10 per Audit-fresh-3 P2.2 review).
+>
+> **Always read** `gss_phase1_design.md` (live) and `osf_preregistration_v1.md` (OSF lock) for current canonical state. Body below is preserved for project history only.
+>
+> **Quick-reference deltas vs. body of this doc**:
+> - Phase 1a: ~~N=100~~ → **N=200 with 100/100 selection/validation split**, **primary_eval only**
+> - Phase 1b: ~~N=1,500~~ → **N=3,309 (full GSS 2024)**, single §12.2-selected model, **primary_eval only**
+> - GPT-4o anchor: ~~primary only~~ → **primary + sensitivity** (the only Park-comparable sensitivity run; per OSF §3.2)
+> - Cheap panel: ~~MiniMax-M1~~ → **Llama-3.3-70B-Instruct (Meta)** (3 China + 1 Western)
+> - All-DQ-fail: ~~Qwen fallback~~ → **PAUSE for human review**
+> - Bootstrap: ~~B=1000 percentile~~ → **B=10000 BCa with percentile fallback**
+> - Phase 1 budget: ~~$280-300~~ → ~~$450~~ → ~~$875~~ → **~$756** (Option A: cheap-panel primary-only + anchor sensitivity-only)
+> - Per-call seed: ~~hardcoded 42~~ → **SHA-256(rid, condition, item, model, sample_idx)**
+> - Sensitivity resume: data-loss bug fixed (deep-merge upsert + pre-populate from existing partials)
+> - Driver named modes: `--phase1a` / `--phase1b --phase1b-model SLUG` / `--phase1b-anchor` / `--battery-loo` (stub) / `--shapley` (stub)
+> - F9 cost guard: refuses --n≥1000 × multi-model + sensitivity unless `--allow-panel-wide-large-n`
+
+**Created:** 2026-05-08 · **Last refreshed:** 2026-05-10 night (Audit-fresh-6 demoted from "front door" to "historical handoff")
 **Author of project:** Joyce Yu (Stanford GSB master's thesis, advisor Prof. Mohsen Bayati)
-**Read this file first.** It points you to the canonical sources and tells you the immediate next action. It is NOT a replacement for `STATUS.md` — it's the front door.
+**DO NOT use this file as the fresh-session front door anymore.** As of 2026-05-10 night, the canonical entry-points for a fresh session are (in order):
+
+1. `gss_phase1_design.md` — live canonical design (sample sizes / panel / sensitivity scope all current)
+2. `osf_preregistration_v1.md` — OSF preregistration
+3. `RUNBOOK.md` — exact paid-run commands + costs + expected outputs
+
+The HANDOFF body below is preserved for project history (decision evolution, original Phase 1 framing, pilot context) but its specific numerics — Phase 1a N=100, Phase 1b N=1500, ~$215 budget, all-DQ-fail Qwen fallback, etc. — are **superseded**. The banner delta-table at the top of this file lists every override.
 
 ---
 
@@ -29,7 +52,7 @@ GSBGEN390 is a Stanford GSB master's thesis on **feature attribution for LLM per
 11. theory_review.md / theory_review_round2.md — literature scaffolds (informational, not driving primary findings under lean lock)
 ```
 
-For Phase 2 / pilot context, also: `thesis_phase2_design.md`, `MEETING_HANDOUT.md`, `WRITEUP.md`, `progress_report.md`, `replication_scoping.md`.
+For Phase 2 / pilot context, also: `thesis_phase2_design.md`, `archive/MEETING_HANDOUT.md`, `WRITEUP.md`, `progress_report.md`, `replication_scoping.md`.
 
 ---
 
@@ -187,7 +210,8 @@ GSBGEN390/
 ├── DESIGN + NARRATIVE
 │   ├── README.md, STATUS.md (canonical), HANDOFF.md (this), CLAUDE.md, AGENTS.md, PRIMER.md
 │   ├── replication_scoping.md, FUTURE_DESIGN.md, BUSINESS_LANDSCAPE.md
-│   ├── LIT_REVIEW.md (academic), MEETING_HANDOUT.md, WRITEUP.md, progress_report.md
+│   ├── LIT_REVIEW.md (academic), WRITEUP.md, progress_report.md
+│   ├── archive/MEETING_HANDOUT.md (pilot one-pager; moved to archive/ 2026-05-10 per Audit-fresh-2 F4)
 │   └── EXPLAIN_ZH.md, CODE_WALKTHROUGH_ZH.md, COLAB_RUN_GUIDE.md
 │
 ├── PHASE 1 (GSS PUBLIC) DESIGN + ARTIFACTS

@@ -17,8 +17,24 @@ Math (locked):
   α_T = (1/16) Σ_x MAE(x) c_T(x), where c_T(x) = ∏_{B∈T}(2·1[B in x] - 1).
   α_∅ = grand mean; α_{B} = main effect for B; α_T for |T|≥2 = interactions.
 - interaction_variance_share = Σ_{|T|≥2} α_T² / Σ_{|T|≥1} α_T².
-- Bootstrap CIs at respondent level, B=1000, seed=42 (paired across all 16
+- Bootstrap CIs at respondent level, B=10000, seed=42 (paired across all 16
   conditions per resample to preserve correlation structure).
+- Percentile bootstrap (NOT BCa) because each replicate produces a vector of
+  ~16 derived statistics (4 Shapley values + 11 interaction contrasts + IVS).
+  BCa requires per-statistic jackknife on the original data, which would mean
+  16 separate full re-decompositions per leave-one-respondent-out — ~24,000
+  jackknife evaluations on top of 10,000 bootstrap replicates. Cost-prohibitive
+  and the symmetric-by-construction Shapley contrast distribution makes BCa
+  correction mostly cosmetic. Battery LOO uses BCa because each battery is a
+  scalar ΔMAE close to the small/modest practical-effect boundary, where
+  near-zero asymmetry actually matters.
+- Bumped B 1000 → 10000 (Codex N5 audit 2026-05-09 night, doc revised
+  per Audit-2 review 2026-05-09 night): rationale is consistency with the
+  rest of the bootstrap pipeline (battery_loo + gss_pipeline both at 10000)
+  and tighter Shapley + IVS CIs. Note: the joint-34 Holm threshold rationale
+  cited elsewhere does NOT apply here — Shapley shares the 4-bin primary
+  family per §8.8 and has no joint-34 multiplicity gate. Bootstrap is local-
+  compute (no LLM cost) so 10x runtime is acceptable for the headline.
 """
 from __future__ import annotations
 
@@ -169,9 +185,12 @@ def _interaction_variance_share(contrasts: dict[frozenset[str], float]) -> float
 # Bootstrap CI (paired across 16 conditions per resample)
 # ---------------------------------------------------------------------------
 
+BOOTSTRAP_B_DEFAULT = 10000  # locked 2026-05-09 night per Codex N5 audit
+
+
 def _paired_bootstrap_shapley(
     per_resp_mae_by_subset: dict[frozenset[str], dict[int, float]],
-    B: int = 1000,
+    B: int = BOOTSTRAP_B_DEFAULT,
     seed: int = 42,
     alpha: float = 0.05,
 ) -> dict[str, dict[str, tuple[float, float]]]:
@@ -253,7 +272,7 @@ def shapley_decomposition(
     records: list[dict[str, Any]],
     model: str | None = None,
     seed: int = 42,
-    bootstrap_B: int = 1000,
+    bootstrap_B: int = BOOTSTRAP_B_DEFAULT,
 ) -> dict[str, Any]:
     """Compute the full Shapley + interaction decomposition from a records list.
 
@@ -612,7 +631,8 @@ def _cli():
     p.add_argument("--model", type=str, default=None,
                    help="filter records to this model slug (default: unique model)")
     p.add_argument("--seed", type=int, default=42, help="bootstrap seed (locked at 42)")
-    p.add_argument("--bootstrap-B", type=int, default=1000, help="bootstrap replicates")
+    p.add_argument("--bootstrap-B", type=int, default=BOOTSTRAP_B_DEFAULT,
+                   help=f"bootstrap replicates (default {BOOTSTRAP_B_DEFAULT})")
     return p.parse_args()
 
 

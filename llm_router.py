@@ -1,9 +1,13 @@
 """LLM router — minimal OpenRouter (or direct OpenAI) client for Phase 1.
 
-Locked panel (gss_phase1_design.md §12):
-  - 4 cheap OpenRouter models, n_samples=1 each, primary path (Phase 1a, N=100)
-  - Phase 1b: single quality-selected model (per §12.2: argmin 1a MAE among DQ-passers), n_samples=1
-  - GPT-4o anchor on N=100 subset, n_samples=2, primary-conditions-only
+Locked panel (gss_phase1_design.md §12; sample sizes revised 2026-05-09 night):
+  - 4 cheap OpenRouter models (Qwen-2.5-72B / DeepSeek-V3.1 /
+    Llama-3.3-70B-Instruct / Kimi K2 — 3 China-trained + 1 Western-trained
+    after the 2026-05-09 MiniMax→Llama swap for cross-family balance),
+    n_samples=1 each, primary path (Phase 1a, N=200 with 100/100 split).
+  - Phase 1b: single §12.2-quality-selected model on N=3,309 (full GSS 2024),
+    n_samples=1.
+  - GPT-4o anchor on N=100 selection subset, n_samples=2, primary-conditions-only.
 
 This module is intentionally small — it does not own scoring, prompt
 construction, or result accumulation. Those live in gss_pipeline.py.
@@ -34,10 +38,17 @@ WORK = Path("/Users/joyce/Documents/GSBGEN390")
 
 # OpenRouter model slugs — verify exact slugs at https://openrouter.ai/models
 # before launching Phase 1b. These are reasonable defaults as of 2026-05.
+#
+# Cross-family balance (locked 2026-05-09 night per Audit-3 review): the
+# original all-China panel (Qwen + DeepSeek + MiniMax + Kimi) was swapped
+# pre-OSF to introduce one Western-trained model. MiniMax-M1 → Llama-3.3-70B-
+# Instruct (Meta); the panel now reads as 3 China-trained + 1 Western, which
+# preserves cost-efficiency while defending Western-venue cross-family
+# generalization claims. Llama-3.3-70B is comparable in OpenRouter pricing.
 MODEL_PANEL_PRIMARY: tuple[str, ...] = (
     "qwen/qwen-2.5-72b-instruct",
-    "deepseek/deepseek-chat",          # V3.1 family
-    "minimax/minimax-m1",
+    "deepseek/deepseek-chat",            # V3.1 family
+    "meta-llama/llama-3.3-70b-instruct", # Western (Meta) — swapped in pre-OSF for cross-family balance
     "moonshotai/kimi-k2",
 )
 
@@ -134,6 +145,7 @@ def call_llm(
     timeout: float = DEFAULT_TIMEOUT,
     max_retries: int = 8,
     initial_backoff_s: float = 4.0,
+    seed: int | None = 42,
 ) -> str:
     """One LLM call. Returns raw response text. Raises LLMError on persistent
     failure after max_retries.
@@ -143,6 +155,18 @@ def call_llm(
         could route via OpenRouter; we keep direct OpenAI for the GPT-4o
         anchor only (more reliable for self-consistency reproducibility).
       - all other models route via OpenRouter.
+
+    Seed (locked 2026-05-09 night per Codex N1 audit):
+      - OpenAI direct (GPT-4o anchor): passes `seed=` to chat.completions.create.
+        OpenAI honors this and returns `system_fingerprint` for verification.
+      - OpenRouter: passes `extra_body={"seed": seed}` which OpenRouter forwards
+        to backing providers that support it (varies by provider — must be
+        verified on N=10 smoke per panel model).
+      - seed is a HINT, not a guarantee — providers may ignore it. The §14
+        reproducibility commitment in `gss_phase1_design.md` documents this
+        per-model verification requirement.
+      - Pass `seed=None` to disable explicitly (e.g., for deliberate
+        non-determinism testing).
     """
     use_openai_direct = model.startswith("openai/") and "gpt-4o" in model
     if use_openai_direct:
@@ -162,15 +186,22 @@ def call_llm(
     last_exc: Exception | None = None
     for attempt in range(max_retries):
         try:
-            resp = client.chat.completions.create(
-                model=actual_model,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                messages=[
+            # Build kwargs to forward seed in the routing-appropriate way
+            create_kwargs: dict = {
+                "model": actual_model,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "messages": [
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
                 ],
-            )
+            }
+            if seed is not None:
+                if use_openai_direct:
+                    create_kwargs["seed"] = seed
+                else:
+                    create_kwargs["extra_body"] = {"seed": seed}
+            resp = client.chat.completions.create(**create_kwargs)
             return (resp.choices[0].message.content or "").strip()
         except Exception as e:
             last_exc = e

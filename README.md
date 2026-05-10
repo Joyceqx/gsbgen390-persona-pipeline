@@ -1,5 +1,16 @@
 # GSBGEN390 — Feature Attribution for LLM Persona Synthesis
 
+> ⚠️ **PARTIALLY SUPERSEDED** (banner added 2026-05-10 night per Audit-fresh-4 P2.3). Phase 1 numbers below are from 2026-05-09 evening; sample sizes / panel / sensitivity scope / budget were revised on 2026-05-09 night and 2026-05-10. **Always read** `gss_phase1_design.md` (live design) + `osf_preregistration_v1.md` (OSF lock) for canonical state, and `RUNBOOK.md` for the exact paid-run sequence.
+>
+> **Current Phase 1 numbers** (locked 2026-05-10 Joyce decision Option A):
+> - Phase 1a: **N=200** with 100/100 selection/validation split, cheap panel **primary-only**
+> - Phase 1b: **N=3,309** (full GSS 2024), single §12.2-selected model, **primary-only**
+> - GPT-4o anchor: **N=100 selection-split subset, primary + sensitivity** (the only Park-comparable run; produces the per-item raw-accuracy anchor table)
+> - Cheap panel: Qwen-2.5-72B / DeepSeek-V3.1 / **Llama-3.3-70B-Instruct (Meta)** / Kimi K2 (3 China + 1 Western post pre-OSF MiniMax→Llama swap)
+> - Budget: **~$756** total Phase 1 (~$237 core + ~$481 Battery LOO + ~$38 Shapley)
+> - All-DQ-fail: **PAUSE for human review** (no silent Qwen fallback)
+> - Bootstrap: B=10000 BCa with percentile fallback (was 1000 percentile)
+
 Independent research project, Spring 2026, Stanford GSB. Faculty advisor: **Prof. Mohsen Bayati.** Lead: **Joyce Yu.**
 
 ## What this is
@@ -9,24 +20,33 @@ A research project investigating **feature attribution for LLM persona synthesis
 The thesis is structured in two phases plus a completed pilot:
 
 - **Pilot** (completed 2026-04-30): N=2 interview + N=1 survey via Cookiy → GPT-4o → eval, with manual leakage audit. Pipeline + dashboard + audit shipped. Scale supports feasibility demonstration only, not statistical inference.
-- **Phase 1** (in progress, lean-design + co-primary Battery LOO locked 2026-05-09): N≈1500 from GSS 2024 cross-section. Answers the project-level question for the **attitude** outcome dimension. **Two co-primary analyses**: (i) 4-bin LOO ablation (broad), (ii) 34-battery LOO across all 4 bins with nested Holm primary + joint-34 sensitivity (mechanistic). Bin-level Shapley = 4-bin robustness. R1 (battery exclusion, `gss_battery_map.json` v0.2 = 34 batteries) + R2 (regression-baseline comparator) as leakage hygiene. Multi-model OpenRouter panel + GPT-4o anchor. Budget: ~$215 core run + ~$50-60 Battery LOO + ~$15-25 Shapley = **~$280-300 total**.
+- **Phase 1** (in progress; design locked 2026-05-10 evening — see banner above for current numbers): full GSS 2024 cross-section (**N=3,309**) for the **attitude** outcome dimension. **Two co-primary analyses**: (i) 4-bin LOO ablation (broad), (ii) 34-battery LOO across all 4 bins with nested Holm primary + joint-34 sensitivity (mechanistic). Bin-level Shapley = 4-bin robustness. R1 (battery exclusion, `gss_battery_map.json` v0.2 = 34 batteries) + R2 (regression-baseline comparator) as leakage hygiene. Multi-model OpenRouter panel + GPT-4o anchor. Budget: **~$756 total** (Option A: cheap-panel primary-only; sensitivity_eval anchor-only per OSF §3.2).
 - **Phase 2** (planned): N=20-30 Prolific respondents, 30-45 min modular interview (4 modules ↔ 4 feature bins) with **2-week separation** for test-retest baseline, BFI-44 + behavioral-game vignettes + GSS held-out outcomes. Extends feature attribution to **personality** and **behavior** outcome dimensions; ~$1,500-1,750.
 
 [Park, Bernstein, Liang et al. (2024) "Generative Agent Simulations of 1,000 People"](https://arxiv.org/abs/2411.10109) (the Stanford-spinout-Simile paper) is the most-cited prior work in this area. This project anchors against Park for cross-paper benchmarking — a GPT-4o anchor on N=100 subset gives per-item raw accuracy directly comparable to Park v2 SI Table 3 — but the research question stands independently. Park studied aggregate "interview vs surveys"; this project studies feature attribution within survey-style persona prompts at scale, with leakage-stringency that goes beyond Park's reported defenses.
 
 ## Quick orientation
 
-If you (or future-Claude) walked in cold, read these in order:
+If you (or future-Claude) walked in cold, read these in order (reordered
+2026-05-10 night per Audit-fresh-5 RevB P2 to put canonical / operational
+sources ABOVE historical handoff docs that have superseded banners but
+stale bodies):
 
-1. [`HANDOFF.md`](HANDOFF.md) — **start here** — fresh-session quickstart, current state, immediate next actions
-2. [`INDEX.md`](INDEX.md) — file map; what every file is and which are current vs historical
-3. [`STATUS.md`](STATUS.md) — TL;DR + dated changelog
-4. [`PROJECT_SYNTHESIS.md`](PROJECT_SYNTHESIS.md) — paper-ready bilingual (中文 + English) comprehensive synthesis
-5. [`gss_phase1_design.md`](gss_phase1_design.md) — locked Phase 1 design (lean lock 2026-05-09)
-6. [`theory_interpretation_guide.md`](theory_interpretation_guide.md) — Discussion-section memo on candidate cognitive frameworks
-7. [`MEETING_HANDOUT.md`](MEETING_HANDOUT.md) — earlier bilingual project brief (still useful for cross-phase context)
-8. [`replication_scoping.md`](replication_scoping.md) — original Park v2 replication scoping
-9. [`thesis_phase2_design.md`](thesis_phase2_design.md) — Phase 2 (planned)
+**Canonical / operational (read first; current as of 2026-05-10):**
+1. [`gss_phase1_design.md`](gss_phase1_design.md) — **start here** — the live canonical Phase 1 design (single source of truth; sample sizes / panel / sensitivity scope all current)
+2. [`osf_preregistration_v1.md`](osf_preregistration_v1.md) — OSF v1 preregistration (mirrors design doc; locks the analysis contract)
+3. [`RUNBOOK.md`](RUNBOOK.md) — step-by-step paid-run sequence with exact commands, costs, and expected outputs
+4. [`tier1_tool_schemas.md`](tier1_tool_schemas.md) — Battery LOO + Shapley analyzer/orchestration spec
+5. [`INDEX.md`](INDEX.md) — file map; what every file is and which are current vs historical
+
+**Historical handoff (banner'd PARTIALLY SUPERSEDED — read for project history, NOT current numbers):**
+6. [`HANDOFF.md`](HANDOFF.md) — fresh-session quickstart from 2026-05-09 evening, body has stale numbers, banner has delta table
+7. [`STATUS.md`](STATUS.md) — dated changelog (banner'd; same caution)
+8. [`PROJECT_SYNTHESIS.md`](PROJECT_SYNTHESIS.md) — paper-ready bilingual synthesis (banner'd)
+9. [`theory_interpretation_guide.md`](theory_interpretation_guide.md) — Discussion-section memo on candidate cognitive frameworks
+10. [`archive/MEETING_HANDOUT.md`](archive/MEETING_HANDOUT.md) — earlier bilingual project brief (moved to archive 2026-05-10 per Audit-fresh-2 F4)
+11. [`replication_scoping.md`](replication_scoping.md) — original Park v2 replication scoping
+12. [`thesis_phase2_design.md`](thesis_phase2_design.md) — Phase 2 (planned)
 
 ## How to run the pipelines
 
@@ -46,19 +66,34 @@ python3 gss_pipeline.py --test-multimodel       # multi-model panel test
 ```
 
 **Real LLM runs** (need OpenRouter API key — `echo "sk-or-v1-..." > OpenRouter_api.txt`):
+
+> ⚠️ **Use the locked named modes for paid runs** — see `RUNBOOK.md` for the
+> canonical step-by-step paid sequence with cost projections per step. Legacy
+> manual-flag commands are preserved below for cheap connectivity smoke only;
+> they do NOT match the OSF Option A scope and the F9 cost guard will
+> refuse panel-wide-large-N invocations like `--n 3309` outright.
+
 ```bash
+# Connectivity smokes (cheap, NOT paid runs):
 python3 llm_router.py --smoke-one               # ~$0.001 — verify connectivity
 python3 llm_router.py --smoke-panel             # ~$0.005 — verify all 4 models respond
 python3 gss_driver.py --smoke                   # ~$0.02 — 1 resp / 1 model / primary
-python3 gss_driver.py --n 10 --primary-only     # ~$0.70 — full panel, primary only
-python3 gss_driver.py --n 10                    # ~$2.00 — primary + sensitivity
-python3 gss_driver.py --anchor --n 100          # GPT-4o anchor on N=100, primary only, n=2
-python3 gss_driver.py --n 1500                  # Phase 1b primary (after OSF pre-reg)
+
+# Locked paid-run named modes (per RUNBOOK.md + Option A):
+python3 gss_driver.py --phase1a                 # Phase 1a cheap × N=200 primary-only, ~$17
+python3 select_phase1b_model.py outputs/gss_phase1_records_n200_*.json   # §12.2 selector, free
+python3 gss_driver.py --phase1b --phase1b-model SLUG  # Phase 1b cheap × N=3309 primary-only, ~$71
+python3 gss_driver.py --phase1b-anchor          # GPT-4o anchor × N=100 primary+sensitivity, ~$148
 ```
 
-Output: `outputs/gss_phase1_records_n{N}_*.json` (atomic-write per respondent; `--resume` default-on).
+Output: `outputs/gss_phase1_records_n{N}_*.json` (atomic-write per respondent;
+resume default-on; partial-resume guard refuses to silently resume from
+suspiciously-small files).
 
-See **STATUS.md** for the full work-tree, locked design references, and known runtime gotchas.
+See **`RUNBOOK.md`** for the full paid-run sequence, **`gss_phase1_design.md`**
+for the canonical live design (the source of truth), and **`osf_preregistration_v1.md`**
+for the OSF lock. STATUS.md / HANDOFF.md / PROJECT_SYNTHESIS.md are
+historical handoff docs with superseded banners; read them last, not first.
 
 ### Pilot phase (Cookiy, completed)
 

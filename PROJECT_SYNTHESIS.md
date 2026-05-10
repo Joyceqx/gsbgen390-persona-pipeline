@@ -1,5 +1,19 @@
 # GSBGEN390 项目综合文档 / Project Synthesis Document
 
+> ⚠️ **PARTIALLY SUPERSEDED — read carefully** (banner added 2026-05-09 night per Audit-fresh review).
+> Sample sizes, model panel, selector rule, and budget figures in this file's body have been revised. **For canonical locked design, always read** `gss_phase1_design.md` (live design) and `osf_preregistration_v1.md` (OSF lock).
+>
+> **Quick-reference deltas vs. body of this doc**:
+> - Phase 1a: ~~N=100~~ → **N=200 with 100/100 selection/validation split** (per §12.2 anti-overfit defense, Audit-3)
+> - Phase 1b: ~~N=1,500~~ → **N=3,309 (full GSS 2024 cross-section)** (Audit-3 framing fix)
+> - Cheap panel: ~~MiniMax-M1~~ → **Llama-3.3-70B-Instruct (Meta)** (Audit-3 cross-family balance, 3 China + 1 Western)
+> - All-DQ-fail: ~~Qwen fallback~~ → **PAUSE for human review** (Audit-2; Qwen fallback retained ONLY for quality+cost ties)
+> - Bootstrap: ~~B=1000 percentile~~ → **B=10000 BCa via scipy** (with percentile fallback for degenerate inputs; Codex N5/N6)
+> - Phase 1 budget: ~~$280-300~~ → ~~$450~~ → ~~$875~~ → **~$756** (cumulative effect of full-sample + 100/100 split + accurate Battery LOO grid + Option-A cheap-panel-primary-only sensitivity scope; per Codex N9 + Audit-3 + Audit-fresh-2 Joyce-decision-2026-05-10)
+> - Shapley + Battery LOO **analyzers ARE implemented and self-tested**; only the orchestration drivers (`gss_driver.py` 16-condition + 34-battery enumeration modes) are pending.
+>
+> The body below is preserved for historical context (decision evidence trails, anticipated-criticism arguments). Do NOT cite specific numerics from the body without cross-checking the live design doc.
+
 **作者 / Author**: Joyce Yu
 **指导教师 / Advisor**: Prof. Mohsen Bayati (Stanford GSB)
 **课程 / Course**: GSBGEN390 thesis-track research, Stanford GSB, Spring 2026

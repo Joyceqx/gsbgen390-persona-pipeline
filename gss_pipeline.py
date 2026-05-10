@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -744,13 +745,21 @@ def aggregate_respondent_condition(
 #          one number per (condition, metric); these are averaged.
 #        - SECONDARY: item-macro (mean per item across respondents, then
 #          mean across items) and pooled (flat mean over all observations).
-#   E.2  Bootstrap CIs at respondent level, B=1000, 95% percentile.
+#   E.2  Bootstrap CIs at respondent level, B=10000 (locked 2026-05-09 night
+#        per Codex N5/N6 audit; was 1000 → bumped to keep p-floor below joint-
+#        34 Holm threshold α/34 ≈ 0.00147). BCa via scipy.stats.bootstrap when
+#        available, percentile fallback otherwise. BCa is more accurate near
+#        zero — material for ΔMAE values close to the small/modest practical-
+#        effect boundary.
 #   E.3  LOO ΔMAE = MAE(LOO_drop_bin) − MAE(Full). PAIRED bootstrap:
 #        resample respondents once, compute Full and LOO from the same
 #        resample, then take delta. Do NOT independently bootstrap.
 #   E.4  Output: gss_phase1_per_respondent.csv + gss_phase1_headline.csv +
 #        gss_phase1_persona_answers.json (diagnostics).
 # ---------------------------------------------------------------------------
+
+BOOTSTRAP_B_DEFAULT = 10000  # locked 2026-05-09 night per Codex N5 audit
+USE_BCA = True               # locked 2026-05-09 night per Codex N6 audit
 
 import random as _aud_e_random  # explicit import scope; not the missing-data 'random'
 
@@ -894,37 +903,87 @@ def aggregate_condition(
     }
 
 
-def bootstrap_ci(
-    per_respondent_values: dict[int, float],
-    B: int = 1000,
-    alpha: float = 0.05,
-    seed: int = 42,
-) -> tuple[float, float]:
-    """Percentile bootstrap CI on the mean of per-respondent values.
-    Resampling is at respondent level (per locked design §10).
+def _bca_or_percentile_ci(
+    values: list[float],
+    B: int,
+    alpha: float,
+    seed: int,
+) -> tuple[float, float, str]:
+    """Helper: BCa via scipy if USE_BCA, with graceful percentile fallback.
+    Returns (ci_lo, ci_hi, method_used).
 
-    Returns: (ci_lo, ci_hi) at the (alpha/2, 1 - alpha/2) percentiles.
-    Returns (nan, nan) if input is empty.
+    Logs to stderr when BCa fails or returns degenerate CIs (mirroring
+    battery_loo._battery_paired_bootstrap so headline runs that fall back
+    are visible in the run log).
     """
-    if not per_respondent_values:
-        return (float("nan"), float("nan"))
+    import sys as _sys
+    if USE_BCA:
+        try:
+            import warnings as _warnings
+            import numpy as np
+            from scipy.stats import bootstrap as scipy_bootstrap
+            data = (np.array(values, dtype=float),)
+            rng_np = np.random.default_rng(seed)
+            with _warnings.catch_warnings():
+                _warnings.simplefilter("ignore")
+                res = scipy_bootstrap(
+                    data,
+                    statistic=np.mean,
+                    n_resamples=B,
+                    confidence_level=1 - alpha,
+                    method="BCa",
+                    random_state=rng_np,
+                )
+            ci_lo = float(res.confidence_interval.low)
+            ci_hi = float(res.confidence_interval.high)
+            if math.isfinite(ci_lo) and math.isfinite(ci_hi):
+                return (ci_lo, ci_hi, "bca")
+            print(
+                "  [bootstrap method=bca returned non-finite CI "
+                "(degenerate data); falling back to percentile]",
+                file=_sys.stderr,
+            )
+        except Exception as e:
+            print(
+                f"  [bootstrap method=bca failed ({type(e).__name__}: {e}); "
+                f"falling back to percentile]",
+                file=_sys.stderr,
+            )
+    # Percentile fallback
     rng = _aud_e_random.Random(seed)
-    rids = list(per_respondent_values.keys())
-    n = len(rids)
+    n = len(values)
     boot_means: list[float] = []
     for _ in range(B):
-        sample = [per_respondent_values[rng.choice(rids)] for _ in range(n)]
+        sample = [values[rng.randrange(n)] for _ in range(n)]
         boot_means.append(mean(sample))
     boot_means.sort()
     lo_idx = int((alpha / 2) * B)
     hi_idx = int((1 - alpha / 2) * B) - 1
-    return (boot_means[lo_idx], boot_means[hi_idx])
+    return (boot_means[lo_idx], boot_means[hi_idx], "percentile")
+
+
+def bootstrap_ci(
+    per_respondent_values: dict[int, float],
+    B: int = BOOTSTRAP_B_DEFAULT,
+    alpha: float = 0.05,
+    seed: int = 42,
+) -> tuple[float, float]:
+    """Bootstrap CI on the mean of per-respondent values (BCa preferred,
+    percentile fallback). Resampling is at respondent level (locked §10).
+
+    Returns: (ci_lo, ci_hi). Returns (nan, nan) if input is empty.
+    """
+    if not per_respondent_values:
+        return (float("nan"), float("nan"))
+    values = list(per_respondent_values.values())
+    ci_lo, ci_hi, _method = _bca_or_percentile_ci(values, B=B, alpha=alpha, seed=seed)
+    return (ci_lo, ci_hi)
 
 
 def paired_bootstrap_loo_delta(
     full_per_resp: dict[int, float],
     loo_per_resp: dict[int, float],
-    B: int = 1000,
+    B: int = BOOTSTRAP_B_DEFAULT,
     alpha: float = 0.05,
     seed: int = 42,
 ) -> dict[str, float]:
@@ -933,6 +992,9 @@ def paired_bootstrap_loo_delta(
     Locked design §10: resample respondents ONCE per replicate, compute MAE
     on Full and LOO from THE SAME resample, then take delta. Mathematically
     equivalent to bootstrapping per-respondent deltas (paired Δ → mean Δ).
+    BCa via scipy if available (more accurate near zero, material for ΔMAE
+    near the small/modest practical-effect boundary), percentile fallback
+    when BCa is unavailable or degenerate.
 
     Args:
         full_per_resp: respondent_id → per-respondent metric under Full
@@ -944,33 +1006,29 @@ def paired_bootstrap_loo_delta(
         "ci_lo": float,
         "ci_hi": float,
         "n_paired_respondents": int,
+        "ci_method": "bca" | "percentile",
     }
     """
     common_rids = sorted(set(full_per_resp) & set(loo_per_resp))
     if not common_rids:
         return {"mean_delta": float("nan"), "ci_lo": float("nan"), "ci_hi": float("nan"),
-                "n_paired_respondents": 0}
+                "n_paired_respondents": 0, "ci_method": "insufficient_n"}
 
-    # Per-respondent paired delta
     per_resp_delta = {rid: loo_per_resp[rid] - full_per_resp[rid] for rid in common_rids}
-    mean_delta = mean(per_resp_delta.values())
-
-    # Paired bootstrap: resample respondents, take mean of their deltas
-    rng = _aud_e_random.Random(seed)
+    delta_array = [per_resp_delta[r] for r in common_rids]
+    mean_delta = mean(delta_array)
     n = len(common_rids)
-    boot_deltas: list[float] = []
-    for _ in range(B):
-        sample = [per_resp_delta[rng.choice(common_rids)] for _ in range(n)]
-        boot_deltas.append(mean(sample))
-    boot_deltas.sort()
-    lo_idx = int((alpha / 2) * B)
-    hi_idx = int((1 - alpha / 2) * B) - 1
+
+    ci_lo, ci_hi, method_used = _bca_or_percentile_ci(
+        delta_array, B=B, alpha=alpha, seed=seed
+    )
 
     return {
         "mean_delta": mean_delta,
-        "ci_lo": boot_deltas[lo_idx],
-        "ci_hi": boot_deltas[hi_idx],
+        "ci_lo": ci_lo,
+        "ci_hi": ci_hi,
         "n_paired_respondents": n,
+        "ci_method": method_used,
     }
 
 
@@ -978,7 +1036,7 @@ def compute_phase1_headline(
     records: list[dict[str, Any]],
     conditions: list[str] | None = None,
     metrics: tuple[str, ...] = ("likert_mae", "likert_within1_pct", "cat_match_pct"),
-    bootstrap_B: int = 1000,
+    bootstrap_B: int = BOOTSTRAP_B_DEFAULT,
     seed: int = 42,
     full_condition: str = "full",
     loo_conditions: tuple[str, ...] = (
@@ -1343,7 +1401,7 @@ def compute_phase1_headline_multimodel(
     valid_codes_by_item: dict[str, list[int]],
     item_format_by_id: dict[str, str] | None = None,
     expected_models: list[str] | None = None,
-    bootstrap_B: int = 1000,
+    bootstrap_B: int = BOOTSTRAP_B_DEFAULT,
     seed: int = 42,
 ) -> dict[str, Any]:
     """End-to-end multi-model headline.
@@ -1577,6 +1635,7 @@ def _audit_e_test():
     print("   ✓ matches")
 
     print("\n[3] Bootstrap CI (Full likert_mae)")
+    # B=1000 here for self-test speed; production default BOOTSTRAP_B_DEFAULT = 10000.
     ci_lo, ci_hi = bootstrap_ci(agg_full_likert["per_respondent_values"], B=1000, seed=42)
     print(f"   per-respondent values: {agg_full_likert['per_respondent_values']}")
     print(f"   95% CI: [{ci_lo:.3f}, {ci_hi:.3f}]")
@@ -1584,6 +1643,21 @@ def _audit_e_test():
     # but bracket the point estimate 1.0
     assert ci_lo <= 1.0 <= ci_hi, f"CI [{ci_lo}, {ci_hi}] does not bracket point estimate 1.0"
     print("   ✓ CI brackets point estimate")
+
+    print("\n[3b] BCa fallback path — constant data forces percentile fallback")
+    # When all per-respondent values are identical, BCa's acceleration term is
+    # undefined (DegenerateDataWarning + NaN CI from scipy). The wrapper must
+    # detect non-finite BCa output and silently fall back to percentile.
+    # Per Audit-2 review, this code path was previously untested.
+    constant_resps = {1: 0.5, 2: 0.5, 3: 0.5, 4: 0.5, 5: 0.5}
+    ci_lo_const, ci_hi_const = bootstrap_ci(constant_resps, B=200, seed=42)
+    print(f"   constant 0.5 input → CI: [{ci_lo_const:.3f}, {ci_hi_const:.3f}]")
+    assert math.isfinite(ci_lo_const) and math.isfinite(ci_hi_const), \
+        "fallback CI must be finite"
+    # On constant input the CI degenerates to [0.5, 0.5] (or near it under percentile).
+    assert abs(ci_lo_const - 0.5) < 1e-9 and abs(ci_hi_const - 0.5) < 1e-9, \
+        f"constant-input CI should be [0.5, 0.5], got [{ci_lo_const}, {ci_hi_const}]"
+    print("   ✓ percentile fallback returned finite CI on constant data")
 
     print("\n[4] Paired bootstrap LOO delta (loo_drop_attitudinal vs full)")
     # Expected per-respondent deltas:

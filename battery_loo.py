@@ -13,7 +13,7 @@ Algorithm (locked):
   * 'full' — baseline (R1 per-item battery exclusion already applied)
   * 'battery_loo_drop_<battery_name>' — additionally drops the named battery
 - For each battery B, ΔMAE_B = mean over respondents of [MAE(drop_B) − MAE(full)]
-- Bootstrap CI: paired-respondent bootstrap, B=1000, seed=42
+- Bootstrap CI: paired-respondent bootstrap, B=10000, seed=42 (BCa via scipy with percentile fallback for degenerate inputs — locked 2026-05-09 night per Codex N5/N6)
 - Two-tailed p-value: 2 × min(P(Δ ≤ 0), P(Δ ≥ 0)) under bootstrap distribution
 
 Multiplicity (locked, §8.8):
@@ -48,8 +48,19 @@ EFFECT_SIZE_SMALL_LT = 0.02
 EFFECT_SIZE_MODEST_GTE = 0.02
 EFFECT_SIZE_SUBSTANTIVE_GTE = 0.05
 ALPHA = 0.05
-BOOTSTRAP_B_DEFAULT = 1000
+# B=10000 for headline runs (Codex N5 audit 2026-05-09 night): with B=1000 the
+# p-value floor was 0.001, colliding with joint-34 Holm threshold (α/34 = 0.00147).
+# B=10000 floor is 0.0001, well below joint-34 critical p. Bootstrap is local-
+# compute (no LLM cost), so 10x runtime is acceptable for headline analysis.
+# Self-tests can use smaller B for speed.
+BOOTSTRAP_B_DEFAULT = 10000
 SEED = 42
+
+# BCa (bias-corrected, accelerated) bootstrap is more accurate near zero —
+# important for ΔMAE values close to the small/modest practical-effect boundary.
+# Locked 2026-05-09 night per Codex N6 audit. Falls back to percentile if
+# scipy.stats.bootstrap is unavailable, with explicit log warning.
+USE_BCA = True
 
 
 # ---------------------------------------------------------------------------
@@ -158,35 +169,96 @@ def _battery_paired_bootstrap(
     B: int = BOOTSTRAP_B_DEFAULT,
     alpha: float = ALPHA,
     seed: int = SEED,
+    method: str = "bca",
 ) -> dict[str, float]:
     """Per-battery paired bootstrap.
 
-    Returns {'mean_delta', 'ci_lo', 'ci_hi', 'p_two_tailed', 'n_paired'}.
-    Two-tailed p = 2 × min(P_boot(Δ ≤ 0), P_boot(Δ ≥ 0)).
+    method: "bca" (bias-corrected, accelerated; preferred — uses scipy)
+            "percentile" (raw percentile cuts; legacy / fallback when scipy unavailable)
+
+    Returns {'mean_delta', 'ci_lo', 'ci_hi', 'p_two_tailed', 'n_paired',
+             'method_used'}.
+    Two-tailed p uses the bootstrap distribution: 2 × min(P_boot(Δ ≤ 0), P_boot(Δ ≥ 0)),
+    floored at 1/B to avoid log(0) downstream.
     """
     common = sorted(set(full_per_resp) & set(drop_per_resp))
-    if len(common) < 5:
+    # Floor raised 5 → 30 on 2026-05-10 per Audit-fresh-2 F10. Below 30 paired
+    # respondents, BCa acceleration is undefined and percentile CIs are too
+    # noisy to be informative — return NaN with an explicit warning so callers
+    # see the silent-fallback case. At N=3,309 the floor never triggers; it
+    # exists for the OSF §6.6 reduction-to-N=1500 fallback × R1 missingness ×
+    # ballot rotation case where individual battery LOO can produce sub-30
+    # paired counts.
+    if len(common) < 30:
+        if 0 < len(common) < 30:
+            print(
+                f"  [battery LOO: insufficient_n={len(common)} (<30 floor); "
+                "returning NaN CI rather than silent percentile estimate]",
+                file=sys.stderr,
+            )
         return {"mean_delta": float("nan"), "ci_lo": float("nan"),
-                "ci_hi": float("nan"), "p_two_tailed": 1.0, "n_paired": len(common)}
+                "ci_hi": float("nan"), "p_two_tailed": 1.0, "n_paired": len(common),
+                "method_used": "insufficient_n_floor30"}
     per_resp_delta = {rid: drop_per_resp[rid] - full_per_resp[rid] for rid in common}
-    mean_delta = statistics.fmean(per_resp_delta.values())
+    delta_array = [per_resp_delta[r] for r in common]
+    mean_delta = statistics.fmean(delta_array)
 
-    rng = _rng.Random(seed)
-    n = len(common)
-    boot_deltas: list[float] = []
-    for _ in range(B):
-        sample = [per_resp_delta[rng.choice(common)] for _ in range(n)]
-        boot_deltas.append(statistics.fmean(sample))
-    boot_deltas.sort()
-    lo_idx = int((alpha / 2) * B)
-    hi_idx = int((1 - alpha / 2) * B) - 1
-    ci_lo = boot_deltas[lo_idx]
-    ci_hi = boot_deltas[hi_idx]
+    # Try BCa via scipy.stats.bootstrap (preferred; more accurate near zero)
+    if method == "bca":
+        try:
+            import math as _math
+            import warnings as _warnings
+            import numpy as np
+            from scipy.stats import bootstrap as scipy_bootstrap
+            data = (np.array(delta_array, dtype=float),)
+            rng_np = np.random.default_rng(seed)
+            with _warnings.catch_warnings():
+                # Suppress scipy DegenerateDataWarning + numpy divide warnings
+                # when input is near-constant — we detect via NaN CI below and
+                # fall back to percentile.
+                _warnings.simplefilter("ignore")
+                res = scipy_bootstrap(
+                    data,
+                    statistic=np.mean,
+                    n_resamples=B,
+                    confidence_level=1 - alpha,
+                    method="BCa",
+                    random_state=rng_np,
+                )
+            ci_lo = float(res.confidence_interval.low)
+            ci_hi = float(res.confidence_interval.high)
+            if not (_math.isfinite(ci_lo) and _math.isfinite(ci_hi)):
+                raise ValueError("BCa CI not finite (degenerate data)")
+            boot_deltas = sorted(res.bootstrap_distribution.tolist())
+            method_used = "bca"
+        except Exception as e:
+            # Fall back to percentile if scipy unavailable or BCa fails
+            # (e.g., constant data → BCa undefined acceleration)
+            print(
+                f"  [bootstrap method=bca failed ({type(e).__name__}: {e}); "
+                f"falling back to percentile]",
+                file=sys.stderr,
+            )
+            method = "percentile"
 
-    # Two-tailed p-value from bootstrap distribution
+    if method == "percentile":
+        rng = _rng.Random(seed)
+        n = len(common)
+        boot_deltas = []
+        for _ in range(B):
+            sample = [rng.choice(delta_array) for _ in range(n)]
+            boot_deltas.append(statistics.fmean(sample))
+        boot_deltas.sort()
+        lo_idx = int((alpha / 2) * B)
+        hi_idx = int((1 - alpha / 2) * B) - 1
+        ci_lo = boot_deltas[lo_idx]
+        ci_hi = boot_deltas[hi_idx]
+        method_used = "percentile"
+
+    # Two-tailed p from bootstrap distribution (works for both methods).
+    # Floor at 1/B so multiple batteries don't tie at 0.
     p_left = sum(1 for d in boot_deltas if d <= 0) / B
     p_right = sum(1 for d in boot_deltas if d >= 0) / B
-    # Add small floor so p > 0 (avoid log(0) downstream; Holm handles ties)
     p_two = max(2 * min(p_left, p_right), 1.0 / B)
 
     return {
@@ -194,7 +266,8 @@ def _battery_paired_bootstrap(
         "ci_lo": ci_lo,
         "ci_hi": ci_hi,
         "p_two_tailed": p_two,
-        "n_paired": n,
+        "n_paired": len(common),
+        "method_used": method_used,
     }
 
 
