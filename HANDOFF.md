@@ -39,7 +39,8 @@ For Phase 2 / pilot context, also: `thesis_phase2_design.md`, `MEETING_HANDOUT.m
 |---|---|---|
 | Pilot (Cookiy N=2+1) | ✅ done; GitHub repo + GitHub Pages dashboard live | — |
 | Phase 1 base pipeline (loader, audit primitives, multi-model orchestrator, atomic-write driver, R1+R2 leakage hygiene, §12.2 selector, R2 regression baseline) | ✅ implemented + tested | — |
-| Co-primary tools (`shapley_decomposition.py` 4-bin + `battery_loo.py` 34-battery) | 🟡 specified + locked, NOT yet implemented | needs implementation before Phase 1c |
+| Co-primary analysis tools (`shapley_decomposition.py` 4-bin + `battery_loo.py` 34-battery) | ✅ **implemented + self-tested on synthetic fixtures (2026-05-09 night)** | — |
+| Driver runtime extension (16-condition Shapley + 34-battery LOO conditions in `gss_driver.py`) | 🟡 NOT yet implemented; Phase 1a / 1c runtime work; needs API key | does not block N=10 smoke or Phase 1a primary |
 | Phase 1 design lock | ✅ LEAN-LOCKED 2026-05-09 + Battery LOO promoted to co-primary 2026-05-09 evening (4-bin LOO + 34-battery LOO across all 4 bins co-primary; Shapley robustness; theory-as-Discussion) | — |
 | Phase 1 N=10 smoke test on real LLMs | 🟡 awaiting OpenRouter API key | needs key in `OpenRouter_api.txt` |
 | OSF pre-registration | 🔒 awaiting (a) Joyce + Bayati signoff on `theory_interpretation_guide.md` open items + (b) smoke green | blocks Phase 1a |

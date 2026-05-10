@@ -45,6 +45,8 @@ For "what changed and when", see `STATUS.md` changelog. For "the comprehensive p
 | `validate_taxonomy.py` | 10-check structural validator (data presence, bin disjointness, override coverage, battery map well-formedness) | `python3 validate_taxonomy.py` |
 | `select_phase1b_model.py` | §12.2 quality-primary rule executable + 5-branch self-test | `python3 select_phase1b_model.py --self-test` |
 | `regression_baseline.py` | R2 regression baseline (Layer 4 leakage hygiene) — partition LLM gain from auto-correlation | `python3 regression_baseline.py --self-test` |
+| `shapley_decomposition.py` | Tier 1 secondary tool — 16-condition bin-level Shapley + ANOVA-contrast decomposition + interaction_variance_share + paired bootstrap CI; consumes records JSON, produces JSON matching `tier1_tool_schemas.md` Tool 1 v0.2 | `python3 shapley_decomposition.py --self-test` |
+| `battery_loo.py` | Tier 1 co-primary tool — 34-battery LOO ΔMAE + nested Holm primary + joint-34 sensitivity + practical-effect labels + paired bootstrap; consumes records JSON, produces JSON matching `tier1_tool_schemas.md` Tool 2 v0.4 | `python3 battery_loo.py --self-test` |
 
 ## Layer 3 — Status / decisions (cross-reference)
 

@@ -13,11 +13,11 @@ This document is the changelog-style single-source-of-truth for what's done, wha
 **Phase 1 design is LEAN-LOCKED as of 2026-05-09 + Battery LOO co-primary upgrade 2026-05-09 evening + comprehensive cleanup 2026-05-09 night.**
 
 Implementation status (be precise about this):
-- **Implemented + tested**: `gss_loader.py`, `validate_taxonomy.py` (10 checks), `gss_pipeline.py` AUDIT A-E + B-regression, `gss_driver.py`, `select_phase1b_model.py` (5-branch self-test), `regression_baseline.py` (12/12 items self-test) — all passing.
-- **Designed + locked but NOT yet implemented**: `shapley_decomposition.py` (4-bin Shapley; spec in `tier1_tool_schemas.md` Tool 1), `battery_loo.py` (34-battery co-primary; spec in `tier1_tool_schemas.md` Tool 2).
+- **Implemented + tested (analysis tier)**: `gss_loader.py`, `validate_taxonomy.py` (10 checks), `gss_pipeline.py` AUDIT A-E + B-regression, `gss_driver.py`, `select_phase1b_model.py` (5-branch self-test), `regression_baseline.py` (12/12 items self-test), **`shapley_decomposition.py` (8-assertion synthetic-fixture self-test, locked 2026-05-09 night)**, **`battery_loo.py` (8-assertion synthetic-fixture self-test, locked 2026-05-09 night)** — all passing.
+- **NOT yet implemented (driver runtime extension)**: 16-condition Shapley enumeration mode in `gss_driver.py` (currently runs 5 conditions: Full + 4 LOO; needs +11 conditions for Shapley) and 34-battery exclusion mode (currently no battery-drop conditions). These are Phase 1a / Phase 1c runtime work; spec'd in `tier1_tool_schemas.md` Tools 1-2 and ready to implement when OpenRouter API key is in place.
 - **Pending paid runs**: N=10 smoke / Phase 1a N=100 / Phase 1b N=1500 / GPT-4o anchor N=100 — all blocked on OpenRouter API key.
 
-The base Phase 1 driver and audit pipeline are implemented and tested. The two co-primary Battery LOO and 4-bin Shapley robustness tools are specified but not yet implemented.
+The base Phase 1 driver + audit pipeline + analysis tools (Shapley + Battery LOO) are implemented and self-tested on synthetic fixtures. The driver runtime extensions to actually GENERATE the 16-condition / 34-battery LLM call data are deferred to Phase 1a / 1c runtime (require API key + paid budget).
 
 **Project-level research question**: *In LLM persona synthesis, which input feature categories drive prediction quality, and how does that contribution vary across outcome dimensions?* No prior published work has done large-N, leakage-clean, multi-model feature attribution at scale; this project fills that area-level methodological gap. Park et al. 2024 is the most-cited prior work in LLM persona simulation and serves here as a **cross-paper benchmarking anchor**, not as the project's defining framework.
 
