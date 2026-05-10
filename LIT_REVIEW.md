@@ -127,7 +127,7 @@ This is a working bibliography, not a full literature review. Each entry has the
 
 ## Theme 6 — Construct theory underlying the eval batteries
 
-The AI-persona literature (Themes 1–5) studies *how to simulate* people; it rarely engages with *what each battery is supposed to measure*. This theme imports the foundational construct theory for each battery family in `eval_battery.json` and `gss_battery_map.json`. Use these citations to motivate (a) why batteries are grouped the way they are, (b) why some constructs are deeper than surveys can reach, and (c) what the survey-vs-interview gap *means* substantively.
+The AI-persona literature (Themes 1–5) studies *how to simulate* people; it rarely engages with *what each battery is supposed to measure*. This theme imports the foundational construct theory for each battery family in `archive/eval_battery.json` (pilot) and `gss_battery_map.json` (Phase 1). Use these citations to motivate (a) why batteries are grouped the way they are, (b) why some constructs are deeper than surveys can reach, and (c) what the survey-vs-interview gap *means* substantively.
 
 ### 6.1 Personality (BFI-10; Phase 2 BFI-44)
 

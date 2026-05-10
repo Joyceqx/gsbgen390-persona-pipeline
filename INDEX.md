@@ -5,9 +5,9 @@
 **Lead**: Joyce Yu · **Advisor**: Prof. Mohsen Bayati
 **Last housekeeping**: 2026-05-09
 
-This file maps every file in the project to its purpose, status, and "stop reading here if I just want to get oriented" signal. **Read `HANDOFF.md` first** if this is a fresh session; this file is the lookup table when you know the question.
+This file maps every file in the project to its purpose, status, and "stop reading here if I just want to get oriented" signal. **For a fresh session, read `gss_phase1_design.md` §1.0 + `osf_preregistration_v1.md` §1 first**; this file is the lookup table when you know the question.
 
-For "what changed and when", see `STATUS.md` changelog. For "the comprehensive paper-ready synthesis", see `PROJECT_SYNTHESIS.md`. For "what to do right now", see `HANDOFF.md` §6.
+For "what changed and when", see `STATUS.md` changelog. For "the comprehensive paper-ready synthesis", see `PROJECT_SYNTHESIS.md`. For "what to do right now", see `osf_preregistration_v1.md` §17 (open items pending Bayati signoff) + `STATUS.md` TL;DR.
 
 ---
 
@@ -16,9 +16,10 @@ For "what changed and when", see `STATUS.md` changelog. For "the comprehensive p
 | File | Purpose | Status |
 |---|---|---|
 | `CLAUDE.md` | Operating principles for any AI assistant in this folder (rigor over velocity, pre-reg discipline, Park comparability) | Stable |
-| `HANDOFF.md` | Front-door quickstart for a fresh terminal / Claude session | Updated 2026-05-09 |
-| `STATUS.md` | Single source of truth for tree state + decisions log; changelog-style | Updated 2026-05-09 |
-| `INDEX.md` | This file — every file's purpose | Updated 2026-05-09 |
+| `gss_phase1_design.md` | **Canonical live design** — read §1.0 (research question + scope) first | Lean-locked + audit-fixes 2026-05-10 |
+| `osf_preregistration_v1.md` | **OSF lock contract** — read §1 (estimand) + §17 (open items) | v1 DRAFT 2026-05-09 → 2026-05-10 |
+| `STATUS.md` | Tree state + decisions log; changelog-style (banner: partially superseded — read banner first) | Updated 2026-05-10 |
+| `INDEX.md` | This file — every file's purpose | Updated 2026-05-10 |
 | `README.md` | Public-facing repo README (GitHub) | Updated periodically |
 
 ## Layer 1 — Phase 1 design specs (CURRENT, lean-design locked 2026-05-09)
@@ -53,9 +54,8 @@ For "what changed and when", see `STATUS.md` changelog. For "the comprehensive p
 
 | File | Purpose | Notes |
 |---|---|---|
-| `STATUS.md` | Working state + per-day changelog | Updated 2026-05-09 |
-| `HANDOFF.md` | Fresh-session quickstart | Updated 2026-05-09 |
-| `PROJECT_SYNTHESIS.md` | Paper-ready comprehensive synthesis (bilingual ZH/EN); decision log; criticisms + responses | Updated 2026-05-09 (lean revision) |
+| `STATUS.md` | Working state + per-day changelog (banner: partially superseded) | Updated 2026-05-10 |
+| `PROJECT_SYNTHESIS.md` | Paper-ready comprehensive synthesis (bilingual ZH/EN); decision log; criticisms + responses (banner: partially superseded) | Updated 2026-05-10 |
 
 ## Layer 4 — Phase 2 design (planned, not started)
 
@@ -63,22 +63,22 @@ For "what changed and when", see `STATUS.md` changelog. For "the comprehensive p
 |---|---|---|
 | `thesis_phase2_design.md` | Phase 2 design: Cookiy + Prolific N=20-30 with 2-week recontact, BFI-44 + behavioral games + GSS | Stable; will be revisited after Phase 1 results |
 
-## Layer 5 — Pilot phase (completed 2026-04-30)
+## Layer 5 — Pilot phase (completed 2026-04-30 — code in `pilot_code/`, docs in `archive/`)
 
-Pilot is **done**. These files are functional but archive-eligible — they document the N=2 + N=1 Cookiy pilot that informed Phase 1's design.
+Pilot is **done**. Code moved to `pilot_code/` (still runnable for dashboard regeneration); narrative docs moved to `archive/` 2026-05-10.
 
-| File | Purpose |
+| Path | Purpose |
 |---|---|
-| `persona_pipeline.py` | Pilot LLM pipeline (Cookiy → GPT-4o → eval) |
-| `parse_eval_answers.py`, `parse_construction_answers.py` | Pilot data extractors |
-| `run_notebook_local.py`, `build_notebook.py` | Notebook scaffolding |
-| `rescore_with_leakage_audit.py`, `make_robustness_chart.py`, `build_site_data.py` | Pilot post-processing |
-| `eval_battery.json` | Pilot eval items |
-| `leakage_audit.json` | Pilot manual leakage audit |
-| `cookiy_brief*.md`, `cookiy_guide*.md` | Cookiy moderator briefs |
-| `interview_quality_audit.md`, `survey_quality_audit.md` | Pilot quality audits (gitignored if PII present) |
-| `archive/MEETING_HANDOUT.md`, `WRITEUP.md`, `progress_report.md` | Pilot writeups |
-| `EXPLAIN_ZH.md`, `CODE_WALKTHROUGH_ZH.md`, `COLAB_RUN_GUIDE.md` | Pilot user guides |
+| `pilot_code/persona_pipeline.ipynb`, `pilot_code/persona_pipeline.py` | Pilot LLM pipeline (Cookiy → GPT-4o → eval) — notebook is canonical |
+| `pilot_code/parse_eval_answers.py`, `pilot_code/parse_construction_answers.py` | Pilot data extractors |
+| `pilot_code/run_notebook_local.py`, `pilot_code/build_notebook.py` | Notebook scaffolding |
+| `pilot_code/rescore_with_leakage_audit.py`, `pilot_code/make_robustness_chart.py`, `pilot_code/build_site_data.py` | Pilot post-processing (feeds `docs/` dashboard) |
+| `archive/eval_battery.json` | Pilot eval items |
+| `archive/leakage_audit.json` | Pilot manual leakage audit |
+| `archive/cookiy_brief*.md`, `archive/cookiy_guide*.md` | Cookiy moderator briefs |
+| `archive/interview_quality_audit.md`, `archive/survey_quality_audit.md` | Pilot quality audits (gitignored — contain direct quotes) |
+| `archive/MEETING_HANDOUT.md`, `archive/HANDOFF.md`, `archive/WRITEUP.md`, `archive/progress_report.md` | Pilot-era narrative docs |
+| `archive/EXPLAIN_ZH.md`, `archive/CODE_WALKTHROUGH_ZH.md`, `archive/COLAB_RUN_GUIDE.md` | Pilot user guides (ZH + Colab) |
 | `outputs/persona_answers_full.json` (gitignored), `metrics_with_leakage_audit.csv`, `chart_robustness.png` | Pilot outputs |
 
 ## Layer 6 — Cross-phase research scaffolding
@@ -89,7 +89,7 @@ Pilot is **done**. These files are functional but archive-eligible — they docu
 | `BUSINESS_LANDSCAPE.md` | Industry survey (Simile / Aaru / Voicepanel / Synthetic Users / etc.) |
 | `replication_scoping.md` | Original Park v2 replication scope analysis |
 | `FUTURE_DESIGN.md` | Aspirational design ideas (cross-phase) |
-| `gss_variables_to_download.md` | GSS DE variable download workflow |
+| `archive/gss_variables_to_download.md` | GSS DE variable download workflow (completed 2026-05-02) |
 | `PRIMER.md`, `AGENTS.md` | Cross-AI-tool guidance |
 
 ## Layer 7 — External / public
@@ -100,14 +100,15 @@ Pilot is **done**. These files are functional but archive-eligible — they docu
 | `data/gss/390data1/{batch1,batch2,batch3}/{GSS.dat,GSS.do,post_processing_output.json}` | GSS 2024 raw data (3-batch fixed-width) |
 | `2411.10109v2.pdf` | Park v2 paper (gitignored, kept local) |
 
-## Layer 8 — Historical / superseded (kept for reference)
+## Layer 8 — Historical / superseded (kept for reference, all in `archive/`)
 
 | File | Purpose | Why kept |
 |---|---|---|
-| `osf_preregistration_appendix_a_theory_predictions.SUPERSEDED-2026-05-09.md` | The 6-theory horse-race draft slimmed away on 2026-05-09 | Referenced from `theory_interpretation_guide.md` + `PROJECT_SYNTHESIS.md` as historical context |
-| `GSBGEN390_audit_summary.md` | Original Codex 2026-05-08 research-layer audit text | Source document for the audit fix arc |
-| `archive/` | Pre-pivot pilot scaffolds (claude_moderator_prompt, eval_joyce_truth, persona_demographics) | Historical |
-| `email_to_bayati.md` (now in `archive/`) | One-off email draft from 2026-04-30 | Historical |
+| `archive/osf_preregistration_appendix_a_theory_predictions.SUPERSEDED-2026-05-09.md` | The 6-theory horse-race draft slimmed away on 2026-05-09 | Referenced from `theory_interpretation_guide.md` + `PROJECT_SYNTHESIS.md` as historical context |
+| `archive/GSBGEN390_audit_summary.md` | Original Codex 2026-05-08 research-layer audit text | Source document for the audit fix arc |
+| `archive/gss_variables_to_download.md`, `archive/gss_missing_variables.txt` | GSS DE download workflow (completed 2026-05-02) | Historical data-prep record |
+| `archive/claude_moderator_prompt.md`, `archive/eval_joyce_truth*.md`, `archive/persona_demographics.json`, `archive/persona_description.md` | Pre-pivot pilot scaffolds | Historical |
+| `archive/email_to_bayati.md` | One-off email draft from 2026-04-30 | Historical |
 
 ## Layer 9 — Gitignored secrets / PII
 
@@ -115,7 +116,7 @@ Pilot is **done**. These files are functional but archive-eligible — they docu
 |---|---|---|
 | `Openai_api.txt`, `OpenRouter_api.txt` | API keys | Secrets |
 | `cookiy_transcripts/`, `responses/`, `responses_s2/`, `outputs/persona_answers_full.json` | Cookiy participant verbatim transcripts | PII |
-| `interview_quality_audit.md`, `survey_quality_audit.md` (if containing direct quotes) | Pilot audits with quotes | PII |
+| `archive/interview_quality_audit.md`, `archive/survey_quality_audit.md` (gitignored — contain direct quotes) | Pilot audits with quotes | PII |
 | `2411.10109v2.pdf` | Park v2 PDF | Copyright |
 | `*.docx` (e.g., `GSBGEN390_Application_Joyce Yu_v{1,2}.docx`) | Personal application materials | Personal |
 
@@ -123,21 +124,20 @@ Pilot is **done**. These files are functional but archive-eligible — they docu
 
 ## Maintenance habits (going forward)
 
-1. **One canonical truth per fact.** If a decision is in `gss_phase1_design.md` §X, the same decision should not be re-stated in `STATUS.md` or `HANDOFF.md` — those should LINK to §X. This file is the cross-reference authority.
-2. **Mark superseded files explicitly.** Add `SUPERSEDED-{YYYY-MM-DD}` suffix; do not delete. Linkers to the old name keep working.
+1. **One canonical truth per fact.** If a decision is in `gss_phase1_design.md` §X, the same decision should not be re-stated in `STATUS.md` or other narrative docs — those should LINK to §X. This file is the cross-reference authority.
+2. **Mark superseded files explicitly.** Add `SUPERSEDED-{YYYY-MM-DD}` suffix or move to `archive/`; do not delete. Linkers to the old name keep working.
 3. **Update STATUS.md changelog after every locked decision.** Append a new dated entry; do not rewrite history.
-4. **Update HANDOFF.md when the immediate-next-action changes.** §3 state snapshot + §6 next actions are the volatile sections.
-5. **Update INDEX.md when a new file is added or moved.** This file should remain accurate within hours of any restructure.
-6. **Do NOT move .py files** without checking imports + Path() references (e.g., `gss_pipeline.py:43 TAXONOMY_PATH = WORK / "gss_feature_taxonomy.json"`).
-7. **Do NOT move locked artifact JSONs** (`gss_feature_taxonomy.json`, `gss_battery_map.json`, `outputs/primary_eval_human_variance_2024.json`) without an OSF amendment if they are pre-reg-locked.
+4. **Update INDEX.md when a new file is added or moved.** This file should remain accurate within hours of any restructure.
+5. **Do NOT move .py files** without checking imports + Path() references (e.g., `gss_pipeline.py:43 TAXONOMY_PATH = WORK / "gss_feature_taxonomy.json"`).
+6. **Do NOT move locked artifact JSONs** (`gss_feature_taxonomy.json`, `gss_battery_map.json`, `outputs/primary_eval_human_variance_2024.json`) without an OSF amendment if they are pre-reg-locked.
 
 ## How a fresh session should boot up
 
 1. Read `CLAUDE.md` (operating principles)
-2. Read `HANDOFF.md` (front door + what to do first)
-3. Skim `INDEX.md` (this file — learn what's where)
-4. Skim `STATUS.md` TL;DR (what's locked, what's pending)
-5. Open `gss_phase1_design.md` only when working on Phase 1 design
-6. Open `PROJECT_SYNTHESIS.md` only when paper-writing or stakeholder-presenting
+2. Read `gss_phase1_design.md` §1.0 (research question + scope framing) — canonical entry
+3. Skim `osf_preregistration_v1.md` §1 (estimand) + §17 (open items pending Bayati signoff) — what's locked vs pending
+4. Skim `INDEX.md` (this file — learn what's where)
+5. Skim `STATUS.md` TL;DR (read banner first; partially superseded body)
+6. Open `gss_phase1_design.md` in full when working on Phase 1 design; `PROJECT_SYNTHESIS.md` when paper-writing or stakeholder-presenting
 
 A fresh session should be productive within 60-90 minutes of focused reading.

@@ -3,7 +3,7 @@
 **Author:** Joyce Yu
 **Course:** GSBGEN390 / thesis prep · Prof. Mohsen Bayati
 **Status:** Locked 2026-05-02; audit-fix revisions 2026-05-05 → 2026-05-06 (this version frozen pending OSF pre-registration sign-off **before Phase 1a launches** — pre-reg locks the model panel, the §12.2 selection rule, and dual-headline aggregation; Phase 1a's results then feed §12.2 to pick the Phase 1b model)
-**Sequel to:** the Cookiy pilot in `MEETING_HANDOUT.md` and `progress_report.md`
+**Sequel to:** the Cookiy pilot in `archive/MEETING_HANDOUT.md` and `archive/progress_report.md`
 
 ---
 

@@ -16,7 +16,7 @@
 
 **Last updated:** 2026-05-09 night (Audit-2/3/fresh fixes landed; partially supersedes the body below)
 **Maintained by:** Joyce Yu + collaborating Claude session
-**See also:** `INDEX.md` (file map), `HANDOFF.md` (fresh-session quickstart), `PROJECT_SYNTHESIS.md` (paper-ready synthesis — also banner-marked as partially superseded)
+**See also:** `INDEX.md` (file map), `gss_phase1_design.md` (canonical live design), `osf_preregistration_v1.md` (OSF lock contract), `PROJECT_SYNTHESIS.md` (paper-ready synthesis — also banner-marked as partially superseded). Earlier `HANDOFF.md` moved to `archive/` 2026-05-10 — front-door role taken over by the design doc + OSF.
 
 This document was originally the changelog-style single-source-of-truth, but as of 2026-05-10 night (per Audit-fresh-6 review) it is **historical / partially superseded** — see banner above for current numbers, and read these in order for canonical state:
 
@@ -684,7 +684,7 @@ python3 build_site_data.py
 
 ## Pending work (post-meeting decisions)
 
-> **Frozen 2026-04-30 (pilot wrap state).** The bullets below were the open list at the end of the pilot, before the 2026-05-02 Phase 1 lock and the 2026-05-09 lean-lock. Phase 1 design questions are now settled in `gss_phase1_design.md`; Phase 2 questions live in `thesis_phase2_design.md`; current next-actions are in HANDOFF §6 + the TL;DR at the top of this file. Kept here as historical context.
+> **Frozen 2026-04-30 (pilot wrap state).** The bullets below were the open list at the end of the pilot, before the 2026-05-02 Phase 1 lock and the 2026-05-09 lean-lock. Phase 1 design questions are now settled in `gss_phase1_design.md`; Phase 2 questions live in `thesis_phase2_design.md`; current next-actions are in `osf_preregistration_v1.md` §17 + the TL;DR at the top of this file. Kept here as historical context.
 
 1. **3-5 page formal writeup** — methods, pipeline, results, leakage audit, comparison to Park v2's per-outcome 74/83/82/86% (with caveats: ≈ tie on GSS only; surveys lag by 0.15 BFI / 0.28 games), limitations, next steps. Awaits Bayati feedback.
 1a. **Phase 1 — GSS public-data feature-importance analysis** (proposed; see [`gss_phase1_design.md`](gss_phase1_design.md)). Uses GSS Three-Wave Panel 2010-2014 (N≈1,500), provides first test-retest-normalized-accuracy comparison to Park's 0.82-0.83. Covers GSS-attitudes outcome row only. Budget ~$300-500, timeline 1-4 weeks. Awaiting Bayati endorsement. *[Endorsed 2026-05-02; design subsequently revised to GSS 2024 single-wave snapshot, raw-only, ~$215 — see TL;DR.]*
@@ -699,7 +699,7 @@ python3 build_site_data.py
 
 ## Open methodological questions for Bayati meeting
 
-> **Frozen 2026-04-30.** These were the questions queued for the 2026-05-02 Bayati meeting; that meeting locked the Phase 1 direction (GSS-first → Phase 2 Cookiy + 4-bin taxonomy + pre-reg before Phase 1a). Most items below are now answered or absorbed into Phase 2 (`thesis_phase2_design.md`). Current open items for Bayati are in HANDOFF §8.
+> **Frozen 2026-04-30.** These were the questions queued for the 2026-05-02 Bayati meeting; that meeting locked the Phase 1 direction (GSS-first → Phase 2 Cookiy + 4-bin taxonomy + pre-reg before Phase 1a). Most items below are now answered or absorbed into Phase 2 (`thesis_phase2_design.md`). Current open items for Bayati are in `osf_preregistration_v1.md` §17.
 
 1. Is the leakage-filtered analysis (manual STRONG-tagging + strict-clean MAE column) sufficient defense of the C-condition result, or does the thesis-stage replication need 2-week-separated collection regardless?
 2. **LOO ranking instability at N=1**: across two pipeline runs at temp 0.7, the "most-important-when-dropped" category changed (psychological → demographic). What N + how many seeds buy a stable ranking?

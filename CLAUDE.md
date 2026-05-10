@@ -64,7 +64,8 @@ These supersede any default helpfulness instinct toward speed over rigor.
 ## Quick references
 
 - **Design doc**: `replication_scoping.md`, `gss_phase1_design.md`, `thesis_phase2_design.md`, `FUTURE_DESIGN.md`
-- **Pipeline canonical**: `persona_pipeline.ipynb` (notebook); `run_notebook_local.py` (local runner); `rescore_with_leakage_audit.py`, `make_robustness_chart.py`, `build_site_data.py` (post-pipeline)
+- **Phase 1 pipeline (canonical)**: `gss_driver.py` (orchestrator), `gss_pipeline.py`, `select_phase1b_model.py`, `battery_loo.py`, `shapley_decomposition.py`, `regression_baseline.py`, `validate_taxonomy.py`, `llm_router.py`, `lint_writeup_language.py` — see `RUNBOOK.md` for paid-run sequence
+- **Pilot pipeline (archived to `pilot_code/`)**: `pilot_code/persona_pipeline.ipynb` (notebook), `pilot_code/run_notebook_local.py` (local runner), `pilot_code/rescore_with_leakage_audit.py`, `pilot_code/make_robustness_chart.py`, `pilot_code/build_site_data.py` (post-pipeline) — produces `docs/` dashboard
 - **Status**: `STATUS.md` (single source of truth for work-tree state)
-- **Meeting prep**: `archive/MEETING_HANDOUT.md`, `WRITEUP.md`
+- **Meeting prep**: `archive/MEETING_HANDOUT.md`, `archive/WRITEUP.md` (both pilot-era; current state lives in `gss_phase1_design.md` + `osf_preregistration_v1.md`)
 - **Park reference**: `2411.10109v2.pdf` (gitignored, kept local; v2 retitled "LLM Agents Grounded in Self-Reports...")

@@ -40,11 +40,11 @@ stale bodies):
 5. [`INDEX.md`](INDEX.md) — file map; what every file is and which are current vs historical
 
 **Historical handoff (banner'd PARTIALLY SUPERSEDED — read for project history, NOT current numbers):**
-6. [`HANDOFF.md`](HANDOFF.md) — fresh-session quickstart from 2026-05-09 evening, body has stale numbers, banner has delta table
-7. [`STATUS.md`](STATUS.md) — dated changelog (banner'd; same caution)
-8. [`PROJECT_SYNTHESIS.md`](PROJECT_SYNTHESIS.md) — paper-ready bilingual synthesis (banner'd)
-9. [`theory_interpretation_guide.md`](theory_interpretation_guide.md) — Discussion-section memo on candidate cognitive frameworks
-10. [`archive/MEETING_HANDOUT.md`](archive/MEETING_HANDOUT.md) — earlier bilingual project brief (moved to archive 2026-05-10 per Audit-fresh-2 F4)
+6. [`STATUS.md`](STATUS.md) — dated changelog (banner'd; partially superseded)
+7. [`PROJECT_SYNTHESIS.md`](PROJECT_SYNTHESIS.md) — paper-ready bilingual synthesis (banner'd)
+8. [`theory_interpretation_guide.md`](theory_interpretation_guide.md) — Discussion-section memo on candidate cognitive frameworks
+9. [`archive/MEETING_HANDOUT.md`](archive/MEETING_HANDOUT.md) — earlier bilingual project brief (moved to archive 2026-05-10 per Audit-fresh-2 F4)
+10. [`archive/HANDOFF.md`](archive/HANDOFF.md) — earlier fresh-session quickstart (moved to archive 2026-05-10 — front-door role replaced by `gss_phase1_design.md` + `osf_preregistration_v1.md`)
 11. [`replication_scoping.md`](replication_scoping.md) — original Park v2 replication scoping
 12. [`thesis_phase2_design.md`](thesis_phase2_design.md) — Phase 2 (planned)
 
@@ -92,30 +92,30 @@ suspiciously-small files).
 
 See **`RUNBOOK.md`** for the full paid-run sequence, **`gss_phase1_design.md`**
 for the canonical live design (the source of truth), and **`osf_preregistration_v1.md`**
-for the OSF lock. STATUS.md / HANDOFF.md / PROJECT_SYNTHESIS.md are
-historical handoff docs with superseded banners; read them last, not first.
+for the OSF lock. STATUS.md / PROJECT_SYNTHESIS.md are historical handoff docs
+with superseded banners; read them last, not first.
 
-### Pilot phase (Cookiy, completed)
+### Pilot phase (Cookiy, completed — code archived to `pilot_code/`)
 
-Canonical pipeline is `persona_pipeline.ipynb`. To run it locally without Jupyter:
+Canonical pipeline is `pilot_code/persona_pipeline.ipynb`. To run it locally without Jupyter:
 
 ```bash
 export OPENAI_API_KEY=$(cat Openai_api.txt)
-python3 -u run_notebook_local.py 2>&1 | tee outputs/logs/run_$(date +%Y%m%d_%H%M).log
+python3 -u pilot_code/run_notebook_local.py 2>&1 | tee outputs/logs/run_$(date +%Y%m%d_%H%M).log
 ```
 
 Runtime: ~9 minutes, ~$3-5 in OpenAI API calls. Outputs `metrics_per_respondent.csv` + `outputs/persona_answers_full.json`.
 
 Then re-score under leakage-filter views and refresh the dashboard data (no API, ~1 second):
 ```bash
-python3 rescore_with_leakage_audit.py    # → outputs/metrics_with_leakage_audit.csv
-python3 make_robustness_chart.py         # → outputs/chart_robustness.png
-python3 build_site_data.py               # → docs/data/*.json
+python3 pilot_code/rescore_with_leakage_audit.py    # → outputs/metrics_with_leakage_audit.csv
+python3 pilot_code/make_robustness_chart.py         # → outputs/chart_robustness.png
+python3 pilot_code/build_site_data.py               # → docs/data/*.json
 ```
 
-`run_notebook_local.py` is a thin runner that executes the notebook's code cells outside Colab (patches Cell 8 to read from `cookiy_transcripts/`, skips Jupyter magics, stubs `display()`, adds retry+exponential-backoff for OpenAI TPM limits).
+`pilot_code/run_notebook_local.py` is a thin runner that executes the notebook's code cells outside Colab (patches Cell 8 to read from `cookiy_transcripts/`, skips Jupyter magics, stubs `display()`, adds retry+exponential-backoff for OpenAI TPM limits).
 
-`persona_pipeline.py` (the older script-based version) still works but is no longer the canonical path. See STATUS.md for the latest results and full file inventory.
+`pilot_code/persona_pipeline.py` (the older script-based version) still works but is no longer the canonical path. See STATUS.md for the latest results and full file inventory.
 
 ## Project goal
 
@@ -131,5 +131,5 @@ The pilot delivers the smallest end-to-end version of the architecture (Cookiy i
 ## Repo conventions
 
 - Markdown working notes for design and status; JSON for machine-readable batteries and metrics; Python for the pipeline.
-- All paths in `persona_pipeline.py` resolve under `$GSBGEN390_DIR`, defaulting to `/Users/joyce/Documents/GSBGEN390`.
+- All paths in `pilot_code/persona_pipeline.py` resolve under `$GSBGEN390_DIR`, defaulting to `/Users/joyce/Documents/GSBGEN390`.
 - Sensitive: `Openai_api.txt` lives in this folder for convenience but should be deleted/rotated when the project ends. Never check it into version control.
