@@ -56,16 +56,17 @@ If Inglehart-Welzel doesn't fit on closer reading, the second-strongest move is 
 
 ### 2.2 Inglehart-Welzel cultural map (World Values Survey)
 
-**Foundational citations:**
-- Inglehart, R. & Welzel, C. (2005). *Modernization, Cultural Change, and Democracy: The Human Development Sequence.* Cambridge University Press.
-- Inglehart, R. (1997). *Modernization and Postmodernization: Cultural, Economic, and Political Change in 43 Societies.* Princeton University Press.
-- World Values Survey Wave 7 (2017–2022) cultural-map construction documentation: https://www.worldvaluessurvey.org/
+**Foundational citations (✅ VERIFIED 2026-05-10 night per OSF §17 item ④ Claude cite check):**
+- Inglehart, R. & Welzel, C. (2005). *Modernization, Cultural Change, and Democracy: The Human Development Sequence.* Cambridge University Press. [ISBN 0-521-60971-2, 333 pages; data from WVS + European Values Surveys, covering 85% of world population]
+- Inglehart, R. (1997). *Modernization and Postmodernization: Cultural, Economic, and Political Change in 43 Societies.* Princeton University Press. [ISBN 0-691-01180-X paperback / 0-691-01181-8 hardcover, x+453 pages; data from WVS, 70% of world population]
+- Welzel, C. (2013). *Freedom Rising: Human Empowerment and the Quest for Emancipation.* Cambridge University Press. [The canonical source for **individual-level value indices**; introduces the **Emancipative Values Index** (12-item, 4 sub-domains: reproductive choice, gender equality, people's voice, personal autonomy), the **Cognitive Stimulation Index** (3-item), etc. Online appendix at www.cambridge.com/welzel.]
+- World Values Survey association: https://www.worldvaluessurvey.org/
 
-**What it claims.** Two orthogonal axes structure cross-cultural value variation:
-- **Traditional ↔ Secular-rational** (importance of religion, family ties, authority deference)
-- **Survival ↔ Self-expression** (security, conformity vs. tolerance, autonomy, life-quality)
+**What it claims.** Two orthogonal axes structure cross-cultural value variation (canonical 2005 nomenclature):
+- **Traditional ↔ Secular-rational** (vertical / y-axis) — importance of religion, parent-child ties, deference to authority, absolute standards, traditional family values; secular-rational = "replacement of religion and superstition with science and bureaucracy as the basis of behaviour and authority relations"
+- **Survival ↔ Self-expression** (horizontal / x-axis) — survival = economic + physical security, ethnocentric outlook, low trust/tolerance; self-expression = subjective well-being, individual freedom, quality of life
 
-The 4 quadrants give a "cultural map" showing nation-level positions. Substantively close to Hofstede but extracted from different empirical procedures.
+The 4 quadrants give a "cultural map" showing nation-level positions. An early version was created in 1997; revised maps released in 2005, 2010-2011, and 2023.
 
 **Fit to GSS attitudinal items:**
 
@@ -78,9 +79,15 @@ The 4 quadrants give a "cultural map" showing nation-level positions. Substantiv
 
 **Strengths.** Direct empirical lineage with GSS (items literally overlap with WVS); 4 balanced quadrants (similar item counts); cross-cultural pedigree across 100+ countries; less politically loaded than MFT.
 
-**Risks.** Originally a *country-level* construct (national averages on the cultural map). Using it at the individual level is supported but requires citing specific individual-level Inglehart-Welzel work (Welzel's *Freedom Rising* 2013 is the canonical source for individual-level value indices). Verify before locking.
+**Risks** (revised 2026-05-10 night with verified citations + an additional methodological caveat found during cite check):
 
-**Verdict.** **High-priority candidate, not in Round-1.** Joyce should evaluate this side-by-side with MFT and Schwartz.
+1. **Country-level vs. individual-level**: the framework is originally a *country-level* construct (national averages on the cultural map). Individual-level application is supported by Welzel (2013)'s Emancipative Values Index (12-item, individual-level) — that is the citation to use for individual-level claims, NOT the original 2005 Inglehart-Welzel cultural-map work.
+
+2. **Single-factor vs. two-factor structure (Beugelsdijk & Welzel 2010 critique)** — verified during cite check: in 2010, calculations by Beugelsdijk and Welzel themselves suggested that the split into two factors (Traditional/Secular-rational + Survival/Self-expression) is only weakly justified by the data, and that **a single-factor solution might be appropriate** at the individual level. This is a real methodological caveat that **the 6-framework comparison in OSF Discussion section must acknowledge**: if the two-axis structure collapses to a single dimension in the GSS-2024 individual-level data, the Inglehart-Welzel quadrant predictions become less differentiated.
+
+3. **Cultural essentialism critique (Dervin / Moloney / Simpson 2020)** — a polemical critique that the map's classifications can stigmatize developing countries as inferior to predominantly White / European / Christian ones. Not a methodological show-stopper for Phase 1 (which is US-only) but should be acknowledged if any cross-cultural extension is discussed in Phase 2 or future work.
+
+**Verdict.** **High-priority candidate, retained in the locked 6-framework list (OSF §17 item ①, locked 2026-05-10 night).** Joyce evaluates side-by-side with MFT and Schwartz. Discussion section must cite Welzel (2013) for individual-level claims and acknowledge the 2010 single-factor caveat.
 
 ### 2.3 Hofstede's cultural dimensions
 
@@ -279,7 +286,7 @@ All arXiv IDs, DOIs, and paper titles in §3 were retrieved by web search on 202
 - Author lists are summarized from search snippets — verify full author orderings before pre-reg.
 - Page numbers / volume numbers may have transcription errors — verify from publisher.
 - Year of publication is reliable for most; but pre-print → final-publication can shift.
-- For Inglehart-Welzel and Hofstede specifically, the citations in §2.2 and §2.3 are textbook references that are not from this round's web searches; verify those independently.
+- For Inglehart-Welzel specifically: §2.2 citations were verified 2026-05-10 night via web cross-check against publisher pages (Cambridge UP, Princeton UP) + Wikipedia + World Values Survey site (per OSF §17 item ④). Verification added the 2010 Beugelsdijk & Welzel single-factor caveat to §2.2 Risks. **For Hofstede specifically: §2.3 citations are still textbook-reference recall; verify independently before any Discussion-section use.**
 
 Joyce: before any of these citations enter the OSF pre-registration or paper, retrieve the actual paper or DOI page and confirm.
 
