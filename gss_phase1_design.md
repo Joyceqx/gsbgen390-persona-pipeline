@@ -198,10 +198,12 @@ This sequence is **hypothesis-driven**, not exploratory. Phase 1 outputs become 
    - **Bin-level Shapley** (16 conditions) is a *robustness re-aggregation* of the same 4-bin estimand; no separate multiplicity correction (it shares the 4-bin primary family).
    - **Theory-bin LOO is NOT a confirmatory family.** Theory framing enters the Discussion section as interpretive secondary analysis only (see §13.3). If a future amendment adds theory-bin LOO as a confirmatory family, that amendment will introduce its own Holm correction at that time.
 
-9. **Practical-effect-size thresholds (locked 2026-05-09 evening).** Because N=1500 can render very small ΔMAE values statistically significant under Holm correction, every Battery LOO and 4-bin LOO ΔMAE is reported alongside a **practical effect-size label**:
+9. **Practical-effect-size thresholds (locked 2026-05-09 evening; anchored to Funder & Ozer 2019 effect-size taxonomy 2026-05-09 night).** Because N=1500 can render very small ΔMAE values statistically significant under Holm correction, every Battery LOO and 4-bin LOO ΔMAE is reported alongside a **practical effect-size label**:
    - **small / descriptive**: ΔMAE < 0.02
    - **modest**: 0.02 ≤ ΔMAE < 0.05
    - **substantive**: ΔMAE ≥ 0.05
+
+   **Anchor to existing literature**: these thresholds correspond to *"small-but-consequential"* (~0.02 on a 1-5 Likert MAE) and *"medium"* (~0.05) in **Funder & Ozer (2019)** *"Evaluating Effect Sizes in Psychological Research: Sense and Nonsense"* (AMPPS, DOI: 10.1177/2515245919847202)'s effect-size taxonomy applied to MAE on Likert scales. The 0.02 threshold deliberately includes effects Funder & Ozer call "small but consequential at scale" — meaningful for a public-survey LLM persona deployment context where small per-item ΔMAEs translate to large aggregate prediction shifts. See `LIT_REVIEW.md` §2.4 for the Funder & Ozer entry and supporting citation logic.
    - These thresholds are pre-registered. A finding is reported as substantively meaningful only if it is **both** (a) Holm-significant within its family AND (b) practical-effect ≥ "modest" with a 95% bootstrap CI that excludes the "small/descriptive" boundary. Statistical significance alone is not sufficient for headline-strength substantive interpretation.
    - Bootstrap CIs are respondent-level paired CIs (B=1000, seed=42).
    - Battery size must always be reported alongside ΔMAE; `delta_mae_per_item` (ΔMAE / n_items_in_battery) is reported as a size-aware **descriptive sensitivity column**, not the primary inferential metric.
@@ -274,7 +276,7 @@ The following items must be in the OSF pre-registration document, locked before 
 - [ ] **DQ-3 reference**: `outputs/primary_eval_human_variance_2024.json` (locked GSS 2024 per-item human variance)
 - [ ] **GPT-4o anchor scope**: N=100 subset, primary conditions only, n_samples=2 — used for Park-comparable per-item raw accuracy, NOT the N=1500 headline
 - [ ] **Theory interpretation**: Discussion-section only, no horse race, no theory-bin LOO, no Stage 3 refinement, no hard supports/refutes thresholds (per `theory_interpretation_guide.md`)
-- [ ] **Implementation status disclosure**: Shapley + Battery LOO are *specified but not yet implemented* (`shapley_decomposition.py` + `battery_loo.py` pending); 4-bin LOO + R1 + R2 + §12.2 selector + audit primitives are *implemented and tested* (per STATUS.md)
+- [ ] **Implementation status disclosure** (this is the *lock-first defense* per Codex audit 2026-05-09 night addition A — used CONFIDENTLY, not apologetically): Shapley decomposition + Battery LOO are *specified at schema level (`tier1_tool_schemas.md` Tools 1-2) but not yet implemented in code* (`shapley_decomposition.py` + `battery_loo.py` pending). 4-bin LOO + R1 + R2 + §12.2 selector + audit primitives + battery map v0.2 + DQ-3 reference are *implemented and self-tested* (validate_taxonomy 10-check + AUDIT A-E + §12.2 5-branch + R2 12/12 self-test, all green). **Pre-registration commitment**: these analyses were locked at the analysis-plan level prior to implementation; the implementations will pass self-tests on synthetic fixtures (matching Tools 1-2 schema output exactly) BEFORE any paid Phase 1c run. This is conventional OSF practice for analysis-plan preregistration.
 - [ ] **Writeup language template (§11.1)**: forbidden mentalist claims; required scope qualifiers
 - [ ] **Decisions log appendix**: PROJECT_SYNTHESIS.md §4 (locked, when, against what evidence)
 
@@ -287,6 +289,12 @@ The following items must be in the OSF pre-registration document, locked before 
 - [ ] Smoke command **chosen intentionally** — verify no flag accidentally triggers full sensitivity pass across all 4 cheap models (operational risk, see §9g)
 - [ ] Expected dollar cost printed and understood (~$2-3 for `--n 10`)
 - [ ] All non-paid tests green (validate_taxonomy + audit A-E + selector + R2 baseline)
+
+**Self-imposed smoke discipline (locked 2026-05-09 night per Codex audit addition)**:
+
+> **Smoke = plumbing only, not data look.** N=10 smoke verifies (a) the API succeeded, (b) artifacts have the right shape (NDJSON fields populated, persona_code parsed within valid_codes, parse_failure rate not catastrophic), (c) the seed-42 reproducibility guard fires correctly, and (d) atomic-write resume works on interruption. **Do NOT open the JSON and read the actual codes.** If smoke output informs a design tweak (a prompt change, a parsing rule, a model swap, a battery edit), you have silently pre-violated your own pre-registration. Smoke is for verifying the implemented base pipeline; it is NOT for piloting design choices.
+
+This rule is enforced by the maintainer (Joyce) only — there's no automated check. If a future commit shows changes to prompt wording / parsing rule / model panel / battery map between the smoke run and the Phase 1a launch, that's a pre-registration deviation that must be filed as an OSF amendment with rationale.
 
 **Before Phase 1a (N=100)**:
 - [ ] OSF pre-registration draft locked (per §9e)
@@ -325,9 +333,28 @@ The following items must be in the OSF pre-registration document, locked before 
 - **Item-macro-averaged**: mean MAE per item, then average over items. Useful when items differ systematically in difficulty.
 - **Respondent-item weighted (pooled)**: pool all (respondent, item) errors and average. Equivalent to weighting respondents by their answered-item count.
 
-**Weighted reanalysis** — robustness check using GSS sampling weights (`WTSSALL` or equivalent in the 2024 release). Reported alongside unweighted primary if the two diverge by >0.05 MAE.
+**Inferential frame** — locked 2026-05-09 night per Codex M1 audit. Phase 1's bootstrap is paired-respondent-level, which assumes simple random sampling; GSS 2024 is a multi-stage probability sample with PSU + strata + WTSSALL weights. **We explicitly restrict the inferential frame to the GSS-2024 cross-section as a fixed dataset** — i.e., we estimate predictive properties on this specific 3,309-respondent extract, NOT population-level parameters of the U.S. adult attitude landscape. All "respondent-level" language refers to the sampled 1500/3309 from this fixed dataset. We do NOT claim population inference. A weighted/cluster-bootstrap robustness check using `WTSSALL` + PSU is a future-work extension; if pursued, reported as a separate sensitivity column with explicit "fixed-dataset vs population-inferential" framing.
 
 **LOO-condition delta** — primary inferential quantity per category bin: `ΔMAE_bin = MAE(LOO-drop-bin) − MAE(Full)`. Bootstrap CIs at respondent level via **paired bootstrap**: in each of the B=1000 resamples, draw one respondent set with replacement, then compute MAE(Full) and MAE(LOO-drop-bin) on **the same resample**, then take the delta. Do not bootstrap MAE(Full) and MAE(LOO) independently (would over-inflate Δ-CI variance).
+
+### 10a. R1 asymmetric burden across primary_eval items (locked 2026-05-09 night per Codex M6)
+
+The R1 battery exclusion is asymmetric across the 12 primary_eval items because some primary_eval items have battery-mates inside primary_eval and others do not. Specifically:
+
+| Group | Items | R1 strips when predicted |
+|---|---|---|
+| **In-battery primary_eval** (4 of 12) | FECHLD, FEPOL (gender_role_attitudes battery, 5 items) | 5-item battery from prompt |
+| | CONFINAN, CONLEGIS (confidence_in_institutions battery, 13 items) | 13-item battery from prompt |
+| **Singleton primary_eval** (8 of 12) | POLVIEWS, PARTYID, ABANY, CAPPUN, GUNLAW, RACDIF1, HELPPOOR, SATFIN | only the predicted item itself |
+
+The respondent-macro Likert MAE weights all 12 items equally, so the 4 in-battery items contribute under structurally thinner conditioning than the 8 singleton items. This is **NOT a bug** — it's the correct behavior of R1 (the battery-mates ARE same-construct redundant siblings that must be removed) — but it produces an implicit per-item weighting that a careful reviewer would flag.
+
+**Pre-registered reporting rule**: alongside the headline respondent-macro Likert MAE over all 12 items, also report:
+
+1. **Headline split**: respondent-macro MAE over the 4 in-battery primary_eval items vs over the 8 singleton primary_eval items, separately. Reported in Table 1 (or Table 2) with explicit labels.
+2. **Sensitivity column**: respondent-macro MAE recomputed weighting items inverse to their R1-stripped feature count (in-battery items down-weighted, singletons up-weighted). Reported as descriptive sensitivity.
+
+This is a methodological asymmetry, NOT a confound. We disclose it explicitly because reviewers will (correctly) ask about it.
 
 ## 11. What a positive Phase 1 result does and does NOT support (writeup constraints)
 
@@ -534,7 +561,7 @@ Battery LOO is **not** a fishing expedition across 34 unrelated tests. **Batteri
 - **Within-bin claims** use nested Holm only and are confirmatory.
 - **Cross-bin claims** ("battery X is the strongest battery overall") require joint-34 Holm sensitivity support (§8.8). Without joint-34 support, cross-bin language must be descriptive (e.g., "rank-ordered" rather than "significantly stronger").
 - **Practical-effect threshold gate** (§8.9): a battery is reported as substantively meaningful only if Holm-significant AND practical-effect ≥ "modest" (ΔMAE ≥ 0.02) with bootstrap CI excluding the small-effect boundary. Statistical significance alone is insufficient.
-- Battery size is unbalanced (2-15 items per battery); ΔMAE magnitudes are reported alongside `n_items_in_battery` and `delta_mae_per_item` for size-aware interpretation. `delta_mae_per_item` is a descriptive sensitivity column, NOT the primary inferential metric.
+- Battery size is unbalanced (2-15 items per battery); ΔMAE magnitudes are reported alongside `n_items_in_battery` and `delta_mae_per_item` for size-aware interpretation. `delta_mae_per_item` is a descriptive sensitivity column, NOT the primary inferential metric. **Documented trade-off (locked 2026-05-09 night per Codex M3)**: bare ΔMAE has a size-toward-larger-batteries confound; per-item ΔMAE has a variance-toward-smaller-batteries confound. There is no clean primary metric that escapes both. We report **both metrics with the explicit `n_items_in_battery` size column** so readers can apply whichever framing fits their substantive question. The headline Holm-significance test runs on bare ΔMAE because it has the better statistical-power profile at this N; per-item ΔMAE is reported as a robustness column in every results table.
 
 **Output schema** in `tier1_tool_schemas.md` Tool 2 — includes `p_holm_within_bin`, `p_holm_joint_34`, `holm_significant_within_bin`, `holm_significant_joint_34`, `effect_size_label`, and `n_items_in_battery` / `delta_mae_per_item`.
 

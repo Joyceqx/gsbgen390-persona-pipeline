@@ -1,5 +1,7 @@
 # GSBGEN390 — Comprehensive Project Brief
 
+> ⚠️ **FROZEN AS PILOT-WRAP STATE (2026-04-30)** — This document captures the project state at the end of the pilot phase. The Phase 1 design described here ("GSS Three-Wave Panel 2010-2014, normalized accuracy directly comparable to Park's 0.82-0.83") **was abandoned in May 2026** in favor of a single-wave GSS 2024 design with raw-accuracy primary metrics, no test-retest normalization, and a forbidden-language list that explicitly bans "normalized accuracy directly comparable to Park" claims. **For the current Phase 1 design, see `gss_phase1_design.md` (especially §1.0, §4, §10, §11.1) and `PROJECT_SYNTHESIS.md` §3.** Do NOT cite this file as the live Phase 1 spec. It is preserved for pilot-era historical reference and decision-log purposes only.
+
 **Joyce Yu · for Prof. Mohsen Bayati · 2026-04-30**
 
 This document is written in two complete versions: **English first, then 中文** (scroll down). Either version covers the full project state. Pick whichever reads faster.

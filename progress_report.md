@@ -1,5 +1,7 @@
 # Progress Report — GSBGEN390 Mini-Replication Sprint
 
+> ⚠️ **FROZEN AS PILOT-WRAP STATE (2026-04-30)** — This is the pilot-phase progress report. The Phase 1 forward-looking plan described here ("GSS Three-Wave Panel 2010-2014, wave-1 inputs predicting wave-3 outcomes, normalized accuracy directly comparable to Park's 0.82-0.83") **was abandoned in May 2026** in favor of a single-wave GSS 2024 design with raw-accuracy primary metrics and no test-retest normalization. **For the current Phase 1 design, see `gss_phase1_design.md` and `PROJECT_SYNTHESIS.md` §3.** Do NOT cite this file as the live Phase 1 spec. It is preserved for pilot-era historical reference and decision-log purposes only.
+
 **Author:** Joyce Yu
 **Course:** GSBGEN390 Independent Research, Spring 2026
 **Faculty Advisor:** Prof. Mohsen Bayati

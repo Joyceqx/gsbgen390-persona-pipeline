@@ -1063,19 +1063,49 @@ def _panel_aggregate_code(
     valid_codes: list[int],
     item_id: str,
     item_format: str | None,
+    respondent_id: int | None = None,
 ) -> int:
     """Aggregate model codes into a single 'panel' code.
 
-    Locked design (gss_phase1_design.md §12 + Codex audit 2026-05-06):
+    Locked design (gss_phase1_design.md §12 + Codex audit 2026-05-06;
+    tie-break bug fix Codex audit M5 2026-05-09 night):
+
       - Likert items (likert3+): MEDIAN, snapped to nearest valid code.
-        Tie-break toward lower (deterministic).
+        Tie-break: deterministic by hash of (item_id, respondent_id, codes_tuple)
+        — symmetric, no directional bias.
+
       - Binary / categorical items: MODE (most common code).
-        Tie-break toward lower (deterministic).
+        Tie-break: same deterministic-hash rule. **PRIOR BUG**: tie-break
+        toward `min(candidates)` systematically biased binary items toward
+        code 1 (e.g., ABANY=YES, CAPPUN=Favor, GUNLAW=Allowed). Fixed
+        2026-05-09 night per Codex M5.
+
       - PARTYID contingent: if any model output 7 ('Other party'), MODE
         (because 7 is off the ordinal scale); else MEDIAN.
+
+    The deterministic hash is reproducible for fixed (seed=42 in upstream
+    sampling, item_id, respondent_id, codes) and breaks the prior
+    directional bias toward lower code values.
     """
     from statistics import median as _median
     from collections import Counter
+    import hashlib
+
+    def _deterministic_pick(candidates: list[int]) -> int:
+        """Pick one of candidates deterministically without directional bias.
+        Uses SHA-256 over (item_id, respondent_id, sorted(codes), sorted(candidates))
+        modulo len(candidates). Reproducible and unbiased."""
+        if len(candidates) == 1:
+            return int(candidates[0])
+        key = (
+            f"{item_id}|"
+            f"{respondent_id if respondent_id is not None else 'NA'}|"
+            f"{','.join(str(c) for c in sorted(codes))}|"
+            f"{','.join(str(c) for c in sorted(candidates))}"
+        )
+        h = hashlib.sha256(key.encode("utf-8")).hexdigest()
+        idx = int(h[:8], 16) % len(candidates)
+        return int(sorted(candidates)[idx])
 
     use_mode = (
         item_format == "binary"
@@ -1084,19 +1114,21 @@ def _panel_aggregate_code(
     )
 
     if use_mode:
-        # Most common code; tie-break toward LOWER value for determinism.
         counts = Counter(codes)
         top = max(counts.values())
         candidates = [c for c, n in counts.items() if n == top]
-        chosen = min(candidates)
+        chosen = _deterministic_pick(candidates)
         # Ensure chosen is a valid code (always should be, but defensive)
         if chosen not in valid_codes:
             chosen = min(valid_codes, key=lambda c: abs(c - chosen))
         return int(chosen)
     else:
         med_raw = _median(codes)
-        # Snap median to a valid code (ties broken toward lower)
-        chosen = min(valid_codes, key=lambda c: (abs(c - med_raw), c))
+        # Snap median to nearest valid code; if multiple valid codes are
+        # equidistant, deterministic-hash pick (no longer min-bias).
+        min_dist = min(abs(c - med_raw) for c in valid_codes)
+        candidates = [c for c in valid_codes if abs(c - med_raw) == min_dist]
+        chosen = _deterministic_pick(candidates)
         return int(chosen)
 
 
@@ -1183,7 +1215,7 @@ def synthesize_panel_median_records(
                 if fmt is None:
                     fmt = "binary" if len(vcodes) == 2 else f"likert{len(vcodes)}"
 
-                panel_code = _panel_aggregate_code(codes, vcodes, item_id, fmt)
+                panel_code = _panel_aggregate_code(codes, vcodes, item_id, fmt, respondent_id=rid)
 
                 if truth is None:
                     samples_out.append({
@@ -1691,11 +1723,22 @@ def _audit_e_multimodel_test():
     assert r1_loo["per_item_scores"]["ITEM_B"][0]["cat_match"] == 0
     print("   ✓ resp 1 loo  panel ITEM_A median=4 abs_err=1, ITEM_B mode=2 cat_match=0")
 
-    # Verify mode tie-break (lower wins). Hand-build a tie case:
-    # codes=[1,1,2,2] → mode tie {1,2} → tie-break to lower = 1
-    tied_code = _panel_aggregate_code([1, 1, 2, 2], [1, 2], "FAKE_BIN", "binary")
-    assert tied_code == 1, f"expected tie-break to lower (1), got {tied_code}"
-    print("   ✓ binary tie [1,1,2,2] → mode=1 (lower tie-break)")
+    # Verify mode tie-break is now deterministic-but-unbiased (M5 fix
+    # 2026-05-09 night). Prior bug: tie-break always picked min(candidates),
+    # systematically biasing binary items toward code 1 (e.g., ABANY=YES,
+    # CAPPUN=Favor, GUNLAW=Allowed). Fixed to use hash-based pick.
+    # For codes=[1,1,2,2], the result is in {1, 2} but determined by hash.
+    tied_a = _panel_aggregate_code([1, 1, 2, 2], [1, 2], "FAKE_BIN", "binary", respondent_id=1)
+    tied_a_repeat = _panel_aggregate_code([1, 1, 2, 2], [1, 2], "FAKE_BIN", "binary", respondent_id=1)
+    tied_b = _panel_aggregate_code([1, 1, 2, 2], [1, 2], "FAKE_BIN", "binary", respondent_id=2)
+    assert tied_a in (1, 2), f"expected valid code; got {tied_a}"
+    assert tied_a == tied_a_repeat, f"deterministic: same inputs must give same output (got {tied_a} vs {tied_a_repeat})"
+    print(f"   ✓ binary tie [1,1,2,2] → mode in {{1,2}} (deterministic-hash, NOT min-biased): rid=1→{tied_a}, rid=2→{tied_b}")
+    # Confirm symmetric across many respondent IDs (no systematic bias toward 1)
+    bias_check = [_panel_aggregate_code([1,1,2,2], [1,2], "FAKE_BIN", "binary", respondent_id=i) for i in range(200)]
+    pct_one = sum(1 for c in bias_check if c == 1) / len(bias_check)
+    assert 0.35 < pct_one < 0.65, f"expected ~50/50 across rids (no bias); got {pct_one:.0%} ones"
+    print(f"   ✓ tie-break unbiased across 200 rids: {pct_one:.0%} ones (target ~50%)")
 
     # PARTYID code-7 contingent: when any model outputs 7, use mode
     # codes=[3,4,7,7] → mode 7; should NOT be median 5.5→5/6
