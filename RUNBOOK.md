@@ -193,13 +193,16 @@ Expected output (once wrapper is built):
 
 ---
 
-## Step 6 — Phase 1c Battery LOO + Shapley (DEFERRED — orchestration not implemented)
+## Step 6 — Phase 1c Battery LOO + Shapley (DEFAULT: run as co-primary; orchestration runtime pending)
 
-**STOP**: at the time this runbook was locked (2026-05-10 night), the
-Battery LOO + Shapley orchestration drivers in `gss_driver.py` are
-NOT-IMPLEMENTED stubs (they print an OSF §13.2 pointer and exit). The
-analyzers (`battery_loo.py`, `shapley_decomposition.py`) ARE implemented
-and self-tested.
+**Status (corrected 2026-05-10 night)**: Phase 1c is **co-primary by design and the default action after Phase 1b** — NOT contingent on which bin dominates the 4-bin LOO. The Battery LOO answers "within each pre-registered bin, which specific construct-level batteries drive the predictive signal?" — this question is scientifically valuable whether attitudinal, demographic, behavioral, or psychological wins the 4-bin contest, because Phase 1b alone reports only the broad bin-level effect; Phase 1c is the mechanistic complement at battery level.
+
+**When you CAN legitimately skip / scale back Phase 1c** (not the same as "attitudinal didn't dominate"):
+- Phase 1b shows ALL 4 bins are near-zero ΔMAE → the entire Phase 1 design under-detected effects; the issue isn't Phase 1c specifically, it's whether the Phase 1 run had sufficient power / leakage hygiene actually worked. Pause, investigate, possibly re-run Phase 1a smoke before continuing.
+- Phase 1b exposes a serious methodological problem (parse failure spike, R1 leakage suspected, model-collapse) → fix the problem first; do not throw $481 at a broken pipeline.
+- Budget pressure that didn't exist at OSF lock time → use one of the reduction options (Battery LOO at N=1,500 saves $263; attitudinal-only saves $209; defer to Phase 1d).
+
+**Implementation status (locked 2026-05-10 night)**: at the time this runbook was locked, the Battery LOO + Shapley **orchestration drivers** in `gss_driver.py` are NOT-IMPLEMENTED stubs (they print an OSF §13.2 pointer and exit). The **analyzers** (`battery_loo.py`, `shapley_decomposition.py`) ARE implemented and self-tested. The orchestration is deliberately deferred until Phase 1b results are in — not because Phase 1c is contingent on a specific bin winning, but because the ~1 day of driver work is wasted effort if Phase 1b reveals a methodological problem that needs fixing first.
 
 Before invoking Step 6, the orchestration runtime must be implemented to
 match `tier1_tool_schemas.md` Tools 1-2. Estimated implementation work:

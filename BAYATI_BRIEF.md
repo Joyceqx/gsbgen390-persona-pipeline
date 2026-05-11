@@ -97,7 +97,7 @@ Below is the full §17 status. Items ①②③④⑤⑦ are LOCKED by my decisio
 | ② | Null-alignment commitment (Discussion-only, equal prominence to positive findings) | ✅ Locked: text approved | Confirm OK |
 | ③ | Discussion section structure | ✅ Locked: data-organized (one subsection per empirical finding) | Confirm OK |
 | ④ | Inglehart-Welzel citation verification | ✅ Locked: cross-checked 2026-05-10 night against publisher pages + WVS + Wikipedia; one new caveat added (Beugelsdijk & Welzel 2010 single-factor critique) | Confirm OK |
-| ⑤ | Driver runtime extension timing | ✅ Locked: Phase 1b-result-conditional (write the ~1-day Battery LOO + Shapley orchestration driver AFTER Phase 1b results, so we decide whether $481 Phase 1c is justified) | Confirm OK |
+| ⑤ | Driver runtime extension timing | ✅ Locked: write the ~1-day Battery LOO + Shapley orchestration driver AFTER Phase 1b results land. **Phase 1c is co-primary by design and runs by default** regardless of which bin dominates Phase 1b; the deferral is only to avoid wasting driver work if Phase 1b exposes a methodological problem (e.g., parse-failure spike, R1 leakage suspected) that needs fixing first. | Confirm OK |
 | ⑥ | **Bayati final signoff on OSF v1** | — | **THIS IS YOUR ASK** |
 | ⑦ | Phase 1 ~$756 budget | ✅ Locked: I'll cover; can absorb modest expansion if you prefer the $875 variant or want different reductions | Confirm budget OK |
 
@@ -105,7 +105,7 @@ Below is the full §17 status. Items ①②③④⑤⑦ are LOCKED by my decisio
 
 1. **Phase 1-alone vs Phase 1+2 thesis path**: the auto-correlation tautology (attitudinal-features-predict-attitudinal-outcomes can be partly mechanical) is the strongest single-paper attack on Phase 1. Phase 1 alone can be defended by reframing as a methods paper (leakage hygiene + selector + dual-headline split). Phase 1 + Phase 2 together (with the BFI + behavioral-game outcomes Phase 2 collects) provides the cross-outcome contrast that fully defangs the tautology. Strategic decision affecting Phase 2 recruitment timeline. I'd appreciate your read.
 
-2. **Phase 1c orchestration timing**: the Battery LOO + Shapley orchestration drivers are currently NOT-IMPLEMENTED stubs in `gss_driver.py` (the analyzers ARE implemented and self-tested). I'm planning to implement orchestration AFTER Phase 1b results — so we can see whether the Phase 1b headline justifies the $481 Phase 1c spend before investing the ~1 day of driver work. Confirm OK or push for earlier.
+2. **Phase 1c orchestration timing**: the Battery LOO + Shapley orchestration drivers are currently NOT-IMPLEMENTED stubs in `gss_driver.py` (the analyzers ARE implemented and self-tested). I'm planning to implement orchestration AFTER Phase 1b results land — NOT because Phase 1c is contingent on a specific 4-bin LOO outcome (it's co-primary by design and runs by default), but to avoid wasting the ~1 day of driver work if Phase 1b reveals a methodological problem worth fixing first. Confirm OK or push for earlier.
 
 3. **Phase 2 design** (`thesis_phase2_design.md`) is untouched since April 30 and needs its own revision pass — separate session, not blocking OSF v1.
 
