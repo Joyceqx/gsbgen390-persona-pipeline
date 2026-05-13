@@ -4,6 +4,48 @@ This file is loaded automatically by Claude Code (and any AI coding assistant th
 
 ---
 
+## ⚡ Fresh-session boot-up reading order (READ THIS FIRST)
+
+**Last refreshed**: 2026-05-12 (per-session catch-up guide). Project pre-OSF-lock commit: `16a1c04` (any later commit supersedes).
+
+If you are a fresh Claude session resuming this project, read these in order **before doing anything else**. Skip the "DO NOT read" set; they have superseded content with stale numbers and will mislead you.
+
+### ✅ Canonical sources to read
+
+1. **`gss_phase1_design.md`** — canonical live design document (single source of truth for sample sizes, panel composition, sensitivity scope, selector rule, statistical infrastructure, theory framing, budget). All current.
+2. **`osf_preregistration_v1.md`** — OSF v1 preregistration (mirrors design doc; locks the analysis contract). §17 lists the 7 decision items; 6 are LOCKED, item ⑥ (Bayati signoff) is the only external blocker.
+3. **`RUNBOOK.md`** — exact paid-run sequence with named driver modes, expected outputs, cost per step, common pitfalls.
+4. **This file (`CLAUDE.md`)** — operating principles you should follow.
+
+### 📚 Use-case-specific extensions
+
+- **Implementing Phase 1c orchestration** (Battery LOO + Shapley `gss_driver.py` modes): also read `tier1_tool_schemas.md` (Tools 1-2 spec) and the existing `--battery-loo` / `--shapley` NOT-IMPLEMENTED stubs in `gss_driver.py`.
+- **Writing Phase 1 paper**: also read `theory_review_round2.md` §2 (theory framework comparison with verified citations) and the forbidden-language rules in `lint_writeup_language.py`.
+- **Phase 2 design work**: also read `thesis_phase2_design.md` (last touched 2026-04-30; needs revision against current Phase 1 design).
+- **Brief Joyce's advisor**: `Project Brief for Professor Bayati.md` (15-min overview with two Mermaid flowchart diagrams).
+
+### 🚫 DO NOT read (banner'd as partially superseded; stale numbers)
+
+- `STATUS.md` — banner'd partially-superseded; historical changelog only.
+- `PROJECT_SYNTHESIS.md` — banner'd; pre-2026-05-10 numbers in body.
+- `archive/HANDOFF.md` — moved to archive; old N=100/N=1500/old budget.
+- `archive/MEETING_HANDOUT.md` — pilot-era; nothing about Phase 1.
+- `archive/WRITEUP.md` — pilot writeup; not the Phase 1 paper.
+- Any other file in `archive/` or `pilot_code/` — historical only.
+
+### 📌 Current state snapshot (2026-05-12)
+
+- **Phase 1a** ready to run (N=200, 100/100 selection/validation split). Cheap panel: Qwen-2.5-72B / DeepSeek-V3.1 / Llama-3.3-70B-Instruct / Kimi K2 (3 China + 1 Western post pre-OSF MiniMax→Llama swap). GPT-4o anchor on N=100 selection-split subset, primary + sensitivity, n_samples=2 — the only Park-comparable run per OSF §3.2.
+- **Phase 1b** runs single §12.2-selected cheap model on N=3,309 (full GSS 2024 cross-section), primary_eval only.
+- **Phase 1c** (Battery LOO + Shapley) co-primary by default; orchestration drivers NOT yet implemented (stubs in place pointing to OSF §13.2).
+- **Budget**: ~$756 total Phase 1 (Option A: cheap panel primary-only; sensitivity anchor-only). Joyce has authorized; awaiting Bayati signoff for OSF lock.
+- **Bootstrap**: B=10,000 BCa via scipy with percentile fallback (was 1,000 percentile).
+- **All-DQ-fail**: PAUSE for human review (NOT silent Qwen fallback).
+- **Per-call seed**: SHA-256 over (rid, condition, item_id, model, sample_idx); NOT a single hardcoded value.
+- **Cost guards in driver**: F9 panel-wide-large-N guard refuses --n≥1000 multi-model+sensitivity unless explicitly bypassed; partial-resume guard refuses to silently resume from suspiciously small artifacts.
+
+---
+
 ## What this project is
 
 **GSBGEN390 thesis-track research, Stanford GSB, Spring 2026.** Faculty advisor: **Prof. Mohsen Bayati.** Lead: **Joyce Yu.**
@@ -37,7 +79,7 @@ These supersede any default helpfulness instinct toward speed over rigor.
 ### 4. Statistical claims need the right N + uncertainty
 
 - N=2 + N=1 (Cookiy pilot) supports **directional claims only** — feasibility, methodology demonstrations, design illustrations. It does NOT support "feature X is more important than feature Y."
-- N=1500+ (GSS Phase 1) supports proper feature-importance inference with confidence intervals.
+- N=3,309 (GSS Phase 1, full cross-section — expanded from earlier N=1,500 drafts) supports proper feature-importance inference with confidence intervals.
 - Any AI-generated chart or sentence that implies inferential certainty at low N is a bug.
 
 ### 5. Privacy + ethics
@@ -53,11 +95,11 @@ These supersede any default helpfulness instinct toward speed over rigor.
 
 ---
 
-## Project structure (see STATUS.md for the current work tree)
+## Project structure (see `gss_phase1_design.md` for canonical Phase 1 design state)
 
-- **Pilot phase** (completed 2026-04-30): N=2 interview + N=1 survey via Cookiy; results in `outputs/`, dashboard at `docs/`, GitHub Pages at https://joyceqx.github.io/gsbgen390-persona-pipeline/
-- **Phase 1** (in progress): GSS public-panel feature-importance ablation. Design doc: `gss_phase1_design.md`. Pre-registration on OSF before primary analysis.
-- **Phase 2** (planned): targeted Cookiy collection covering BFI-44 + behavioral economic game outcomes that GSS doesn't measure. Design doc: `thesis_phase2_design.md`.
+- **Pilot phase** (completed 2026-04-30): N=2 interview + N=1 survey via Cookiy; results in `outputs/`, dashboard at `docs/`, GitHub Pages at https://joyceqx.github.io/gsbgen390-persona-pipeline/. Pilot code archived to `pilot_code/`.
+- **Phase 1** (in progress, OSF lock pending Bayati signoff): GSS 2024 full cross-section (N=3,309) feature-importance ablation; two co-primary analyses (4-bin LOO + 34-battery LOO). Design doc: `gss_phase1_design.md`. OSF v1: `osf_preregistration_v1.md`. Paid-run sequence: `RUNBOOK.md`.
+- **Phase 2** (planned, separate preregistration when Phase 1 results land): targeted Prolific/Cookiy collection covering BFI-44 + behavioral economic game outcomes that GSS doesn't measure. Design doc: `thesis_phase2_design.md` (last touched 2026-04-30; needs revision against current Phase 1 design).
 
 ---
 
