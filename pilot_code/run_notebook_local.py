@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 
-WORK = Path("/Users/joyce/Documents/GSBGEN390")
+WORK = Path("/Users/joyce/Developer/gsbgen390")
 os.chdir(WORK)
 
 # --- API key from local file ---

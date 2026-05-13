@@ -6,7 +6,7 @@ import csv
 import json
 from pathlib import Path
 
-WORK = Path("/Users/joyce/Documents/GSBGEN390")
+WORK = Path("/Users/joyce/Developer/gsbgen390")
 DATA = WORK / "docs" / "data"
 DATA.mkdir(parents=True, exist_ok=True)
 

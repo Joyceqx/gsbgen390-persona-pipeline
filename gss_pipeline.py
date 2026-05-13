@@ -40,7 +40,7 @@ from gss_loader import (
     load_gss,
 )
 
-WORK = Path("/Users/joyce/Documents/GSBGEN390")
+WORK = Path("/Users/joyce/Developer/gsbgen390")
 TAXONOMY_PATH = WORK / "gss_feature_taxonomy.json"
 BATTERY_MAP_PATH = WORK / "gss_battery_map.json"
 

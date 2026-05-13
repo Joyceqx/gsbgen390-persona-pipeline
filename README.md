@@ -60,7 +60,7 @@ stale bodies):
 
 **No-API validation** (~30s):
 ```bash
-cd ~/Documents/GSBGEN390
+cd ~/Developer/gsbgen390
 python3 gss_loader.py             # loader smoke
 python3 validate_taxonomy.py      # 10-check validator (incl. 7c battery map)
 python3 gss_pipeline.py --print-prompt          # AUDIT-A
@@ -138,5 +138,5 @@ The pilot delivers the smallest end-to-end version of the architecture (Cookiy i
 ## Repo conventions
 
 - Markdown working notes for design and status; JSON for machine-readable batteries and metrics; Python for the pipeline.
-- All paths in `pilot_code/persona_pipeline.py` resolve under `$GSBGEN390_DIR`, defaulting to `/Users/joyce/Documents/GSBGEN390`.
+- All paths in `pilot_code/persona_pipeline.py` resolve under `$GSBGEN390_DIR`, defaulting to `/Users/joyce/Developer/gsbgen390`.
 - Sensitive: `Openai_api.txt` lives in this folder for convenience but should be deleted/rotated when the project ends. Never check it into version control.

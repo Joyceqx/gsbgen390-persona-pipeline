@@ -95,7 +95,7 @@ from llm_router import (
     call_llm,
 )
 
-WORK = Path("/Users/joyce/Documents/GSBGEN390")
+WORK = Path("/Users/joyce/Developer/gsbgen390")
 OUTPUTS = WORK / "outputs"
 OUTPUTS.mkdir(exist_ok=True)
 

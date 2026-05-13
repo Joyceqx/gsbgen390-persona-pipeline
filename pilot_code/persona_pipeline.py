@@ -18,7 +18,7 @@ both accuracy-vs-truth and self-consistency.
 
 Default model: gpt-4o-2024-08-06 (matches Park 2024). Override with $MODEL.
 
-Inputs (all under $GSBGEN390_DIR, default /Users/joyce/Documents/GSBGEN390/):
+Inputs (all under $GSBGEN390_DIR, default /Users/joyce/Developer/gsbgen390/):
     eval_battery.json                          — 15-item eval
     construction_battery.json                  — 18-item construction (Study 2 only)
     responses/R{N}/transcript.txt              — Study 1 transcripts
@@ -50,7 +50,7 @@ from typing import Any
 
 WORK = Path(os.environ.get(
     "GSBGEN390_DIR",
-    "/Users/joyce/Documents/GSBGEN390",
+    "/Users/joyce/Developer/gsbgen390",
 ))
 BATTERY_PATH = WORK / "eval_battery.json"
 CONSTRUCTION_PATH = WORK / "construction_battery.json"

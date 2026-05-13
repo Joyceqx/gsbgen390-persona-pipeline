@@ -7,7 +7,7 @@ Static HTML dashboard, deployable to GitHub Pages. Self-contained: just `index.h
 The dashboard fetches data via `fetch('./data/...')`, which won't work over `file://` due to browser CORS. Use a local server:
 
 ```bash
-cd ~/Documents/GSBGEN390/docs
+cd ~/Developer/gsbgen390/docs
 python3 -m http.server 8080
 # then open http://localhost:8080
 ```
@@ -19,7 +19,7 @@ If you skip the local server, the page still loads — it falls back to inline m
 After every pipeline run:
 
 ```bash
-cd ~/Documents/GSBGEN390
+cd ~/Developer/gsbgen390
 python3 build_site_data.py     # converts CSVs → docs/data/*.json with naming normalization
 git add docs/data
 git commit -m "Update dashboard with metrics from $(date +%Y-%m-%d) run"

@@ -17,7 +17,7 @@ import re
 from pathlib import Path
 from statistics import mean
 
-WORK = Path("/Users/joyce/Documents/GSBGEN390")
+WORK = Path("/Users/joyce/Developer/gsbgen390")
 OUTPUTS = WORK / "outputs"
 OUTPUTS.mkdir(exist_ok=True)
 

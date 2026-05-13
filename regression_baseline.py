@@ -59,7 +59,7 @@ from gss_pipeline import (
     sample_respondents,
 )
 
-WORK = Path("/Users/joyce/Documents/GSBGEN390")
+WORK = Path("/Users/joyce/Developer/gsbgen390")
 SEED = 42
 
 # Items whose value labels are nominal categories (use one-hot rather than ordinal)

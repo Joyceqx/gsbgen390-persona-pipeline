@@ -21,7 +21,7 @@ from pathlib import Path
 import pandas as pd
 from gss_loader import load_gss, _spec, MISSING_CODES, _full_data
 
-WORK = Path("/Users/joyce/Documents/GSBGEN390")
+WORK = Path("/Users/joyce/Developer/gsbgen390")
 TAX_PATH = WORK / "gss_feature_taxonomy.json"
 
 EXPECTED_N_2024 = 3309

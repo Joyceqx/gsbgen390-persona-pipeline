@@ -30,7 +30,7 @@ import time
 from pathlib import Path
 from typing import Iterable
 
-WORK = Path("/Users/joyce/Documents/GSBGEN390")
+WORK = Path("/Users/joyce/Developer/gsbgen390")
 
 # ---------------------------------------------------------------------------
 # Locked model panel (matches gss_phase1_design.md §12)

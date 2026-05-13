@@ -27,7 +27,7 @@ cheap-panel primary-only; sensitivity_eval anchor-only).
 ## Pre-flight (one-time, free)
 
 ```bash
-cd /Users/joyce/Documents/GSBGEN390
+cd /Users/joyce/Developer/gsbgen390
 
 # 0.1 — confirm no stray partial outputs at canonical paths
 ls outputs/gss_phase1_records*.json

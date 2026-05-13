@@ -15,7 +15,7 @@ from pathlib import Path
 from functools import lru_cache
 import pandas as pd
 
-WORK = Path("/Users/joyce/Documents/GSBGEN390")
+WORK = Path("/Users/joyce/Developer/gsbgen390")
 GSS_DIR = WORK / "data" / "gss"
 # GSS DE splits the 973-variable extract into 3 batches; each batch has its own
 # .dat + .do but the same row order (same respondents, different columns).
