@@ -61,7 +61,7 @@ def normalize_for_site(rows):
         out.append(rec)
     return out
 
-per_resp_raw = csv_to_jsonable_rows(WORK / "metrics_per_respondent.csv")
+per_resp_raw = csv_to_jsonable_rows(WORK / "pilot_code" / "metrics_per_respondent.csv")
 per_resp = normalize_for_site(per_resp_raw)
 (DATA / "metrics_per_respondent.json").write_text(json.dumps(per_resp, indent=2))
 print(f"wrote {len(per_resp)} rows to docs/data/metrics_per_respondent.json")
@@ -93,7 +93,7 @@ agg = aggregate(per_resp)  # already normalized
 print(f"wrote {len(agg)} rows to docs/data/metrics_aggregate.json")
 
 # ---------- truth answers (aggregate, no PII; participant ids are coded) ----------
-truth_path = WORK / "eval_answers_extracted.csv"
+truth_path = WORK / "pilot_code" / "eval_answers_extracted.csv"
 if truth_path.exists():
     truth_rows_raw = csv_to_jsonable_rows(truth_path)
     # truth CSV has 'participant_id' column; normalize that too

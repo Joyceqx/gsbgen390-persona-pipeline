@@ -53,18 +53,19 @@ These supersede any default helpfulness instinct toward speed over rigor.
 
 ---
 
-## Project structure (see STATUS.md for the current work tree)
+## Project structure (see `INDEX.md` for the current work tree)
 
-- **Pilot phase** (completed 2026-04-30): N=2 interview + N=1 survey via Cookiy; results in `outputs/`, dashboard at `docs/`, GitHub Pages at https://joyceqx.github.io/gsbgen390-persona-pipeline/
-- **Phase 1** (in progress): GSS public-panel feature-importance ablation. Design doc: `gss_phase1_design.md`. Pre-registration on OSF before primary analysis.
-- **Phase 2** (planned): targeted Cookiy collection covering BFI-44 + behavioral economic game outcomes that GSS doesn't measure. Design doc: `thesis_phase2_design.md`.
+- **Pilot phase** (completed 2026-04-30): N=2 interview + N=1 survey via Cookiy; results in `outputs/`, dashboard at `docs/`, GitHub Pages at https://joyceqx.github.io/gsbgen390-persona-pipeline/. Pilot code in `pilot_code/`.
+- **Phase 1** (in progress, OSF lock pending Bayati signoff): GSS 2024 full cross-section (N=3,309) feature-importance ablation. Design doc: `gss_phase1_design.md`. OSF v1: `osf_preregistration_v1.md`. Paid-run sequence: `RUNBOOK.md`.
+- **Phase 2** (planned, separate preregistration when Phase 1 results land): targeted Prolific/Cookiy collection covering BFI-44 + behavioral economic game outcomes that GSS doesn't measure. Design doc: `thesis_phase2_design.md` (out-of-date; needs revision against current Phase 1 design).
 
 ---
 
 ## Quick references
 
-- **Design doc**: `replication_scoping.md`, `gss_phase1_design.md`, `thesis_phase2_design.md`, `FUTURE_DESIGN.md`
-- **Pipeline canonical**: `persona_pipeline.ipynb` (notebook); `run_notebook_local.py` (local runner); `rescore_with_leakage_audit.py`, `make_robustness_chart.py`, `build_site_data.py` (post-pipeline)
-- **Status**: `STATUS.md` (single source of truth for work-tree state)
-- **Meeting prep**: `archive/MEETING_HANDOUT.md`, `WRITEUP.md`
+- **Design doc (live)**: `gss_phase1_design.md` (Phase 1 canonical), `thesis_phase2_design.md` (Phase 2 planned)
+- **Phase 1 pipeline (canonical)**: `gss_driver.py` (orchestrator), `gss_pipeline.py`, `select_phase1b_model.py`, `battery_loo.py`, `shapley_decomposition.py`, `regression_baseline.py`, `validate_taxonomy.py`, `llm_router.py`, `lint_writeup_language.py` — see `RUNBOOK.md` for paid-run sequence
+- **Pilot pipeline (archived to `pilot_code/`)**: `pilot_code/persona_pipeline.ipynb` (notebook), `pilot_code/run_notebook_local.py` (local runner), `pilot_code/rescore_with_leakage_audit.py`, `pilot_code/make_robustness_chart.py`, `pilot_code/build_site_data.py` (post-pipeline)
+- **Status (live)**: `osf_preregistration_v1.md` §16 decisions log + `RUNBOOK.md` TL;DR. (Earlier `STATUS.md` and `PROJECT_SYNTHESIS.md` moved to `archive/` 2026-05-13.)
+- **Faculty briefing**: `Project Brief for Professor Bayati.md`
 - **Park reference**: `2411.10109v2.pdf` (gitignored, kept local; v2 retitled "LLM Agents Grounded in Self-Reports...")

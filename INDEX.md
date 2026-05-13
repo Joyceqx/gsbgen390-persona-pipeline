@@ -3,11 +3,11 @@
 **Project**: GSBGEN390 thesis-track research, Stanford GSB, Spring 2026
 **Research direction**: feature attribution for LLM persona synthesis (Phase 1: attitude prediction; Phase 2 planned: personality + behavioral games)
 **Lead**: Joyce Yu · **Advisor**: Prof. Mohsen Bayati
-**Last housekeeping**: 2026-05-09
+**Last housekeeping**: 2026-05-13 (stale-doc consolidation: 7 docs + 3 pilot CSVs moved to `archive/` / `pilot_code/`)
 
 This file maps every file in the project to its purpose, status, and "stop reading here if I just want to get oriented" signal. **For a fresh session, read `gss_phase1_design.md` §1.0 + `osf_preregistration_v1.md` §1 first**; this file is the lookup table when you know the question.
 
-For "what changed and when", see `STATUS.md` changelog. For "the comprehensive paper-ready synthesis", see `PROJECT_SYNTHESIS.md`. For "what to do right now", see `osf_preregistration_v1.md` §17 (open items pending Bayati signoff) + `STATUS.md` TL;DR.
+For "what changed and when", see `osf_preregistration_v1.md` §16 decisions log (live) or `archive/STATUS.md` changelog (historical). For "what to do right now", see `osf_preregistration_v1.md` §17 (open items pending Bayati signoff) + `RUNBOOK.md` TL;DR.
 
 ---
 
@@ -18,8 +18,8 @@ For "what changed and when", see `STATUS.md` changelog. For "the comprehensive p
 | `CLAUDE.md` | Operating principles for any AI assistant in this folder (rigor over velocity, pre-reg discipline, Park comparability) | Stable |
 | `gss_phase1_design.md` | **Canonical live design** — read §1.0 (research question + scope) first | Lean-locked + audit-fixes 2026-05-10 |
 | `osf_preregistration_v1.md` | **OSF lock contract** — read §1 (estimand) + §17 (open items) | v1 DRAFT 2026-05-09 → 2026-05-10 |
-| `STATUS.md` | Tree state + decisions log; changelog-style (banner: partially superseded — read banner first) | Updated 2026-05-10 |
-| `INDEX.md` | This file — every file's purpose | Updated 2026-05-10 |
+| `RUNBOOK.md` | Paid-run sequence with exact commands, costs, expected outputs | Updated 2026-05-10 |
+| `INDEX.md` | This file — every file's purpose | Updated 2026-05-13 |
 | `README.md` | Public-facing repo README (GitHub) | Updated periodically |
 
 ## Layer 1 — Phase 1 design specs (CURRENT, lean-design locked 2026-05-09)
@@ -32,8 +32,7 @@ For "what changed and when", see `STATUS.md` changelog. For "the comprehensive p
 | `tier1_tool_schemas.md` | Output schemas for the 2 secondary tools (Shapley + Battery LOO) | Lean v0.2 locked 2026-05-09 |
 | `theory_interpretation_guide.md` | Discussion-section memo: 6 candidate frameworks for interpretive secondary analysis (NOT a horse race) | Lean v0.1 locked 2026-05-09 |
 | `osf_preregistration_v1.md` | **OSF v1 draft** — full preregistration document with locked artifact SHA-256 hashes, walks through §9e 22-item checklist; 6 open items pending Joyce + Bayati signoff before final lock | v1 DRAFT 2026-05-09 night |
-| `theory_review.md` | Round 1 lit review: MFT / Schwartz / Bourdieu / Cultural Theory of Risk | Stable; §8 lock empty (theory choice deferred to amendment-only) |
-| `theory_review_round2.md` | Round 2 lit review: + Inglehart-Welzel / Big Five + verified 2024-2026 LLM-applied work | Stable |
+| `theory_review_round2.md` | Round 2 lit review: + Inglehart-Welzel / Big Five + verified 2024-2026 LLM-applied work (supersedes Round 1 — see `archive/theory_review.md` for historical scaffold) | Stable |
 | `outputs/primary_eval_human_variance_2024.json` | Locked GSS-2024 per-item human variance reference for DQ-3 | Locked 2026-05-08 |
 
 ## Layer 2 — Phase 1 implementation (code)
@@ -52,10 +51,9 @@ For "what changed and when", see `STATUS.md` changelog. For "the comprehensive p
 
 ## Layer 3 — Status / decisions (cross-reference)
 
-| File | Purpose | Notes |
-|---|---|---|
-| `STATUS.md` | Working state + per-day changelog (banner: partially superseded) | Updated 2026-05-10 |
-| `PROJECT_SYNTHESIS.md` | Paper-ready comprehensive synthesis (bilingual ZH/EN); decision log; criticisms + responses (banner: partially superseded) | Updated 2026-05-10 |
+The live decisions log is `osf_preregistration_v1.md` §16 (chronological, with evidence). The earlier
+narrative status docs (`STATUS.md`, `PROJECT_SYNTHESIS.md`) moved to `archive/` on 2026-05-13 — see
+Layer 8.
 
 ## Layer 4 — Phase 2 design (planned, not started)
 
@@ -73,6 +71,7 @@ Pilot is **done**. Code moved to `pilot_code/` (still runnable for dashboard reg
 | `pilot_code/parse_eval_answers.py`, `pilot_code/parse_construction_answers.py` | Pilot data extractors |
 | `pilot_code/run_notebook_local.py`, `pilot_code/build_notebook.py` | Notebook scaffolding |
 | `pilot_code/rescore_with_leakage_audit.py`, `pilot_code/make_robustness_chart.py`, `pilot_code/build_site_data.py` | Pilot post-processing (feeds `docs/` dashboard) |
+| `pilot_code/construction_answers_extracted.csv`, `pilot_code/eval_answers_extracted.csv`, `pilot_code/metrics_per_respondent.csv` | Pilot extracted answers + per-respondent metrics (moved from repo root 2026-05-13) |
 | `archive/eval_battery.json` | Pilot eval items |
 | `archive/leakage_audit.json` | Pilot manual leakage audit |
 | `archive/cookiy_brief*.md`, `archive/cookiy_guide*.md` | Cookiy moderator briefs |
@@ -87,10 +86,9 @@ Pilot is **done**. Code moved to `pilot_code/` (still runnable for dashboard reg
 |---|---|
 | `LIT_REVIEW.md` | Academic literature review (cross-phase) |
 | `BUSINESS_LANDSCAPE.md` | Industry survey (Simile / Aaru / Voicepanel / Synthetic Users / etc.) |
-| `replication_scoping.md` | Original Park v2 replication scope analysis |
-| `FUTURE_DESIGN.md` | Aspirational design ideas (cross-phase) |
+| `Project Brief for Professor Bayati.md` | Faculty-advisor briefing doc for OSF v1 signoff (2026-05-10) |
 | `archive/gss_variables_to_download.md` | GSS DE variable download workflow (completed 2026-05-02) |
-| `PRIMER.md`, `AGENTS.md` | Cross-AI-tool guidance |
+| `AGENTS.md` | Cross-AI-tool guidance (Codex equivalent of `CLAUDE.md`) |
 
 ## Layer 7 — External / public
 
@@ -104,7 +102,14 @@ Pilot is **done**. Code moved to `pilot_code/` (still runnable for dashboard reg
 
 | File | Purpose | Why kept |
 |---|---|---|
-| `archive/osf_preregistration_appendix_a_theory_predictions.SUPERSEDED-2026-05-09.md` | The 6-theory horse-race draft slimmed away on 2026-05-09 | Referenced from `theory_interpretation_guide.md` + `PROJECT_SYNTHESIS.md` as historical context |
+| `archive/STATUS.md` | Dated changelog of project state (banner: partially superseded; pre-2026-05-10 numbers in body) | Decision-evidence trail; superseded by `osf_preregistration_v1.md` §16 (moved 2026-05-13) |
+| `archive/PROJECT_SYNTHESIS.md` | Bilingual ZH/EN paper-ready synthesis with decision log + anticipated criticisms (banner: partially superseded) | Decision-evidence + ZH context; superseded by canonical sources (moved 2026-05-13) |
+| `archive/theory_review.md` | Round-1 4-theory scaffold (MFT/Schwartz/Bourdieu/Cultural Theory of Risk); banner'd stale under lean lock | Superseded by `theory_review_round2.md` + `theory_interpretation_guide.md` (moved 2026-05-13) |
+| `archive/replication_scoping.md` | Original Park v2 replication-scoping doc (2026-04-29; the 1.5-day sprint that produced the pivot to GSS Phase 1) | Decision-evidence for the GSS pivot (moved 2026-05-13) |
+| `archive/FUTURE_DESIGN.md` | "Discussion Agenda for Bayati Meeting" 2026-04-30, pre-pivot Phase 1 panel approach | Items resolved in `gss_phase1_design.md` (moved 2026-05-13) |
+| `archive/PRIMER.md` | 3-version personal self-intro doc with pre-pivot Phase 1 numbers | Personal scaffold; not project-state (moved 2026-05-13) |
+| `archive/GSBGEN390_Application_Joyce Yu_v1.docx` | Superseded application draft | Replaced by `v2.docx` (moved 2026-05-13) |
+| `archive/osf_preregistration_appendix_a_theory_predictions.SUPERSEDED-2026-05-09.md` | The 6-theory horse-race draft slimmed away on 2026-05-09 | Referenced from `theory_interpretation_guide.md` as historical context |
 | `archive/GSBGEN390_audit_summary.md` | Original Codex 2026-05-08 research-layer audit text | Source document for the audit fix arc |
 | `archive/gss_variables_to_download.md`, `archive/gss_missing_variables.txt` | GSS DE download workflow (completed 2026-05-02) | Historical data-prep record |
 | `archive/claude_moderator_prompt.md`, `archive/eval_joyce_truth*.md`, `archive/persona_demographics.json`, `archive/persona_description.md` | Pre-pivot pilot scaffolds | Historical |
@@ -136,8 +141,8 @@ Pilot is **done**. Code moved to `pilot_code/` (still runnable for dashboard reg
 1. Read `CLAUDE.md` (operating principles)
 2. Read `gss_phase1_design.md` §1.0 (research question + scope framing) — canonical entry
 3. Skim `osf_preregistration_v1.md` §1 (estimand) + §17 (open items pending Bayati signoff) — what's locked vs pending
-4. Skim `INDEX.md` (this file — learn what's where)
-5. Skim `STATUS.md` TL;DR (read banner first; partially superseded body)
-6. Open `gss_phase1_design.md` in full when working on Phase 1 design; `PROJECT_SYNTHESIS.md` when paper-writing or stakeholder-presenting
+4. Skim `RUNBOOK.md` TL;DR (paid-run sequence)
+5. Skim `INDEX.md` (this file — learn what's where)
+6. Open `gss_phase1_design.md` in full when working on Phase 1 design; consult `archive/PROJECT_SYNTHESIS.md` only for ZH narrative or decision-evidence trails (numbers in body are stale — always cross-check live design)
 
 A fresh session should be productive within 60-90 minutes of focused reading.

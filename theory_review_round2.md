@@ -2,13 +2,13 @@
 
 **Author:** collaborating Claude session (scaffold for Joyce)
 **Created:** 2026-05-07
-**Status:** Open. Companion to `theory_review.md`. Does NOT supersede §1–11 of that file. Joyce owns the locked decision (§8 of `theory_review.md`).
+**Status:** Open. Companion to `archive/theory_review.md` (Round 1, moved to archive 2026-05-13 as banner'd stale under lean lock). Does NOT supersede §1–11 of that file as historical scaffolding. Joyce owns the locked decision; the live spec is `theory_interpretation_guide.md`.
 
 This round adds (a) candidate frameworks the Round-1 scaffold missed because it skewed toward moral/values theories, (b) verified 2023–2026 LLM-applied work that establishes methodological precedent for theory-grounded persona construction, and (c) a prioritized reading list. All arXiv IDs and journal references below were retrieved via web search on 2026-05-07; none are recall-only. **Joyce should still pull the abstracts before quoting in OSF pre-reg.**
 
 ---
 
-## 0. What this round adds vs `theory_review.md`
+## 0. What this round adds vs `archive/theory_review.md`
 
 | Round-1 gap | Round-2 contribution |
 |---|---|
@@ -27,7 +27,7 @@ If Joyce wants the strongest cog-sci/behavioral-science upgrade with the least a
 1. **Direct empirical lineage with GSS.** Inglehart-Welzel was extracted from the World Values Survey, which shares item-level overlap with GSS (the WVS borrowed many items from GSS). The mapping from GSS variable → quadrant is therefore *less inferential* than mapping from GSS → MFT or GSS → Schwartz.
 2. **Clean 4-cluster LOO structure.** Two orthogonal axes (Traditional ↔ Secular-rational; Survival ↔ Self-expression) produce 4 quadrants — same cluster count as the existing atheoretical 4-bin taxonomy, so the comparison is clean.
 3. **Cross-cultural validation in 100+ countries.** Stronger generalization claim than MFT's WEIRD-bound original validation (though Atari 2023 partially fixed that).
-4. **Not in §2-5 of `theory_review.md`** — Round-1 missed it; this is a real gap.
+4. **Not in §2-5 of `archive/theory_review.md`** — Round-1 missed it; this is a real gap.
 
 **This is a recommendation for evaluation, not a lock.** The fact that Bayati's tradition is closer to behavioral economics / management science also weighs in favor of values frameworks (Inglehart, Schwartz) over moral-psych (MFT) or sociology (Bourdieu).
 
@@ -292,4 +292,4 @@ Joyce: before any of these citations enter the OSF pre-registration or paper, re
 
 ---
 
-**Companion file:** `theory_review.md` (Round 1, scaffold for the original 4 candidates; do not delete — Round 2 is additive).
+**Companion file:** `archive/theory_review.md` (Round 1, scaffold for the original 4 candidates; do not delete — Round 2 is additive).

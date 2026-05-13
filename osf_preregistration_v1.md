@@ -441,7 +441,7 @@ N=10 smoke test verifies (a) the OpenRouter API succeeded, (b) artifacts have th
 
 ## 16. Decisions log (chronological, with evidence)
 
-Per `PROJECT_SYNTHESIS.md` §4 — locked decisions, when, against what evidence:
+Per `archive/PROJECT_SYNTHESIS.md` §4 (moved to archive 2026-05-13; the table below is the live decisions log — the archived doc preserves historical evidence trails) — locked decisions, when, against what evidence:
 
 | Decision | Date | Rationale source |
 |---|---|---|

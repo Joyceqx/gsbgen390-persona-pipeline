@@ -5,7 +5,7 @@
 **Locked**: target 2026-05-12 (must lock before Phase 1a fires, but with much lower stakes than a confirmatory horse-race appendix would have had)
 **Companion files**:
 - `gss_phase1_design.md` §13.3 — locks "theory interpretation is secondary, primary findings do not depend on theory alignment"
-- `theory_review.md` + `theory_review_round2.md` — full literature scaffolds (kept; not affected by slim-down)
+- `archive/theory_review.md` + `theory_review_round2.md` — full literature scaffolds (kept; not affected by slim-down)
 - `tier1_tool_schemas.md` — locked schemas for the two secondary tools (Shapley + Battery LOO)
 
 ---
@@ -41,7 +41,7 @@ The Discussion is structured around the **data**, not the theory list. The theor
 
 ## Candidate frameworks (interpretive only — qualitative predictions only)
 
-The six frameworks below are the candidates Joyce surveyed in `theory_review.md` + `theory_review_round2.md`. They are listed here so the Discussion section's framework choice is pre-committed; they do NOT trigger any quantitative test.
+The six frameworks below are the candidates Joyce surveyed in `archive/theory_review.md` + `theory_review_round2.md`. They are listed here so the Discussion section's framework choice is pre-committed; they do NOT trigger any quantitative test.
 
 For each framework, we note:
 - The framework's broad direction (which feature categories should matter, by the framework's logic).

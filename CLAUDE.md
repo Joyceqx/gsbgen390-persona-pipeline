@@ -6,7 +6,7 @@ This file is loaded automatically by Claude Code (and any AI coding assistant th
 
 ## ⚡ Fresh-session boot-up reading order (READ THIS FIRST)
 
-**Last refreshed**: 2026-05-12 (per-session catch-up guide). Project pre-OSF-lock commit: `16a1c04` (any later commit supersedes).
+**Last refreshed**: 2026-05-13 (stale-doc consolidation: STATUS, PROJECT_SYNTHESIS, theory_review, replication_scoping, FUTURE_DESIGN, PRIMER moved to `archive/`). Project pre-OSF-lock commit: `16a1c04` (any later commit supersedes).
 
 If you are a fresh Claude session resuming this project, read these in order **before doing anything else**. Skip the "DO NOT read" set; they have superseded content with stale numbers and will mislead you.
 
@@ -24,10 +24,14 @@ If you are a fresh Claude session resuming this project, read these in order **b
 - **Phase 2 design work**: also read `thesis_phase2_design.md` (last touched 2026-04-30; needs revision against current Phase 1 design).
 - **Brief Joyce's advisor**: `Project Brief for Professor Bayati.md` (15-min overview with two Mermaid flowchart diagrams).
 
-### 🚫 DO NOT read (banner'd as partially superseded; stale numbers)
+### 🚫 DO NOT read (moved to `archive/` 2026-05-13; banner'd as partially superseded; stale numbers)
 
-- `STATUS.md` — banner'd partially-superseded; historical changelog only.
-- `PROJECT_SYNTHESIS.md` — banner'd; pre-2026-05-10 numbers in body.
+- `archive/STATUS.md` — banner'd partially-superseded; historical changelog only.
+- `archive/PROJECT_SYNTHESIS.md` — banner'd; pre-2026-05-10 numbers in body.
+- `archive/theory_review.md` — Round-1 4-theory scaffold; banner'd stale under lean lock; superseded by `theory_review_round2.md` + `theory_interpretation_guide.md`.
+- `archive/replication_scoping.md` — pre-pivot Park v2 replication-scoping doc (2026-04-29).
+- `archive/FUTURE_DESIGN.md` — pre-pivot Bayati meeting agenda (2026-04-30); items resolved.
+- `archive/PRIMER.md` — personal self-intro doc with pre-pivot numbers.
 - `archive/HANDOFF.md` — moved to archive; old N=100/N=1500/old budget.
 - `archive/MEETING_HANDOUT.md` — pilot-era; nothing about Phase 1.
 - `archive/WRITEUP.md` — pilot writeup; not the Phase 1 paper.
@@ -105,9 +109,9 @@ These supersede any default helpfulness instinct toward speed over rigor.
 
 ## Quick references
 
-- **Design doc**: `replication_scoping.md`, `gss_phase1_design.md`, `thesis_phase2_design.md`, `FUTURE_DESIGN.md`
+- **Design doc (live)**: `gss_phase1_design.md` (Phase 1 canonical), `thesis_phase2_design.md` (Phase 2 planned — out-of-date, needs revision)
 - **Phase 1 pipeline (canonical)**: `gss_driver.py` (orchestrator), `gss_pipeline.py`, `select_phase1b_model.py`, `battery_loo.py`, `shapley_decomposition.py`, `regression_baseline.py`, `validate_taxonomy.py`, `llm_router.py`, `lint_writeup_language.py` — see `RUNBOOK.md` for paid-run sequence
 - **Pilot pipeline (archived to `pilot_code/`)**: `pilot_code/persona_pipeline.ipynb` (notebook), `pilot_code/run_notebook_local.py` (local runner), `pilot_code/rescore_with_leakage_audit.py`, `pilot_code/make_robustness_chart.py`, `pilot_code/build_site_data.py` (post-pipeline) — produces `docs/` dashboard
-- **Status**: `STATUS.md` (single source of truth for work-tree state)
-- **Meeting prep**: `archive/MEETING_HANDOUT.md`, `archive/WRITEUP.md` (both pilot-era; current state lives in `gss_phase1_design.md` + `osf_preregistration_v1.md`)
+- **Status (live)**: `osf_preregistration_v1.md` §16 decisions log + `RUNBOOK.md` TL;DR. (Earlier `STATUS.md` and `PROJECT_SYNTHESIS.md` moved to `archive/` 2026-05-13.)
+- **Faculty briefing**: `Project Brief for Professor Bayati.md` (15-min OSF v1 overview with two Mermaid flowcharts)
 - **Park reference**: `2411.10109v2.pdf` (gitignored, kept local; v2 retitled "LLM Agents Grounded in Self-Reports...")

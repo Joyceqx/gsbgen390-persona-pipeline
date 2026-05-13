@@ -39,14 +39,20 @@ stale bodies):
 4. [`tier1_tool_schemas.md`](tier1_tool_schemas.md) — Battery LOO + Shapley analyzer/orchestration spec
 5. [`INDEX.md`](INDEX.md) — file map; what every file is and which are current vs historical
 
-**Historical handoff (banner'd PARTIALLY SUPERSEDED — read for project history, NOT current numbers):**
-6. [`STATUS.md`](STATUS.md) — dated changelog (banner'd; partially superseded)
-7. [`PROJECT_SYNTHESIS.md`](PROJECT_SYNTHESIS.md) — paper-ready bilingual synthesis (banner'd)
-8. [`theory_interpretation_guide.md`](theory_interpretation_guide.md) — Discussion-section memo on candidate cognitive frameworks
-9. [`archive/MEETING_HANDOUT.md`](archive/MEETING_HANDOUT.md) — earlier bilingual project brief (moved to archive 2026-05-10 per Audit-fresh-2 F4)
-10. [`archive/HANDOFF.md`](archive/HANDOFF.md) — earlier fresh-session quickstart (moved to archive 2026-05-10 — front-door role replaced by `gss_phase1_design.md` + `osf_preregistration_v1.md`)
-11. [`replication_scoping.md`](replication_scoping.md) — original Park v2 replication scoping
-12. [`thesis_phase2_design.md`](thesis_phase2_design.md) — Phase 2 (planned)
+**Live secondary docs:**
+6. [`theory_interpretation_guide.md`](theory_interpretation_guide.md) — Discussion-section memo on candidate cognitive frameworks
+7. [`thesis_phase2_design.md`](thesis_phase2_design.md) — Phase 2 (planned; out-of-date, needs revision against current Phase 1 design)
+8. [`Project Brief for Professor Bayati.md`](Project%20Brief%20for%20Professor%20Bayati.md) — 15-min faculty-advisor briefing on OSF v1
+
+**Historical handoff (all in `archive/` — read for project history, NOT current numbers; moved 2026-05-13):**
+9. [`archive/STATUS.md`](archive/STATUS.md) — dated changelog (banner'd; partially superseded)
+10. [`archive/PROJECT_SYNTHESIS.md`](archive/PROJECT_SYNTHESIS.md) — paper-ready bilingual synthesis (banner'd)
+11. [`archive/replication_scoping.md`](archive/replication_scoping.md) — original Park v2 replication scoping
+12. [`archive/FUTURE_DESIGN.md`](archive/FUTURE_DESIGN.md) — pre-pivot Bayati meeting agenda
+13. [`archive/PRIMER.md`](archive/PRIMER.md) — personal self-intro
+14. [`archive/theory_review.md`](archive/theory_review.md) — Round-1 theory scaffold (superseded by `theory_review_round2.md`)
+15. [`archive/MEETING_HANDOUT.md`](archive/MEETING_HANDOUT.md) — earlier bilingual project brief
+16. [`archive/HANDOFF.md`](archive/HANDOFF.md) — earlier fresh-session quickstart
 
 ## How to run the pipelines
 
@@ -92,8 +98,9 @@ suspiciously-small files).
 
 See **`RUNBOOK.md`** for the full paid-run sequence, **`gss_phase1_design.md`**
 for the canonical live design (the source of truth), and **`osf_preregistration_v1.md`**
-for the OSF lock. STATUS.md / PROJECT_SYNTHESIS.md are historical handoff docs
-with superseded banners; read them last, not first.
+for the OSF lock. The earlier `STATUS.md` / `PROJECT_SYNTHESIS.md` narrative
+docs moved to `archive/` on 2026-05-13; consult them only for decision-evidence
+trails or ZH context, never for current numbers.
 
 ### Pilot phase (Cookiy, completed — code archived to `pilot_code/`)
 
@@ -104,7 +111,7 @@ export OPENAI_API_KEY=$(cat Openai_api.txt)
 python3 -u pilot_code/run_notebook_local.py 2>&1 | tee outputs/logs/run_$(date +%Y%m%d_%H%M).log
 ```
 
-Runtime: ~9 minutes, ~$3-5 in OpenAI API calls. Outputs `metrics_per_respondent.csv` + `outputs/persona_answers_full.json`.
+Runtime: ~9 minutes, ~$3-5 in OpenAI API calls. Outputs `pilot_code/metrics_per_respondent.csv` + `outputs/persona_answers_full.json`.
 
 Then re-score under leakage-filter views and refresh the dashboard data (no API, ~1 second):
 ```bash
@@ -115,7 +122,7 @@ python3 pilot_code/build_site_data.py               # → docs/data/*.json
 
 `pilot_code/run_notebook_local.py` is a thin runner that executes the notebook's code cells outside Colab (patches Cell 8 to read from `cookiy_transcripts/`, skips Jupyter magics, stubs `display()`, adds retry+exponential-backoff for OpenAI TPM limits).
 
-`pilot_code/persona_pipeline.py` (the older script-based version) still works but is no longer the canonical path. See STATUS.md for the latest results and full file inventory.
+`pilot_code/persona_pipeline.py` (the older script-based version) still works but is no longer the canonical path. See `INDEX.md` for the full file inventory and `archive/STATUS.md` for the historical pilot-era changelog.
 
 ## Project goal
 

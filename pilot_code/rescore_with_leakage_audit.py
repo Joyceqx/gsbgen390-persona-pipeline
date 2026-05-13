@@ -28,7 +28,7 @@ results = json.loads((OUTPUTS / "persona_answers_full.json").read_text())
 audit = json.loads((WORK / "leakage_audit.json").read_text())["per_respondent"]
 
 truth = {}
-with open(WORK / "eval_answers_extracted.csv") as f:
+with open(WORK / "pilot_code" / "eval_answers_extracted.csv") as f:
     for row in csv.DictReader(f):
         truth[row["participant_id"]] = {k: v for k, v in row.items() if k != "participant_id" and v}
 

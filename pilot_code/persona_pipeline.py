@@ -684,7 +684,7 @@ RESPONDENT_TO_CSV_ID = {
 def truth_from_csv(arm: str, respondent: str) -> dict[str, str]:
     """Look up the audited truth row for this respondent. Returns empty dict if not found."""
     import csv
-    csv_path = WORK / "eval_answers_extracted.csv"
+    csv_path = WORK / "pilot_code" / "eval_answers_extracted.csv"
     if not csv_path.exists():
         return {}
     target_pid = RESPONDENT_TO_CSV_ID.get((arm, respondent))
