@@ -38,7 +38,7 @@ flowchart TD
     Z --> P["[0:200] N=200<br/>Phase 1a panel arm<br/>4 cheap models + GPT-4o anchor"]
     Z --> S["[200:250] N=50<br/>Prompt sweep (NEW)<br/>3 candidates"]
     Z --> R["[250:450] N=200<br/>Random-model arm (NEW)<br/>1 random model per respondent"]
-    Z --> H["[450:3309] N=3,059<br/>Phase 1b-only"]
+    Z --> H["[450:3309] N=2,859<br/>Phase 1b-only"]
 
     S --> SP["Pick winning prompt by argmin MAE<br/>locks the prompt for all arms + Phase 1b"]
 
@@ -65,7 +65,7 @@ The GSS 2024 cross-section (N=3,309) is shuffled once by `sample_respondents(n=3
 | `[0:200]` | 200 | yes (panel arm, all 4 models) | yes (single selected model) |
 | `[200:250]` | 50 | yes (prompt sweep) | **no — held out** |
 | `[250:450]` | 200 | yes (random-model arm, 1 model each) | **no — held out** |
-| `[450:3309]` | 3,059 | no | yes (single selected model) |
+| `[450:3309]` | 2,859 | no | yes (single selected model) |
 
 Phase 1B's headline sample is `[0:200] ∪ [450:3309]` = **N = 3,059**.
 
@@ -110,7 +110,17 @@ A separate cohort of N=200 respondents, each randomly assigned **exactly one** o
 
 **Cost**: ~$5 (N=200 × 1 model × 5 conditions × 12 items ≈ 12,000 calls).
 
-**What this arm produces**: a per-model MAE on the random-arm subsample (each model has ~50 respondents) and a between-respondent bin-level LOO ΔMAE. Both are reported alongside the panel-arm results in the writeup; agreement between the two designs strengthens the headline, disagreement is flagged transparently.
+**What this arm produces**: a per-model MAE on the random-arm subsample (each model has ~50 respondents) and a between-respondent bin-level LOO ΔMAE. Both are reported alongside the panel-arm results in the writeup.
+
+**Pre-committed interpretation rule (panel vs. random-arm disagreement)**. So that "disagreement is flagged transparently" does not collapse into post-hoc judgment, we lock the following three-tier rule before the Phase 1A run:
+
+| Outcome | Pre-committed interpretation |
+|---|---|
+| Both arms select the same model **and** the 4-bin LOO ΔMAE rankings agree | Confirmatory; the random-arm result is reported as a robustness column alongside the panel-arm headline. |
+| Selections disagree, but the random-arm winner is **within 5% MAE** of the panel-arm winner on the random arm itself | "Within noise" — the panel-arm headline stands; the disagreement is reported as a within-tiebreak-window observation. |
+| Selections disagree, and the random-arm winner is **>5% better** than the panel-arm winner on the random arm | "Genuine design-dependence flag" — documented in the writeup's limitations section; the panel-arm result remains the headline (per the locked OSF §12.2 selection rule), but the magnitude of the design-dependence is reported explicitly. |
+
+**DQ-1 / DQ-3 on the random arm**. The disqualification metrics are computed on the random arm and reported as a transparency column, but **panel-arm DQ verdicts are the authoritative gates** for §12.2 selection. The random-arm DQ-3 estimate (per-item variance ratio with ~50 respondents per model) is too noisy to use as a gating decision; the panel arm's N=100 selection split is the locked-OSF gating input. Random-arm DQ disagreement with panel-arm DQ is interpreted as a sensitivity flag in the writeup, not as a contradicting verdict.
 
 ### 2.5 §12.2 selector + DQ gates (UNCHANGED)
 
