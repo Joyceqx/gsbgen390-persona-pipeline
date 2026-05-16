@@ -28,48 +28,28 @@ Incremental Phase 1A cost: **+$25** (prompt sweep ~$20 + random arm ~$5). Total 
 
 ## 1. Updated Phase 1A flow diagram
 
-Yellow blocks are new this round. Phase 1B run on the right is unchanged in methodology; only its sample size shrinks by 250 (the two holdouts).
+Two new pieces this round (yellow): a prompt sweep on [200:250] that picks the Phase 1B prompt, and a random-model arm on [250:450] that adds a between-respondent comparison alongside the panel arm. Everything else is unchanged from OSF v1.
 
 ```mermaid
 flowchart TD
-    A["GSS 2024 cross-section<br/>N = 3,309 respondents · 973 variables"]
-    A --> Z["seed=42 deterministic partition<br/>(4 disjoint slices)"]
+    A["GSS 2024 cross-section<br/>N = 3,309"]
+    A --> Z["seed=42 partition (4 disjoint slices)"]
 
-    Z --> Z1["[0:200] N=200<br/>Phase 1a panel arm<br/>(100/100 selection/validation split)"]
-    Z --> Z2["[200:250] N=50<br/>Prompt sweep cohort (NEW)<br/>held out from Phase 1b"]
-    Z --> Z3["[250:450] N=200<br/>Random-model arm (NEW)<br/>held out from Phase 1b"]
-    Z --> Z4["[450:3309] N=3,059<br/>Phase 1b-only respondents"]
+    Z --> P["[0:200] N=200<br/>Phase 1a panel arm<br/>4 cheap models + GPT-4o anchor"]
+    Z --> S["[200:250] N=50<br/>Prompt sweep (NEW)<br/>3 candidates"]
+    Z --> R["[250:450] N=200<br/>Random-model arm (NEW)<br/>1 random model per respondent"]
+    Z --> H["[450:3309] N=3,059<br/>Phase 1b-only"]
 
-    Z2 --> Z2A["3 prompt variants × 4 cheap models × 12 items<br/>P0 baseline / P1 1st-person prose / P2 interview Q&A<br/>~$20"]
-    Z2A --> Z2B["argmin respondent-macro Likert MAE<br/>(5% MAE tiebreak → P0 baseline)<br/>locks the Phase 1b prompt"]
+    S --> SP["Pick winning prompt by argmin MAE<br/>locks the prompt for all arms + Phase 1b"]
 
-    Z1 --> Z1A["4 cheap models · n=1<br/>primary_eval only<br/>~$17"]
-    Z1 --> Z1B["GPT-4o anchor on N=100 selection split<br/>primary + 118 sensitivity items · n=2<br/>~$148"]
+    P --> SEL["§12.2 selector + DQ-1 / DQ-3 gates<br/>argmin MAE on selection split"]
+    SEL --> B1B["Phase 1b headline<br/>[0:200] ∪ [450:3309] = N=3,059<br/>single selected model × locked prompt<br/>4-bin LOO ΔMAE"]
 
-    Z3 --> Z3A["Each respondent randomly assigned ONE of 4 cheap models<br/>strict 50/50/50/50 balance via seed=42 hash<br/>5 conditions (Full + 4 LOO) × 12 items<br/>~$5"]
+    R -.between-respondent comparison.-> B1B
 
-    Z2B -.locked prompt.-> Z1A
-    Z2B -.locked prompt.-> Z3A
-    Z2B -.locked prompt.-> Z4A
-
-    Z1A --> Z1C["§12.2 selector (argmin MAE on selection split)<br/>DQ-1: parse-failure rate ≤ 30%<br/>DQ-3: per-item variance ≥ 30% human"]
-    Z1C --> DQ{"DQ pass?"}
-    DQ -->|all-DQ-fail| FAIL["PAUSE for human review<br/>Phase 1b does NOT proceed"]
-    DQ -->|pass / tie-break| Z4A["Phase 1b on [0:200] ∪ [450:3309]<br/>N = 3,059<br/>single §12.2-selected model × selected prompt<br/>~$66"]
-
-    Z1B --> ANCHOR["Park v2 SI Table 3 anchor<br/>per-item raw accuracy"]
-
-    Z1A --> CROSS["Cross-design comparison (NEW):<br/>bin-level LOO ΔMAE ranking<br/>from panel arm vs. random-model arm"]
-    Z3A --> CROSS
-
-    style Z2 fill:#fff4cc
-    style Z2A fill:#fff4cc
-    style Z2B fill:#fff4cc
-    style Z3 fill:#fff4cc
-    style Z3A fill:#fff4cc
-    style CROSS fill:#fff4cc
-    style FAIL fill:#ffe5e5
-    style ANCHOR fill:#e5f5ff
+    style S fill:#fff4cc
+    style SP fill:#fff4cc
+    style R fill:#fff4cc
 ```
 
 ---
@@ -130,10 +110,7 @@ A separate cohort of N=200 respondents, each randomly assigned **exactly one** o
 
 **Cost**: ~$5 (N=200 × 1 model × 5 conditions × 12 items ≈ 12,000 calls).
 
-**What this arm produces**:
-
-- A per-model MAE on the random-arm subsample (each model has ~50 respondents) — comparable to the panel arm's per-model MAE.
-- A bin-level LOO ΔMAE per bin, aggregated across the four models (between-respondent estimate of feature-category contribution).
+**What this arm produces**: a per-model MAE on the random-arm subsample (each model has ~50 respondents) and a between-respondent bin-level LOO ΔMAE. Both are reported alongside the panel-arm results in the writeup; agreement between the two designs strengthens the headline, disagreement is flagged transparently.
 
 ### 2.5 §12.2 selector + DQ gates (UNCHANGED)
 
@@ -142,20 +119,6 @@ The selector logic is exactly as locked in OSF v1: argmin respondent-macro Liker
 ### 2.6 Phase 1b on [0:200] ∪ [450:3309] (UNCHANGED design, N reduced by 250)
 
 Single (§12.2-selected model × sweep-selected prompt) on **N=3,059** respondents. Otherwise identical to OSF v1: primary_eval only, n_samples=1, full-condition + 4-bin LOO, atomic-write resume, paired-respondent bootstrap. Headline ΔMAE per bin with Holm-Bonferroni correction is unchanged.
-
-### 2.7 Cross-design comparison (NEW)
-
-After both Phase 1A arms produce their data, **the bin-level 4-LOO ΔMAE ranking is computed twice** — once on the within-respondent panel arm, once on the between-respondent random-model arm — and the two rankings are compared.
-
-**The comparisons we report**:
-
-| Quantity | Panel arm estimate | Random-arm estimate | What agreement tells us |
-|---|---|---|---|
-| §12.2 selected model | argmin MAE on panel selection split | argmin MAE on random-arm subsample | §12.2's model choice is robust across designs |
-| 4-bin LOO ΔMAE ranking | ΔMAE per bin from full-panel 4-LOO | ΔMAE per bin aggregated across the random 50/50/50/50 split | The bin-level attribution survives the deployment-mode design |
-| Cross-model agreement (panel only) | % of items where all 4 models agree | n/a (each respondent sees one model) | Panel arm's cross-model agreement is interpreted alongside the random arm's per-model MAEs |
-
-**Status of this comparison**: it is a sensitivity analysis, not a primary inferential test. The Phase 1B headline remains the panel-design 4-bin LOO ΔMAE; the random-arm ranking is reported alongside as a robustness column in the writeup. Disagreement between the two designs is reported transparently and investigated.
 
 ---
 
@@ -511,7 +474,7 @@ The full Phase 1A → Phase 1B selection flow is:
 4. If the survivor pool is empty → PAUSE, do not proceed to Phase 1B.
 5. Among survivors, take argmin MAE. If two or more models are within 5% of the best MAE, tiebreak on cost score (`cost × (1 + parse_failure_rate)`); if both quality and cost tie within 1%, the named Qwen-2.5-72B-Instruct fallback fires.
 6. The selected model's MAE on the held-out validation split (N=100) is also reported alongside the Phase 1B headline as a post-selection-inference defense.
-7. The random-model arm (§2.4) independently computes per-model MAE on its N=200 between-respondent cohort; agreement with the panel-arm §12.2 selection is reported alongside the headline as a cross-design robustness column (§2.7).
+7. The random-model arm (§2.4) independently computes per-model MAE on its N=200 between-respondent cohort; the results are reported alongside the panel-arm headline.
 
 This sequence is unchanged from OSF v1 except step 7, which is new this round.
 
