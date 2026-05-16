@@ -1,214 +1,182 @@
-# Project Brief for Professor Bayati — Phase 1A Design Updates
+# Project Brief — Phase 1A Design Updates
 
 **Author**: Joyce Yu
-**Advisor**: Professor Mohsen Bayati
-**Course**: GSBGEN390 thesis-track research, Stanford Graduate School of Business, Spring 2026
-**Date prepared**: 2026-05-15
-**Repository**: `github.com/Joyceqx/gsbgen390-persona-pipeline` (working branch `mohsen-redesign`)
-**Snapshot before changes**: tag `pre-mohsen-redesign-2026-05-13` (recoverable rollback point)
-**Purpose**: Propose two additions inside Phase 1A (model + prompt selection) following our 5/13 discussion, with a worked end-to-end example and a self-contained walkthrough of the disqualification framework. The Phase 1B headline analysis methodology, the GPT-4o anchor, and the Phase 1c co-primary plan are all unchanged in design; only the Phase 1B sample size is reduced by 250 (the prompt-sweep + random-model-arm holdouts).
+**Advisor**: Prof. Mohsen Bayati
+**Date**: 2026-05-15
+**Repository**: `github.com/Joyceqx/gsbgen390-persona-pipeline` (branch `mohsen-redesign`; pre-change snapshot tagged `pre-mohsen-redesign-2026-05-13`)
+
+This brief proposes how to implement the two Phase 1A additions you suggested on 5/13: comparing a few prompt variants, and adding a random-model condition alongside the four-model panel. Phase 1B headline methodology, the GPT-4o anchor, and the Phase 1c plan are unchanged.
 
 ---
 
 ## 0. Summary
 
-Two additions inside Phase 1A:
+Phase 1A becomes a **5 × 3 factorial sweep** (15 cells) — 4 cheap models plus 1 random-assignment condition crossed with 3 literature-grounded prompts. §12.2 picks the best (model, prompt) cell jointly. The GPT-4o anchor still runs **only the baseline prompt P0**, so Park v2 SI Table 3 comparability is preserved.
 
-1. **NEW — Prompt sweep**: select the Phase 1B prompt empirically from three literature-grounded candidates rather than ship the un-ablated baseline. Uses a separate **N=200** cohort held out from Phase 1B (sized so the sweep can reliably detect prompt differences in the ~5% MAE range — the same noise window §12.2 uses as its tiebreak threshold).
+| | P0 baseline | P1 1st-person | P2 interview Q&A |
+|---|---|---|---|
+| **Qwen-2.5-72B** | cell 1 | 2 | 3 |
+| **DeepSeek-V3.1** | 4 | 5 | 6 |
+| **Llama-3.3-70B** | 7 | 8 | 9 |
+| **Kimi K2** | 10 | 11 | 12 |
+| **Random-of-4 (between-respondent)** | 13 | 14 | 15 |
 
-2. **NEW — Random-model arm**: a separate N=200 cohort, each respondent randomly assigned exactly one of the four cheap models (strict 50/50/50/50 balance). Provides a **genuine between-respondent estimate** of feature-category contribution alongside the panel arm's within-respondent estimate; verifies that §12.2's model selection is not an artifact of the within-respondent panel design. Held out from Phase 1B.
+Cells 1–12 are the panel arm (within-respondent, N=200, all four models seen by each respondent). Cells 13–15 are the random-model arm (between-respondent, separate N=200, one randomly assigned model per respondent). The random arm is a sensitivity comparator for the panel-arm selection.
 
-Phase 1B's headline sample reduces from N=3,309 to **N=2,909** (the 400-respondent reduction is the sweep + random-arm holdouts; ~12% of N, headline CI widens by approximately 6%).
+**Phase 1B headline N**: 3,309 → **3,109** (random-arm cohort held out; panel-arm cohort stays in headline with the same 100/100 post-selection-inference defense as OSF v1).
 
-To make the abstract pipeline concrete, §3 of this brief walks through one real GSS 2024 respondent end-to-end (the input data we have on her, the synthesized persona prompt, an example primary_eval question, and how scoring works). §4 explains the disqualification framework you asked us to revisit on 5/13.
+**Incremental Phase 1A cost**: +$47 (panel +$34 from the new prompts dimension, random arm +$13). **Total Phase 1**: ~$770 (+$14 vs. $756 OSF v1 envelope).
 
-Incremental Phase 1A cost: **+$17** (prompt sweep ~$12 + random arm ~$5). Total Phase 1 budget is approximately **$709** (down from $756 — Phase 1B and Battery LOO scale with N=2,909).
+§3 walks through a real GSS 2024 respondent end-to-end so the abstract design is concrete. §4 explains DQ-1 and DQ-3 (the disqualification gates) since you asked us to look at them more carefully — no changes proposed.
 
 ---
 
-## 1. Updated Phase 1A flow diagram
+## 1. Flow diagram
 
-Two new pieces this round (yellow): a prompt sweep on [200:400] (N=200) that picks the Phase 1B prompt, and a random-model arm on [400:600] (N=200) that adds a between-respondent comparison alongside the panel arm. The four slices below are laid out left-to-right in **experimental run order**: sweep runs first (produces the locked prompt), then panel arm and random arm run in parallel (both consume the locked prompt), then Phase 1B runs last on the remaining respondents. Everything else is unchanged from OSF v1.
+Yellow blocks are new or substantially changed this round. Slices are arranged left-to-right in experimental run order.
 
 ```mermaid
 flowchart TD
     A["GSS 2024 cross-section<br/>N = 3,309"]
-    A --> Z["seed=42 partition (4 disjoint slices)"]
+    A --> Z["seed=42 partition (3 disjoint slices)"]
 
-    Z --> S["[200:400] N=200<br/>① Prompt sweep (NEW)<br/>3 candidates · 4 models<br/>runs first"]
-    Z --> P["[0:200] N=200<br/>② Phase 1a panel arm<br/>4 cheap models + GPT-4o anchor<br/>runs after sweep"]
-    Z --> R["[400:600] N=200<br/>③ Random-model arm (NEW)<br/>1 random model per respondent<br/>runs after sweep"]
-    Z --> H["[600:3309] N=2,709<br/>④ Phase 1b-only respondents<br/>runs last"]
+    Z --> P["[0:200] N=200<br/>① Phase 1a panel arm (factorial)<br/>4 models × 3 prompts (cells 1–12)<br/>+ GPT-4o anchor on P0 only"]
+    Z --> R["[200:400] N=200<br/>② Random-model arm (NEW)<br/>1 random model × 3 prompts (cells 13–15)<br/>strict 50/50/50/50 model balance"]
+    Z --> H["[400:3309] N=2,909<br/>③ Phase 1b-only respondents"]
 
-    S --> SP["Pick winning prompt by argmin MAE<br/>locks the prompt for all arms + Phase 1b"]
-
-    SP -.locked prompt.-> P
-    SP -.locked prompt.-> R
-    SP -.locked prompt.-> B1B
-
-    P --> SEL["§12.2 selector + DQ-1 / DQ-3 gates<br/>argmin MAE on selection split"]
-    SEL --> B1B["Phase 1b headline<br/>[0:200] ∪ [600:3309] = N=2,909<br/>single selected model × locked prompt<br/>4-bin LOO ΔMAE"]
+    P --> SEL["§12.2 joint selector + DQ gates<br/>argmin MAE over 12 panel cells<br/>on selection split [0:100]"]
+    SEL --> B1B["Phase 1b headline<br/>[0:200] ∪ [400:3309] = N=3,109<br/>selected (model, prompt) cell<br/>4-bin LOO ΔMAE"]
 
     R -.between-respondent comparison.-> B1B
+    P --> ANCHOR["Park v2 SI Table 3 anchor<br/>GPT-4o × P0 only · N=100<br/>per-item raw accuracy"]
 
-    style S fill:#fff4cc
-    style SP fill:#fff4cc
+    style P fill:#fff4cc
     style R fill:#fff4cc
+    style SEL fill:#fff4cc
 ```
 
 ---
 
-## 2. Block-by-block explanation
+## 2. What each block does
 
-### 2.1 GSS 2024 seed=42 partition (UPDATED — 4 slices)
+### 2.1 Partition (3 slices)
 
-The GSS 2024 cross-section (N=3,309) is shuffled once by `sample_respondents(n=3309, seed=42)` and partitioned into **four disjoint slices**. The table below lists them in slice-index order; the diagram in §1 arranges them in experimental run order (sweep first, then panel + random in parallel, then Phase 1B):
-
-| Slice | N | Used in Phase 1A | Used in Phase 1B headline |
+| Slice | N | Phase 1A role | In Phase 1B headline? |
 |---|---|---|---|
-| `[0:200]` | 200 | yes (panel arm, all 4 models) | yes (single selected model) |
-| `[200:400]` | 200 | yes (prompt sweep) | **no — held out** |
-| `[400:600]` | 200 | yes (random-model arm, 1 model each) | **no — held out** |
-| `[600:3309]` | 2,709 | no | yes (single selected model) |
+| `[0:200]` | 200 | panel arm — 4 models × 3 prompts | yes (under selected cell) |
+| `[200:400]` | 200 | random arm — 1 random model × 3 prompts | **no — held out** |
+| `[400:3309]` | 2,909 | — | yes (under selected cell) |
 
-Phase 1B's headline sample is `[0:200] ∪ [600:3309]` = **N = 2,909**.
+Phase 1B headline sample = `[0:200] ∪ [400:3309]` = **N=3,109**.
 
-**Why the prompt sweep and the random-model arm must both be held out from Phase 1B**. Both choose or test something on a cohort, and re-using those respondents in Phase 1B would bias the headline:
+The random arm must be held out because its data validates §12.2's selection — re-using those respondents in the headline would create dependence between validation and headline. The panel cohort stays in the headline because the 100/100 selection/validation split inside `[0:200]` already protects against post-selection inference: §12.2 reads only `[0:100]`, and the selected cell's MAE on the held-out `[100:200]` is reported alongside the headline.
 
-- The sweep cohort's MAE is what the sweep optimizes over → re-using those 200 in Phase 1B biases the Phase 1B MAE downward on those respondents (selection on the outcome).
-- The random-arm cohort's data is what validates §12.2's model choice → if §12.2's robustness check used those 200 to confirm the choice, then re-using them in the Phase 1B headline creates a subtle dependency between the validation and the headline. Carving them out keeps the headline statistically independent of the Phase 1A validation steps.
+### 2.2 Phase 1a panel arm (factorial)
 
-**Why the sweep cohort is N=200 (not smaller)**. A smaller sweep cohort (e.g., N=50) would only reliably detect MAE differences of ~10% between prompts; the literature suggests prompt-form differences sit closer to 5% (Wang 2025, Sun 2025). At N=200, the sweep can reliably detect MAE differences of ~5%, matching the §12.2 tiebreak window — so any prompt the sweep declares as a "winner over baseline" is by construction larger than the noise the OSF locks for model selection. The 200-respondent cost is ~$12; the alternative of a smaller cohort buys back ~150 respondents into Phase 1B at the cost of statistical interpretability of the sweep itself.
+Every panel respondent runs all 12 (model × prompt) cells × 5 conditions (Full + 4 single-bin LOO) × 12 primary_eval items (subject to GSS ballot rotation). The comparison across cells is within-respondent. Cost: ~$51.
 
-The combined cost of both carve-outs is a 12% reduction in Phase 1B N (3,309 → 2,909). CI on the headline widens by approximately 6%; statistical power on the 4-bin LOO remains adequate at any practically meaningful effect size.
+### 2.3 GPT-4o anchor — P0 only
 
-### 2.2 Prompt sweep [200:400] (NEW)
+GPT-4o runs on the 100-respondent selection split, on the **P0 baseline prompt only**, at n_samples=2, primary + 118 sensitivity items. This produces the Park v2 SI Table 3 anchor with per-item raw accuracy. P0 mirrors Park's surveys-only condition; if we ran the anchor on a different prompt, Park's table would stop being a directly comparable reference. Cost: ~$148 (unchanged from OSF v1).
 
-A held-out N=200 cohort is used to choose the Phase 1B prompt empirically from a literature-grounded candidate set rather than shipping the locked baseline.
+### 2.4 Random-model arm
 
-**Why this addresses your 5/13 suggestion**: you asked whether we could be more careful in selecting the prompt for the upcoming research; this is the operationalization.
+N=200 separate respondents, each assigned **one** of the four cheap models (50/50/50/50 via seed=42 hash). Each respondent runs all 3 prompts under their assigned model × 5 conditions × 12 items. This gives three between-respondent cells (13, 14, 15). Cost: ~$13.
 
-**What gets swept**: three prompt variants (see §5.2 for full text and literature grounding) run on the 200 sweep respondents × 12 primary_eval items × 4 cheap models. The candidate that achieves the lowest respondent-macro Likert MAE is locked, then used by the Phase 1A panel arm, the Phase 1A random-model arm, and the Phase 1B headline run.
+Two things this arm produces, both reported alongside the panel-arm headline:
 
-**Cost**: ~$12 (~28,800 LLM calls at ~$0.0004/call).
+1. **Per-(model, prompt) MAE** in the between-respondent design — a sensitivity comparator for §12.2's selection.
+2. **Bin-level LOO ΔMAE ranking** in the between-respondent design — a sensitivity comparator for the 4-bin LOO headline.
 
-### 2.3 Phase 1a panel arm [0:200] (UNCHANGED)
+**Disagreement rule (pre-committed)**:
 
-The locked design from OSF v1 — 4 cheap models (Qwen-2.5-72B / DeepSeek-V3.1 / Llama-3.3-70B / Kimi K2) × N=200 × n_samples=1, 100/100 selection/validation split, primary_eval only.
-
-The only change is that this arm now uses the prompt chosen by the prompt sweep (§2.2), not the un-ablated baseline.
-
-The GPT-4o anchor sub-arm on the N=100 selection split is also unchanged; it remains the Park-comparable per-item raw-accuracy table input.
-
-### 2.4 Random-model arm [400:600] (NEW)
-
-A separate cohort of N=200 respondents, each randomly assigned **exactly one** of the four cheap models via a seed=42 hash that produces a strict 50/50/50/50 balance (50 respondents per model). Each assigned respondent runs the same primary_eval LOO conditions as the panel arm (Full + 4 single-bin LOO) under the **locked sweep-winner prompt**.
-
-**Why this exists** (the scientific case):
-
-> The panel arm has every respondent rated by all 4 models — a within-respondent design. Estimates of cross-model agreement and bin-level LOO ΔMAE rankings derived from this arm are partially conditioned on within-respondent dependence: if respondent #17 is hard to predict, all 4 models will be wrong in the same direction on that person, and the cross-model agreement metric is inflated by this shared respondent-level idiosyncrasy.
->
-> A reviewer attack: *"Your panel-design cross-model agreement is partly an artifact of every model seeing the same demographic anchor for each person. This does not establish model-level robustness, and the bin-level LOO ranking may not survive deployment, where each user is served by a single model."*
->
-> The between-respondent random-model arm directly rebuts this. If the §12.2-selected model and the bin-level LOO ΔMAE ranking from the panel arm agree with the same quantities computed on the random-model arm (a genuinely independent between-respondent estimate), the cross-model robustness story is established on two independent designs, not one.
-
-**Why a new N=200 cohort rather than re-sampling from the panel data**: this is the question of whether the random arm is a real experiment or a post-hoc re-aggregation. Subsampling from the panel re-uses respondents who *did* see all 4 models — the "what if each respondent had seen only one model?" counterfactual cannot be reconstructed from data where they saw all four. A real between-respondent estimate requires real respondents who only ever see one (randomly assigned) model. Hence the new cohort.
-
-**Cost**: ~$5 (N=200 × 1 model × 5 conditions × 12 items ≈ 12,000 calls).
-
-**What this arm produces**: a per-model MAE on the random-arm subsample (each model has ~50 respondents) and a between-respondent bin-level LOO ΔMAE. Both are reported alongside the panel-arm results in the writeup.
-
-**Pre-committed interpretation rule (panel vs. random-arm disagreement)**. So that "disagreement is flagged transparently" does not collapse into post-hoc judgment, we lock the following three-tier rule before the Phase 1A run:
-
-| Outcome | Pre-committed interpretation |
+| Outcome | Interpretation |
 |---|---|
-| Both arms select the same model **and** the 4-bin LOO ΔMAE rankings agree | Confirmatory; the random-arm result is reported as a robustness column alongside the panel-arm headline. |
-| Selections disagree, but the random-arm winner is **within 5% MAE** of the panel-arm winner on the random arm itself | "Within noise" — the panel-arm headline stands; the disagreement is reported as a within-tiebreak-window observation. |
-| Selections disagree, and the random-arm winner is **>5% better** than the panel-arm winner on the random arm | "Genuine design-dependence flag" — documented in the writeup's limitations section; the panel-arm result remains the headline (per the locked OSF §12.2 selection rule), but the magnitude of the design-dependence is reported explicitly. |
+| Both arms select the same cell, and bin-level rankings agree | Confirmatory; report random arm as a robustness column. |
+| Selections differ, but random-arm winner is within 5% MAE of panel-arm winner on the random arm | "Within noise"; panel-arm headline stands. |
+| Selections differ, random-arm winner is >5% better on the random arm | Documented as a design-dependence flag in the limitations section; panel-arm headline still holds per the locked §12.2 rule. |
 
-**DQ-1 / DQ-3 on the random arm**. The disqualification metrics are computed on the random arm and reported as a transparency column, but **panel-arm DQ verdicts are the authoritative gates** for §12.2 selection. The random-arm DQ-3 estimate (per-item variance ratio with ~50 respondents per model) is too noisy to use as a gating decision; the panel arm's N=100 selection split is the locked-OSF gating input. Random-arm DQ disagreement with panel-arm DQ is interpreted as a sensitivity flag in the writeup, not as a contradicting verdict.
+**DQ on the random arm**: DQ-1 and DQ-3 are computed and reported for transparency, but **panel-arm DQ verdicts are the authoritative gates** for §12.2. The random arm has only ~50 respondents per (model, prompt) cell, which is too noisy for the variance-ratio test to be a gating decision.
 
-### 2.5 §12.2 selector + DQ gates (UNCHANGED)
+### 2.5 §12.2 joint selector
 
-The selector logic is exactly as locked in OSF v1: argmin respondent-macro Likert MAE on the selection split of the panel arm, with DQ-1 (parse-fail ≤ 30%), DQ-3 (per-item variance ≥ 30% × human variance for ≥ 50% of items), cost as 5% tiebreak, Qwen tie-break-only fallback, and all-DQ-fail PAUSE. **Detailed walkthrough of the disqualification framework — what DQ-1 and DQ-3 measure, what failure modes each catches, and a worked numerical example — is in §4.**
+OSF v1's §12.2 is generalized from "best model" to "best (model, prompt) cell". The selection logic is otherwise unchanged:
 
-### 2.6 Phase 1b on [0:200] ∪ [600:3309] (UNCHANGED design, N reduced by 400)
+1. Compute parse-failure rate, per-item variance ratios, and respondent-macro Likert MAE for each of the 12 panel cells on the selection split `[0:100]`.
+2. Apply DQ-1 and DQ-3 per cell (see §4).
+3. If no cells survive → PAUSE; Phase 1B does not run.
+4. argmin MAE among survivors. Tiebreak within 5% MAE on cost score; if both quality and cost tie within 1%, the named fallback Qwen × P0 fires.
+5. Selected cell's MAE on held-out `[100:200]` is reported alongside the Phase 1B headline.
 
-Single (§12.2-selected model × sweep-selected prompt) on **N=2,909** respondents. Otherwise identical to OSF v1: primary_eval only, n_samples=1, full-condition + 4-bin LOO, atomic-write resume, paired-respondent bootstrap. Headline ΔMAE per bin with Holm-Bonferroni correction is unchanged.
+### 2.6 Phase 1b headline
+
+Single (selected model, selected prompt) on N=3,109 respondents. Otherwise identical to OSF v1: primary_eval only, n_samples=1, Full + 4-bin LOO, paired-respondent bootstrap, Holm-Bonferroni at α=0.05 across the 4 bins. Cost: ~$67.
 
 ---
 
-## 3. Concrete example: one persona prediction end-to-end
+## 3. Concrete example: one GSS 2024 respondent end-to-end
 
-To make the abstract pipeline concrete, this section walks through what the system does for **one real GSS 2024 respondent** — the first one drawn by the seed=42 sample (Phase 1a `[0]`). She is a publicly-released GSS respondent with all identifying information already removed by NORC.
+To make the design concrete, here is what the pipeline does for the first respondent in the seed=42 sample — a publicly-released GSS 2024 respondent (all identifying info already removed by NORC).
 
-### 3.1 The prediction targets — 12 primary_eval items
+### 3.1 The 12 prediction targets
 
-The headline analysis predicts these 12 attitude items, one per LLM call. They are drawn from each major construct family in the GSS so that the four-bin LOO ablation can detect bin-specific effects.
-
-| Variable | Construct family | Format | Scale |
+| Variable | Construct | Format | Scale |
 |---|---|---|---|
 | POLVIEWS | political ideology | Likert-7 | 1 = Extremely liberal … 7 = Extremely conservative |
 | PARTYID | party identification | Likert-7 + Other | 0 = Strong Democrat … 6 = Strong Republican (7 = Other) |
-| ABANY | abortion attitudes | binary | 1 = YES (favor abortion for any reason), 2 = NO |
+| ABANY | abortion attitudes | binary | 1 = YES, 2 = NO |
 | CAPPUN | death penalty | binary | 1 = FAVOR, 2 = OPPOSE |
-| GUNLAW | gun control | binary | 1 = FAVOR (gun permits), 2 = OPPOSE |
-| FECHLD | gender role attitudes | Likert-4 | 1 = Strongly agree (working mother can establish warm relationship with children) … 4 = Strongly disagree |
-| FEPOL | women in politics | binary | 1 = AGREE (men better suited emotionally for politics), 2 = DISAGREE |
-| RACDIF1 | racial attitudes | binary | 1 = YES (racial inequality is due to discrimination), 2 = NO |
-| CONFINAN | institutional confidence (banks) | Likert-3 | 1 = A great deal … 3 = Hardly any |
+| GUNLAW | gun control | binary | 1 = FAVOR (permits), 2 = OPPOSE |
+| FECHLD | gender role attitudes | Likert-4 | 1 = Strongly agree … 4 = Strongly disagree |
+| FEPOL | women in politics | binary | 1 = AGREE, 2 = DISAGREE |
+| RACDIF1 | racial attitudes | binary | 1 = YES (discrimination), 2 = NO |
+| CONFINAN | confidence in banks | Likert-3 | 1 = A great deal … 3 = Hardly any |
 | CONLEGIS | trust in Congress | Likert-3 | 1 = A great deal … 3 = Hardly any |
-| HELPPOOR | economic-policy attitudes | sparse-anchored Likert-5 | 1 = Govt should improve standard of living … 5 = Each person should take care of self |
-| SATFIN | financial life-evaluation | Likert-3 | 1 = Pretty well satisfied … 3 = Not at all satisfied |
+| HELPPOOR | govt help for poor | Likert-5 sparse-anchor | 1 = Govt should improve … 5 = Each person should |
+| SATFIN | financial satisfaction | Likert-3 | 1 = Pretty well satisfied … 3 = Not at all |
 
-GSS 2024 uses ballot rotation, so any single respondent typically sees only ~8 of these 12 items. The headline metric (respondent-macro Likert MAE) excludes parse-failed and ballot-missing items per-respondent.
+GSS uses ballot rotation, so any one respondent typically sees ~8 of these 12 items. The headline metric excludes ballot-missing items per respondent.
 
-### 3.2 What we have on this respondent (the input)
+### 3.2 Who she is
 
-The respondent the pipeline draws as `seed=42 index 0` is a 24-year-old white female from the South Atlantic region (interviewed in the Northeast). She voted for Biden in 2020. She is never-married, has a Bachelor's degree, works full-time (55 hours/week). She self-identifies as Catholic but is "not religious at all" and attends services less than once a year. She reports being very happy, very satisfied with her work, and finding life exciting.
+A 24-year-old white female, never married, Bachelor's degree, German ancestry. Currently in the Northeast (grew up Midwest). Full-time, 55 hr/week. Catholic but self-describes "not religious at all"; attends services less than once a year. Very happy, very satisfied with work, finds life exciting. Voted Biden in 2020.
 
-GSS 2024 measures 140 variables in our taxonomy across her ballot. Organized by the four pre-registered bins (the design's LOO conditions), her substantive responses are:
+GSS 2024 records 140 variables for her across our four bins. Substantively:
 
-**Demographic bin** (20 variables filled): age 24, female, white, never-married, Bachelor's, total family income $75-89K, German ancestry, born in US, lived in Midwest at age 16, currently Northeast, both parents had graduate-level education, family income at 16 was "far above average."
+- **Demographic** (20 vars): age 24, female, white, never-married, Bachelor's, family income $75–89K, both parents have graduate degrees, family income at 16 "far above average", etc.
+- **Behavioral** (18 vars): full-time at 55 hrs/wk, watches TV 2 hr/day, attends religious services less than once a year, never prays, Catholic, no gun at home, reads newspaper daily, voted Biden 2020, etc.
+- **Psychological** (4 vars): very happy, exciting life, very satisfied with work, good health.
+- **Attitudinal** (33 vars, excluding the 12 prediction targets): pro-choice on all 7 abortion conditions, strongly disagrees with traditional gender roles, supports gun control / immigration / sex education / birth control for teens, opposes spanking, supports physician-assisted suicide for incurable illness only, etc.
 
-**Behavioral bin** (18 variables filled): voted Biden in 2020, ineligible to vote in 2016, works full-time at 55 hours/week, uses computer, watches 2 hours/day of TV, attends religious services less than once a year, never prays, Catholic, raised Catholic, no gun in home, neither she nor partner hunts, reads newspaper every day, would find it "somewhat easy" to find an equally good job if needed.
+Her ground-truth answers on the 12 prediction targets:
 
-**Psychological bin** (4 variables filled): general happiness = very happy; health = good; life = exciting; work satisfaction = very satisfied.
-
-**Attitudinal bin** (33 variables filled — excluding the 12 primary_eval targets being predicted): pro-choice on all seven abortion conditions, "strongly disagree" with "better for man to work, woman tend home", "disagree" that preschool kids suffer if mother works, "not wrong at all" on homosexual sex relations, supports increasing immigration, supports more federal spending on childcare / alternative energy / highways / scientific research, supports birth control for teenagers 14-16, believes racial inequality is due to lack of education (not in-born ability or lack of will), supports sex education in public schools, opposes spanking, supports physician-assisted suicide for incurable disease (but not for bankruptcy or being tired of living), considers federal income tax too high, considers sex outside marriage always wrong.
-
-Her ground-truth primary_eval answers (the items the headline will predict) are:
-
-| Variable | Her answer | On her ballot? |
+| Variable | Answer | On her ballot? |
 |---|---|---|
-| POLVIEWS | Slightly liberal (code 3) | yes |
-| PARTYID | Not very strong democrat (code 1) | yes |
-| ABANY | YES (code 1) | yes |
-| CAPPUN | (not on her ballot) | no |
-| GUNLAW | FAVOR (code 1) | yes |
-| FECHLD | AGREE (code 2) | yes |
-| FEPOL | (not on her ballot) | no |
-| RACDIF1 | YES (code 1) | yes |
-| CONFINAN | (not on her ballot) | no |
-| CONLEGIS | (not on her ballot) | no |
-| HELPPOOR | (not on her ballot) | no |
-| SATFIN | Pretty well satisfied (code 1) | yes |
+| POLVIEWS | Slightly liberal (3) | yes |
+| PARTYID | Not very strong democrat (1) | yes |
+| ABANY | YES (1) | yes |
+| GUNLAW | FAVOR (1) | yes |
+| FECHLD | AGREE (2) | yes |
+| RACDIF1 | YES (1) | yes |
+| SATFIN | Pretty well satisfied (1) | yes |
+| CAPPUN, FEPOL, CONFINAN, CONLEGIS, HELPPOOR | (not on her ballot) | no |
 
-The pipeline never sees these primary_eval values during prompt construction (R1 leakage hygiene removes the entire battery containing the item being predicted; see §3.5 leakage notes in the original OSF v1 brief).
+The pipeline never sees these target values during prompt construction (R1 leakage hygiene removes the whole battery containing the predicted item).
 
-### 3.3 The synthesized persona prompt (P0 baseline)
+### 3.3 The P0 baseline persona prompt
 
-Plugging this respondent's 75 substantive responses across the four bins into `build_persona_prompt()` yields the P0 baseline persona prompt below. This is the **exact string** the LLM sees as the system message; the only modification at inference time is that the entire bin containing the prediction target is dropped (e.g., when predicting POLVIEWS, the attitudinal bin is dropped; she remains as demographic + behavioral + psychological only). The prompt for this respondent is **75 features, ~1,012 tokens**.
+Plugging her 75 substantive responses into `build_persona_prompt()` produces the P0 baseline below. This is the exact system message the LLM sees under cells 1, 4, 7, 10 (Qwen / DeepSeek / Llama / Kimi × P0). For LOO conditions, the entire matching `## YOUR …` section is dropped (e.g., when predicting POLVIEWS under the attitudinal-LOO condition, the `## YOUR ATTITUDES` block is removed). The prompt is **75 features, ~1,012 tokens** for her.
 
 ```
-You are a person who completed the 2024 General Social Survey (GSS). Below is what
-you told the survey, organized by topic. Stay in character as this respondent
-throughout — your views, your demographics, your behaviors are as described.
+You are a person who completed the 2024 General Social Survey (GSS). Below is
+what you told the survey, organized by topic. Stay in character as this
+respondent throughout — your views, your demographics, your behaviors are as
+described.
 
 You may be asked further survey questions. Answer ENTIRELY IN CHARACTER as this
 person, drawing on the consistency of the views and life context shown below.
-Always commit to a single answer in the requested format. No "it depends" hedges,
-no refusals, no qualifications about being an AI.
+Always commit to a single answer in the requested format. No "it depends"
+hedges, no refusals, no qualifications about being an AI.
 
 ## YOUR DEMOGRAPHIC BACKGROUND
 - age of respondent: 24
@@ -299,20 +267,11 @@ You will now be asked one or more additional GSS questions. Answer in character,
 in the exact format requested by each question.
 ```
 
-This is the **Full condition** prompt — all four bins included. For the four-bin LOO conditions:
+### 3.4 The item-question prompt
 
-- **drop_bin = demographic**: remove the entire "## YOUR DEMOGRAPHIC BACKGROUND" section.
-- **drop_bin = behavioral**: remove the entire "## YOUR BEHAVIORS" section.
-- **drop_bin = psychological**: remove "## YOUR PSYCHOLOGICAL DISPOSITIONS".
-- **drop_bin = attitudinal**: remove "## YOUR ATTITUDES".
+After the persona is set as the system message, each primary_eval item becomes its own user message. Examples:
 
-ΔMAE per bin is computed as `MAE(LOO-bin-dropped) − MAE(Full)`, giving the marginal contribution of that bin to LLM persona prediction.
-
-### 3.4 The item-question prompt (the user message)
-
-After the persona prompt above is set as the system message, each of the 12 primary_eval items becomes its own user message. Three concrete examples:
-
-**Predicting POLVIEWS (Likert-7):**
+**POLVIEWS (Likert-7)** — her truth is 3 (Slightly liberal). If the LLM outputs `3`, error = 0; if it outputs `5`, error = 2.
 
 ```
 GSS question: think of self as liberal or conservative
@@ -329,9 +288,7 @@ Options:
 Output ONLY a single integer code (1-7).
 ```
 
-Her ground-truth answer is **3 (Slightly liberal)**. If the LLM outputs `3`, absolute error = 0. If the LLM outputs `5` (Slightly conservative), absolute error = 2. Respondent-macro Likert MAE averages such per-item errors across her Likert items, then averages across all respondents.
-
-**Predicting GUNLAW (binary):**
+**GUNLAW (binary)** — her truth is 1 (FAVOR). Binary items use exact-match accuracy in the headline; §12.2 scoring uses Likert MAE only.
 
 ```
 GSS question: favor or oppose gun permits
@@ -343,13 +300,11 @@ Options:
 Output ONLY a single integer code (1-2).
 ```
 
-Her ground-truth answer is **1 (FAVOR)**. For binary items, the headline metric is exact-match accuracy (not MAE), although for selector-scoring purposes (§12.2) MAE is computed on Likert items only.
-
-**Predicting FEPOL (binary, with stem-override):**
+**FEPOL (binary, stem-overridden for clarity)** — she is not on the FEPOL ballot, so the pipeline skips this item for her.
 
 ```
-GSS question: Tell me if you agree or disagree with this statement: "Most men are
-better suited emotionally for politics than are most women."
+GSS question: Tell me if you agree or disagree with this statement: "Most men
+are better suited emotionally for politics than are most women."
 
 Options:
   1. AGREE
@@ -358,84 +313,46 @@ Options:
 Output ONLY a single integer code (1-2).
 ```
 
-FEPOL's canonical GSS variable label ("women not suited for politics") is terse and ambiguous about polarity, so the pipeline overrides four items (FEPOL, FECHLD, RACDIF1, HELPPOOR) with full GSS codebook question wording for clarity.
+### 3.5 What this respondent costs to run
 
-This respondent is not on the FEPOL ballot in GSS 2024, so the pipeline would skip this item for her at runtime.
+Under the factorial design, this respondent (in the panel arm) generates approximately **420 LLM calls**: 7 ballot-on items × 5 conditions × 4 models × 3 prompts. Add ~356 calls for the GPT-4o anchor (since she is in the selection split, primary + sensitivity, n=2, P0 only). At ~$0.0004/call, the cheap-panel cost for her is about $0.17; the full N=200 panel runs to ~$51.
 
-### 3.5 Putting it together: the call sequence for this respondent
-
-For every primary_eval item she is on the ballot for, the pipeline issues one LLM call per (model, condition):
-
-```
-SYSTEM: [persona prompt with appropriate bin dropped per condition]
-USER:   [item-question prompt]
-→ LLM   single integer code
-→ parse + score against her ground truth
-```
-
-For this respondent in the Phase 1a panel arm: 7 primary_eval items on her ballot × 5 conditions (Full + 4 single-bin LOO) × 4 cheap models ≈ **140 LLM calls** for her, plus an additional ~178 calls × n_samples=2 for the GPT-4o anchor (because she is in the N=100 selection split, primary + sensitivity items). The cheap-panel pipeline runs ~50,000 LLM calls across N=200 respondents at ~$0.0004/call ≈ $17.
-
-A respondent assigned to the random-model arm (in slice `[400:600]`) instead sees just one model × 5 conditions × ~7 items on the ballot ≈ 35 calls per respondent.
+A random-arm respondent (in `[200:400]`) generates 7 × 5 × 1 × 3 ≈ 105 calls — one assigned model, all three prompts. Full random arm: ~$13.
 
 ---
 
-## 4. Disqualification framework — what DQ-1 and DQ-3 are and why they exist
+## 4. Disqualification framework — DQ-1 and DQ-3
 
-The §12.2 model-selection rule does not just argmin MAE. Before any MAE comparison, each of the four cheap-panel models must pass two pre-registered disqualification (DQ) gates: **DQ-1 (parse-failure ceiling)** and **DQ-3 (mode-collapse guard)**. A model that fails either gate is removed from the candidate pool and cannot be selected for Phase 1B, regardless of its measured MAE.
+§12.2 doesn't just argmin MAE. Each of the 12 panel cells must first pass two pre-registered gates: DQ-1 (parse-failure ceiling) and DQ-3 (mode-collapse guard). A cell that fails either is removed from the candidate pool, regardless of its MAE.
 
-This section explains what each gate measures, what failure mode it catches, and what happens when all four models fail. The framework is locked in OSF v1 §12.2 and remains unchanged this round; we include it here because you asked us to look more carefully at disqualification, and the clearest answer is a self-contained walkthrough you can review against your concern.
-
-(Historical note: the OSF document numbers these as DQ-1 and DQ-3. An earlier draft of the framework included a DQ-2 — a within-model self-consistency floor — which was removed pre-OSF when the cheap panel moved to `n_samples = 1` and self-consistency was replaced by cross-model agreement as the stability QA metric. The numbering was kept to preserve the audit trail.)
+The framework is unchanged from OSF v1; the only structural change is that DQ now applies per (model, prompt) cell rather than per model. We include this walk-through because you asked us to examine disqualification more carefully on 5/13.
 
 ### 4.1 DQ-1 — Parse-failure ceiling
 
-**What it measures.** The fraction of LLM responses across the Phase 1a panel run where the output could not be parsed to a valid integer code matching the item's response options.
-
 ```
-DQ-1 metric    = (# of parse-fail samples) / (total # of samples)
-DQ-1 threshold = 30%
-Model passes if parse-failure rate ≤ 30%
+DQ-1 metric    = (# parse-fail samples) / (# total samples)  per cell
+Cell passes if parse-failure rate ≤ 30%
 ```
 
-**Examples of parse failures**:
+A parse failure is any output that can't be parsed to a valid integer code: refusals ("As an AI…"), hedges ("It depends…"), verbose justifications, out-of-range codes, API errors.
 
-- Model refuses: *"As an AI assistant, I cannot provide a single answer to this question…"*
-- Model hedges instead of committing: *"It depends on the context, but probably 3 or 4…"*
-- Model outputs verbose justification instead of just the integer: *"Given this respondent's background, the most likely answer would be a 5 because…"*
-- Model returns a code outside the valid range (e.g., outputs "10" when the scale is 1-7)
-- Model returns a rate-limit error or API error string
-
-**Why this gate exists**. A model with 30%+ parse failures is operationally unusable at the scale Phase 1B requires. The MAE on its parsed remainder is also unreliable — selection bias guarantees the parsed subset is non-representative, and a model might score well on the easy items it parsed and refuse on the hard ones. The 30% threshold was set pre-OSF after pilot runs; it is loose enough to absorb minor formatting hiccups but tight enough to flag systemic refusal or hedging patterns.
-
-**What we'd see if a model fails**: in the decision log, the model would be tagged `dq1_pass = False`; its row in the per-model table would show `parse_failure_rate > 0.30`; the selector silently skips it and continues to compare among the remaining DQ-passers.
+**Why 30%**: A cell with worse than 30% parse failures is operationally unusable at the scale Phase 1B requires. The MAE on its parsed remainder would be unreliable anyway (selection bias). 30% is loose enough to absorb minor formatting glitches but tight enough to catch systemic refusal.
 
 ### 4.2 DQ-3 — Mode-collapse guard
 
-**What it measures.** For each of the 12 primary_eval items, the variance of the model's predicted codes across the respondents that saw that item, relative to the variance of the human population's actual GSS 2024 responses on the same item.
-
 ```
-For each primary_eval item i:
-    DQ-3 ratio_i = var(model_predictions_i) / var(human_GSS_2024_responses_i)
+For each primary_eval item i in a cell:
+    ratio_i = var(cell_predictions_i) / var(human_GSS_2024_responses_i)
     item_i fails the floor if ratio_i < 0.30
 
-Model-level aggregation:
-    fail_pct = (# items failing the floor) / (# items with ≥ 1 valid prediction)
-    Model passes DQ-3 if fail_pct ≤ 50%
-A model with > 50% of items failing the floor is disqualified.
+Cell passes DQ-3 if at most 50% of items fail the floor.
 ```
 
-**Examples of mode-collapse failures**:
+The guard catches cells whose predictions are too concentrated relative to the human distribution — for example, a model that always answers "4 (Moderate)" on POLVIEWS for every respondent.
 
-- A model that always outputs "4 (Moderate, middle of the road)" on POLVIEWS for every respondent (variance = 0; humans have variance ≈ 2.3; ratio = 0; fails the floor)
-- A model that always outputs the modal answer for every binary item (variance = 0)
-- A model that only ever uses codes 3 and 4 on a Likert-7 scale (compressed variance vs. wide human variance)
-- A model that has learned a strong prior toward a specific answer and largely ignores the persona prompt
+**Concrete example.** A hypothetical "always answer mode" cell — outputs the modal code on every item, regardless of persona:
 
-**Concrete numerical example** (using approximate GSS 2024 human variances; the locked reference numbers live in `outputs/primary_eval_human_variance_2024.json`):
-
-Hypothetical "lazy" model that always answers `4` (mode) on Likert items and `1` on binary items, regardless of persona:
-
-| Item | Human variance | "Always answer mode" model variance | Ratio | Item fails floor? |
+| Item | Human variance | Cell variance | Ratio | Fails? |
 |---|---|---|---|---|
 | POLVIEWS | 2.34 | 0.00 | 0.00 | yes |
 | PARTYID | 4.24 | 0.00 | 0.00 | yes |
@@ -450,99 +367,72 @@ Hypothetical "lazy" model that always answers `4` (mode) on Likert items and `1`
 | CAPPUN | 0.21 | 0.00 | 0.00 | yes |
 | SATFIN | 0.51 | 0.00 | 0.00 | yes |
 
-12 out of 12 items fail (fail_pct = 100% > 50%) → model **disqualified**.
+All 12 items fail → fail_pct = 100% > 50% → cell **disqualified**.
 
-Now compare with a hypothetical "healthy" model whose predictions span roughly the same range as humans:
+For comparison, a "healthy" cell with reasonable spread:
 
-| Item | Human variance | Healthy model variance | Ratio | Item fails floor? |
+| Item | Human variance | Cell variance | Ratio | Fails? |
 |---|---|---|---|---|
 | POLVIEWS | 2.34 | 1.80 | 0.77 | no |
 | PARTYID | 4.24 | 3.10 | 0.73 | no |
 | ABANY | 0.25 | 0.22 | 0.88 | no |
 | GUNLAW | 0.21 | 0.18 | 0.86 | no |
 | FECHLD | 0.93 | 0.80 | 0.86 | no |
-| FEPOL | 0.15 | 0.13 | 0.87 | no |
-| (...) | (...) | (...) | (>0.30) | no |
+| (…) | | | (>0.30) | no |
 
-0 of 12 items fail → model **passes** DQ-3 and proceeds to MAE comparison.
+Cell **passes** DQ-3.
 
-**Why the threshold is per-item relative (not absolute)**. Human variance varies substantially across primary_eval items: FEPOL has variance ≈ 0.15 (heavily skewed binary; ~85% of humans answer DISAGREE), PARTYID has variance ≈ 4.24 (broad spread across the 0-7 Democrat-Republican-Other scale). An absolute threshold like "variance ≥ 0.5" would be too lenient on FEPOL (a model could pass FEPOL by outputting only AGREE or only DISAGREE — both produce variance ≤ 0.25, but the all-DISAGREE model is "lazy", the all-AGREE model isn't representative either) and too strict on PARTYID (a perfectly healthy model with variance 0.8 would fail). The per-item relative threshold scales the floor to each item's human spread, so the gate is comparably strict across items with very different distributions.
+**Why per-item relative**: Human variance varies across items — FEPOL ≈ 0.15 (heavily skewed binary), PARTYID ≈ 4.24 (wide Likert-7 spread). An absolute threshold would be too lenient on FEPOL and too strict on PARTYID. Scaling to each item's human spread gives a comparable strictness across items.
 
-**Why the >50% aggregation rule (not "any 1 item")**. GSS ballot rotation means each model only "sees" ~30-65% of respondents on most items, so per-item variance estimates are noisy. A strict "any 1 item fails = disqualify" rule would over-reject models for stochastic per-item noise on small-N items. The 50% aggregation requires a majority of items to fail the floor, which is robust to per-item noise while still flagging systemic mode collapse.
+**Why "majority of items must fail", not "any single item"**: GSS ballot rotation means each cell only sees a fraction of respondents on each item, so per-item variance estimates are noisy. The 50% majority rule is robust to that noise.
 
-**Why this gate exists at all**. Mode-collapsed models can have surprisingly low MAE on GSS attitude items, because most attitude items cluster centrally and "always 4" gets close to a sizeable fraction of human respondents who actually answered "moderate". Without DQ-3, the §12.2 selector could pick a model whose low MAE is *because* it has stopped trying to predict individual respondents, not because it has learned them. DQ-3 is the explicit anti-cheat: it rejects models that have given up on individuation regardless of their measured MAE.
+**Why this gate matters**: A mode-collapsed cell can have surprisingly low MAE because most GSS attitudes cluster centrally and "always 4" gets close to many respondents. Without DQ-3, §12.2 could pick a cell whose low MAE comes from giving up on individuation rather than from learning the persona. DQ-3 rejects such cells regardless of MAE.
 
-### 4.3 All-DQ-fail handling: PAUSE for human review
+### 4.3 All-DQ-fail handling: PAUSE
 
-If all four cheap models fail DQ-1 or DQ-3 (the candidate pool after gating is empty), the §12.2 selector returns `selected = None` with rationale `all_dq_fail_pause_for_review`. **Phase 1B does not proceed.**
-
-**Why**. An empty candidate pool is a signal that something structural is wrong — the prompt template is broken, the parser has a bug, the model panel has a systemic issue at the current OpenRouter snapshot, or the locked human-variance reference is misaligned with the data. Silently bypassing the gate to a named fallback would burn ~$62 of paid Phase 1B spend on a model already known to be unreliable. The PAUSE forces human review: diagnose the failure, fix it, and either rerun Phase 1a or file an OSF amendment.
-
-An earlier OSF draft had a Qwen-fallback-on-all-DQ-fail rule; that rule was removed pre-OSF (2026-05-09) after audit review pointed out it bypasses the quality gate. The current locked behavior is PAUSE, not silent override.
-
-### 4.4 Summary — how DQ interacts with the rest of §12.2
-
-The full Phase 1A → Phase 1B selection flow is:
-
-1. Run all 4 cheap models on the panel arm and the GPT-4o anchor.
-2. For each cheap model on the selection split (N=100): compute `parse_failure_rate`, per-item variance ratios, and respondent-macro Likert MAE.
-3. Apply DQ-1 (parse rate ≤ 30%) and DQ-3 (per-item variance floor, >50% aggregation). Any model failing either gate is removed.
-4. If the survivor pool is empty → PAUSE, do not proceed to Phase 1B.
-5. Among survivors, take argmin MAE. If two or more models are within 5% of the best MAE, tiebreak on cost score (`cost × (1 + parse_failure_rate)`); if both quality and cost tie within 1%, the named Qwen-2.5-72B-Instruct fallback fires.
-6. The selected model's MAE on the held-out validation split (N=100) is also reported alongside the Phase 1B headline as a post-selection-inference defense.
-7. The random-model arm (§2.4) independently computes per-model MAE on its N=200 between-respondent cohort; the results are reported alongside the panel-arm headline.
-
-This sequence is unchanged from OSF v1 except step 7, which is new this round.
+If every panel cell fails one of the gates, §12.2 returns `selected = None` and Phase 1B does **not** proceed. The rationale: an empty pool means something structural is broken — prompt template, parser, model panel snapshot, or the human-variance reference. Silently falling back to a named model would burn paid Phase 1B spend on a known-failing setup. The PAUSE forces human review and either a rerun of Phase 1A or an OSF amendment.
 
 ---
 
 ## 5. Decisions in detail
 
-### 5.1 A1 — Prompt sweep cohort
+### 5.1 Why factorial rather than sequential sweep-then-panel
 
-**Decision**: use GSS 2024 seed=42 indices `[200:400]`, **N=200**, for the prompt sweep. The N is sized to reliably detect MAE differences in the ~5% range (matching §12.2's tiebreak window) — see §2.1 "Why the sweep cohort is N=200" for the power calculation.
+Two reasons.
 
-**Alternatives considered**:
+First, a factorial design captures **(model × prompt) interactions**. If P2 helps Llama but hurts Kimi, a sequential design that picks "best prompt averaged across models" misses this and may pick a prompt that's mediocre everywhere. The factorial lets §12.2 read the joint winner directly.
 
-| Option | Pros | Cons | Verdict |
+Second, **no separate sweep cohort is needed**. The panel arm is the sweep — every prompt is tested on the same 200 respondents across all four models. Phase 1B's headline N is reduced only by the random-arm carve-out (200 respondents), not by a separate sweep carve-out.
+
+The cost is +$34 on the panel arm (three prompts instead of one). The user explicitly chose to absorb this cost in exchange for clean joint selection.
+
+### 5.2 Prompt candidates — the 2 × 2 ablation
+
+The three prompts vary along two design knobs: **voice** (1st-person vs. 2nd-person) and **structure** (key-value list vs. interview Q&A turns).
+
+| Candidate | Voice | Structure | Citation |
 |---|---|---|---|
-| GSS 2022 separate wave | Zero overlap with 2024 | Two-year attitude drift (esp. 2024 election); requires loader extension | rejected — leakage already addressed by held-out 2024 |
-| **GSS 2024 held-out N=200** | Same attitude distribution as Phase 1b; standard cross-validation; statistically powered to detect ~5% MAE differences | Phase 1b N drops by 200 (6%) for this carve-out alone | **selected** |
-| GSS 2024 held-out N=50 | Smaller Phase 1b carve-out (1.5%) | Only detects MAE differences ≥ 10%; under-powered against literature-typical effect sizes | rejected after revising power analysis |
-| Use GSS 2024 first 50 respondents | Simplest | Same cohort as Phase 1b headline → severe data peeking | rejected |
-| Skip sweep, ship locked baseline | No cost | No empirical defense for prompt choice | rejected |
-| Sweep on Phase 1A panel [0:200] data | "Free" N=200 sweep | Triple-purposes [0:200] (sweep + §12.2 + headline); destroys the locked 100/100 post-selection-inference defense; reviewer-rejectable peeking | rejected |
+| **P0 baseline** | 2nd person | 4-bin key-value list | Park et al. 2024 v2 (arXiv:2411.10109), surveys-only condition |
+| **P1 Argyle 1st-person prose** | 1st person | 4-bin clauses | Argyle et al. 2023 "Out of One, Many", *Political Analysis* 31(3) |
+| **P2 Wang interview Q&A** | 2nd person (dialogue) | 4-bin Q-A turns | Wang et al. 2025 "The Prompt Makes the Person(a)", *Findings of EMNLP 2025* |
 
-### 5.2 A2 — Prompt sweep candidates (3-variant 2×2 ablation)
+**Why these three**:
 
-The sweep is a **2×2 ablation** that isolates two design knobs simultaneously: voice (1st person vs. 2nd person) and structure (key-value list vs. interview Q&A turns).
+- **P0**: the citation baseline (mirrors Park v2's surveys-only condition).
+- **P2**: the only prompt-format ablation in the persona-simulation literature with a head-to-head winner (Wang's 5 LLMs × 15 demographic groups × 100 OpinionQA items found interview Q&A best on stereotyping and opinion alignment).
+- **P1**: fills a literature gap — Argyle uses 1st-person prose; Park/Hu/Bisbee/our baseline use 2nd person; no paper has compared them head-to-head on a survey-prediction task. Including P1 makes the sweep a 2 × 2 (voice × structure) that decomposes where any improvement comes from.
 
-| Candidate | Voice | Structure | Citation grounding |
-|---|---|---|---|
-| **P0 baseline** | 2nd person | 4-bin key-value list | Park et al. 2024 v2 (arXiv:2411.10109) — the surveys-only condition |
-| **P1 Argyle 1st-person prose** | 1st person | 4-bin clauses | Argyle, Busby, Fulda, Gubler, Rytting, Wingate (2023) "Out of One, Many", *Political Analysis* 31(3) |
-| **P2 Wang interview Q&A** | 2nd person (dialogue) | 4-bin Q-A turns | Wang, Pyatkin, Bhagavatula, Choi (2025) "The Prompt Makes the Person(a)", *Findings of EMNLP 2025* |
+**Why not other variants** considered and excluded:
 
-**Why these three (and not others)**.
+- Plain CoT: Sun et al. 2025 (PB&J) show CoT gives **no gain** on OpinionQA (49.17% vs 49.63% baseline).
+- Variable reordering within bins: Hu & Collier 2024 show "little variation" from reorder/reparagraph.
+- PB&J scaffolded rationale: +4.8 pp in Sun 2025, but needs an extra LLM pre-pass. Better evaluated as Phase 2.
+- Salecha brand-name removal: small expected effect; would cost a slot.
 
-P0 must be in the sweep — it is the citation baseline against Park 2024 (see §3.3 above for the exact P0 string).
+**The three prompts on the §3 respondent**:
 
-P2 must be in the sweep — Wang et al. 2025 is the only paper in the persona-simulation literature with a **direct head-to-head ablation** of prompt format (3 role-adoption × 3 priming strategies × 5 LLMs × 15 demographic groups × 100 OpinionQA items). Their winner was interview Q&A with name-based priming; this is the strongest empirical signal in the field on prompt-form design.
+P0 appears in §3.3 above. P1 (Argyle):
 
-P1 fills a **genuine literature gap**. Argyle 2023 uses 1st-person prose; Park / Hu / Bisbee / our baseline use 2nd person; no paper has compared them head-to-head on a survey-prediction task. Including P1 turns the sweep into a clean 2×2 (voice × structure) that lets us decompose where any improvement comes from.
-
-**Why not include further variants** (already considered and excluded):
-
-- **Plain chain-of-thought (CoT)**: Sun et al. 2025 ("PB&J: Improving LLM Personas via Rationalization with Psychological Scaffolds", arXiv:2504.17993) show that on OpinionQA with GPT-4, demographics+judgments+CoT achieves 49.17% vs. demographics+judgments alone at 49.63% — i.e., **zero gain from CoT** on this task family.
-- **Variable reordering / re-paragraphing within bins**: Hu & Collier 2024 (*ACL 2024*) report "little variation" from reorder / reparagraph ablations on a similar task.
-- **PB&J scaffolded rationale**: Sun 2025 shows +4.8 pp on OpinionQA, the strongest single intervention in the literature, but requires an additional LLM pre-pass per respondent to generate the rationale. Excluded under simplicity — better evaluated as a Phase 2 question.
-- **Remove "GSS" brand name** (Salecha et al. 2024): a single-knob ablation testing whether naming a recognizable instrument inflates social-desirability bias. Excluded under simplicity unless a fourth slot is wanted.
-
-**Example — what the three prompts look like for the §3 example respondent**.
-
-P0 baseline appears verbatim in §3.3 above.
-
-P1 Argyle 1st-person prose:
 ```
 I am a respondent of the 2024 General Social Survey. Below is who I am, organized
 by topic. I will answer further survey questions in character, in the exact format
@@ -551,11 +441,11 @@ refuse, or break character.
 
 ## ABOUT ME — DEMOGRAPHICS
 I am 24 years old. I am female. I am white. I have never been married. I have a
-Bachelor's degree. My total family income is between $75,000 and $89,999. ...
+Bachelor's degree. My total family income is between $75,000 and $89,999. …
 
 ## ABOUT ME — BEHAVIORS
 I attend religious services less than once a year. I voted for Biden in 2020. I
-work full-time, 55 hours per week. I watch about 2 hours of TV per day. ...
+work full-time, 55 hours per week. …
 
 ## ABOUT ME — PSYCHOLOGICAL DISPOSITIONS
 I am very happy in general. I find life exciting. I am very satisfied with my
@@ -565,7 +455,8 @@ work. My health is good.
 [1st-person clauses for the 33 substantive attitudinal responses ...]
 ```
 
-P2 Wang interview Q&A:
+P2 (Wang interview Q&A):
+
 ```
 The following is an interview transcript with a respondent of the 2024 General
 Social Survey. The respondent answered questions about themselves, their
@@ -584,89 +475,73 @@ Interviewer: What is your race?
 Respondent: White.
 Interviewer: What is your marital status?
 Respondent: I have never been married.
-...
+…
 
 ## BEHAVIORS
 Interviewer: How often do you attend religious services?
 Respondent: Less than once a year.
-...
+…
 ```
 
-All three preserve the 4-bin structure (so the 4-bin LOO is implementable on each), preserve per-item exclusion for AUDIT-D (so the sensitivity_eval per-item hold-out is implementable on each), and produce the same target output format at item-question time.
+All three preserve the 4-bin structure (LOO works on each), preserve per-item exclusion for AUDIT-D, and produce the same single-integer output format at item time.
 
-### 5.3 A3 — How the sweep picks a winner
+### 5.3 §12.2's joint selection rule
 
-For each candidate prompt, compute the respondent-macro Likert MAE on the 200 sweep respondents averaged across the 4 cheap models. The candidate with the lowest MAE wins.
+For each of the 12 panel cells, compute the respondent-macro Likert MAE on `[0:100]`. argmin MAE among DQ-passers wins. If two cells are within 5% of best MAE, tiebreak on cost; if both quality and cost tie within 1%, default to Qwen × P0 (the named fallback from OSF v1). The selected cell's MAE on `[100:200]` is reported alongside the Phase 1B headline.
 
-If the top-2 candidates fall within 5% of the best MAE (i.e., the difference is in noise range), the winner defaults to P0 baseline. The 5% window matches the §12.2 model-selection tiebreak window in OSF v1 — same rule applied at the prompt level.
+MAE is used (not Park's normalized accuracy) because GSS 2024 has no test-retest baseline to normalize against; OSF v1 §10 already locks raw MAE as the headline metric.
 
-**Why MAE and not Park's normalized accuracy**. Park et al. 2024 use normalized accuracy, where the denominator is a 2-week test-retest baseline. GSS 2024 has no recontact and no normalized denominator. OSF v1 §10 already locks raw MAE as the headline metric and explicitly does not directly compare to Park's normalized numbers; the GPT-4o anchor reports per-item raw accuracy side-by-side with Park's SI Table 3 only as a separate sensitivity-analysis comparator. The sweep must use the same metric as the headline.
+### 5.4 Random-arm sample size and allocation
 
-### 5.4 C1 — Random-model arm sample size and source
+**Decision**: N=200 in `[200:400]`, strict 50/50/50/50 model assignment by seed=42 hash, all 3 prompts tested under each respondent's assigned model.
 
-**Decision**: N=200 independent respondents drawn from GSS 2024 seed=42 indices `[400:600]`. Each respondent runs under the locked sweep-winner prompt with **one** of the four cheap models (assigned deterministically by seed=42 hash, strict 50/50/50/50 balance — see §5.5).
-
-Alternatives:
-
-| Option | Cost | Per-model N | Verdict |
+| Alternative | Cost | Per-(model, prompt) N | Verdict |
 |---|---|---|---|
-| Same 200 respondents as panel; randomly select one of 4 model results per respondent post-hoc | $0 | 50 | rejected — not a valid between-respondent design; the panel respondents *did* see all four models, so the "what if they had only seen one?" counterfactual cannot be reconstructed |
-| **Independent N=200 in [400:600]** | ~$5 | 50 | **selected** |
-| Independent N=100 in [400:500] | ~$2.50 | 25 | rejected — per-model N too small for stable per-model MAE comparison |
-| Independent N=400 | ~$10 | 100 | rejected — marginal power gain over N=200 not worth doubling the carve-out from Phase 1B |
+| Post-hoc subsample of panel | $0 | ~50 (not a real between-respondent design) | rejected |
+| **N=200 in [200:400]** | ~$13 | 50 | **selected** |
+| N=100 in [200:300] | ~$7 | 25 | rejected — too noisy |
+| N=400 | ~$27 | 100 | rejected — doubles the Phase 1B carve-out |
 
-### 5.5 C2 — Random-arm allocation
-
-**Decision**: strict 50/50/50/50 allocation across the 4 cheap models via deterministic seed=42 hash on respondent_id.
-
-Alternative considered: true random (each respondent independently draws one of 4 models uniformly), which yields slightly unbalanced cell sizes (e.g., 47/51/50/52). The strict-balance design has tighter and more comparable per-model CIs, which is the relevant goal here — we are estimating "what does the Phase 1B-mode performance look like when each respondent sees only one model", and balanced cells maximize the power of the cross-arm ranking comparison. The "true random" framing would add the strict random-assignment interpretation usually invoked for causal claims, but the arm's role here is sensitivity, not a randomized trial.
+Strict balance (rather than true random assignment) is chosen because the goal is tight per-cell CIs for the cross-arm comparison, not a randomized causal trial.
 
 ---
 
-## 6. Updated budget
+## 6. Budget
 
-| Sub-phase | Operation | OSF v1 | Proposed | Δ |
-|---|---|---|---|---|
-| Smoke | N=10 cheap × primary (plumbing) | ~$1 | ~$1 | 0 |
-| **Prompt sweep (NEW)** | N=200 × 3 prompts × 4 models × 12 items | — | ~$12 | +12 |
-| Phase 1a cheap panel | N=200 × 4 cheap × primary | ~$17 | ~$17 | 0 |
-| **Random-model arm (NEW)** | N=200 × 1 model × 5 conditions × 12 items | — | ~$5 | +5 |
-| GPT-4o anchor | N=100 × primary + sensitivity × n=2 | ~$148 | ~$148 | 0 |
-| Phase 1b cheap (single selected model) | N=3,309 → N=2,909 | ~$71 | ~$62 | −9 |
-| **Core Phase 1 subtotal (pre-Battery LOO)** | | **~$237** | **~$245** | **+8** |
-| Battery LOO co-primary | 34 batteries × 12 items × N (scales with Phase 1B N) | ~$481 | ~$423 (proportional) | −58 |
-| Shapley 16-condition extension | 11 conditions × 12 items × N=200 × 4 cheap | ~$38 | ~$38 | 0 |
-| **Total Phase 1** | | **~$756** | **~$706** | **−50** |
-
-Phase 1A net add ~$17 (sweep $12 + random arm $5); Phase 1B and Battery LOO both scale down with N=2,909. Total Phase 1 budget actually decreases by ~$50.
+| Item | OSF v1 | Proposed | Δ |
+|---|---|---|---|
+| Smoke (N=10 plumbing check) | $1 | $1 | 0 |
+| **Phase 1a panel (NEW: 3 prompts)** | $17 | $51 | +34 |
+| **Random-model arm (NEW)** | — | $13 | +13 |
+| GPT-4o anchor (P0 only) | $148 | $148 | 0 |
+| Phase 1b cheap (N=3,309 → 3,109) | $71 | $67 | −4 |
+| **Subtotal (pre-Battery LOO)** | **$237** | **$280** | **+43** |
+| Battery LOO (scales with N) | $481 | $452 | −29 |
+| Shapley 16-condition | $38 | $38 | 0 |
+| **Total Phase 1** | **$756** | **$770** | **+14** |
 
 ---
 
 ## 7. Questions for your review
 
-1. **Sweep candidates (§5.2)**: are P0 + P1 + P2 the right three to test? Specifically, do you want me to add a fourth candidate — Salecha-style brand-name removal (cheapest add) or PB&J psychological scaffold (most empirically supported but adds a pre-pass)?
-
-2. **Random-model arm size (§5.4)**: is N=200 (50 per model) the right size? If you would prefer a more powered arm (N=400, ~$10, 100 per model) so the cross-design ranking comparison can hit tighter CIs, that is easy to add now and only reduces Phase 1B to N=2,709.
-
-3. **Sweep cohort size (§2.1, §5.1)**: I have proposed N=200 sized to detect ~5% MAE differences between prompts (matching §12.2's tiebreak window). A compromise of N=100 (detects ~7% differences, saves ~$6 on the sweep, gives Phase 1B 100 more respondents) is the obvious middle option if N=200 feels excessive. Let me know if you would prefer N=100 instead.
-
-4. **End-to-end example (§3)**: is the level of concreteness here the right pitch, or would you like more / less detail on any block? I can extend the example to show one specific LLM call (system message + user message + actual model output + score) if it helps.
-
-5. **Disqualification framework (§4)**: does the variance-ratio DQ-3 rule address what you had in mind when you suggested checking the disqualification logic more carefully, or were you pointing at a different dimension (thresholds, all-DQ-fail handling, or metric design)?
-
-6. Anything else from the 5/13 meeting that I have under-weighted or misrepresented here.
+1. **Joint (model, prompt) selection (§2.5, §5.3)**: comfortable with §12.2 generalized from "best model" to "best cell"? The rule structure is unchanged from OSF v1; only the domain expands from 4 to 12 cells.
+2. **Prompt candidates (§5.2)**: are P0 + P1 + P2 the right three? Specifically, want a 4th candidate (Salecha brand-name removal or PB&J scaffold)?
+3. **Random-arm size (§5.4)**: is N=200 right, or do you want N=400 for tighter per-cell CIs (at the cost of Phase 1B dropping to N=2,909)?
+4. **End-to-end example (§3)**: right pitch of concreteness, or would you like a fully worked single-call example (system message + user message + actual model output + score)?
+5. **Disqualification framework (§4)**: does the per-cell variance-ratio DQ-3 rule address what you had in mind, or were you pointing at a different dimension (thresholds, all-DQ-fail handling, metric design)?
+6. Anything else from the 5/13 meeting I have under-weighted.
 
 ---
 
 ## 8. Supporting materials
 
-- **This brief** (the file you are reading): `Project Brief — Phase 1A Updates 2026-05-15.md`
-- **Working branch**: `github.com/Joyceqx/gsbgen390-persona-pipeline/tree/mohsen-redesign`
-- **Snapshot tag** (rollback point before this round): `pre-mohsen-redesign-2026-05-13`
-- **Literature review supporting the prompt sweep candidates** (Park v2 + Argyle 2023 + Wang 2025 + PB&J 2025 + Hu & Collier 2024 + Bisbee 2024 + Salecha 2024 + Aher 2023 + Horton 2023): `lit_review_prompt_variants_2026-05-15.md` on the branch
-- **Original OSF brief** (for cross-reference): `Project Brief for Professor Bayati.md` (the unmodified 2026-05-10 version)
-- **OSF v1 draft** (lives on the branch unchanged for now): `osf_preregistration_v1.md`
+- This brief: `Project Brief — Phase 1A Updates 2026-05-15.md`
+- Working branch: `github.com/Joyceqx/gsbgen390-persona-pipeline/tree/mohsen-redesign`
+- Snapshot tag (rollback point): `pre-mohsen-redesign-2026-05-13`
+- Supporting literature review (Park v2, Argyle 2023, Wang 2025, Sun 2025, Hu & Collier 2024, Bisbee 2024, Salecha 2024, Aher 2023, Horton 2023): `lit_review_prompt_variants_2026-05-15.md` on the branch
+- Original 5/10 OSF brief (cross-reference): `Project Brief for Professor Bayati.md`
+- OSF v1 draft: `osf_preregistration_v1.md`
 
 ---
 
-*Document prepared 2026-05-15 in support of Phase 1A design updates following the 5/13 advisor meeting. Author: Joyce Yu; advisor: Professor Mohsen Bayati.*
+*Joyce Yu, GSBGEN390 thesis-track research, Stanford GSB Spring 2026.*
