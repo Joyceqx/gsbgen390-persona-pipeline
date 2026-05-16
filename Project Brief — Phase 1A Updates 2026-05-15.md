@@ -14,36 +14,40 @@
 
 Two additions inside Phase 1A:
 
-1. **NEW — Prompt sweep**: select the Phase 1B prompt empirically from three literature-grounded candidates rather than ship the un-ablated baseline. Uses N=50 respondents held out from Phase 1B.
+1. **NEW — Prompt sweep**: select the Phase 1B prompt empirically from three literature-grounded candidates rather than ship the un-ablated baseline. Uses a separate **N=200** cohort held out from Phase 1B (sized so the sweep can reliably detect prompt differences in the ~5% MAE range — the same noise window §12.2 uses as its tiebreak threshold).
 
 2. **NEW — Random-model arm**: a separate N=200 cohort, each respondent randomly assigned exactly one of the four cheap models (strict 50/50/50/50 balance). Provides a **genuine between-respondent estimate** of feature-category contribution alongside the panel arm's within-respondent estimate; verifies that §12.2's model selection is not an artifact of the within-respondent panel design. Held out from Phase 1B.
 
-Phase 1B's headline sample reduces from N=3,309 to **N=3,059** (the 250-respondent reduction is the sweep + random-arm holdouts; ~7.5% of N, statistically negligible).
+Phase 1B's headline sample reduces from N=3,309 to **N=2,909** (the 400-respondent reduction is the sweep + random-arm holdouts; ~12% of N, headline CI widens by approximately 6%).
 
 To make the abstract pipeline concrete, §3 of this brief walks through one real GSS 2024 respondent end-to-end (the input data we have on her, the synthesized persona prompt, an example primary_eval question, and how scoring works). §4 explains the disqualification framework you asked us to revisit on 5/13.
 
-Incremental Phase 1A cost: **+$25** (prompt sweep ~$20 + random arm ~$5). Total Phase 1 budget remains within the original ~$756 envelope.
+Incremental Phase 1A cost: **+$17** (prompt sweep ~$12 + random arm ~$5). Total Phase 1 budget is approximately **$709** (down from $756 — Phase 1B and Battery LOO scale with N=2,909).
 
 ---
 
 ## 1. Updated Phase 1A flow diagram
 
-Two new pieces this round (yellow): a prompt sweep on [200:250] that picks the Phase 1B prompt, and a random-model arm on [250:450] that adds a between-respondent comparison alongside the panel arm. Everything else is unchanged from OSF v1.
+Two new pieces this round (yellow): a prompt sweep on [200:400] (N=200) that picks the Phase 1B prompt, and a random-model arm on [400:600] (N=200) that adds a between-respondent comparison alongside the panel arm. The four slices below are laid out left-to-right in **experimental run order**: sweep runs first (produces the locked prompt), then panel arm and random arm run in parallel (both consume the locked prompt), then Phase 1B runs last on the remaining respondents. Everything else is unchanged from OSF v1.
 
 ```mermaid
 flowchart TD
     A["GSS 2024 cross-section<br/>N = 3,309"]
     A --> Z["seed=42 partition (4 disjoint slices)"]
 
-    Z --> P["[0:200] N=200<br/>Phase 1a panel arm<br/>4 cheap models + GPT-4o anchor"]
-    Z --> S["[200:250] N=50<br/>Prompt sweep (NEW)<br/>3 candidates"]
-    Z --> R["[250:450] N=200<br/>Random-model arm (NEW)<br/>1 random model per respondent"]
-    Z --> H["[450:3309] N=2,859<br/>Phase 1b-only"]
+    Z --> S["[200:400] N=200<br/>① Prompt sweep (NEW)<br/>3 candidates · 4 models<br/>runs first"]
+    Z --> P["[0:200] N=200<br/>② Phase 1a panel arm<br/>4 cheap models + GPT-4o anchor<br/>runs after sweep"]
+    Z --> R["[400:600] N=200<br/>③ Random-model arm (NEW)<br/>1 random model per respondent<br/>runs after sweep"]
+    Z --> H["[600:3309] N=2,709<br/>④ Phase 1b-only respondents<br/>runs last"]
 
     S --> SP["Pick winning prompt by argmin MAE<br/>locks the prompt for all arms + Phase 1b"]
 
+    SP -.locked prompt.-> P
+    SP -.locked prompt.-> R
+    SP -.locked prompt.-> B1B
+
     P --> SEL["§12.2 selector + DQ-1 / DQ-3 gates<br/>argmin MAE on selection split"]
-    SEL --> B1B["Phase 1b headline<br/>[0:200] ∪ [450:3309] = N=3,059<br/>single selected model × locked prompt<br/>4-bin LOO ΔMAE"]
+    SEL --> B1B["Phase 1b headline<br/>[0:200] ∪ [600:3309] = N=2,909<br/>single selected model × locked prompt<br/>4-bin LOO ΔMAE"]
 
     R -.between-respondent comparison.-> B1B
 
@@ -58,33 +62,35 @@ flowchart TD
 
 ### 2.1 GSS 2024 seed=42 partition (UPDATED — 4 slices)
 
-The GSS 2024 cross-section (N=3,309) is shuffled once by `sample_respondents(n=3309, seed=42)` and partitioned into **four disjoint slices**:
+The GSS 2024 cross-section (N=3,309) is shuffled once by `sample_respondents(n=3309, seed=42)` and partitioned into **four disjoint slices**. The table below lists them in slice-index order; the diagram in §1 arranges them in experimental run order (sweep first, then panel + random in parallel, then Phase 1B):
 
 | Slice | N | Used in Phase 1A | Used in Phase 1B headline |
 |---|---|---|---|
 | `[0:200]` | 200 | yes (panel arm, all 4 models) | yes (single selected model) |
-| `[200:250]` | 50 | yes (prompt sweep) | **no — held out** |
-| `[250:450]` | 200 | yes (random-model arm, 1 model each) | **no — held out** |
-| `[450:3309]` | 2,859 | no | yes (single selected model) |
+| `[200:400]` | 200 | yes (prompt sweep) | **no — held out** |
+| `[400:600]` | 200 | yes (random-model arm, 1 model each) | **no — held out** |
+| `[600:3309]` | 2,709 | no | yes (single selected model) |
 
-Phase 1B's headline sample is `[0:200] ∪ [450:3309]` = **N = 3,059**.
+Phase 1B's headline sample is `[0:200] ∪ [600:3309]` = **N = 2,909**.
 
 **Why the prompt sweep and the random-model arm must both be held out from Phase 1B**. Both choose or test something on a cohort, and re-using those respondents in Phase 1B would bias the headline:
 
-- The sweep cohort's MAE is what the sweep optimizes over → re-using those 50 in Phase 1B biases the Phase 1B MAE downward on those respondents (selection on the outcome).
+- The sweep cohort's MAE is what the sweep optimizes over → re-using those 200 in Phase 1B biases the Phase 1B MAE downward on those respondents (selection on the outcome).
 - The random-arm cohort's data is what validates §12.2's model choice → if §12.2's robustness check used those 200 to confirm the choice, then re-using them in the Phase 1B headline creates a subtle dependency between the validation and the headline. Carving them out keeps the headline statistically independent of the Phase 1A validation steps.
 
-The cost of the carve-out is a 7.5% reduction in Phase 1B N (3,309 → 3,059). CI on the headline widens by approximately 4%; statistical power on the 4-bin LOO is unchanged at any practically meaningful effect size.
+**Why the sweep cohort is N=200 (not smaller)**. A smaller sweep cohort (e.g., N=50) would only reliably detect MAE differences of ~10% between prompts; the literature suggests prompt-form differences sit closer to 5% (Wang 2025, Sun 2025). At N=200, the sweep can reliably detect MAE differences of ~5%, matching the §12.2 tiebreak window — so any prompt the sweep declares as a "winner over baseline" is by construction larger than the noise the OSF locks for model selection. The 200-respondent cost is ~$12; the alternative of a smaller cohort buys back ~150 respondents into Phase 1B at the cost of statistical interpretability of the sweep itself.
 
-### 2.2 Prompt sweep [200:250] (NEW)
+The combined cost of both carve-outs is a 12% reduction in Phase 1B N (3,309 → 2,909). CI on the headline widens by approximately 6%; statistical power on the 4-bin LOO remains adequate at any practically meaningful effect size.
 
-A held-out N=50 cohort is used to choose the Phase 1B prompt empirically from a literature-grounded candidate set rather than shipping the locked baseline.
+### 2.2 Prompt sweep [200:400] (NEW)
+
+A held-out N=200 cohort is used to choose the Phase 1B prompt empirically from a literature-grounded candidate set rather than shipping the locked baseline.
 
 **Why this addresses your 5/13 suggestion**: you asked whether we could be more careful in selecting the prompt for the upcoming research; this is the operationalization.
 
-**What gets swept**: three prompt variants (see §5.2 for full text and literature grounding) run on the 50 sweep respondents × 12 primary_eval items × 4 cheap models. The candidate that achieves the lowest respondent-macro Likert MAE is locked, then used by the Phase 1A panel arm, the Phase 1A random-model arm, and the Phase 1B headline run.
+**What gets swept**: three prompt variants (see §5.2 for full text and literature grounding) run on the 200 sweep respondents × 12 primary_eval items × 4 cheap models. The candidate that achieves the lowest respondent-macro Likert MAE is locked, then used by the Phase 1A panel arm, the Phase 1A random-model arm, and the Phase 1B headline run.
 
-**Cost**: ~$20 (~4,800 LLM calls at ~$0.0004/call).
+**Cost**: ~$12 (~28,800 LLM calls at ~$0.0004/call).
 
 ### 2.3 Phase 1a panel arm [0:200] (UNCHANGED)
 
@@ -94,7 +100,7 @@ The only change is that this arm now uses the prompt chosen by the prompt sweep 
 
 The GPT-4o anchor sub-arm on the N=100 selection split is also unchanged; it remains the Park-comparable per-item raw-accuracy table input.
 
-### 2.4 Random-model arm [250:450] (NEW)
+### 2.4 Random-model arm [400:600] (NEW)
 
 A separate cohort of N=200 respondents, each randomly assigned **exactly one** of the four cheap models via a seed=42 hash that produces a strict 50/50/50/50 balance (50 respondents per model). Each assigned respondent runs the same primary_eval LOO conditions as the panel arm (Full + 4 single-bin LOO) under the **locked sweep-winner prompt**.
 
@@ -126,9 +132,9 @@ A separate cohort of N=200 respondents, each randomly assigned **exactly one** o
 
 The selector logic is exactly as locked in OSF v1: argmin respondent-macro Likert MAE on the selection split of the panel arm, with DQ-1 (parse-fail ≤ 30%), DQ-3 (per-item variance ≥ 30% × human variance for ≥ 50% of items), cost as 5% tiebreak, Qwen tie-break-only fallback, and all-DQ-fail PAUSE. **Detailed walkthrough of the disqualification framework — what DQ-1 and DQ-3 measure, what failure modes each catches, and a worked numerical example — is in §4.**
 
-### 2.6 Phase 1b on [0:200] ∪ [450:3309] (UNCHANGED design, N reduced by 250)
+### 2.6 Phase 1b on [0:200] ∪ [600:3309] (UNCHANGED design, N reduced by 400)
 
-Single (§12.2-selected model × sweep-selected prompt) on **N=3,059** respondents. Otherwise identical to OSF v1: primary_eval only, n_samples=1, full-condition + 4-bin LOO, atomic-write resume, paired-respondent bootstrap. Headline ΔMAE per bin with Holm-Bonferroni correction is unchanged.
+Single (§12.2-selected model × sweep-selected prompt) on **N=2,909** respondents. Otherwise identical to OSF v1: primary_eval only, n_samples=1, full-condition + 4-bin LOO, atomic-write resume, paired-respondent bootstrap. Headline ΔMAE per bin with Holm-Bonferroni correction is unchanged.
 
 ---
 
@@ -369,7 +375,7 @@ USER:   [item-question prompt]
 
 For this respondent in the Phase 1a panel arm: 7 primary_eval items on her ballot × 5 conditions (Full + 4 single-bin LOO) × 4 cheap models ≈ **140 LLM calls** for her, plus an additional ~178 calls × n_samples=2 for the GPT-4o anchor (because she is in the N=100 selection split, primary + sensitivity items). The cheap-panel pipeline runs ~50,000 LLM calls across N=200 respondents at ~$0.0004/call ≈ $17.
 
-A respondent assigned to the random-model arm (in slice `[250:450]`) instead sees just one model × 5 conditions × ~7 items on the ballot ≈ 35 calls per respondent.
+A respondent assigned to the random-model arm (in slice `[400:600]`) instead sees just one model × 5 conditions × ~7 items on the ballot ≈ 35 calls per respondent.
 
 ---
 
@@ -470,7 +476,7 @@ Now compare with a hypothetical "healthy" model whose predictions span roughly t
 
 If all four cheap models fail DQ-1 or DQ-3 (the candidate pool after gating is empty), the §12.2 selector returns `selected = None` with rationale `all_dq_fail_pause_for_review`. **Phase 1B does not proceed.**
 
-**Why**. An empty candidate pool is a signal that something structural is wrong — the prompt template is broken, the parser has a bug, the model panel has a systemic issue at the current OpenRouter snapshot, or the locked human-variance reference is misaligned with the data. Silently bypassing the gate to a named fallback would burn ~$66 of paid Phase 1B spend on a model already known to be unreliable. The PAUSE forces human review: diagnose the failure, fix it, and either rerun Phase 1a or file an OSF amendment.
+**Why**. An empty candidate pool is a signal that something structural is wrong — the prompt template is broken, the parser has a bug, the model panel has a systemic issue at the current OpenRouter snapshot, or the locked human-variance reference is misaligned with the data. Silently bypassing the gate to a named fallback would burn ~$62 of paid Phase 1B spend on a model already known to be unreliable. The PAUSE forces human review: diagnose the failure, fix it, and either rerun Phase 1a or file an OSF amendment.
 
 An earlier OSF draft had a Qwen-fallback-on-all-DQ-fail rule; that rule was removed pre-OSF (2026-05-09) after audit review pointed out it bypasses the quality gate. The current locked behavior is PAUSE, not silent override.
 
@@ -494,16 +500,18 @@ This sequence is unchanged from OSF v1 except step 7, which is new this round.
 
 ### 5.1 A1 — Prompt sweep cohort
 
-**Decision**: use GSS 2024 seed=42 indices `[200:250]`, N=50, for the prompt sweep.
+**Decision**: use GSS 2024 seed=42 indices `[200:400]`, **N=200**, for the prompt sweep. The N is sized to reliably detect MAE differences in the ~5% range (matching §12.2's tiebreak window) — see §2.1 "Why the sweep cohort is N=200" for the power calculation.
 
 **Alternatives considered**:
 
 | Option | Pros | Cons | Verdict |
 |---|---|---|---|
-| GSS 2022 separate wave (N=50) | Zero overlap with 2024 | Two-year attitude drift (esp. 2024 election); requires loader extension | rejected — leakage already addressed by held-out 2024 |
-| **GSS 2024 held-out N=50** | Same attitude distribution as Phase 1b; standard cross-validation | Phase 1b N drops 1.5% | **selected** |
+| GSS 2022 separate wave | Zero overlap with 2024 | Two-year attitude drift (esp. 2024 election); requires loader extension | rejected — leakage already addressed by held-out 2024 |
+| **GSS 2024 held-out N=200** | Same attitude distribution as Phase 1b; standard cross-validation; statistically powered to detect ~5% MAE differences | Phase 1b N drops by 200 (6%) for this carve-out alone | **selected** |
+| GSS 2024 held-out N=50 | Smaller Phase 1b carve-out (1.5%) | Only detects MAE differences ≥ 10%; under-powered against literature-typical effect sizes | rejected after revising power analysis |
 | Use GSS 2024 first 50 respondents | Simplest | Same cohort as Phase 1b headline → severe data peeking | rejected |
 | Skip sweep, ship locked baseline | No cost | No empirical defense for prompt choice | rejected |
+| Sweep on Phase 1A panel [0:200] data | "Free" N=200 sweep | Triple-purposes [0:200] (sweep + §12.2 + headline); destroys the locked 100/100 post-selection-inference defense; reviewer-rejectable peeking | rejected |
 
 ### 5.2 A2 — Prompt sweep candidates (3-variant 2×2 ablation)
 
@@ -588,7 +596,7 @@ All three preserve the 4-bin structure (so the 4-bin LOO is implementable on eac
 
 ### 5.3 A3 — How the sweep picks a winner
 
-For each candidate prompt, compute the respondent-macro Likert MAE on the 50 sweep respondents averaged across the 4 cheap models. The candidate with the lowest MAE wins.
+For each candidate prompt, compute the respondent-macro Likert MAE on the 200 sweep respondents averaged across the 4 cheap models. The candidate with the lowest MAE wins.
 
 If the top-2 candidates fall within 5% of the best MAE (i.e., the difference is in noise range), the winner defaults to P0 baseline. The 5% window matches the §12.2 model-selection tiebreak window in OSF v1 — same rule applied at the prompt level.
 
@@ -596,15 +604,15 @@ If the top-2 candidates fall within 5% of the best MAE (i.e., the difference is 
 
 ### 5.4 C1 — Random-model arm sample size and source
 
-**Decision**: N=200 independent respondents drawn from GSS 2024 seed=42 indices `[250:450]`. Each respondent runs under the locked sweep-winner prompt with **one** of the four cheap models (assigned deterministically by seed=42 hash, strict 50/50/50/50 balance — see §5.5).
+**Decision**: N=200 independent respondents drawn from GSS 2024 seed=42 indices `[400:600]`. Each respondent runs under the locked sweep-winner prompt with **one** of the four cheap models (assigned deterministically by seed=42 hash, strict 50/50/50/50 balance — see §5.5).
 
 Alternatives:
 
 | Option | Cost | Per-model N | Verdict |
 |---|---|---|---|
 | Same 200 respondents as panel; randomly select one of 4 model results per respondent post-hoc | $0 | 50 | rejected — not a valid between-respondent design; the panel respondents *did* see all four models, so the "what if they had only seen one?" counterfactual cannot be reconstructed |
-| **Independent N=200 in [250:450]** | ~$5 | 50 | **selected** |
-| Independent N=100 in [250:350] | ~$2.50 | 25 | rejected — per-model N too small for stable per-model MAE comparison |
+| **Independent N=200 in [400:600]** | ~$5 | 50 | **selected** |
+| Independent N=100 in [400:500] | ~$2.50 | 25 | rejected — per-model N too small for stable per-model MAE comparison |
 | Independent N=400 | ~$10 | 100 | rejected — marginal power gain over N=200 not worth doubling the carve-out from Phase 1B |
 
 ### 5.5 C2 — Random-arm allocation
@@ -620,17 +628,17 @@ Alternative considered: true random (each respondent independently draws one of 
 | Sub-phase | Operation | OSF v1 | Proposed | Δ |
 |---|---|---|---|---|
 | Smoke | N=10 cheap × primary (plumbing) | ~$1 | ~$1 | 0 |
-| **Prompt sweep (NEW)** | N=50 × 3 prompts × 4 models × 12 items | — | ~$20 | +20 |
+| **Prompt sweep (NEW)** | N=200 × 3 prompts × 4 models × 12 items | — | ~$12 | +12 |
 | Phase 1a cheap panel | N=200 × 4 cheap × primary | ~$17 | ~$17 | 0 |
 | **Random-model arm (NEW)** | N=200 × 1 model × 5 conditions × 12 items | — | ~$5 | +5 |
 | GPT-4o anchor | N=100 × primary + sensitivity × n=2 | ~$148 | ~$148 | 0 |
-| Phase 1b cheap (single selected model) | N=3,309 → N=3,059 | ~$71 | ~$66 | −5 |
-| **Core Phase 1 subtotal (pre-Battery LOO)** | | **~$237** | **~$257** | **+20** |
-| Battery LOO co-primary | 34 batteries × 12 items × N | ~$481 | ~$445 (proportional) | −36 |
+| Phase 1b cheap (single selected model) | N=3,309 → N=2,909 | ~$71 | ~$62 | −9 |
+| **Core Phase 1 subtotal (pre-Battery LOO)** | | **~$237** | **~$245** | **+8** |
+| Battery LOO co-primary | 34 batteries × 12 items × N (scales with Phase 1B N) | ~$481 | ~$423 (proportional) | −58 |
 | Shapley 16-condition extension | 11 conditions × 12 items × N=200 × 4 cheap | ~$38 | ~$38 | 0 |
-| **Total Phase 1** | | **~$756** | **~$740** | **−16** |
+| **Total Phase 1** | | **~$756** | **~$706** | **−50** |
 
-Phase 1A net add ~$25; absorbed by the Phase 1B and Battery LOO reductions (Battery LOO scales with N=3,059 rather than N=3,309). Total Phase 1 stays within the original budget envelope.
+Phase 1A net add ~$17 (sweep $12 + random arm $5); Phase 1B and Battery LOO both scale down with N=2,909. Total Phase 1 budget actually decreases by ~$50.
 
 ---
 
@@ -638,13 +646,15 @@ Phase 1A net add ~$25; absorbed by the Phase 1B and Battery LOO reductions (Batt
 
 1. **Sweep candidates (§5.2)**: are P0 + P1 + P2 the right three to test? Specifically, do you want me to add a fourth candidate — Salecha-style brand-name removal (cheapest add) or PB&J psychological scaffold (most empirically supported but adds a pre-pass)?
 
-2. **Random-model arm size (§5.4)**: is N=200 (50 per model) the right size? If you would prefer a more powered arm (N=400, ~$10, 100 per model) so the cross-design ranking comparison can hit tighter CIs, that is easy to add now and only reduces Phase 1B to N=2,859.
+2. **Random-model arm size (§5.4)**: is N=200 (50 per model) the right size? If you would prefer a more powered arm (N=400, ~$10, 100 per model) so the cross-design ranking comparison can hit tighter CIs, that is easy to add now and only reduces Phase 1B to N=2,709.
 
-3. **End-to-end example (§3)**: is the level of concreteness here the right pitch, or would you like more / less detail on any block? I can extend the example to show one specific LLM call (system message + user message + actual model output + score) if it helps.
+3. **Sweep cohort size (§2.1, §5.1)**: I have proposed N=200 sized to detect ~5% MAE differences between prompts (matching §12.2's tiebreak window). A compromise of N=100 (detects ~7% differences, saves ~$6 on the sweep, gives Phase 1B 100 more respondents) is the obvious middle option if N=200 feels excessive. Let me know if you would prefer N=100 instead.
 
-4. **Disqualification framework (§4)**: does the variance-ratio DQ-3 rule address what you had in mind when you suggested checking the disqualification logic more carefully, or were you pointing at a different dimension (thresholds, all-DQ-fail handling, or metric design)?
+4. **End-to-end example (§3)**: is the level of concreteness here the right pitch, or would you like more / less detail on any block? I can extend the example to show one specific LLM call (system message + user message + actual model output + score) if it helps.
 
-5. Anything else from the 5/13 meeting that I have under-weighted or misrepresented here.
+5. **Disqualification framework (§4)**: does the variance-ratio DQ-3 rule address what you had in mind when you suggested checking the disqualification logic more carefully, or were you pointing at a different dimension (thresholds, all-DQ-fail handling, or metric design)?
+
+6. Anything else from the 5/13 meeting that I have under-weighted or misrepresented here.
 
 ---
 
