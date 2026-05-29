@@ -63,7 +63,12 @@ PANEL_MODELS = (
 )
 PROMPTS = ("P0", "P1", "P2")
 
-DQ1_PARSE_FAIL_MAX: float = 0.30
+# DQ-1 ceiling tightened 0.30 → 0.10 (locked 2026-05-29 Joyce decision per
+# Reviewer round-2 Q2): cheap LLMs in practice have parse_failure_rate < 5%
+# on this task. A cell at 30% is broken, not borderline. The previous 30%
+# was an overly generous safety net that left room for evasive cells to
+# slip through the conservative MAE metric.
+DQ1_PARSE_FAIL_MAX: float = 0.10
 DQ3_RELATIVE_VARIANCE_FLOOR: float = 0.30
 DQ3_PER_ITEM_FAIL_MAX: float = 0.50
 TIE_BREAK_QUALITY_PCT: float = 0.05
@@ -170,23 +175,43 @@ def _cell_dq3(
 def _cell_normalized_mae(
     cell_df: pd.DataFrame,
     item_ranges: dict[str, tuple[int, int]],
+    parse_fail_as_max: bool = True,
 ) -> float | None:
     """Respondent-macro mean of (per-item normalized abs_err) on the Full
     condition. Per-item normalization makes mixed-scale items (binary,
-    Likert-3/4/5/7) contribute on a common [0, 1] scale."""
-    full = cell_df[(cell_df["condition"] == "Full") & cell_df["parse_ok"]]
+    Likert-3/4/5/7) contribute on a common [0, 1] scale.
+
+    `parse_fail_as_max` (locked 2026-05-29 per Reviewer round-2 Q2):
+      - True  (DEFAULT, "conservative"): parse_fail rows count as
+        normalized_abs_err = 1.0 (maximum possible error). This is the
+        selector's PRIMARY metric. Without it, a cell that strategically
+        refuses to answer hard items can look better than a cell that
+        answers everything — the optimistic metric structurally rewards
+        evasion.
+      - False ("optimistic"): parse_fail rows are dropped. This is the
+        sensitivity / legacy metric, reported alongside the conservative
+        version so writeups can show readers how much of the headline
+        depends on the parse_fail policy.
+    """
+    full = cell_df[cell_df["condition"] == "Full"]
     if full.empty:
         return None
-    # Normalize each row's abs_err by its item's (max - min)
-    def _normalize(row):
-        rng = item_ranges.get(row["item"])
-        if rng is None:
+    range_map = {item: rng[1] - rng[0] for item, rng in item_ranges.items()}
+    full = full.copy()
+    full["_denom"] = full["item"].map(range_map)
+    full = full[full["_denom"] > 0]
+    if full.empty:
+        return None
+    if parse_fail_as_max:
+        # Conservative: parse_fail → 1.0; parse_ok → abs_err / denom.
+        ok_nae = full["abs_err"].astype("float") / full["_denom"].astype("float")
+        full["_nae"] = ok_nae.where(full["parse_ok"], 1.0)
+    else:
+        # Optimistic: drop parse_fail rows entirely.
+        full = full[full["parse_ok"]]
+        if full.empty:
             return None
-        denom = rng[1] - rng[0]
-        if denom <= 0 or row["abs_err"] is None:
-            return None
-        return row["abs_err"] / denom
-    full = full.assign(_nae=full.apply(_normalize, axis=1))
+        full["_nae"] = full["abs_err"].astype("float") / full["_denom"].astype("float")
     full = full.dropna(subset=["_nae"])
     if full.empty:
         return None
@@ -242,12 +267,15 @@ def select_phase1b_cell(
             "decision_log": ["No real-model rows in input parquet."],
         }
 
-    # Score each (model, prompt) cell
+    # Score each (model, prompt) cell. Both MAE versions are computed:
+    # `mae_conservative` (parse_fail → 1.0; PRIMARY) drives selection;
+    # `mae_optimistic` (parse_fail dropped) is the sensitivity report.
     for (model, prompt), cell_df in real.groupby(["model", "prompt"]):
         key = f"{model}|{prompt}"
         pf = _cell_parse_failure_rate(cell_df)
         dq3 = _cell_dq3(cell_df, human_variance_by_item)
-        mae = _cell_normalized_mae(cell_df, item_ranges)
+        mae_conservative = _cell_normalized_mae(cell_df, item_ranges, parse_fail_as_max=True)
+        mae_optimistic = _cell_normalized_mae(cell_df, item_ranges, parse_fail_as_max=False)
         cost_m = max(cost.get(model, 0.0), COST_FLOOR_USD)
         cost_score = cost_m * (1.0 + pf)
         dq1_pass = pf <= DQ1_PARSE_FAIL_MAX
@@ -259,7 +287,8 @@ def select_phase1b_cell(
             "dq3_per_item_fail_pct": dq3["fail_pct"],
             "dq3_n_items_failing": dq3["n_items_failing"],
             "dq3_per_item": dq3["per_item"],
-            "normalized_mae": round(mae, 4) if mae is not None else None,
+            "normalized_mae": round(mae_conservative, 4) if mae_conservative is not None else None,
+            "normalized_mae_optimistic": round(mae_optimistic, 4) if mae_optimistic is not None else None,
             "cost_per_call_usd": cost_m,
             "cost_score": round(cost_score, 8),
             "dq1_pass": dq1_pass,
@@ -268,7 +297,8 @@ def select_phase1b_cell(
         log.append(
             f"  [{model:<40} × {prompt}] pf={pf:.3f} "
             f"dq3_fail={dq3['fail_pct']:.2f} ({dq3['n_items_failing']}/{dq3['n_items']}) "
-            f"mae={f'{mae:.4f}' if mae is not None else 'NA'} "
+            f"mae_c={f'{mae_conservative:.4f}' if mae_conservative is not None else 'NA'} "
+            f"(opt {f'{mae_optimistic:.4f}' if mae_optimistic is not None else 'NA'}) "
             f"cost={cost_m:.2e} dq1={'OK' if dq1_pass else 'FAIL'} "
             f"dq3={'OK' if dq3['passes'] else 'FAIL'}"
         )
@@ -525,6 +555,76 @@ def _test_random_column_reporting() -> None:
     print("  [random_column_reporting] PASSED")
 
 
+def _test_parse_fail_conservative_vs_optimistic() -> None:
+    """The conservative metric (parse_fail → 1.0) must penalize a cell that
+    strategically parse_fails on hard items while the optimistic metric
+    (current behavior pre-2026-05-29) lets that cell off the hook.
+
+    Construct:
+      - qwen × P0: hits every item (MAE_optimistic = 0, MAE_conservative = 0).
+      - deepseek × P0: hits every item it answers (small MAE on answered),
+        but parse_fails 40% of the time on item P1 — far above the 10% DQ-1
+        ceiling, so the cell is disqualified entirely (so the conservative
+        winner is qwen × P0). This also exercises the DQ-1 tightening
+        (was 30% → now 10%): under the old 30% ceiling deepseek would
+        have survived DQ.
+    """
+    rows: list[dict] = []
+    for rid in range(20):
+        truths = {"P1": (rid % 5) + 1, "P2": (rid % 4) + 1, "P3": (rid % 7) + 1}
+        # qwen: perfect everywhere
+        for item, truth in truths.items():
+            rows.append({
+                "respondent_id": rid, "model": "qwen/qwen-2.5-72b-instruct",
+                "prompt": "P0", "condition": "Full", "item": item,
+                "true_code": truth, "pred_code": truth,
+                "parse_ok": True, "abs_err": 0, "sample_position": 1,
+            })
+        # deepseek: parse_fails on P1 for 40% of respondents (8/20).
+        # Note: deepseek's RAW parse_fail rate over all 60 deepseek rows is 8/60 = 13.3%,
+        # which is above the 10% DQ-1 ceiling. (Pre-2026-05-29 the ceiling was 30% so
+        # deepseek would have survived; the tightened ceiling now flags it.)
+        for item, truth in truths.items():
+            if item == "P1" and rid < 8:
+                rows.append({
+                    "respondent_id": rid, "model": "deepseek/deepseek-chat",
+                    "prompt": "P0", "condition": "Full", "item": item,
+                    "true_code": truth, "pred_code": None,
+                    "parse_ok": False, "abs_err": None, "sample_position": 1,
+                })
+            else:
+                rows.append({
+                    "respondent_id": rid, "model": "deepseek/deepseek-chat",
+                    "prompt": "P0", "condition": "Full", "item": item,
+                    "true_code": truth, "pred_code": truth,
+                    "parse_ok": True, "abs_err": 0, "sample_position": 1,
+                })
+    df = pd.DataFrame(rows)
+    item_ranges = {"P1": (1, 7), "P2": (1, 7), "P3": (1, 7)}
+    human_var = {"P1": 4.0, "P2": 4.0, "P3": 4.0}
+    out = select_phase1b_cell(df, item_ranges=item_ranges,
+                              human_variance_by_item=human_var)
+    deepseek = out["per_cell"]["deepseek/deepseek-chat|P0"]
+    qwen = out["per_cell"]["qwen/qwen-2.5-72b-instruct|P0"]
+    # DQ-1: deepseek's parse_failure_rate ≈ 0.133 > 0.10 → disqualified.
+    assert not deepseek["dq1_pass"], deepseek["parse_failure_rate"]
+    assert qwen["dq1_pass"], qwen["parse_failure_rate"]
+    # Conservative MAE penalizes deepseek (parse_fails count as 1.0):
+    # deepseek's MAE_conservative > 0; optimistic = 0.
+    assert deepseek["normalized_mae"] is not None and deepseek["normalized_mae"] > 0, deepseek
+    assert deepseek["normalized_mae_optimistic"] == 0.0, deepseek
+    # Selector picks qwen × P0 (deepseek DQ'd out).
+    assert out["selected_cell"] == {
+        "model": "qwen/qwen-2.5-72b-instruct", "prompt": "P0",
+    }, out["selected_cell"]
+    print(
+        f"  [parse_fail_conservative_vs_optimistic] PASSED "
+        f"(deepseek mae_conservative={deepseek['normalized_mae']:.4f}, "
+        f"mae_optimistic={deepseek['normalized_mae_optimistic']}, "
+        f"DQ-1 flag={deepseek['parse_failure_rate']:.3f} > 0.10)"
+    )
+
+
 def run_self_tests() -> int:
     print("§7 joint-cell selector self-tests")
     _test_argmin_mae()
@@ -533,7 +633,8 @@ def run_self_tests() -> int:
     _test_tie_break_cost()
     _test_fallback_qwen_p0_tie()
     _test_random_column_reporting()
-    print("✓ ALL 6 SELF-TESTS PASSED")
+    _test_parse_fail_conservative_vs_optimistic()
+    print("✓ ALL 7 SELF-TESTS PASSED")
     return 0
 
 
