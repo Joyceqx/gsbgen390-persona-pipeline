@@ -142,22 +142,55 @@ Bayati's requested format (2026-05-28). The Phase 1A run produces both a summary
 
 Stored at `outputs/phase1a_summary_table.{csv,parquet}` after the §12.2 selector runs.
 
-### 6.2 Raw long-format database — ~96,000 rows
+### 6.2 Raw long-format database — ~120,000 rows
 
-| respondent_id | model | prompt | condition | item | true_code | pred_code | parse_ok | abs_err | sample_position |
-|---|---|---|---|---|---|---|---|---|---|
-| 0 | Qwen | P0 | Full | POLVIEWS | 3 | 3 | true | 0 | 1 |
-| 0 | Qwen | P0 | drop_demographic | POLVIEWS | 3 | 2 | true | 1 | 1 |
-| 0 | Qwen | P0 | Full | PARTYID | 1 | 1 | true | 0 | 1 |
-| ... | | | | | | | | | |
+Schema (14 columns):
 
-Volume: 200 respondents × 4 models × 3 prompts × 5 conditions × ~8 ballot-on items ≈ 96,000 rows. Stored at `outputs/phase1a_raw.parquet` (DuckDB-compatible).
+| Group | Column | Meaning |
+|---|---|---|
+| **Prediction** | `respondent_id` | seed=42 index into the GSS 2024 sample |
+| | `model` | one of `Qwen`, `DeepSeek`, `Llama-3.3`, `Kimi`, `Random` — see note below |
+| | `prompt` | one of `P0`, `P1`, `P2` |
+| | `condition` | one of `Full`, `drop_demographic`, `drop_behavioral`, `drop_psychological`, `drop_attitudinal` |
+| | `item` | primary_eval variable (e.g., `POLVIEWS`, `GUNLAW`, …) |
+| | `true_code` | ground-truth integer code from GSS 2024 |
+| | `pred_code` | model-output integer code (NULL if parse_ok=false) |
+| | `parse_ok` | boolean — did the model output parse to a valid code? |
+| | `abs_err` | `|pred_code − true_code|` on Likert items; 0/1 on binary (NULL if parse_ok=false) |
+| | `sample_position` | 1 (cheap-panel n=1) or 1/2 (GPT-4o anchor n=2) |
+| **Call metadata** | `timestamp` | UTC datetime of the LLM call |
+| | `cost_usd` | per-call cost in USD (computed from token counts × provider rate) |
+| | `tokens_in` | input token count |
+| | `tokens_out` | output token count |
 
-The summary table is derived from the raw DB; the raw DB is the reproducibility ground truth. Any future re-analysis (different metric, different aggregation, sensitivity check) queries the raw DB directly without re-running the LLM panel.
+Example rows:
+
+| respondent_id | model | prompt | condition | item | true_code | pred_code | parse_ok | abs_err | sample_position | timestamp | cost_usd | tokens_in | tokens_out |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | Qwen | P0 | Full | POLVIEWS | 3 | 3 | true | 0 | 1 | 2026-05-29T14:32:01Z | 0.00041 | 928 | 3 |
+| 0 | Qwen | P0 | drop_demographic | POLVIEWS | 3 | 2 | true | 1 | 1 | 2026-05-29T14:32:04Z | 0.00038 | 858 | 3 |
+| 0 | Qwen | P0 | Full | PARTYID | 1 | 1 | true | 0 | 1 | 2026-05-29T14:32:07Z | 0.00041 | 928 | 3 |
+| 0 | **Random** | P0 | Full | POLVIEWS | 3 | 3 | true | 0 | 1 | (= Qwen row's metadata) | | | |
+
+**`model="Random"` row construction**: for each `(respondent_id, prompt)`, a seed=42 hash uniformly picks one of the four real models (no balance constraint). The `Random × prompt` rows are copies of that picked model's rows with `model` re-labeled to `Random`. No new LLM calls; the timestamp / cost / token columns are copied from the source row for auditability.
+
+**Volume**: 200 respondents × 5 (4 cheap models + Random) × 3 prompts × 5 conditions (Full + 4 single-bin LOO) × ~8 ballot-on items (GSS ballot rotation; see §3.1) ≈ **120,000 rows**. Stored at `outputs/phase1a_raw.parquet` (DuckDB-compatible).
+
+The summary table (§6.1, 180 rows) is derived from the raw DB by aggregating on the `Full` condition. Any future re-analysis (different metric, different aggregation, sensitivity check) queries the raw DB directly without re-running the LLM panel. Bayati's requested 5 × 3 × 12 = 180-row MAE table is one line of pandas / SQL:
+
+```sql
+SELECT model, prompt, item, AVG(abs_err) AS mae, COUNT(*) AS n
+FROM phase1a_raw
+WHERE condition = 'Full' AND parse_ok = true
+GROUP BY model, prompt, item
+ORDER BY model, prompt, item;
+-- → 180 rows (5 models × 3 prompts × 12 items, minus the (cell, item) pairs where every
+--   respondent's ballot missed that item — these become NaN MAE with n=0)
+```
 
 ### 6.3 Phase 1B raw DB (when it runs)
 
-Same long-format schema, single (model, prompt) cell × N=3,309 × 5 conditions × ~8 items ≈ 132,000 rows. Stored at `outputs/phase1b_raw.parquet`.
+Same 14-column schema. Single (model, prompt) cell × N=3,309 × 5 conditions × ~8 items ≈ **132,000 rows**. Stored at `outputs/phase1b_raw.parquet`. No Random column at the Phase 1B stage (deployment is the single selected cell).
 
 ---
 
