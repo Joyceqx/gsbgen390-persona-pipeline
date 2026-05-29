@@ -1,6 +1,8 @@
-"""Deterministic implementation of the §12.2 quality-primary model-selection rule.
+"""Deterministic implementation of the §7 quality-primary cell-selection rule.
 
-Locked rule (gss_phase1_design.md §12.2, revised 2026-05-08):
+Locked rule (RESEARCH_DESIGN.md §7; canonical single-source 2026-05-28
+post-Bayati signoff. Earlier framing in gss_phase1_design.md §12.2 is
+archived):
 
     primary_score(model) = respondent-macro Likert MAE on Phase-1a primary_eval,
                            full condition only, parse-failed items excluded.
@@ -26,17 +28,22 @@ DQ-3 history:
   the empirical human distribution per item.
 
 This script is the canonical executable form of the rule. Running it on the
-Phase-1a output JSON produces a single deterministic decision plus an audit
-trail, so the §12.2 decision is reproducible and reviewable.
+Phase-1a output produces a single deterministic decision plus an audit trail,
+so the §7 decision is reproducible and reviewable.
+
+NOTE (2026-05-28): module still implements the OSF-v1 single-model selector.
+The factorial extension to joint (model, prompt) cells over 12 panel cells
+plus the random-model post-hoc column (per RESEARCH_DESIGN.md §5.2 + §7) is
+queued as Phase 1A code extension #2 and not yet implemented here.
 
 Usage:
-    python3 select_phase1b_model.py outputs/gss_phase1_records_n100_<...>.json
+    python3 src/select_phase1b_model.py outputs/phase1a_raw.parquet
 
     # JSON output for programmatic consumption:
-    python3 select_phase1b_model.py outputs/<...>.json --json
+    python3 src/select_phase1b_model.py outputs/<...> --json
 
-The cost table below is the May-2026 OpenRouter snapshot used in the design
-doc §12.2 budget table; verify before live runs.
+The cost table below is the May-2026 OpenRouter snapshot used in the
+RESEARCH_DESIGN.md §11 budget table; verify before live runs.
 """
 from __future__ import annotations
 

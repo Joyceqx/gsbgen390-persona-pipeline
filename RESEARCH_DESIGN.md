@@ -92,13 +92,15 @@ Two layers:
 
 3 China-trained + 1 Western-trained on the cheap side. GPT-4o anchor is a second Western reference for Park comparison.
 
-### 5.2 Prompts (3 candidates, 2×2 voice × structure ablation)
+### 5.2 Prompts (3 candidates for §7 selection)
 
 | ID | Voice | Structure | Citation |
 |---|---|---|---|
 | **P0** | 2nd person | 4-bin key-value list | Park et al. 2024 v2 (arXiv:2411.10109), surveys-only condition |
 | **P1** | 1st person | 4-bin clauses | Argyle, Busby, Fulda, Gubler, Rytting, Wingate (2023) "Out of One, Many", *Political Analysis* 31(3) |
 | **P2** | 2nd person (dialogue) | 4-bin Q&A turns | Wang, Pyatkin, Bhagavatula, Choi (2025) "The Prompt Makes the Person(a)", *Findings of EMNLP 2025* |
+
+The three prompts vary along two design axes — voice (1st vs. 2nd person) and structure (key-value vs. clauses vs. Q&A) — but the three points are **not crossed**. P0 and P2 share voice (2nd person) and differ in structure; P0 and P1 differ in both axes simultaneously. The set is designed for selector-level "which prompt does best on this respondent panel" (§7), **not for controlled attribution of voice vs. structure effects**. The Phase 1B headline reports MAE under the §7-selected (model, prompt) cell with no causal claim about prompt design.
 
 P0 is the OSF-v1-era baseline implemented in `build_persona_prompt()`. P1 and P2 are new for Phase 1A. Full literature scan grounding these choices is at `archive/lit_review_prompt_variants_2026-05-15.md`.
 
@@ -201,20 +203,28 @@ Joint (model, prompt) cell selection. See `select_phase1b_model.py`.
 ```
 candidate cells = {(m, p) : m ∈ {Qwen, DeepSeek, Llama-3.3, Kimi}, p ∈ {P0, P1, P2}}  # 12 cells
 
-primary_score(cell) = respondent-macro Likert MAE on selection split [0:100], Full condition only
+# Per-item normalized abs-err so that mixed scales (binary, Likert-3/4/5/7) contribute
+# comparably. Each item's normalized abs-err is in [0, 1]; macro-average runs
+# over respondents and then over items.
+normalized_abs_err(respondent, item) = abs(pred_code − true_code) / (max_code − min_code)
+primary_score(cell) = mean over respondents of (mean over Full-condition items in their ballot of
+                                                normalized_abs_err)
+
+# Scoring uses the FULL N=200 panel cohort (no 100/100 split — the OSF-era
+# post-selection-inference defense is dropped per 2026-05-28 Bayati signoff).
 
 DQ-1 (parse-fail ceiling):    parse_failure_rate ≤ 30% per cell
 DQ-3 (mode-collapse guard):   for each primary_eval item i, var(cell_i) / var(human_i) ≥ 0.30
-                              cell fails if >50% of items fail the floor
+                              cell fails if > 50% of items fail the floor
                               human variance reference: outputs/primary_eval_human_variance_2024.json
 
-argmin MAE among DQ-passers.
-Tie-break (within 5% of best MAE): lowest cost × (1 + parse_fail_rate).
+argmin primary_score among DQ-passers.
+Tie-break (within 5% of best score): lowest cost × (1 + parse_fail_rate).
 Tie on both quality + cost: Qwen × P0 named fallback.
 All cells fail DQ: PAUSE — Phase 1B does not proceed.
 ```
 
-The held-out validation split [100:200] yields a `validation_mae` reported alongside the Phase 1B headline — a post-selection-inference sanity check.
+**Honest framing of the tiebreak**: at N=200 the SE per-cell normalized MAE is ≈ 0.071, while the 5% tiebreak window on an assumed best MAE ≈ 1.0 is 0.05. Most cells whose true MAE differs by < 10% from the best will land inside the tiebreak window, so the selector is best described as "DQ screen → MAE argmin if a single cell is clearly best by > 5%, otherwise cost-driven choice within the noise band". The "quality-primary" label only holds when one cell genuinely dominates. The Phase 1B writeup reports the per-cell MAEs (180-row summary, §6.1) alongside the headline so any reader can audit how thick the tiebreak band was on the actual run.
 
 ---
 
