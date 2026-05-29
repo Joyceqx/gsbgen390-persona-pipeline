@@ -16,7 +16,10 @@ Locked rule (RESEARCH_DESIGN.md §7):
                                                     items in their ballot of
                                                     normalized_abs_err)
 
-    DQ-1: parse_failure_rate <= 0.30 per cell
+    DQ-1: parse_failure_rate <= 0.10 per cell (tightened from 0.30 — locked
+          2026-05-29 per Reviewer round-2 Q2; cheap LLMs in practice
+          parse-fail <5%, so 10% is still a generous safety net while
+          closing the evasive-cell loophole).
     DQ-3: per-item model variance / human variance >= 0.30 on a strict
           majority of primary_eval items the cell answered
           (cell fails if > 50% of items fail the floor)

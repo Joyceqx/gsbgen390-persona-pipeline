@@ -5,18 +5,22 @@ persists results.
 Audit primitives (prompts / scoring / aggregation) live in gss_pipeline.py.
 LLM network layer lives in llm_router.py. This module only orchestrates.
 
-Locked design (gss_phase1_design.md §12; sample sizes revised 2026-05-09 night
-per Audit-3 + Joyce decision; sensitivity scope revised 2026-05-10 per Joyce
-decision Option A):
-  - Phase 1a (N=200): 4 cheap OpenRouter models × n_samples=1, **primary_eval
-    ONLY** (12 items × 5 conditions = 60 prompts/model/respondent), with a
-    locked 100/100 selection/validation split per §12.2 (selector scores ONLY
-    on the selection-half; validation-half held out for post-selection-
-    inference defense).
-  - Phase 1b (N=3,309 — full GSS 2024 cross-section): single §12.2-quality-
-    selected model × n_samples=1, **primary_eval ONLY** (60 prompts/respondent;
-    argmin selection-MAE among DQ-passers; cost is tie-break only; all-DQ-fail
-    PAUSES for human review rather than silently bypassing the gate to Qwen).
+Locked design (RESEARCH_DESIGN.md; sample sizes locked 2026-05-28 per Bayati
+signoff; sensitivity scope locked 2026-05-10 Joyce decision Option A;
+Phase 1A scope reduced + n_samples bumped 2026-05-29 per Reviewer round-2):
+  - Phase 1a (N=200): 4 cheap OpenRouter models × 3 prompts × **n_samples=2**
+    × FULL CONDITION ONLY × ballot-on items (ballot-off pre-filtered before
+    the LLM call). 12 items only × 1 condition × ~8 ballot-on × n=2 ≈ 192
+    prompts/model/respondent. LOO conditions are deferred to Phase 1B on
+    the disjoint cohort; the §7 selector reads Full only.
+  - Phase 1b (N=3,309 — full GSS 2024 cross-section): single §7-selected
+    (model, prompt) cell × n_samples=1, **primary_eval ONLY** × Full + 4 LOO
+    conditions, with ballot-off pre-filter. Headline cohort excludes the
+    N=200 §7 selector cohort (N=3,109 disjoint); full N=3,309 reported as
+    sensitivity. The §7 selector is CI-overlap-driven: ties are determined
+    by bootstrap-CI overlap rather than a fixed 5% MAE window, so the
+    selector behaves quality-primary only when the headline cell is
+    statistically separated from the rest.
   - GPT-4o anchor: N=100 selection-split subset, n_samples=2, **primary +
     sensitivity** (60 + 118 = 178 prompts × n=2 = 356 calls/respondent — the
     ONLY Park-comparable run; produces the per-item raw-accuracy anchor table
@@ -760,15 +764,17 @@ def _cli():
     # (the only Park-comparable run, per OSF §3.2).
     mode = p.add_mutually_exclusive_group()
     mode.add_argument("--phase1a", action="store_true",
-                      help="Phase 1a (N=200, 4 cheap panel, n_samples=1, "
-                           "PRIMARY ONLY — sensitivity_eval is anchor-only per "
-                           "OSF §3.2). The 100/100 selection/validation split is "
-                           "enforced downstream by select_phase1b_model.py CLI.")
+                      help="Phase 1a (N=200, 4 cheap panel × 3 prompts, "
+                           "n_samples=2, FULL CONDITION ONLY, ballot-off "
+                           "pre-filtered, PRIMARY only). Cell selection runs "
+                           "downstream via select_phase1b_cell.py on "
+                           "outputs/phase1a_raw.parquet.")
     mode.add_argument("--phase1b", action="store_true",
-                      help="Phase 1b (N=3,309 full GSS 2024 cross-section, single "
-                           "§12.2-selected model, n_samples=1, PRIMARY ONLY — "
-                           "sensitivity_eval is anchor-only per OSF §3.2). "
-                           "REQUIRES --phase1b-model SLUG (the §12.2 selector output).")
+                      help="Phase 1b (N=3,309 full GSS 2024 cross-section, "
+                           "single §7-selected cell, n_samples=1, Full + 4 LOO "
+                           "conditions, PRIMARY only). REQUIRES --phase1b-model "
+                           "SLUG and --phase1b-prompt {P0,P1,P2} (the §7 "
+                           "selector output).")
     mode.add_argument("--phase1b-anchor", action="store_true",
                       help="GPT-4o anchor (N=100 selection-split subset; one run "
                            "serves both Phase 1a and Phase 1b reporting), "
@@ -819,7 +825,7 @@ def _cli():
                    help="bypass the panel-wide-large-N cost guard (Audit-fresh-2 F9). "
                         "Default: refuse to run --n >= 1000 with >1 model + sensitivity "
                         "since this would burn ~$836 for the 4-model × N=3309 × full-178-prompt "
-                        "panel-wide grid (Phase 1b is locked to a SINGLE §12.2-selected model). "
+                        "panel-wide grid (Phase 1b is locked to a SINGLE §7-selected model). "
                         "Pass this flag only for an intentional cross-panel reanalysis with "
                         "explicit budget approval.")
     p.add_argument("--force-resume-partial", action="store_true",
@@ -989,8 +995,8 @@ if __name__ == "__main__":
         print(
             f"REFUSING [F9 cost guard]: --n={n} with {len(models)} models AND "
             f"sensitivity pass would dispatch ~{approx_calls:,} LLM calls "
-            f"(~${approx_cost:,.0f}). The locked Phase 1b design (per §12.2) "
-            f"runs a SINGLE §12.2-selected model at N=3,309 (~$209). To "
+            f"(~${approx_cost:,.0f}). The locked Phase 1b design (per §7) "
+            f"runs a SINGLE §7-selected model at N=3,309 (~$209). To "
             f"replicate that, use:\n"
             f"    python3 gss_driver.py --phase1b --phase1b-model SLUG\n"
             f"\n"
