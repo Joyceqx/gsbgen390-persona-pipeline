@@ -1,24 +1,20 @@
 # GSBGEN390 Phase 1 — Paid-Run Runbook
 
-**Locked 2026-05-10 night** per Audit-fresh-4 review (TL;DR table added per
-Audit-fresh-5 my-review item 8). This is the canonical step-by-step sequence
-for the OSF-locked paid Phase 1 run. Total budget **~$756** (Option A:
-cheap-panel primary-only; sensitivity_eval anchor-only).
+**Locked 2026-05-10 night** per Audit-fresh-4 review; **updated 2026-05-28** for Bayati-signed Phase 1A factorial extension (4 models × 3 prompts). Total budget **~$792** (Option A + factorial: cheap-panel primary-only at 3 prompts; sensitivity_eval anchor-only at P0 only). The OSF-locked paid Phase 1 run sequence is below.
 
-> **Before any step below**: confirm OSF v1 (`osf_preregistration_v1.md`) is
-> filed and the design lock matches `gss_phase1_design.md`. The paid runs
-> consume the OSF lock as their pre-registration; running before lock is a
-> deviation that requires an amendment.
+> **Before any step below**: confirm OSF v1.1 (`osf_preregistration_v1.md`) is filed and the design lock matches `gss_phase1_design.md` §12. The paid runs consume the OSF lock as their pre-registration; running before lock is a deviation that requires an amendment.
+
+> **Code implementation pending**: §12.2 selector and `gss_driver.py --phase1a` were implemented for the OSF v1 single-prompt panel. The Bayati-signed factorial extension (3 prompts in `--phase1a`, joint (model, prompt) selection in `select_phase1b_model.py`, random-column post-hoc aggregation) is **not yet implemented** in code. The commands below assume the factorial extension; see `gss_phase1_design.md` §12.2 / §12.3 / §12.4 for the locked design. Implement the code extension before launching paid Phase 1a.
 
 ## TL;DR — six-row paid-run summary
 
 | # | Step | Command | Cost | Wall-clock | Output |
 |---|---|---|---|---|---|
-| 1 | Smoke | `python3 gss_driver.py --smoke` | ~$0.10 | 1-2 min | `outputs/gss_phase1_records_n1_*.json` (~5 records) |
-| 2a | Phase 1a cheap | `python3 gss_driver.py --phase1a` | ~$17 | 6-10 hr | `outputs/gss_phase1_records_n200_*.json` (~4,000 records) |
-| 2b | GPT-4o anchor | `python3 gss_driver.py --phase1b-anchor` | ~$148 | 2-4 hr | `outputs/gss_phase1_records_n100_gpt-4o_seed42.json` (~600 records) |
-| 3 | §12.2 selector | `python3 select_phase1b_model.py outputs/gss_phase1_records_n200_*.json` | $0 | <1 min | stdout: selected slug + `validation_mae` |
-| 4 | Phase 1b cheap | `python3 gss_driver.py --phase1b --phase1b-model SLUG` | ~$71 | 2-12 days | `outputs/gss_phase1_records_n3309_*.json` (~16,545 records) |
+| 1 | Smoke | `python3 gss_driver.py --smoke` | ~$0.30 | 3-5 min | `outputs/gss_phase1_records_n1_*.json` (~15 records: 1 respondent × 1 model × 3 prompts × 5 conditions) |
+| 2a | Phase 1a cheap (factorial 4 × 3) | `python3 gss_driver.py --phase1a` | ~$51 | 18-30 hr | `outputs/gss_phase1_records_n200_*.json` (~12,000 records: 200 × 4 models × 3 prompts × 5 conditions) |
+| 2b | GPT-4o anchor (P0 only) | `python3 gss_driver.py --phase1b-anchor` | ~$148 | 2-4 hr | `outputs/gss_phase1_records_n100_gpt-4o_seed42.json` (~600 records) |
+| 3 | §12.2 joint cell selector | `python3 select_phase1b_model.py outputs/gss_phase1_records_n200_*.json` | $0 | <1 min | stdout: selected (model, prompt) cell + `validation_mae` + random-column report |
+| 4 | Phase 1b cheap (selected cell) | `python3 gss_driver.py --phase1b --phase1b-model SLUG --phase1b-prompt PROMPT_ID` | ~$71 | 2-12 days | `outputs/gss_phase1_records_n3309_*.json` (~16,545 records) |
 | 5 | Headline analysis | (CLI wrapper pending; see Step 5 details) | $0 | ~5 min | `outputs/gss_phase1_headline.{csv,json}` |
 | 6 | Phase 1c (DEFERRED) | (orchestration not yet implemented) | ~$519 | post-1b | `outputs/gss_phase1c_*` |
 
@@ -82,50 +78,41 @@ Expected output:
 
 ---
 
-## Step 2 — Phase 1a (~$17 cheap + ~$148 anchor = ~$165, ~6-10 hours)
+## Step 2 — Phase 1a (~$51 cheap factorial + ~$148 anchor = ~$199, ~18-30 hours)
 
-Cheap panel × N=200 primary-only AND GPT-4o anchor × N=100 (the selection
-half) primary + sensitivity. Anchor produces the Park-comparable Table 3 input.
+Cheap panel factorial × N=200 primary-only (4 models × 3 prompts) AND GPT-4o anchor × N=100 (the selection half) primary + sensitivity, P0 only. Anchor produces the Park-comparable Table 3 input.
 
 ```bash
-# 2a. Cheap-panel Phase 1a (sequential; ~6 hr at ~5 min/respondent)
+# 2a. Cheap-panel Phase 1a factorial (sequential; ~6 hr/prompt × 3 prompts = ~18 hr)
 python3 gss_driver.py --phase1a
 
-# 2b. GPT-4o anchor — runs once, serves both Phase 1a + Phase 1b reporting
+# 2b. GPT-4o anchor (P0 only) — runs once, serves both Phase 1a + Phase 1b reporting
 python3 gss_driver.py --phase1b-anchor
 ```
 
 Expected outputs:
-- `outputs/gss_phase1_records_n200_qwen-2.5-deepseek-llama-3.-kimi-k2_seed42.json`
-  (~4,000 records: 200 respondents × 4 models × 5 conditions)
-- `outputs/gss_phase1_records_n100_gpt-4o_seed42.json`
-  (~600 records: 100 respondents × 1 model × 6 condition-records — 5
-  primary [Full + 4 LOO] + 1 sensitivity-pass record per respondent. The
-  sensitivity-pass record carries 118 per-item scored entries inside its
-  `per_item_scores` dict; n_samples=2 multiplies the SAMPLE list inside
-  each scored entry, not the record count.)
+- `outputs/gss_phase1_records_n200_qwen-2.5-deepseek-llama-3.-kimi-k2_seed42.json` (~12,000 records: 200 respondents × 4 models × 3 prompts × 5 conditions). Each record's metadata must include both `model` and `prompt_id` fields so the §12.2 selector can read the 12 cells.
+- `outputs/gss_phase1_records_n100_gpt-4o_seed42.json` (~600 records: 100 respondents × 1 model × P0 × 6 condition-records — 5 primary [Full + 4 LOO] + 1 sensitivity-pass record per respondent).
 
-**Cost guard**: if you accidentally try `python3 gss_driver.py --n 3309`
-(panel-wide × full sample), the F9 cost guard refuses with a clear cost
-projection (~$839 vs the locked ~$71 single-model 1b). Use the named modes.
+**Cost guard**: if you accidentally try `python3 gss_driver.py --n 3309` (panel-wide × full sample), the F9 cost guard refuses with a clear cost projection. Use the named modes.
 
 ---
 
-## Step 3 — §12.2 model selection (free, ~30s)
+## Step 3 — §12.2 joint (model, prompt) cell selection (free, ~30s)
 
 ```bash
 python3 select_phase1b_model.py outputs/gss_phase1_records_n200_*.json
 ```
 
 Expected output (one of):
-- `argmin_mae` rationale + a model slug + a `validation_mae` on the held-
-  out N=100 (post-selection-inference defense)
-- `tie_break_cost` — quality tied within 5%, cheaper model wins
-- `fallback_qwen_tie` — quality + cost both tied, named Qwen fallback fires
-- `all_dq_fail_pause_for_review` — **STOP** and diagnose; do NOT proceed to
-  Phase 1b. The CLI prints `selected: None` + a remediation note.
+- `argmin_mae` rationale + a `(model, prompt)` cell + a `validation_mae` on the held-out N=100 (post-selection-inference defense)
+- `tie_break_cost` — quality tied within 5%, lowest cost score wins among tied cells
+- `fallback_qwen_p0_tie` — quality + cost both tied, named Qwen × P0 fallback fires
+- `all_dq_fail_pause_for_review` — **STOP** and diagnose; do NOT proceed to Phase 1b. The CLI prints `selected: None` + a remediation note.
 
-Record the selected slug: it is the input to Step 4.
+Random-column report (post-hoc, no extra LLM calls): the CLI also reports per-prompt MAE for the analytical "Random × prompt" aggregation (see `gss_phase1_design.md` §12.3) as a deployment-mode sensitivity column. The random column is reporting-only; it is NOT a §12.2 input.
+
+Record the selected `(model, prompt)`: it is the input to Step 4.
 
 **Anti-overfit reporting**: the CLI also prints `validation_mae` on the
 held-out N=100. This number must appear alongside the Phase 1b headline in
@@ -135,11 +122,13 @@ the abstract / writeup per §12.2 anti-post-selection-inference rule.
 
 ## Step 4 — Phase 1b (~$71, ~2–12 days wall-clock at sequential rate; budget for ~5 days)
 
+Phase 1b runs the single §12.2-selected `(model, prompt)` cell from Step 3 on the full N=3,309 GSS 2024 cross-section. The cell's `prompt_id` selects which of P0 / P1 / P2 is used; the cell's `model` is the OpenRouter slug.
+
 Single §12.2-selected model × N=3,309 (full GSS 2024 cross-section) ×
 primary_eval only (60 prompts/respondent).
 
 ```bash
-python3 gss_driver.py --phase1b --phase1b-model <slug-from-step-3>
+python3 gss_driver.py --phase1b --phase1b-model <slug-from-step-3> --phase1b-prompt <prompt-id-from-step-3>
 ```
 
 Expected output:
@@ -230,26 +219,26 @@ python3 shapley_decomposition.py --input outputs/gss_phase1c_shapley_<...>.json 
 
 ---
 
-## Total cost projection (Option A locked 2026-05-10)
+## Total cost projection (Option A + factorial; locked 2026-05-10, Bayati-signed factorial 2026-05-28)
 
 | Step | Cost | Cumulative |
 |---|---|---|
-| 1 Smoke | ~$1 | $1 |
-| 2a Phase 1a cheap | ~$17 | $18 |
-| 2b GPT-4o anchor (1a + 1b reporting; one run) | ~$148 | $166 |
-| 3 §12.2 selector | $0 | $166 |
-| 4 Phase 1b cheap (single selected model) | ~$71 | $237 |
-| 5 Headline analysis | $0 | $237 |
-| 6a Battery LOO orchestration (DEFERRED) | ~$481 | $718 |
-| 6b Shapley orchestration (DEFERRED) | ~$38 | $756 |
-| **Total Phase 1** | | **~$756** |
+| 1 Smoke | ~$3 | $3 |
+| 2a Phase 1a cheap factorial (4 models × 3 prompts) | ~$51 | $54 |
+| 2b GPT-4o anchor P0 only (1a + 1b reporting; one run) | ~$148 | $202 |
+| 3 §12.2 joint cell selector | $0 | $202 |
+| 4 Phase 1b cheap (single selected (model, prompt) cell) | ~$71 | $273 |
+| 5 Headline analysis | $0 | $273 |
+| 6a Battery LOO orchestration (DEFERRED) | ~$481 | $754 |
+| 6b Shapley orchestration (DEFERRED) | ~$38 | $792 |
+| **Total Phase 1** | | **~$792** |
 
 ---
 
 ## Common pitfalls (lessons from Audit-fresh-3/4)
 
 1. **Don't run `--n 3309` manually**: the F9 cost guard refuses (would burn
-   ~$839 vs $71 single-model). Use `--phase1b --phase1b-model SLUG`.
+   ~$839 vs $71 single-cell 1b). Use `--phase1b --phase1b-model SLUG --phase1b-prompt PROMPT_ID`.
 2. **Don't background paid invocations**: the Audit-fresh-3 review caught
    4 zombie driver processes spending API tokens because of an earlier
    `run_in_background:true` invocation. Always run paid commands in the

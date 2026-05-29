@@ -2,7 +2,7 @@
 
 **Author:** Joyce Yu
 **Course:** GSBGEN390 / thesis prep · Prof. Mohsen Bayati
-**Status:** Locked 2026-05-02; audit-fix revisions 2026-05-05 → 2026-05-06 (this version frozen pending OSF pre-registration sign-off **before Phase 1a launches** — pre-reg locks the model panel, the §12.2 selection rule, and dual-headline aggregation; Phase 1a's results then feed §12.2 to pick the Phase 1b model)
+**Status:** Locked 2026-05-02; audit-fix revisions 2026-05-05 → 2026-05-06; **Phase 1A factorial extension confirmed by Prof. Bayati 2026-05-28** (panel arm now runs 4 cheap models × 3 literature-grounded prompts; §12.2 selector generalized to joint (model, prompt) selection; random-model column computed analytically post-hoc on panel data; see §12.2 and §12.3). Pre-OSF lock fully resolved (§17 item ⑥ signed off).
 **Sequel to:** the Cookiy pilot in `archive/MEETING_HANDOUT.md` and `archive/progress_report.md`
 
 ---
@@ -131,38 +131,41 @@ For each respondent in the locked sample:
 
 **Seed reproducibility (Codex I-10)**: every output artifact (ndjson, summary JSON, plots) MUST encode the seed in its filename suffix (e.g., `phase1a_panel_seed42.ndjson`). The driver emits a `WARNING` to stderr when the runtime seed is anything other than 42, and refuses to overwrite a seed-42 artifact with a non-42 run unless `--force-non-canonical-seed` is passed. This guards against silent reproducibility drift if a future contributor changes the seed.
 
-**Two-stage model strategy** (locked 2026-05-06; expanded 2026-05-09 night per Audit-3 + Joyce decision; see §12 for the multi-model-then-single rationale):
-- **Phase 1a (N=200)**: run all 4 cheap OpenRouter models in parallel + GPT-4o anchor on N=100 subset. The 200 respondents are split 100/100 (selection / held-out validation) per §12.2; selector scores ONLY on the first 100; the held-out 100 yields a validation MAE reported alongside the Phase 1b headline.
-- **Phase 1b (N=3,309)**: run the single cheap model selected by the §12.2 quality-primary rule + GPT-4o anchor on N=100 subset. The other 3 cheap models are NOT carried forward to 1b.
+**Two-stage model strategy** (locked 2026-05-06; expanded 2026-05-09 night per Audit-3 + Joyce decision; **Phase 1A panel arm extended to a 4-model × 3-prompt factorial 2026-05-28 per Bayati signoff**; see §12 for the multi-model-then-single rationale):
+- **Phase 1a (N=200)**: run all 4 cheap OpenRouter models × **3 prompts** (P0 / P1 / P2; see §12.4) in parallel + GPT-4o anchor on N=100 subset (P0 only). The 200 respondents are split 100/100 (selection / held-out validation) per §12.2; selector scores ONLY on the first 100; the held-out 100 yields a validation MAE reported alongside the Phase 1b headline.
+- **Phase 1b (N=3,309)**: run the single (model, prompt) cell selected by the §12.2 joint quality-primary rule + GPT-4o anchor on N=100 subset (P0 only). The other 11 (model, prompt) cells are NOT carried forward to 1b.
 
 | Sub-phase | N | LLM calls per respondent | Cost / respondent | Total budget |
 |---|---|---|---|---|
-| Smoke | 10 | ~240 (60 primary prompts × 4 cheap, n=1) | ~$0.085 | **~$1** |
-| 1a — cheap panel (N=200, 100/100 split) | 200 | ~240 (4 cheap × 60 primary) | ~$0.085 | **~$17** |
-| 1b — primary (single §12.2-selected model) | 3,309 | ~60 (1 cheap × 60 primary, n=1) | ~$0.021 | **~$71** |
-| 1a + 1b GPT-4o anchor (one run, serves both) | 100 | ~356 (178 prompts × n=2) | ~$1.48 | **~$148** |
-| **Total Phase 1 core (pre-Battery LOO)** | | | | **~$237** |
+| Smoke | 10 | ~720 (60 primary prompts × 4 cheap × 3 prompts, n=1) | ~$0.26 | **~$3** |
+| 1a — cheap panel factorial (N=200, 100/100 split, 4 models × 3 prompts) | 200 | ~720 (4 cheap × 3 prompts × 60 primary) | ~$0.26 | **~$51** |
+| 1b — primary (single §12.2-selected (model, prompt) cell) | 3,309 | ~60 (1 cheap × 1 prompt × 60 primary, n=1) | ~$0.021 | **~$71** |
+| 1a + 1b GPT-4o anchor (one run, P0 only, serves both) | 100 | ~356 (178 prompts × n=2) | ~$1.48 | **~$148** |
+| **Total Phase 1 core (pre-Battery LOO)** | | | | **~$273** |
 
-**Per-prompt math (locked 2026-05-10 per Joyce decision Option A; supersedes the Codex N8 numbers under the new sensitivity scope)**:
+**Per-prompt math (locked 2026-05-10 per Joyce decision Option A; extended to 3 prompts 2026-05-28 per Bayati signoff)**:
 
-   - **Cheap panel** (Qwen / DeepSeek / Llama-3.3 / Kimi): **60 prompts/respondent** = 12 primary_eval items × 5 conditions (Full + 4 single-bin LOO). **Cheap panel does NOT run sensitivity** — sensitivity_eval is anchor-only per OSF §3.2 (Park-comparable per-item raw-accuracy table on GPT-4o).
-   - **GPT-4o anchor** (N=100 selection-split subset): **178 prompts × n_samples=2 = 356 calls/respondent** = 60 primary + 118 sensitivity (per-item exclusion). One anchor run serves both Phase 1a and Phase 1b reporting.
+   - **Cheap panel** (Qwen / DeepSeek / Llama-3.3 / Kimi × P0 / P1 / P2): **180 prompts/respondent** = 12 primary_eval items × 5 conditions (Full + 4 single-bin LOO) × 3 prompts. **Cheap panel does NOT run sensitivity** — sensitivity_eval is anchor-only per OSF §3.2 (Park-comparable per-item raw-accuracy table on GPT-4o, P0 only).
+   - **GPT-4o anchor** (N=100 selection-split subset, **P0 only** for Park comparability): **178 prompts × n_samples=2 = 356 calls/respondent** = 60 primary + 118 sensitivity (per-item exclusion). One anchor run serves both Phase 1a and Phase 1b reporting.
+   - **Random-model column**: computed analytically post-hoc on the cheap-panel data (see §12.3) — no extra LLM calls.
 
 Cost rates: cheap models ~$0.000356/call (OpenRouter mid-2026 snapshot); GPT-4o ~$0.00417/call (verified against original $50 anchor quote at 12,000 calls, recomputed for 35,600 calls = $148).
 
-**Updated total Phase 1 budget** (locked 2026-05-10 per Joyce decision Option A; supersedes the 2026-05-09 ~$875 estimate which had cheap panel running sensitivity):
+**Updated total Phase 1 budget** (locked 2026-05-10 per Joyce decision Option A; **panel arm extended to factorial 4 × 3 on 2026-05-28 per Bayati signoff**):
 
-- **Core Phase 1 LLM run** (smoke + 1a cheap + 1b cheap + GPT-4o anchor): ~$237
-- **Phase 1c Battery LOO** (co-primary): 34 batteries × 12 primary_eval items × **3,309 respondents** × 1 sample = **~1,350,000 LLM calls** at the §12.2-selected cheap model (~$0.000356/call) ≈ **~$481**.
+- **Core Phase 1 LLM run** (smoke + 1a factorial cheap + 1b cheap + GPT-4o anchor): ~$273 (panel arm at 3 prompts costs ~$51 vs. ~$17 single-prompt; everything else unchanged).
+- **Phase 1c Battery LOO** (co-primary): 34 batteries × 12 primary_eval items × **3,309 respondents** × 1 sample = **~1,350,000 LLM calls** at the §12.2-selected (model, prompt) cell (~$0.000356/call) ≈ **~$481**.
 - **Phase 1c Shapley decomposition** (16 conditions on Phase 1a's N=200 panel; primary only — Shapley shares 4-bin LOO conditions): +~$38 incremental (11 multi-bin LOO × 12 items × 200 respondents × 4 cheap models = ~105,600 calls × ~$0.000356).
-- **Total Phase 1**: **~$237 + $481 + $38 ≈ $756**.
+- **Random-model column**: $0 — post-hoc analytical aggregation on existing panel data (see §12.3).
+- **Total Phase 1**: **~$273 + $481 + $38 ≈ $792** (~$36 increment over the OSF v1 ~$756 envelope, entirely attributable to the panel arm running 3 prompts instead of 1).
 - All cost estimates assume **no prompt caching** and must be re-verified against OpenRouter prices at smoke-test time.
 
 **Budget evolution log** (so the OSF history reads cleanly):
 - Earlier draft (~$280-300): incorrect Battery LOO enumeration, fixed by Codex N9 audit.
 - Codex-N9-fixed (~$450): correct math, but assumed N=1,500 + N=100 Phase 1a + all-China panel.
 - Audit-3 + Joyce-decisions-2026-05-09 (~$875): full sample (N=3,309), 100/100 Phase 1a split (N=200), Llama swap, **cheap panel running sensitivity**.
-- **Current (~$756; locked 2026-05-10 per Joyce decision Option A)**: cheap panel reverts to primary-only per OSF §3.2 literal; sensitivity_eval anchor-only. Drop of ~$120 from the $875 figure (saves cheap-panel sensitivity calls; bumps anchor cost from $50 → $148 since anchor now runs sensitivity). Net ~$120 savings vs Audit-3-locked plan.
+- Joyce-decision-2026-05-10 Option A (~$756): cheap panel reverts to primary-only per OSF §3.2 literal; sensitivity_eval anchor-only.
+- **Current (~$792; Bayati-signed 2026-05-28)**: Phase 1A panel arm extended to a 4-model × 3-prompt factorial (P0 / P1 / P2 per §12.4); §12.2 generalized to joint (model, prompt) selection; random-model column added post-hoc (no extra LLM calls). Net +$36 over the 2026-05-10 baseline, all from the 3-prompt panel-arm expansion.
 
 If budget is tight, reduction options: (i) Battery LOO at N=1,500 subsample → saves ~$263, (ii) Battery LOO restricted to attitudinal-bin batteries only (15 of 34) → saves ~$209, or (iii) defer Battery LOO to Phase 1d after Phase 1b headline.
 
@@ -429,15 +432,17 @@ The following sentence-level constraints are **mandatory** in any Phase 1 abstra
 
 The abstract and the dashboard / GitHub Pages footer must each be checked against this table before submission. A reviewer who sees a violation immediately recognizes the over-claim — preventing this is what §11.1 exists for.
 
-## 12. Multi-model panel design (locked 2026-05-05)
+## 12. Multi-cell panel design (locked 2026-05-05; extended to 4-model × 3-prompt factorial 2026-05-28 per Bayati signoff)
 
 ### Rationale
 
 GPT-4o-only Phase 1 would cost ~$900 at N=3309, exceeding the $300-500 budget. More importantly, single-model results conflate "feature-category contribution" with "GPT-4o-specific quirks" — a reviewer could plausibly reject "X is the most predictive feature category" with "but maybe only on GPT-4o."
 
-**Solution**: query the same persona prompts on a **panel of 4 cheap, diverse OpenRouter-available models** as the primary analysis. The headline finding becomes "feature-category contribution to GSS-attitude prediction is robust **across LLM families**" — a stronger claim than single-model GPT-4o.
+**Solution (panel arm)**: query the same persona prompts on a **panel of 4 cheap, diverse OpenRouter-available models** as the primary analysis. The headline finding becomes "feature-category contribution to GSS-attitude prediction is robust **across LLM families**" — a stronger claim than single-model GPT-4o.
 
-A small GPT-4o anchor on a 100-respondent subset preserves direct Park v2 Table 3 comparability without blowing budget.
+**Factorial extension (Bayati-signed 2026-05-28)**: the panel arm runs each of the 4 cheap models under **3 literature-grounded prompts** (P0 baseline + P1 Argyle 1st-person + P2 Wang interview Q&A; see §12.4 for the candidates and §12.2 for the joint selector). This expands the candidate pool from 4 models to 12 (model, prompt) cells, letting §12.2 read the joint winner directly and surfacing any (model × prompt) interactions. A 13th–15th "Random × prompt" column is computed analytically post-hoc on the panel data as a deployment-mode sensitivity comparator (see §12.3).
+
+A small GPT-4o anchor on a 100-respondent subset (P0 only, per §12.3) preserves direct Park v2 Table 3 comparability without blowing budget.
 
 ### Locked model panel
 
@@ -455,65 +460,71 @@ A small GPT-4o anchor on a 100-respondent subset preserves direct Park v2 Table 
 
 ### Sampling rules
 
-- **Cheap models**: `n_samples = 1` per (respondent, item, condition). Cross-model agreement (% of items where all 4 models gave the same code) replaces within-model self-consistency as the primary stability metric.
-- **GPT-4o anchor**: `n_samples = 2` per (respondent, item) on the **N=100 selection-split subset**, **primary + sensitivity** (locked 2026-05-10 Joyce decision Option A; supersedes earlier "primary-only" wording). Restores Park-style within-model self-consistency for the directly-comparable subset AND **runs the 118 sensitivity_eval items per-item-excluded** to produce the Park-comparable per-item raw-accuracy table side-by-side with Park v2 SI Table 3 — the anchor is the ONLY run that produces this Park-comparable sensitivity table; cheap panel does not run sensitivity (anchor-only per OSF §3.2). N=100 (bumped from N=50 per Codex audit 2026-05-06) gives wider per-item CIs but still tight enough for per-item Park v2 Table 3 anchoring. One anchor invocation serves both Phase 1a and Phase 1b reporting purposes (same N=100 selection-split respondents).
+- **Cheap models (factorial extension, Bayati-signed 2026-05-28)**: `n_samples = 1` per (respondent, item, condition, **prompt**, model). Each respondent runs all 12 (model × prompt) cells × 5 conditions × 12 items, subject to GSS ballot rotation. Cross-cell agreement (% of items where all 12 cells give the same code) replaces within-model self-consistency as the primary stability metric.
+- **GPT-4o anchor**: `n_samples = 2` per (respondent, item) on the **N=100 selection-split subset**, **primary + sensitivity**, **P0 only** (Bayati signed off 2026-05-28 that anchor runs only the Park-comparable baseline prompt; the cheap panel separately tests P1 / P2 against P0). Restores Park-style within-model self-consistency for the directly-comparable subset AND runs the 118 sensitivity_eval items per-item-excluded to produce the Park-comparable per-item raw-accuracy table side-by-side with Park v2 SI Table 3 — the anchor is the ONLY run that produces this Park-comparable sensitivity table; cheap panel does not run sensitivity (anchor-only per OSF §3.2). N=100 (bumped from N=50 per Codex audit 2026-05-06) gives wider per-item CIs but still tight enough for per-item Park v2 Table 3 anchoring. One anchor invocation serves both Phase 1a and Phase 1b reporting purposes (same N=100 selection-split respondents).
 
-### Headline output extension to multi-model
+### Headline output extension to multi-cell (Bayati-signed 2026-05-28)
 
-The aggregation in §10 is computed:
-- **Per model**: each cheap-panel model gets its own respondent-macro / item-macro / pooled headline + bootstrap CIs. Reported alongside in the writeup.
-- **Panel median (Phase 1a robustness summary, NOT the N=3309 headline)**: for each (respondent, condition, item, sample-position-equivalent), take the median (Likert) or mode (categorical) across the 4 cheap-panel models. Re-run aggregation on this synthetic "panel respondent." **Reported as a Phase 1a (N=100 selection split per §12.2) robustness summary** for cross-model coherence; per-model deltas in supplementary. The N=3309 Phase 1b headline is the §12.2-selected single model, NOT the panel median (Phase 1b runs only one selected model — see §12.2 + line 401 below + §13's writeup constraint).
-- **GPT-4o anchor**: per-item raw accuracy on the 12 primary_eval items + the 118 sensitivity_eval items on N=100 subset, n_samples=2, side-by-side with Park v2 SI Table 3 (locked 2026-05-10 Joyce decision Option A; sensitivity_eval is anchor-only per OSF §3.2).
-- **Cross-model agreement**: % of (respondent, item, condition) tuples where all 4 cheap models output the same integer code. Reported as the new "consistency QA metric" replacing within-model self-consistency.
+The aggregation in §10 is computed per (model, prompt) cell:
+- **Per cell**: each of the 12 (model, prompt) cells gets its own respondent-macro / item-macro / pooled headline + bootstrap CIs. Reported alongside in the writeup.
+- **Random-model column** (3 derived aggregates, one per prompt): post-hoc analytical aggregation defined in §12.3. Reported as a deployment-mode sensitivity column.
+- **Panel median (Phase 1a robustness summary, NOT the N=3309 headline)**: for each (respondent, condition, item, sample-position-equivalent), take the median (Likert) or mode (categorical) across the 12 cells. Re-run aggregation on this synthetic "panel respondent." Reported as a Phase 1a (N=100 selection split per §12.2) robustness summary for cross-cell coherence; per-cell deltas in supplementary. The N=3309 Phase 1b headline is the §12.2-selected single cell, NOT the panel median (Phase 1b runs only one selected (model, prompt) cell — see §12.2 + §13's writeup constraint).
+- **GPT-4o anchor**: per-item raw accuracy on the 12 primary_eval items + the 118 sensitivity_eval items on N=100 subset, n_samples=2, **P0 only**, side-by-side with Park v2 SI Table 3 (locked 2026-05-10 Joyce decision Option A; anchor P0-only confirmed 2026-05-28 to preserve Park comparability).
+- **Cross-cell agreement**: % of (respondent, item, condition) tuples where all 12 cells output the same integer code. Reported as the new "consistency QA metric" (generalizes the OSF v1 4-model agreement metric to the 12-cell panel).
 
 ### What the writeup must say (extension to §11 constraints)
 
-- "The N=3309 headline is the §12.2-selected single model. Phase 1a (N=200 with 100/100 selection/validation split; selection set N=100 reports per-model and panel-synthesized robustness for cross-model coherence) — the panel median is a Phase 1a robustness summary, NOT the N=3309 headline because Phase 1b runs only one selected model."
-- "Direct comparability to Park v2 Table 3 is via the N=100 GPT-4o anchor subset, not via the cheap-model panel. The cheap-model panel addresses generalization across LLM families; the anchor addresses model-comparability with the established benchmark."
-- "Cross-model agreement at temperature 0.7 (4 cheap models on the same item) is reported as a stability QA metric in lieu of within-model self-consistency. The two are different concepts."
+- "The N=3309 headline is the §12.2-selected single (model, prompt) cell. Phase 1a (N=200 with 100/100 selection/validation split; selection set N=100 reports per-cell and panel-synthesized robustness for cross-cell coherence) — the panel median is a Phase 1a robustness summary, NOT the N=3309 headline because Phase 1b runs only one selected cell."
+- "Direct comparability to Park v2 Table 3 is via the N=100 GPT-4o anchor subset on the P0 baseline prompt, not via the cheap-model panel. The anchor preserves Park's surveys-only condition format; the cheap-model panel separately tests P1 / P2 against P0 to address whether persona-prompt structure matters for survey-attitude prediction."
+- "Cross-cell agreement at temperature 0.7 (12 cells = 4 cheap models × 3 prompts on the same item) is reported as a stability QA metric in lieu of within-model self-consistency."
+- "The random-model column (§12.3) is a post-hoc analytical aggregation, not an independent between-respondent arm. It is reported as a deployment-mode sensitivity column, not as confirmatory between-respondent evidence."
 
 ### Pre-registration must declare
 
 Before Phase 1a launches the OSF pre-reg locks:
 - The exact 4-cheap-model list for Phase 1a (prevents post-hoc cherry-picking)
-- The model-selection rule from 1a → 1b (locked below in §12.2)
-- The GPT-4o anchor scope (N=100 selection-split subset, **primary + sensitivity**, n_samples=2 — locked 2026-05-10 Joyce decision Option A; anchor is the only run for Park-comparable sensitivity_eval per OSF §3.2)
-- Aggregation method (per-model + panel median/mode + cross-model agreement)
-- Cross-model agreement metric definition (strict: all expected models present + parsed + identical)
+- The exact 3-prompt list for Phase 1a (P0 / P1 / P2; see §12.4), with citations
+- The joint (model, prompt) selection rule from 1a → 1b (locked in §12.2)
+- The random-model column definition (§12.3) — post-hoc analytical, no extra LLM calls, reporting-only (not a §12.2 input)
+- The GPT-4o anchor scope (N=100 selection-split subset, **primary + sensitivity**, n_samples=2, **P0 only**)
+- Aggregation method (per-cell + panel median/mode + cross-cell agreement + random-model column)
+- Cross-cell agreement metric definition (strict: all expected cells present + parsed + identical)
 
-### §12.2  Locked model-selection rule (Phase 1a → Phase 1b) — quality-primary
+### §12.2  Locked joint (model, prompt) selection rule (Phase 1a → Phase 1b) — quality-primary
 
-**Phase 1a sample structure (locked 2026-05-09 night per Audit-3 + Joyce decision)**: Phase 1a runs at N=200 with a **pre-registered 100/100 selection/validation split** (seed=42 deterministic). The first 100 respondents are the **selection set** — all selector quality scoring (MAE, DQ-1, DQ-3, tie-break) operates ONLY on these 100. The other 100 respondents are the **validation set** — held out from selection entirely. After the selector picks a model on the selection set, the chosen model's MAE is **also reported on the held-out 100 validation respondents** alongside the N=3309 Phase 1b headline. Rationale: prevents post-selection-inference / overfit-on-eval-set attack — a reviewer asking "of course your selected model has low MAE; it was selected on the same items you headline on" is rebutted by the validation-N MAE which the selector never saw.
+**Phase 1a sample structure (locked 2026-05-09 night per Audit-3 + Joyce decision; selector generalized to joint (model, prompt) selection 2026-05-28 per Bayati signoff)**: Phase 1a runs at N=200 with a **pre-registered 100/100 selection/validation split** (seed=42 deterministic). The first 100 respondents are the **selection set** — all selector quality scoring (MAE, DQ-1, DQ-3, tie-break) operates ONLY on these 100. The other 100 respondents are the **validation set** — held out from selection entirely. After the selector picks a (model, prompt) cell on the selection set, the chosen cell's MAE is **also reported on the held-out 100 validation respondents** alongside the N=3309 Phase 1b headline. Rationale: prevents post-selection-inference / overfit-on-eval-set attack — a reviewer asking "of course your selected cell has low MAE; it was selected on the same items you headline on" is rebutted by the validation-N MAE which the selector never saw.
 
-After the selection set scores all 4 cheap models, Phase 1b is run at N=3309 on the single cheap model that minimizes **respondent-macro Likert MAE on the Phase 1a SELECTION primary_eval items, full condition only** — i.e., the model whose persona predictions are most accurate on the headline metric of the paper, on the selection-half only.
+After the selection set scores all **12 (model, prompt) cells** (4 cheap models × 3 prompts P0 / P1 / P2; see §12.4 for the prompt candidates), Phase 1b is run at N=3309 on the single cell that minimizes **respondent-macro Likert MAE on the Phase 1a SELECTION primary_eval items, full condition only** — i.e., the (model, prompt) combination whose persona predictions are most accurate on the headline metric of the paper, on the selection-half only.
 
 ```
-selection_set      = sample[:100]   # respondents 0..99 of seed-42 sample
-validation_set     = sample[100:200]  # respondents 100..199 (HELD OUT from selection)
+selection_set      = sample[:100]    # respondents 0..99 of seed-42 sample
+validation_set     = sample[100:200] # respondents 100..199 (HELD OUT from selection)
+cells              = {(m, p) for m in {Qwen, DeepSeek, Llama-3.3, Kimi}
+                              for p in {P0, P1, P2}}     # 12 candidate cells
 
-primary_score(model) = respondent_macro_Likert_MAE_on_SELECTION_primary_full
+primary_score(cell) = respondent_macro_Likert_MAE_on_SELECTION_primary_full
                        (parse-failed items excluded from the per-respondent average;
                         a respondent contributes only if they have ≥1 valid Likert item)
-choose argmin
+choose argmin over cells
 
 # After selection, ALSO report:
-validation_mae(selected_model) = respondent_macro_Likert_MAE_on_VALIDATION_primary_full
+validation_mae(selected_cell) = respondent_macro_Likert_MAE_on_VALIDATION_primary_full
 # This number must appear in §11.1 abstract template alongside the N=3309 headline.
 ```
 
-**Why quality-primary, not cost-primary** (locked decision 2026-05-06): the 4-cheap-panel members differ in per-call cost by at most ~2× (~$50-80 swing on the entire N=3309 1b run), but can differ in MAE by considerably more. Optimizing the selection criterion on a $50 axis when the *paper's headline metric is MAE* is internally inconsistent — the rule should pick the model that is best at the thing the paper measures. Cost is preserved as a tie-break, not as the primary score.
+**Why quality-primary, not cost-primary** (locked decision 2026-05-06): the 4-cheap-panel members differ in per-call cost by at most ~2× (~$50-80 swing on the entire N=3309 1b run), but can differ in MAE by considerably more. Optimizing the selection criterion on a $50 axis when the *paper's headline metric is MAE* is internally inconsistent — the rule should pick the cell that is best at the thing the paper measures. Cost is preserved as a tie-break, not as the primary score.
 
-**Pre-registered guard rails (all locked in OSF before Phase 1a fires):**
+**Pre-registered guard rails (all locked in OSF before Phase 1a fires; extended to apply per (model, prompt) cell 2026-05-28 per Bayati signoff):**
 
-1. **DQ-1 — Parse-failure ceiling.** Any model with `parse_failure_rate_on_1a > 0.30` is removed from the candidate set BEFORE quality scoring. Rationale: a model that parse-fails on >30% of items is operationally unusable at scale regardless of its measured MAE on the parsed remainder.
+1. **DQ-1 — Parse-failure ceiling.** Any (model, prompt) cell with `parse_failure_rate_on_1a > 0.30` is removed from the candidate set BEFORE quality scoring. Rationale: a cell that parse-fails on >30% of items is operationally unusable at scale regardless of its measured MAE on the parsed remainder.
 
-2. **DQ-3 — Mode-collapse guard (per-item relative threshold; revised 2026-05-08 per audit §3.9).** For each of the 12 primary_eval items, the model's output-code population variance across respondents must satisfy `var(model_i) ≥ 0.30 × var(human_i)`, where `var(human_i)` is the locked GSS 2024 per-item human variance (computed once from `outputs/primary_eval_human_variance_2024.json`, OSF-pre-registered). A model is disqualified if **more than 50% of items fail** this floor — i.e., a majority of items show output collapse relative to the empirical human distribution. Rationale: an absolute threshold (e.g., 0.5) is too lenient on heavily-skewed items where human variance itself is < 0.5 (FEPOL = 0.15, GUNLAW = 0.21, FEPOL is 82/18 split) and too strict on widely-spread items (PARTYID human variance = 4.24). The relative threshold scales with the empirical human distribution per item; 30% is the OSF-pre-registered floor (chosen because (a) a perfectly-calibrated LLM can plausibly run at ~50-100% of human variance, so 30% gives substantial headroom; (b) a mode-collapsed LLM with single-mode output has variance 0% of human; the 30% line cleanly separates the two regimes per the §12.2.1 simulation table).
+2. **DQ-3 — Mode-collapse guard (per-item relative threshold; revised 2026-05-08 per audit §3.9).** For each (model, prompt) cell and each of the 12 primary_eval items, the cell's output-code population variance across respondents must satisfy `var(cell_i) ≥ 0.30 × var(human_i)`, where `var(human_i)` is the locked GSS 2024 per-item human variance (computed once from `outputs/primary_eval_human_variance_2024.json`, OSF-pre-registered). A cell is disqualified if **more than 50% of items fail** this floor — i.e., a majority of items show output collapse relative to the empirical human distribution. Rationale: an absolute threshold (e.g., 0.5) is too lenient on heavily-skewed items where human variance itself is < 0.5 (FEPOL = 0.15, GUNLAW = 0.21, FEPOL is 82/18 split) and too strict on widely-spread items (PARTYID human variance = 4.24). The relative threshold scales with the empirical human distribution per item; 30% is the OSF-pre-registered floor.
 
-3. **Tie-break — cost.** Among models within **5% of the best primary_score** (i.e., `MAE_model ≤ 1.05 × MAE_best`), select the one with the **lowest `cost_per_call_USD × (1 + parse_failure_rate)`** score. Rationale: when quality is statistically indistinguishable, the cost-pre-registered framing of the cheap panel still informs the choice.
+3. **Tie-break — cost.** Among cells within **5% of the best primary_score** (i.e., `MAE_cell ≤ 1.05 × MAE_best`), select the one with the **lowest `cost_per_call_USD × (1 + parse_failure_rate)`** score. Rationale: when quality is statistically indistinguishable, cost informs the choice. (Within a single prompt the only varying axis is the model; across prompts at the same model the cost-per-call is identical so the tiebreak reduces to parse-fail-weighted cost.)
 
-4. **All-DQ-fail PAUSE for human review (locked 2026-05-09 night per Audit-2 + Joyce decision).** If after DQ-1 + DQ-3 the candidate set is empty (all 4 models failed gates), the selector returns `selected=None, rationale="all_dq_fail_pause_for_review"`. Phase 1b does NOT proceed. Rationale: all-DQ-fail is a SIGNAL that something structural is wrong (the prompt template, the parser, or the entire model panel is broken at the current OpenRouter snapshot); silently bypassing the quality gate to a named-Qwen fallback would waste $209 of paid Phase 1b runs on a model that already failed quality checks. The pause requires diagnosing the failure and either rerunning Phase 1a, swapping the panel, or filing an OSF amendment. **Earlier drafts had a Qwen-fallback-on-all-DQ-fail rule; that was removed pre-OSF after Audit-2 review pointed out it bypasses the gate.**
+4. **All-DQ-fail PAUSE for human review (locked 2026-05-09 night per Audit-2 + Joyce decision; extended to cells 2026-05-28).** If after DQ-1 + DQ-3 the candidate pool is empty (all 12 cells failed gates), the selector returns `selected=None, rationale="all_dq_fail_pause_for_review"`. Phase 1b does NOT proceed. Rationale: all-DQ-fail is a SIGNAL that something structural is wrong (every prompt template is broken, the parser has a bug, or the entire model panel is broken at the current OpenRouter snapshot); silently bypassing the quality gate to a named fallback would waste paid Phase 1b runs on a model already known to fail quality checks. The pause requires diagnosing the failure and either rerunning Phase 1a, swapping the panel, or filing an OSF amendment.
 
-5. **Deterministic Qwen tie-break fallback — narrow scope.** If ≥2 candidates pass DQ AND tie on both quality (within 5%) AND cost (within 1%), **Qwen-2.5-72B-Instruct** is named. Reason: when models are statistically and economically indistinguishable, a deterministic named choice avoids a coin-flip; Qwen is the most stable instruction-following baseline of the four. The OSF pre-reg names Qwen explicitly so there is no post-hoc judgment. (Note: this is the ONLY remaining Qwen-fallback path. The all-DQ-fail path is now PAUSE.)
+5. **Deterministic Qwen × P0 tie-break fallback — narrow scope.** If ≥2 cells pass DQ AND tie on both quality (within 5%) AND cost (within 1%), **Qwen-2.5-72B-Instruct × P0 baseline prompt** is named. Reason: when cells are statistically and economically indistinguishable, a deterministic named choice avoids a coin-flip; Qwen is the most stable instruction-following baseline of the four, and P0 is the Park-comparable surveys-only baseline. The OSF pre-reg names this combination explicitly so there is no post-hoc judgment. (Note: this is the ONLY remaining fallback path. The all-DQ-fail path is PAUSE.)
 
 **Why each guard rail**:
 - DQ-1 prevents picking a parse-broken model that scored a fluke MAE on its small parsed subset.
@@ -522,15 +533,59 @@ validation_mae(selected_model) = respondent_macro_Likert_MAE_on_VALIDATION_prima
 - All-DQ-fail PAUSE keeps the quality gate honest: a failed DQ pass means rerun-or-amend, not silent override.
 - Qwen tie-break-only fallback keeps the rule fully deterministic in the indistinguishable-models case — no judgment call required.
 
-**The selection rule in one sentence (for the abstract / writeup; revised 2026-05-09 night):**
-> "We selected the Phase 1b model as the lowest-MAE Phase 1a candidate on the pre-registered N=100 selection split, among models passing parse-failure (≤30%) and per-item relative-variance gates (`var(model_i) ≥ 0.30 × var(human_2024_i)` for ≥50% of primary_eval items); cost served as a within-5% tie-break, with Qwen-2.5-72B-Instruct as the named tie-break fallback. All models failing DQ triggers a pre-registered pause for human review rather than a quality-gate override. The selected model's MAE on a held-out N=100 validation split is reported alongside the N=3309 headline."
+**The selection rule in one sentence (for the abstract / writeup; revised 2026-05-28 per Bayati signoff to reflect the joint (model, prompt) extension):**
+> "We selected the Phase 1b (model, prompt) cell as the lowest-MAE Phase 1a candidate on the pre-registered N=100 selection split (over the 12 cells defined by 4 cheap models × 3 literature-grounded prompts; see §12.4), among cells passing parse-failure (≤30%) and per-item relative-variance gates (`var(cell_i) ≥ 0.30 × var(human_2024_i)` for ≥50% of primary_eval items); cost served as a within-5% tie-break, with Qwen-2.5-72B-Instruct × P0 baseline prompt as the named tie-break fallback. All cells failing DQ triggers a pre-registered pause for human review rather than a quality-gate override. The selected cell's MAE on a held-out N=100 validation split is reported alongside the N=3309 headline."
 
-**Scope** — Phase 1b reports remain valid as "predictive findings on the quality-selected model." Multi-model robustness is established by the 1a comparison itself (published alongside 1b). The thesis claim becomes:
-> "On Phase 1a (N=200 with a pre-registered 100/100 selection/validation split, 4 cheap models), feature-category contribution rankings agreed within bootstrap noise across all 4 models. We selected {model_X} for Phase 1b under the §12.2 quality-primary criterion (with parse-failure and mode-collapse gates, cost tie-break, and a named-Qwen tie-break-only fallback; all-DQ-fail returns a pause-for-review verdict rather than a silent override); the N=3,309 results on {model_X} are reported alongside both the 1a multi-model robustness panel AND {model_X}'s held-out validation MAE on the N=100 validation split — a pre-registered post-selection-inference defense."
+**Scope** — Phase 1b reports remain valid as "predictive findings on the quality-selected (model, prompt) cell." Multi-cell robustness is established by the 1a comparison itself (published alongside 1b). The thesis claim becomes:
+> "On Phase 1a (N=200 with a pre-registered 100/100 selection/validation split, 4 cheap models × 3 prompts = 12 cells), feature-category contribution rankings agreed within bootstrap noise across cells. We selected ({model_X}, {prompt_Y}) for Phase 1b under the §12.2 quality-primary criterion (with parse-failure and mode-collapse gates applied per cell, cost tie-break, and a named-Qwen × P0 tie-break-only fallback; all-DQ-fail returns a pause-for-review verdict rather than a silent override); the N=3,309 results on the selected cell are reported alongside both the 1a multi-cell robustness panel AND the cell's held-out validation MAE on the N=100 validation split — a pre-registered post-selection-inference defense."
 
-This is honest, internally consistent with the paper's primary metric, and avoids the cherry-picking objection.
+**History note**: the selection rule originated as a single-model rule (4 candidate models, single locked prompt — locked 2026-05-06). It was generalized to 12 candidate cells (4 models × 3 prompts) on 2026-05-28 per Bayati's signoff, after the 2026-05-15 advisor brief proposed a factorial prompt extension. The structural form (argmin MAE → DQ gates → cost tiebreak → named fallback → all-DQ-fail PAUSE) is preserved; only the domain expanded.
 
-**History note**: an earlier draft (2026-05-06 morning) proposed a cost-primary rule with quality as tie-break. That was reconsidered the same day after recognizing that the 4-cheap-panel cost spread is too narrow to dominate over typical quality differences, and that selecting on a metric different from the paper's headline metric creates an internal inconsistency that reviewers will flag. The cost-primary alternative is preserved in version-control history but is NOT what the OSF pre-reg locks.
+---
+
+### §12.3 Random-model column (post-hoc, no extra LLM calls; Bayati-signed 2026-05-28)
+
+Alongside the 12 (model, prompt) cells, a 13th–15th "Random × prompt" column is computed analytically post-hoc on the panel data. For each respondent in the Phase 1a panel cohort and each prompt P ∈ {P0, P1, P2}, a model is selected uniformly at random from {Qwen, DeepSeek, Llama-3.3, Kimi} via a seed=42 hash on `(respondent_id, prompt)`. That respondent's "Random × P" result for the primary_eval items is set equal to the corresponding (model, P) panel result. No additional LLM calls are made; the random column is a re-aggregation of existing panel data.
+
+**Allocation**: pure uniform random per (respondent, prompt). **No 50/50/50/50 balance constraint** — expected counts are ~50/model with binomial variance.
+
+**Purpose**: provides a deployment-mode sensitivity column. In real Phase 1B deployment each respondent only sees one model; the random column estimates "if a respondent in the Phase 1A cohort had only seen one randomly-assigned model, how would MAE look?" This is a between-respondent estimate of the panel-arm content, conditional on the panel cohort.
+
+**Scope and caveats** (must appear in the writeup wherever the random column is reported):
+
+- The random column is **NOT a §12.2 selector input**. The selector reads the 12 cells; the 3 random aggregates are reporting-only.
+- The random column is **NOT statistically independent of the panel cells**. Each random-column observation is one of the 4 model results for the same respondent; the panel and random columns share data. Reported as "post-hoc analytical sensitivity," not as independent confirmatory evidence.
+- The random column is **NOT a substitute for a between-respondent arm**. A real between-respondent design would draw separate respondents who only ever see one model; the post-hoc approach trades that independence for $0 marginal cost.
+- The random column **IS** appropriate for: (a) describing what the deployment-mode performance would look like if Phase 1A respondents had only seen one model; (b) bin-level LOO ΔMAE sensitivity comparison alongside the panel-arm ranking; (c) checking whether the §12.2-selected cell still has the best deployment-mode MAE under random assignment.
+
+---
+
+### §12.4 Prompt candidates for the Phase 1A factorial (Bayati-signed 2026-05-28)
+
+The three prompts in the Phase 1A panel arm are a 2×2 ablation isolating two design knobs: **voice** (1st-person vs. 2nd-person) and **structure** (key-value list vs. interview Q&A turns).
+
+| Candidate | Voice | Structure | Citation grounding |
+|---|---|---|---|
+| **P0 baseline** | 2nd person | 4-bin key-value list | Park et al. 2024 v2 (arXiv:2411.10109), surveys-only condition. This is the OSF v1 locked persona prompt (`build_persona_prompt()` in `gss_pipeline.py`). |
+| **P1 Argyle 1st-person prose** | 1st person | 4-bin clauses | Argyle, Busby, Fulda, Gubler, Rytting, Wingate (2023) "Out of One, Many: Using Language Models to Simulate Human Samples", *Political Analysis* 31(3), 337-351. |
+| **P2 Wang interview Q&A** | 2nd person (dialogue) | 4-bin Q-A turns | Wang, Pyatkin, Bhagavatula, Choi (2025) "The Prompt Makes the Person(a): A Systematic Evaluation of Sociodemographic Persona Prompting for LLMs", *Findings of EMNLP 2025*. |
+
+**Why these three (and not others)**:
+
+- **P0**: the citation baseline mirroring Park v2's surveys-only condition.
+- **P2**: the only paper in the persona-simulation literature with a direct head-to-head ablation of prompt format (Wang 2025: 3 role-adoption × 3 priming × 5 LLMs × 15 demographic groups × 100 OpinionQA items). Interview Q&A won across stereotyping, semantic diversity, and opinion alignment.
+- **P1**: fills a literature gap. Argyle 2023 uses 1st-person prose; Park / Hu / Bisbee / our baseline use 2nd person; no paper has compared the two head-to-head on a survey-prediction task. P1 makes the sweep a clean 2×2 (voice × structure).
+
+**Why not other variants** (considered and excluded):
+
+- Plain chain-of-thought: Sun et al. 2025 (PB&J, arXiv:2504.17993) show CoT gives no gain on OpinionQA (49.17% vs. 49.63% baseline).
+- Variable reordering within bins: Hu & Collier 2024 (ACL) report "little variation" from reorder / reparagraph ablations.
+- PB&J scaffolded rationale: +4.8 pp in Sun 2025 but requires an extra LLM pre-pass per respondent. Excluded under simplicity; deferred as a Phase 2 question.
+- Salecha 2024 brand-name removal: small expected effect on persona-prediction (Salecha tested self-administration, not other-prediction). Excluded.
+
+The supporting literature scan for these decisions is at `lit_review_prompt_variants_2026-05-15.md` (Park v2 + Argyle 2023 + Aher 2023 + Horton 2023 + Bisbee 2024 + Hu & Collier 2024 + Salecha 2024 + Wang 2025 + Sun 2025).
+
+**LOO and AUDIT-D compatibility**: all three prompts preserve the 4-bin structure (each bin is an isolable block; the 4-bin LOO ablation drops a whole bin). All three preserve per-item exclusion for AUDIT-D (single variable lines or Q-A pairs can be removed when the corresponding sensitivity_eval item is the prediction target). All three produce the same target output format at item-question time (single integer code).
 
 ---
 

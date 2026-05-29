@@ -5,8 +5,9 @@
 **Project lead**: Joyce Yu (Stanford GSB master's thesis program, 2026)
 **Faculty advisor**: Prof. Mohsen Bayati
 **OSF v1 draft date**: 2026-05-09 (Phase 1 design lean-locked + co-primary upgrade + cleanup audits absorbed)
-**Companion repo**: https://github.com/Joyceqx/gsbgen390-persona-pipeline (current pre-lock commit `4b8a8df` — Audit batch landed 2026-05-10 night, supersedes the 2026-05-09 evening draft commit `b5a9779`. Final OSF-lock commit hash will be the commit that adds Joyce + Bayati signoff to §17 open items; until then, `4b8a8df` is the authoritative reference)
-**Live design canonical source**: `gss_phase1_design.md` (in repo)
+**OSF v1.1 update**: 2026-05-28 (Bayati signoff received; Phase 1A panel arm extended to a 4-model × 3-prompt factorial; §12.2 generalized to joint (model, prompt) selection; random-model column added post-hoc; budget ~$756 → ~$792)
+**Companion repo**: https://github.com/Joyceqx/gsbgen390-persona-pipeline. The OSF-lock commit hash is the commit that lands the Bayati-confirmed extension on `main` and updates §17 item ⑥ to LOCKED.
+**Live design canonical source**: `gss_phase1_design.md` (in repo) — §12 reflects the Bayati-confirmed factorial extension and is the authoritative design source for OSF v1.1.
 
 ---
 
@@ -143,40 +144,45 @@ Validator check 7c confirms: every battery's `bin` field matches the actual taxo
 
 ## 6. LLM panel design
 
-### 6.1 Phase 1a (N=200 with 100/100 selection/validation split, multi-model)
+### 6.1 Phase 1a (N=200 with 100/100 selection/validation split, multi-model × 3 prompts factorial)
 
-- **N=200 respondents** drawn by `gss_pipeline.sample_respondents(200, seed=42)` (locked 2026-05-09 night per Audit-3 + Joyce decision; previously N=100). The 200 are split into a **selection set (first 100 in seed-42 order)** and a **held-out validation set (next 100)**. The §12.2 selector scores ONLY on the selection set; the validation set yields a `validation_mae` reported alongside the Phase 1b headline as a post-selection-inference defense.
-- 4 cheap OpenRouter models: Qwen-2.5-72B-Instruct, DeepSeek-V3.1, **Llama-3.3-70B-Instruct (Meta)**, Kimi K2 (panel revised 2026-05-09 night per Audit-3: MiniMax-M1 → Llama-3.3 to introduce one Western-trained model into the cheap panel).
-- n_samples = 1 per (respondent, condition, item).
-- 5 prompt conditions: Full + 4 LOO (drop demographic / behavioral / psychological / attitudinal). **Cheap panel runs primary_eval ONLY** (60 prompts/model/respondent); does NOT run sensitivity_eval — sensitivity is anchor-only per §3.2 (locked 2026-05-10 Joyce decision Option A).
-- + GPT-4o anchor on the **N=100 selection subset only**, n_samples = 2, **primary + sensitivity** (the only Park-comparable run; produces the per-item raw-accuracy table side-by-side with Park v2 SI Table 3 per §3.2).
-- Cost ~$17 cheap panel + ~$148 anchor = ~$165 for the Phase 1a window (the anchor run is shared with Phase 1b reporting per §6.6 + §5; same N=100 respondents, same records reused).
+- **N=200 respondents** drawn by `gss_pipeline.sample_respondents(200, seed=42)` (locked 2026-05-09 night per Audit-3 + Joyce decision). The 200 are split into a **selection set (first 100 in seed-42 order)** and a **held-out validation set (next 100)**. The §12.2 selector scores ONLY on the selection set; the validation set yields a `validation_mae` reported alongside the Phase 1b headline as a post-selection-inference defense.
+- 4 cheap OpenRouter models: Qwen-2.5-72B-Instruct, DeepSeek-V3.1, **Llama-3.3-70B-Instruct (Meta)**, Kimi K2.
+- **3 prompt candidates** (Bayati-signed 2026-05-28): P0 baseline (Park v2 surveys-only) + P1 Argyle 2023 1st-person prose + P2 Wang 2025 interview Q&A. See `gss_phase1_design.md` §12.4 for citations and rationale.
+- **Factorial cells**: 4 models × 3 prompts = **12 (model, prompt) cells**. Each respondent runs all 12 cells × 5 conditions (Full + 4 single-bin LOO) × primary_eval items.
+- **Random-model column** (post-hoc, no extra LLM calls): for each (respondent, prompt), a model is selected uniformly at random via seed=42 hash and the respondent's "Random × prompt" value is set equal to the corresponding (model, prompt) panel result. See `gss_phase1_design.md` §12.3.
+- n_samples = 1 per (respondent, condition, item, prompt, model).
+- 5 prompt conditions: Full + 4 LOO (drop demographic / behavioral / psychological / attitudinal). **Cheap panel runs primary_eval ONLY** (180 prompts/respondent = 12 items × 5 conditions × 3 prompts); does NOT run sensitivity_eval — sensitivity is anchor-only per §3.2 (locked 2026-05-10 Joyce decision Option A).
+- + **GPT-4o anchor on the N=100 selection subset, P0 only**, n_samples = 2, **primary + sensitivity** (the only Park-comparable run; produces the per-item raw-accuracy table side-by-side with Park v2 SI Table 3 per §3.2; P0-only confirmed 2026-05-28 to preserve Park comparability).
+- Cost ~$51 cheap panel factorial + ~$148 anchor = ~$199 for the Phase 1a window (the anchor run is shared with Phase 1b reporting per §6.6 + §5).
 
-### 6.2 §12.2 model-selection rule (Phase 1a → Phase 1b)
+### 6.2 §12.2 joint (model, prompt) cell selection rule (Phase 1a → Phase 1b)
 
-After Phase 1a completes, run `select_phase1b_model.py` to deterministically select the Phase 1b model. The locked rule:
+After Phase 1a completes, run `select_phase1b_model.py` to deterministically select the Phase 1b (model, prompt) cell. The locked rule (extended from "best model" to "best cell" 2026-05-28 per Bayati signoff):
 
 ```
-primary_score(model) = respondent-macro Likert MAE on 1a primary_eval (full condition only)
-choose argmin among DQ-passers
-  DQ-1: parse_failure_rate > 30% → disqualify
-  DQ-3: per-item relative variance:
-        var(model_i) ≥ 0.30 × var(human_2024_i) for ≥50% of items
+candidate cells = {(m, p) for m in {Qwen, DeepSeek, Llama-3.3, Kimi}
+                            for p in {P0, P1, P2}}                # 12 cells
+
+primary_score(cell) = respondent-macro Likert MAE on 1a primary_eval (full condition only)
+choose argmin over cells among DQ-passers
+  DQ-1: parse_failure_rate > 30% per cell → disqualify
+  DQ-3: per-item relative variance per cell:
+        var(cell_i) ≥ 0.30 × var(human_2024_i) for ≥50% of items
         (human variance reference: outputs/primary_eval_human_variance_2024.json)
 tie-break: within 5% of best MAE, pick lowest cost × (1 + parse_fail)
 all-DQ-fail: PAUSE for human review (return selected=None,
-             rationale="all_dq_fail_pause_for_review")
-             — locked 2026-05-09 night per Audit-2 + Joyce decision; the
-             previously-pre-registered Qwen-fallback-on-all-DQ-fail rule
-             was REMOVED because all-DQ-fail is a SIGNAL (prompt template,
-             parser, or model panel is broken) and bypassing the gate to
-             Qwen would waste ~$209-481 of paid Phase 1b/1c runs on a
-             failed model. Resume requires diagnosing the failure and
-             either rerunning Phase 1a, swapping the panel, or filing
-             an OSF amendment.
-qwen-tie-break: Qwen-2.5-72B-Instruct (named) ONLY when ≥2 candidates pass
-                DQ AND tie on both quality (within 5%) AND cost (within 1%).
-                This is the only remaining Qwen-fallback path.
+             rationale="all_dq_fail_pause_for_review").
+             Pre-registered as PAUSE 2026-05-09; the previously-considered
+             Qwen-fallback-on-all-DQ-fail rule was rejected because
+             all-DQ-fail is a SIGNAL (every prompt template or the entire
+             model panel is broken at the current OpenRouter snapshot)
+             and bypassing the gate would waste paid Phase 1b/1c runs on
+             a failed cell.
+qwen-p0-tie-break: Qwen-2.5-72B-Instruct × P0 baseline prompt (named) ONLY
+                    when ≥2 cells pass DQ AND tie on both quality (within 5%)
+                    AND cost (within 1%). This is the only remaining
+                    named-fallback path.
 ```
 
 `select_phase1b_model.py` implements this with **7-branch** synthetic-fixture self-test (argmin_mae [vanilla + 100/100 split] / tie_break_cost / all_dq_fail_pause_for_review [×2: DQ-1 + DQ-3] / fallback_qwen_no_data / fallback_qwen_tie — all pass; CLI ENFORCES the locked 100/100 split via `_derive_phase1a_split` per Audit-fresh review 2026-05-09 night, with `--no-split` only as a labeled debug escape hatch that prints an explicit stderr warning).
@@ -189,30 +195,31 @@ qwen-tie-break: Qwen-2.5-72B-Instruct (named) ONLY when ≥2 candidates pass
 
 The pre-registered commitment is **transparent reporting + manual abort authority**. The Phase 1b headline reports both `selection_mae` and `validation_mae` side-by-side; any decision to abort on the gap is logged as an explicit OSF amendment with rationale rather than silently re-running with a different model.
 
-### 6.3 Phase 1b (N=3,309, single model)
+### 6.3 Phase 1b (N=3,309, single (model, prompt) cell)
 
-- Single model selected by §12.2 rule on Phase 1a output.
+- Single (model, prompt) cell selected by §12.2 joint rule on Phase 1a output.
 - n_samples = 1.
-- Same 5 prompt conditions as 1a (Full + 4 single-bin LOO). **Primary_eval ONLY** — sensitivity_eval is anchor-only per §3.2 (locked 2026-05-10 Joyce decision Option A).
-- GPT-4o anchor: the SAME run as the Phase 1a anchor (one anchor invocation on the N=100 selection split, primary + sensitivity, n_samples=2 — the records serve both Phase 1a and Phase 1b reporting purposes; do not double-count).
-- Cost ~$71 selected model (60 primary prompts × 3,309 respondents × ~$0.000356/call). Anchor cost (~$148) is in the §6.1 Phase 1a window per the consolidated single-anchor design.
+- Same 5 prompt conditions as 1a (Full + 4 single-bin LOO), but only on the selected prompt. **Primary_eval ONLY** — sensitivity_eval is anchor-only per §3.2.
+- GPT-4o anchor: the SAME run as the Phase 1a anchor (one anchor invocation on the N=100 selection split, primary + sensitivity, n_samples=2, **P0 only** — the records serve both Phase 1a and Phase 1b reporting purposes; do not double-count).
+- Cost ~$71 selected cell (60 primary prompts × 3,309 respondents × ~$0.000356/call). Anchor cost (~$148) is in the §6.1 Phase 1a window per the consolidated single-anchor design.
 
-**Per-prompt math (locked 2026-05-10 per Joyce decision Option A; supersedes 2026-05-09 night Codex N8 numbers under the new sensitivity scope)**:
+**Per-prompt math (Bayati signoff 2026-05-28)**:
 
-   - **Cheap panel** (Qwen / DeepSeek / Llama-3.3 / Kimi): **60 prompts/respondent** = 12 primary_eval items × 5 conditions. **No sensitivity** — sensitivity is anchor-only.
-   - **GPT-4o anchor** (N=100 selection split, single shared run): 60 primary + 118 sensitivity = **178 prompts/respondent × n_samples=2 = 356 calls/respondent**.
+   - **Cheap panel Phase 1a** (Qwen / DeepSeek / Llama-3.3 / Kimi × P0 / P1 / P2): **180 prompts/respondent** = 12 primary_eval items × 5 conditions × 3 prompts. **No sensitivity** — sensitivity is anchor-only.
+   - **Cheap panel Phase 1b** (selected cell): 60 prompts/respondent = 12 items × 5 conditions × 1 prompt.
+   - **GPT-4o anchor** (N=100 selection split, single shared run, **P0 only**): 60 primary + 118 sensitivity = **178 prompts/respondent × n_samples=2 = 356 calls/respondent**.
 
 ### 6.4 The N=3,309 headline
 
-The N=3,309 headline is the **§12.2-selected single model**, NOT the panel median. The panel median is reported as a Phase 1a (N=200, 100/100-split) robustness summary for cross-model coherence, NOT as the headline. Park comparison is via the N=100 GPT-4o anchor subset (per-item raw accuracy table side-by-side with Park v2 SI Table 3), NOT via normalized Park-style fidelity comparison.
+The N=3,309 headline is the **§12.2-selected single (model, prompt) cell**, NOT the panel median across the 12 panel cells. The panel median is reported as a Phase 1a (N=200, 100/100-split) robustness summary for cross-cell coherence, NOT as the headline. The random-model column (`gss_phase1_design.md` §12.3) is a post-hoc analytical sensitivity comparator, not the headline. Park comparison is via the N=100 GPT-4o anchor subset on the P0 baseline prompt (per-item raw accuracy table side-by-side with Park v2 SI Table 3), NOT via normalized Park-style fidelity comparison.
 
 ### 6.5 Diversity-scope caveat
 
 The 4 cheap-panel models after the 2026-05-09 night Audit-3 swap are **3 China-trained (Alibaba / DeepSeek / Moonshot) + 1 Western-trained (Meta-Llama)**. The diversity is real across teams, RLHF philosophies, AND now training regions; the GPT-4o anchor provides a second Western-trained reference for direct Park v2 anchoring. Any "robust across LLM families" claim is restricted to **N=200 panel comparison** wording (Phase 1a panel size also expanded for the 100/100 selection/validation split); the N=3,309 headline does not support cross-family generalization on its own (single §12.2-selected model).
 
-### 6.6 Phase 1c — co-primary Battery LOO budget (locked 2026-05-09 night per Audit-3 + Joyce decision; reordered to §6.6 after §6.5 on 2026-05-10; total budget recomputed under sensitivity-scope Option A on 2026-05-10)
+### 6.6 Phase 1c — co-primary Battery LOO budget (locked 2026-05-09 night per Audit-3 + Joyce decision; budget recomputed under Bayati signoff 2026-05-28)
 
-The Battery LOO co-primary requires **34 batteries × 12 primary_eval items × 3,309 respondents × 1 model × 1 sample ≈ 1,350,000 LLM calls** at the §12.2-selected cheap model (~$0.000356/call assumed) = **~$481 incremental**. The Shapley 16-condition extension adds **~$38 incremental** (11 multi-bin LOO conditions × 12 items × N=200 1a respondents × 4 cheap models ≈ 105,600 calls × ~$0.000356/call; the Full + 4 single-bin LOO conditions are already produced by the Phase 1a cheap-panel run, so Shapley only needs the 11 *additional* multi-bin LOO conditions). The total Phase 1 budget under Option A (cheap panel primary-only; sensitivity anchor-only) is ~$237 (core: smoke + 1a cheap + 1b cheap + GPT-4o anchor with sensitivity) + $481 (Battery LOO) + ~$38 (Shapley) ≈ **~$756**. This budget assumes no prompt caching and must be re-verified against OpenRouter prices at smoke time. Joyce + Bayati must approve the revised budget before Phase 1c launches; reduction options if needed: (a) reduce Battery LOO to N=1,500 subsample (saves ~$263), (b) restrict Battery LOO to attitudinal-bin batteries only (saves ~$209), (c) defer Battery LOO to Phase 1d.
+The Battery LOO co-primary requires **34 batteries × 12 primary_eval items × 3,309 respondents × 1 cell × 1 sample ≈ 1,350,000 LLM calls** at the §12.2-selected cheap (model, prompt) cell (~$0.000356/call assumed) = **~$481 incremental**. The Shapley 16-condition extension adds **~$38 incremental** (11 multi-bin LOO conditions × 12 items × N=200 1a respondents × 4 cheap models ≈ 105,600 calls × ~$0.000356/call; the Full + 4 single-bin LOO conditions are already produced by the Phase 1a cheap-panel run on the §12.2-selected prompt, so Shapley only needs the 11 *additional* multi-bin LOO conditions). The total Phase 1 budget under Bayati-signed Option A+factorial is ~$273 (core: smoke + 1a factorial cheap + 1b cheap + GPT-4o anchor P0-only) + ~$481 (Battery LOO) + ~$38 (Shapley) ≈ **~$792**. This budget assumes no prompt caching and must be re-verified against OpenRouter prices at smoke time. Reduction options if needed: (a) reduce Battery LOO to N=1,500 subsample (saves ~$263), (b) restrict Battery LOO to attitudinal-bin batteries only (saves ~$209), (c) defer Battery LOO to Phase 1d.
 
 ---
 
@@ -462,9 +469,9 @@ Per `archive/PROJECT_SYNTHESIS.md` §4 (moved to archive 2026-05-13; the table b
 
 ---
 
-## 17. Open items — Joyce decisions LOCKED 2026-05-10 night; Bayati signoff still pending
+## 17. Open items — all locked (Bayati signoff received 2026-05-28)
 
-This section was originally a 7-item open list pending both Joyce + Bayati signoff. As of 2026-05-10 night, **Joyce has locked her decisions on items ①②③⑤⑦**; items ④⑥ remain in progress (Inglehart-Welzel cite verification being done by Claude; Bayati signoff is the external dependency). Each item now shows its locked status + the locking decision.
+This section was originally a 7-item open list pending both Joyce + Bayati signoff. As of 2026-05-28, **all 7 items are LOCKED**. Bayati's signoff on the OSF v1 draft (item ⑥) was received together with one design extension: the Phase 1A panel arm runs a 4-model × 3-prompt factorial with §12.2 generalized to joint (model, prompt) cell selection (see §6.1, §6.2, and `gss_phase1_design.md` §12.2 / §12.3 / §12.4). The extension is reflected throughout this OSF v1.1 update.
 
 1. **Theory candidate list final** — ✅ **LOCKED 2026-05-10 (Joyce decision)**: the 6-framework list in `theory_interpretation_guide.md` (MFT / Schwartz / Bourdieu / Cultural Theory / Inglehart-Welzel / Big Five) is the **locked set**. NOT subject to addition or removal post-OSF-lock without amendment. (Inglehart-Welzel retention is contingent on item ④ citation verification below — if verification fails, the framework will be dropped via pre-lock amendment, taking the list to 5 frameworks.)
 
@@ -476,11 +483,11 @@ This section was originally a 7-item open list pending both Joyce + Bayati signo
 
 5. **Driver runtime extension timing** — ✅ **LOCKED 2026-05-10 (Joyce decision; rewording 2026-05-10 night to remove misleading "Phase 1b-result-conditional" framing)**: the `gss_driver.py` orchestration extensions for Battery LOO + Shapley (currently NOT-IMPLEMENTED stubs that print an OSF §13.2 pointer) get implemented **after Phase 1b results land**, NOT because Phase 1c is contingent on a specific bin winning the 4-bin LOO — **Phase 1c is co-primary by design and runs unconditionally on any non-degenerate Phase 1b result** — but because the ~1 day of orchestration-driver work is wasted effort if Phase 1b reveals a methodological problem that needs fixing first (parse-failure spike, R1 leakage suspected, model collapse, etc.). The skip / scale-back conditions for Phase 1c are listed in item ⑦ (reduction options) and apply regardless of which bin dominates Phase 1b: (a) ALL 4 bins near-zero ΔMAE → investigate Phase 1 power / leakage hygiene before committing more spend; (b) Phase 1b exposes a methodological problem → fix first; (c) budget pressure → use one of the documented reduction options. Implementation will pass synthetic-fixture self-tests on driver-output records BEFORE any paid Phase 1c run.
 
-6. **Bayati final signoff** — 🔄 **PENDING (external dependency)**: faculty advisor approval on the OSF v1 draft as a whole. Joyce is preparing a 1-2 page executive brief (`BAYATI_BRIEF.md` — being written 2026-05-10 night by Claude) summarizing the locked design + budget + the 7 items for Bayati's review. OSF cannot be filed until Bayati signs off.
+6. **Bayati final signoff** — ✅ **LOCKED 2026-05-28**: faculty advisor approval on the OSF v1 draft received, with one design extension. Prof. Bayati signed off on the OSF v1 design as drafted, AND requested the Phase 1A panel arm be extended to a 4-model × 3-prompt factorial (P0 baseline + P1 Argyle 1st-person + P2 Wang interview Q&A; see `gss_phase1_design.md` §12.4 for the literature grounding). The §12.2 selector is generalized to joint (model, prompt) cell selection (§6.2 above); a random-model column is added as a post-hoc analytical aggregation on the panel data (no extra LLM calls; see `gss_phase1_design.md` §12.3). The 2026-05-15 advisor brief that drove this decision is archived at `archive/Project Brief — Phase 1A Updates 2026-05-15.md`; the supporting literature scan is at `lit_review_prompt_variants_2026-05-15.md`.
 
-7. **Phase 1 budget approval ~$756** — ✅ **LOCKED 2026-05-10 (Joyce decision)**: Joyce approves the ~$756 total (~$237 core: smoke + 1a cheap N=200 + 1b cheap N=3,309 + GPT-4o anchor with sensitivity; +~$481 Battery LOO co-primary at N=3,309; +~$38 Shapley 16-condition extension on N=200 1a panel — arithmetic: 11 multi-bin LOO conditions × 12 items × 200 respondents × 4 cheap models ≈ 105,600 calls × ~$0.000356/call, since the 5 Full+single-bin conditions are already in 1a output). Joyce explicitly notes the budget is fine and could absorb modest expansion (e.g., reverting to the $875 plan with cheap-panel sensitivity) if Bayati requests it during signoff. Evolution: ~$280-300 (early, wrong Battery LOO grid) → ~$450 (Codex-N9-fixed at N=1,500, all-China panel) → ~$875 (Audit-3 + Joyce decisions: full N=3,309 + 100/100 split + Llama swap, cheap panel + anchor both running sensitivity) → **~$756 (Joyce decision Option A: cheap panel primary-only, sensitivity anchor-only per OSF §3.2)**. Reduction options remain available if Phase 1b shows weak Battery LOO motivation: (a) Battery LOO at N=1,500 subsample (saves ~$263), (b) Battery LOO restricted to attitudinal-bin batteries only (15 of 34 → saves ~$209), or (c) defer Battery LOO to Phase 1d after Phase 1b headline justifies the spend.
+7. **Phase 1 budget approval ~$792** — ✅ **LOCKED 2026-05-28 (Joyce + Bayati)**: Total Phase 1 ~$792 = ~$273 core (smoke + 1a cheap factorial N=200 × 3 prompts + 1b cheap N=3,309 + GPT-4o anchor P0-only) + ~$481 Battery LOO at N=3,309 + ~$38 Shapley 16-condition extension on the 1a panel. The +$36 increment over the 2026-05-10 ~$756 baseline is entirely from the 3-prompt panel expansion (1a cheap from ~$17 to ~$51). Random-model column adds $0 since it is computed analytically post-hoc on existing panel data. Evolution: ~$280-300 (early, wrong Battery LOO grid) → ~$450 (Codex-N9-fixed at N=1,500, all-China panel) → ~$875 (Audit-3: full N=3,309 + 100/100 split + Llama swap, cheap panel + anchor running sensitivity) → ~$756 (Joyce decision Option A 2026-05-10: cheap panel primary-only, sensitivity anchor-only) → **~$792 (Bayati signoff 2026-05-28: + 3-prompt panel factorial)**. Reduction options if Phase 1b weakens the Battery LOO case: (a) Battery LOO at N=1,500 subsample (saves ~$263), (b) Battery LOO restricted to attitudinal-bin batteries only (15 of 34 → saves ~$209), or (c) defer Battery LOO to Phase 1d.
 
-**Status summary at 2026-05-10 night** (updated after Inglehart-Welzel cite check completed): **6 of 7 items LOCKED**. Item ⑥ (Bayati final signoff on OSF v1 as a whole) is the only external blocker. Joyce has prepared a 1-2 page executive brief (`BAYATI_BRIEF.md`) for Bayati's review.
+**Status summary at 2026-05-28**: **7 of 7 items LOCKED**. Item ⑥ Bayati signoff received on 2026-05-28 with one design extension (factorial Phase 1A panel arm; see item ⑥ above). OSF v1.1 incorporates the extension throughout §6 and §10; the canonical design source `gss_phase1_design.md` §12 is updated to match. Budget updated from ~$756 → ~$792 (+$36 from the 3-prompt panel expansion; see §6.6 and §17 item ⑦).
 
 ---
 
@@ -499,7 +506,7 @@ This section was originally a 7-item open list pending both Joyce + Bayati signo
 
 > **Title**: Hierarchical Feature Attribution for LLM Persona Prediction of GSS 2024 Attitude Outcomes: A Pre-Registered Analysis Plan
 >
-> **Abstract**: This preregistration covers Phase 1 of a multi-phase research program on feature attribution for LLM persona synthesis. Phase 1 estimates which of four pre-registered survey-collectible feature categories (demographic / behavioral / psychological / attitudinal) most contribute to LLM persona prediction of held-out GSS 2024 attitude outcomes (full N=3,309 GSS 2024 cross-section), and within each pre-registered bin, which construct-level batteries (34 across all 4 bins) drive the predictive signal. The design has two co-primary analyses at hierarchical levels: a 4-bin leave-one-out ablation (broad feature-category attribution) and a 34-battery LOO with nested Holm-Bonferroni primary correction + joint-34 Holm sensitivity gate (mechanistic cluster-level attribution). Bin-level Shapley decomposition serves as 4-bin LOO robustness. Leakage hygiene is provided by R1 battery-level structural exclusion (mirroring Park v2's BFI whole-trait-block hold-out applied to GSS) and R2 regression-baseline comparator (a non-LLM Ridge/Logistic baseline on the same R1-respecting input pool). LLM panel: **Phase 1a runs all 4 cheap OpenRouter models on N=200 (Qwen-2.5-72B / DeepSeek-V3.1 / Llama-3.3-70B-Instruct / Kimi K2; 3 China-trained + 1 Western-trained for cross-family balance) on the 12 primary_eval items only, under a pre-registered 100/100 selection/validation split, plus a single GPT-4o anchor invocation on the N=100 selection subset that runs both primary AND the 118 sensitivity_eval items (per §3.2: sensitivity_eval is anchor-only — its purpose is the per-item Park v2 SI Table 3 raw-accuracy comparison, NOT the headline LOO/Battery LOO/§12.2-selector inputs); the §12.2 selector scores only on the N=100 selection split's primary_eval; held-out validation_mae is reported alongside the Phase 1b headline as a post-selection-inference defense; if all models fail DQ, the selector returns a pause-for-review verdict and Phase 1b does not proceed**; Phase 1b runs the single §12.2-selected model on the full N=3,309 (primary_eval only). Practical-effect-size thresholds (small <0.02 / modest 0.02-0.05 / substantive ≥0.05) gate substantive interpretation alongside Holm significance. Theory interpretation is Discussion-section only; null or mixed theoretical alignment is reported with equal prominence to positive alignment. Full design canonical source: `gss_phase1_design.md` (current pre-lock commit `4b8a8df` 2026-05-10 night, which supersedes the 2026-05-09 draft `b5a9779`).
+> **Abstract**: This preregistration covers Phase 1 of a multi-phase research program on feature attribution for LLM persona synthesis. Phase 1 estimates which of four pre-registered survey-collectible feature categories (demographic / behavioral / psychological / attitudinal) most contribute to LLM persona prediction of held-out GSS 2024 attitude outcomes (full N=3,309 GSS 2024 cross-section), and within each pre-registered bin, which construct-level batteries (34 across all 4 bins) drive the predictive signal. The design has two co-primary analyses at hierarchical levels: a 4-bin leave-one-out ablation (broad feature-category attribution) and a 34-battery LOO with nested Holm-Bonferroni primary correction + joint-34 Holm sensitivity gate (mechanistic cluster-level attribution). Bin-level Shapley decomposition serves as 4-bin LOO robustness. Leakage hygiene is provided by R1 battery-level structural exclusion (mirroring Park v2's BFI whole-trait-block hold-out applied to GSS) and R2 regression-baseline comparator (a non-LLM Ridge/Logistic baseline on the same R1-respecting input pool). LLM panel: **Phase 1a runs a factorial 4-cheap-model × 3-prompt panel on N=200 (Qwen-2.5-72B / DeepSeek-V3.1 / Llama-3.3-70B-Instruct / Kimi K2; 3 China-trained + 1 Western-trained for cross-family balance, crossed with 3 literature-grounded prompts — P0 baseline mirroring Park v2 surveys-only, P1 Argyle 2023 1st-person prose, P2 Wang 2025 interview Q&A — totaling 12 (model, prompt) cells) on the 12 primary_eval items only, under a pre-registered 100/100 selection/validation split, plus a single GPT-4o anchor invocation on the N=100 selection subset (P0 only) that runs both primary AND the 118 sensitivity_eval items (per §3.2: sensitivity_eval is anchor-only — its purpose is the per-item Park v2 SI Table 3 raw-accuracy comparison, NOT the headline LOO/Battery LOO/§12.2-selector inputs); the §12.2 selector scores only on the N=100 selection split's primary_eval and selects jointly across the 12 (model, prompt) cells; a random-model column is reported as a post-hoc analytical aggregation on the panel data (no extra LLM calls); held-out validation_mae is reported alongside the Phase 1b headline as a post-selection-inference defense; if all 12 cells fail DQ, the selector returns a pause-for-review verdict and Phase 1b does not proceed**; Phase 1b runs the single §12.2-selected (model, prompt) cell on the full N=3,309 (primary_eval only). Practical-effect-size thresholds (small <0.02 / modest 0.02-0.05 / substantive ≥0.05) gate substantive interpretation alongside Holm significance. Theory interpretation is Discussion-section only; null or mixed theoretical alignment is reported with equal prominence to positive alignment. Full design canonical source: `gss_phase1_design.md` (Bayati-signed factorial extension 2026-05-28; supporting literature scan at `lit_review_prompt_variants_2026-05-15.md`).
 
 ---
 
