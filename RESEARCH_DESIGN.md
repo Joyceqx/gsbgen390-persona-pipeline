@@ -282,7 +282,7 @@ Analyzer: `shapley_decomposition.py`.
 | `src/select_phase1b_model.py` | OSF-v1 single-model selector with DQ gates; kept as legacy reference for the pre-factorial design. |
 | `src/select_phase1b_cell.py` | §7 joint (model, prompt) cell selector. Reads `outputs/phase1a_raw.parquet`. Implemented + 6 self-tests pass. |
 | `src/write_phase1a_parquet.py` | §6.2 long-format parquet writer + Random column. Implemented + 6 self-tests pass. |
-| `src/gss_driver.py` | Orchestrator with `--phase1a` / `--phase1b` / `--phase1b-anchor` modes; implemented + tested for single-prompt panel. **3-prompt factorial extension pending.** |
+| `src/gss_driver.py` | Orchestrator with `--phase1a` / `--phase1b` / `--phase1b-anchor` modes. 3-prompt factorial extension implemented: `--phase1a` loops over P0/P1/P2 (writes three per-prompt JSONs) and auto-consolidates into `outputs/phase1a_raw.parquet`. `--phase1b-prompt {P0,P1,P2}` required for non-anchor Phase 1B runs once the factorial parquet exists. Smoke test pending. |
 | `src/battery_loo.py`, `src/shapley_decomposition.py` | Phase 1C analyzers; implemented + self-tested. **Orchestration drivers (`--battery-loo`, `--shapley`) pending.** |
 | `src/regression_baseline.py` | R2 baseline (Ridge + multinomial Logistic, 5-fold CV); implemented + tested |
 | `src/validate_taxonomy.py`, `src/lint_writeup_language.py` | Lint / validation utilities; implemented + tested |

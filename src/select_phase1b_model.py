@@ -31,10 +31,12 @@ This script is the canonical executable form of the rule. Running it on the
 Phase-1a output produces a single deterministic decision plus an audit trail,
 so the §7 decision is reproducible and reviewable.
 
-NOTE (2026-05-28): module still implements the OSF-v1 single-model selector.
-The factorial extension to joint (model, prompt) cells over 12 panel cells
-plus the random-model post-hoc column (per RESEARCH_DESIGN.md §5.2 + §7) is
-queued as Phase 1A code extension #2 and not yet implemented here.
+NOTE (2026-05-28): this module implements the OSF-v1 single-model selector
+and is preserved as the legacy reference for the pre-factorial design. The
+Bayati-confirmed joint (model, prompt) cell selector — 12 panel cells +
+post-hoc random-model column (per RESEARCH_DESIGN.md §5.2 + §7) — lives at
+`src/select_phase1b_cell.py`. New runs should use that module; this file
+should not be invoked for the factorial pipeline.
 
 Usage:
     python3 src/select_phase1b_model.py outputs/phase1a_raw.parquet

@@ -4,8 +4,12 @@ The three prompt variants in Phase 1A's 4×3 factorial. P0 mirrors the Park v2
 surveys-only baseline; P1 is an Argyle-style 1st-person prose recasting; P2 is
 a Wang-style interview Q&A. All three share information equivalence by design:
 the same `_extract_features()` function decides which features appear, so any
-MAE difference across cells comes from voice/structure, not from one prompt
-quietly including more features than another.
+MAE difference across cells cannot be attributed to one prompt quietly
+including more features than another. The three prompts are NOT a crossed
+design over voice or structure axes — they are three published format
+candidates from the persona-simulation literature, treated end-to-end as a
+selector input rather than as a controlled attribution experiment
+(see RESEARCH_DESIGN.md §5.2).
 
 Audit-compliance properties enforced here:
 

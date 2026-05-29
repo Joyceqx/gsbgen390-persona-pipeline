@@ -128,8 +128,24 @@ CONDITIONS_PRIMARY = [
 # smoke-test time.
 SEED_BASE = 42
 
-def _derive_seed(rid: int, condition: str, item_id: str, model: str, sample_idx: int) -> int:
-    payload = f"{SEED_BASE}|{rid}|{condition}|{item_id}|{model}|{sample_idx}".encode("utf-8")
+def _derive_seed(
+    rid: int,
+    condition: str,
+    item_id: str,
+    model: str,
+    sample_idx: int,
+    prompt_id: str = "P0",
+) -> int:
+    """Per-call deterministic seed. `prompt_id` is part of the payload so the
+    3-prompt factorial does not share seeds across P0/P1/P2 — if it did, the
+    provider could give correlated answers to (rid, item, model) for the three
+    prompt variants, biasing the prompt comparison towards zero. The default
+    "P0" lets sensitivity-pass and smoke-test callers stay one-liners; it is
+    NOT byte-equal to the pre-2026-05-28 OSF-v1 seed format (which had no
+    prompt_id in the payload), so any cached pre-factorial records would
+    re-roll seeds on resume. No paid factorial run has been launched yet, so
+    this seed-format break is internal-only."""
+    payload = f"{SEED_BASE}|{rid}|{condition}|{item_id}|{model}|{prompt_id}|{sample_idx}".encode("utf-8")
     h = hashlib.sha256(payload).digest()
     return int.from_bytes(h[:4], "big") & 0x7FFFFFFF
 
@@ -272,7 +288,7 @@ def run_primary_one_respondent(
             for m in models:
                 samples: list[dict] = []
                 for s_idx in range(n_samples):
-                    seed = _derive_seed(rid, cond_name, item["id"], m, s_idx)
+                    seed = _derive_seed(rid, cond_name, item["id"], m, s_idx, prompt_id=prompt_id)
                     try:
                         raw = call_llm(system, question, model=m,
                                         temperature=temperature, seed=seed)
@@ -955,13 +971,26 @@ if __name__ == "__main__":
 
     # Resolve which prompt variants to run. --phase1a runs the 3-prompt factorial
     # (P0 + P1 + P2). --phase1b runs the single §7-selected (model, prompt) cell;
-    # --phase1b-prompt must be specified once Phase 1A factorial output exists,
-    # otherwise it defaults to P0 for OSF-v1 backward compatibility. The anchor
-    # is locked to P0 (per RESEARCH_DESIGN.md §5.5 — Park v2 SI Table 3 anchor
-    # comparability requires the surveys-only baseline).
+    # if the factorial parquet exists then --phase1b-prompt is REQUIRED (Phase 1B
+    # headlines the §7-selected cell — silently defaulting to P0 would risk
+    # running Phase 1B on a prompt the selector did not choose). If no factorial
+    # has been run yet (OSF-v1 backward compatibility path), --phase1b-prompt
+    # may be omitted and defaults to P0. The anchor mode is locked to P0
+    # (per RESEARCH_DESIGN.md §5.5 — Park v2 SI Table 3 anchor comparability).
     if args.phase1a:
         prompt_ids = ["P0", "P1", "P2"]
     elif args.phase1b:
+        factorial_parquet = OUTPUTS / "phase1a_raw.parquet"
+        if args.phase1b_prompt is None and factorial_parquet.exists():
+            print(
+                f"REFUSING: --phase1b-prompt is required when {factorial_parquet.name} "
+                f"exists (the factorial has run; Phase 1B should use the §7-selected "
+                f"prompt). Run `python3 src/select_phase1b_cell.py "
+                f"{factorial_parquet}` to choose the cell, then pass "
+                f"--phase1b-prompt {{P0,P1,P2}}.",
+                file=sys.stderr,
+            )
+            sys.exit(2)
         prompt_ids = [args.phase1b_prompt or "P0"]
     else:
         prompt_ids = ["P0"]
