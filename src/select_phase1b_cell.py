@@ -125,10 +125,25 @@ def _cell_parse_failure_rate(cell_df: pd.DataFrame) -> float:
 
 
 def _cell_per_item_variance(cell_df: pd.DataFrame) -> dict[str, float]:
+    """Per-item population variance of the cell's predictions, computed at
+    the RESPONDENT level so n_samples > 1 does not inflate the estimate.
+
+    With n_samples=2 (Phase 1A factorial), each (respondent_id, item) appears
+    as 2 rows. The pre-2026-05-29 code took variance over all parse_ok rows,
+    so within-respondent LLM jitter contributed to "variance" alongside the
+    real cross-respondent variation the DQ-3 check cares about. Fix:
+    aggregate to one prediction per (respondent_id, item) first (mean across
+    n_samples), then variance across respondents. Comparison against the
+    human-variance reference (also respondent-level by construction) now
+    apples-to-apples (Reviewer round-3 P2 #3).
+    """
     by_item: dict[str, float] = {}
-    ok = cell_df[cell_df["parse_ok"]]
-    for item, sub in ok.groupby("item"):
-        codes = sub["pred_code"].dropna().tolist()
+    ok = cell_df[cell_df["parse_ok"] & cell_df["pred_code"].notna()]
+    if ok.empty:
+        return by_item
+    per_rid_item = ok.groupby(["item", "respondent_id"])["pred_code"].mean()
+    for item, vals in per_rid_item.groupby(level=0):
+        codes = vals.tolist()
         by_item[item] = float(statistics.pvariance(codes)) if len(codes) >= 2 else 0.0
     return by_item
 
@@ -731,6 +746,51 @@ def _test_parse_fail_conservative_vs_optimistic() -> None:
     )
 
 
+def _test_dq3_respondent_level_variance() -> None:
+    """DQ-3 variance must aggregate to respondent-level before computing the
+    cross-respondent variance, so n_samples > 1 does not inflate the estimate
+    via within-respondent LLM jitter (Reviewer round-3 P2 #3).
+
+    Construct: a single (item, rid) appearing as 2 rows that disagree by 2
+    codes. Pre-fix `_cell_per_item_variance` would treat them as 2 separate
+    "respondents" and report variance=1.0; post-fix averages them to a single
+    prediction (per-rid mean) and reports variance=0.0 (only 1 distinct rid).
+    """
+    rows = [
+        # one rid, one item, 2 disagreeing samples (n_samples=2 LLM jitter)
+        {"respondent_id": 0, "model": "qwen/qwen-2.5-72b-instruct",
+         "prompt": "P0", "condition": "Full", "item": "X",
+         "true_code": 3, "pred_code": 1,
+         "parse_ok": True, "abs_err": 2, "sample_position": 1},
+        {"respondent_id": 0, "model": "qwen/qwen-2.5-72b-instruct",
+         "prompt": "P0", "condition": "Full", "item": "X",
+         "true_code": 3, "pred_code": 5,
+         "parse_ok": True, "abs_err": 2, "sample_position": 2},
+    ]
+    df = pd.DataFrame(rows)
+    v = _cell_per_item_variance(df)
+    # Single rid → cross-respondent variance is 0 (not pvariance(1, 5) = 4)
+    assert v == {"X": 0.0}, v
+
+    # Add a second rid → 2 distinct per-rid means; variance now real.
+    rows2 = rows + [
+        {"respondent_id": 1, "model": "qwen/qwen-2.5-72b-instruct",
+         "prompt": "P0", "condition": "Full", "item": "X",
+         "true_code": 7, "pred_code": 7,
+         "parse_ok": True, "abs_err": 0, "sample_position": 1},
+        {"respondent_id": 1, "model": "qwen/qwen-2.5-72b-instruct",
+         "prompt": "P0", "condition": "Full", "item": "X",
+         "true_code": 7, "pred_code": 7,
+         "parse_ok": True, "abs_err": 0, "sample_position": 2},
+    ]
+    df2 = pd.DataFrame(rows2)
+    v2 = _cell_per_item_variance(df2)
+    # rid 0 → mean(1, 5) = 3; rid 1 → mean(7, 7) = 7;
+    # pvariance(3, 7) = 4.
+    assert abs(v2["X"] - 4.0) < 1e-6, v2
+    print("  [dq3_respondent_level_variance] PASSED")
+
+
 def _test_bootstrap_ci_brackets_point() -> None:
     """Bootstrap CI must bracket the point estimate, both bounds in [0, 1]
     (the normalized MAE range), and CI width should be > 0 for a non-
@@ -761,8 +821,9 @@ def run_self_tests() -> int:
     _test_fallback_qwen_p0_tie()
     _test_random_column_reporting()
     _test_parse_fail_conservative_vs_optimistic()
+    _test_dq3_respondent_level_variance()
     _test_bootstrap_ci_brackets_point()
-    print("✓ ALL 8 SELF-TESTS PASSED")
+    print("✓ ALL 9 SELF-TESTS PASSED")
     return 0
 
 
