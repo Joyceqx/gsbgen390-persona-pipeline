@@ -966,12 +966,14 @@ if __name__ == "__main__":
     else:
         prompt_ids = ["P0"]
 
+    per_prompt_outputs: list[Path] = []
     for pid in prompt_ids:
         per_prompt_out = (
             out.with_name(out.stem + f"_{pid}" + out.suffix)
             if len(prompt_ids) > 1
             else out
         )
+        per_prompt_outputs.append(per_prompt_out)
         run_phase1(
             n=n,
             models=models,
@@ -984,3 +986,28 @@ if __name__ == "__main__":
             resume=not args.no_resume,
             force_resume_partial=args.force_resume_partial,
         )
+
+    # After --phase1a completes the 3-prompt factorial, consolidate the per-prompt
+    # JSON artifacts into the canonical long-format parquet (RESEARCH_DESIGN.md
+    # §6.2). The §7 selector reads the parquet, not the JSONs. Failure here is
+    # non-fatal — the JSON artifacts are the source of truth and the writer can
+    # be re-run manually via `python3 src/write_phase1a_parquet.py --inputs ...`.
+    if args.phase1a and len(per_prompt_outputs) == 3:
+        try:
+            from write_phase1a_parquet import build_dataframe
+            parquet_out = OUTPUTS / "phase1a_raw.parquet"
+            print(f"\nConsolidating 3 per-prompt JSONs → {parquet_out.name}")
+            df = build_dataframe(per_prompt_outputs)
+            df.to_parquet(parquet_out, index=False)
+            print(
+                f"  wrote {len(df):,} rows  "
+                f"({df.groupby(['model', 'prompt']).ngroups} cells, "
+                f"{df['item'].nunique()} items)"
+            )
+        except Exception as e:
+            print(
+                f"  warning: parquet consolidation failed: {type(e).__name__}: {e}\n"
+                f"  re-run manually: python3 src/write_phase1a_parquet.py "
+                f"--inputs {' '.join(str(p) for p in per_prompt_outputs)}",
+                file=sys.stderr,
+            )
