@@ -46,6 +46,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 WORK = Path("/Users/joyce/Developer/gsbgen390")
@@ -172,6 +173,68 @@ def _cell_dq3(
     }
 
 
+BOOTSTRAP_B: int = 10_000
+BOOTSTRAP_SEED: int = 42
+
+
+def _cell_bootstrap_ci(
+    cell_df: pd.DataFrame,
+    item_ranges: dict[str, tuple[int, int]],
+    B: int = BOOTSTRAP_B,
+    seed: int = BOOTSTRAP_SEED,
+    parse_fail_as_max: bool = True,
+) -> tuple[float | None, float | None, float | None]:
+    """Respondent-level percentile bootstrap CI on the cell's normalized MAE.
+
+    Robustness diagnostic per Reviewer round-2 Q1 (Joyce-locked 2026-05-29).
+    The selector's N=200 per-cell SE (~0.071) is ~5x wider than the 5%
+    tiebreak window (~0.013) at typical MAE ≈ 0.25, so the argmin "winner"
+    is largely noise-driven (see §7 "Honest framing of the tiebreak").
+    Reporting per-cell bootstrap CIs alongside the point estimate lets
+    readers see directly which cells' CIs overlap with the headline cell's
+    — that overlap is the visual stand-in for "argmin gap < SE".
+
+    Implementation: resample respondent IDs with replacement; for each
+    resample, recompute the respondent-macro normalized MAE; take 2.5 / 97.5
+    percentiles. Vectorized over B bootstrap iterations.
+
+    Returns (point_estimate, ci_lo, ci_hi). All three None if the cell has
+    no usable Full-condition rows.
+    """
+    full = cell_df[cell_df["condition"] == "Full"]
+    if full.empty:
+        return None, None, None
+    range_map = {item: rng[1] - rng[0] for item, rng in item_ranges.items()}
+    full = full.copy()
+    full["_denom"] = full["item"].map(range_map)
+    full = full[full["_denom"] > 0]
+    if full.empty:
+        return None, None, None
+    if parse_fail_as_max:
+        ok_nae = full["abs_err"].astype("float") / full["_denom"].astype("float")
+        full["_nae"] = ok_nae.where(full["parse_ok"], 1.0)
+    else:
+        full = full[full["parse_ok"]]
+        if full.empty:
+            return None, None, None
+        full["_nae"] = full["abs_err"].astype("float") / full["_denom"].astype("float")
+    full = full.dropna(subset=["_nae"])
+    if full.empty:
+        return None, None, None
+    per_rid = full.groupby("respondent_id")["_nae"].mean()
+    rids = per_rid.index.to_numpy()
+    means = per_rid.to_numpy()
+    n = len(rids)
+    if n == 0:
+        return None, None, None
+    point = float(means.mean())
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, n, size=(B, n))
+    boot_means = means[idx].mean(axis=1)
+    lo, hi = np.percentile(boot_means, [2.5, 97.5])
+    return point, float(lo), float(hi)
+
+
 def _cell_normalized_mae(
     cell_df: pd.DataFrame,
     item_ranges: dict[str, tuple[int, int]],
@@ -274,8 +337,12 @@ def select_phase1b_cell(
         key = f"{model}|{prompt}"
         pf = _cell_parse_failure_rate(cell_df)
         dq3 = _cell_dq3(cell_df, human_variance_by_item)
-        mae_conservative = _cell_normalized_mae(cell_df, item_ranges, parse_fail_as_max=True)
-        mae_optimistic = _cell_normalized_mae(cell_df, item_ranges, parse_fail_as_max=False)
+        mae_conservative, ci_lo, ci_hi = _cell_bootstrap_ci(
+            cell_df, item_ranges, parse_fail_as_max=True,
+        )
+        mae_optimistic = _cell_normalized_mae(
+            cell_df, item_ranges, parse_fail_as_max=False,
+        )
         cost_m = max(cost.get(model, 0.0), COST_FLOOR_USD)
         cost_score = cost_m * (1.0 + pf)
         dq1_pass = pf <= DQ1_PARSE_FAIL_MAX
@@ -289,16 +356,21 @@ def select_phase1b_cell(
             "dq3_per_item": dq3["per_item"],
             "normalized_mae": round(mae_conservative, 4) if mae_conservative is not None else None,
             "normalized_mae_optimistic": round(mae_optimistic, 4) if mae_optimistic is not None else None,
+            "bootstrap_ci_lo": round(ci_lo, 4) if ci_lo is not None else None,
+            "bootstrap_ci_hi": round(ci_hi, 4) if ci_hi is not None else None,
             "cost_per_call_usd": cost_m,
             "cost_score": round(cost_score, 8),
             "dq1_pass": dq1_pass,
             "dq3_pass": dq3["passes"],
         }
+        ci_str = (
+            f"[{ci_lo:.4f}, {ci_hi:.4f}]" if ci_lo is not None and ci_hi is not None else "[NA, NA]"
+        )
         log.append(
             f"  [{model:<40} × {prompt}] pf={pf:.3f} "
             f"dq3_fail={dq3['fail_pct']:.2f} ({dq3['n_items_failing']}/{dq3['n_items']}) "
             f"mae_c={f'{mae_conservative:.4f}' if mae_conservative is not None else 'NA'} "
-            f"(opt {f'{mae_optimistic:.4f}' if mae_optimistic is not None else 'NA'}) "
+            f"95% CI {ci_str} (opt {f'{mae_optimistic:.4f}' if mae_optimistic is not None else 'NA'}) "
             f"cost={cost_m:.2e} dq1={'OK' if dq1_pass else 'FAIL'} "
             f"dq3={'OK' if dq3['passes'] else 'FAIL'}"
         )
@@ -335,6 +407,37 @@ def select_phase1b_cell(
     best_key = survivors[0]
     best_mae = per_cell[best_key]["normalized_mae"]
     log.append(f"Best normalized MAE: {best_mae:.4f} ({best_key})")
+
+    # CI-overlap robustness diagnostic: which surviving cells have bootstrap
+    # CIs overlapping the headline's CI? Per Reviewer round-2 Q1, an
+    # overlapping CI means the headline cell's lead is within bootstrap noise.
+    best_lo = per_cell[best_key]["bootstrap_ci_lo"]
+    best_hi = per_cell[best_key]["bootstrap_ci_hi"]
+    overlapping = []
+    if best_lo is not None and best_hi is not None:
+        for k in survivors[1:]:
+            lo = per_cell[k]["bootstrap_ci_lo"]
+            hi = per_cell[k]["bootstrap_ci_hi"]
+            if lo is None or hi is None:
+                continue
+            # CIs overlap iff max(lo) <= min(hi)
+            if max(best_lo, lo) <= min(best_hi, hi):
+                overlapping.append(k)
+    if overlapping:
+        log.append(
+            f"  CI-overlap diagnostic: {len(overlapping)} other surviving cell(s) "
+            f"have bootstrap CIs that overlap the headline's "
+            f"[{best_lo:.4f}, {best_hi:.4f}] — headline is best on this cohort "
+            f"but not statistically separated from: "
+            + ", ".join(f"{k} [{per_cell[k]['bootstrap_ci_lo']:.4f}, {per_cell[k]['bootstrap_ci_hi']:.4f}]" for k in overlapping[:3])
+            + (f" (+{len(overlapping)-3} more)" if len(overlapping) > 3 else "")
+        )
+    elif best_lo is not None:
+        log.append(
+            f"  CI-overlap diagnostic: headline CI [{best_lo:.4f}, {best_hi:.4f}] "
+            f"does not overlap any other surviving cell's CI — argmin is "
+            f"statistically separated."
+        )
 
     # 5% relative tiebreak window
     tie_window_max = best_mae * (1.0 + TIE_BREAK_QUALITY_PCT)
@@ -625,6 +728,27 @@ def _test_parse_fail_conservative_vs_optimistic() -> None:
     )
 
 
+def _test_bootstrap_ci_brackets_point() -> None:
+    """Bootstrap CI must bracket the point estimate, both bounds in [0, 1]
+    (the normalized MAE range), and CI width should be > 0 for a non-
+    degenerate cell."""
+    df, item_ranges, _ = _synthetic_cell_df()
+    qwen_p0 = df[(df["model"] == "qwen/qwen-2.5-72b-instruct") & (df["prompt"] == "P0")]
+    point, lo, hi = _cell_bootstrap_ci(qwen_p0, item_ranges, B=1_000)
+    # Qwen × P0 in the synthetic data hits truth exactly → MAE = 0; CI tight
+    # around 0 (lo and hi both = 0.0 since every per-rid mean = 0).
+    assert point == 0.0, point
+    assert lo == 0.0 and hi == 0.0, (lo, hi)
+
+    # Now pick a cell with non-zero MAE: any "other model × P0" with shift = 1.
+    deepseek_p0 = df[(df["model"] == "deepseek/deepseek-chat") & (df["prompt"] == "P0")]
+    point, lo, hi = _cell_bootstrap_ci(deepseek_p0, item_ranges, B=2_000, seed=1)
+    assert point is not None and lo is not None and hi is not None
+    assert 0.0 <= lo <= point <= hi <= 1.0, (lo, point, hi)
+    assert hi > lo, "CI should have non-zero width on a noisy cell"
+    print(f"  [bootstrap_ci_brackets_point] PASSED (deepseek × P0: {point:.4f}, [{lo:.4f}, {hi:.4f}])")
+
+
 def run_self_tests() -> int:
     print("§7 joint-cell selector self-tests")
     _test_argmin_mae()
@@ -634,7 +758,8 @@ def run_self_tests() -> int:
     _test_fallback_qwen_p0_tie()
     _test_random_column_reporting()
     _test_parse_fail_conservative_vs_optimistic()
-    print("✓ ALL 7 SELF-TESTS PASSED")
+    _test_bootstrap_ci_brackets_point()
+    print("✓ ALL 8 SELF-TESTS PASSED")
     return 0
 
 
