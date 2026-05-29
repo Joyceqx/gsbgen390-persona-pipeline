@@ -655,7 +655,7 @@ def _cli():
     p.add_argument("--input", type=Path, default=None,
                    help="path to records JSON (gss_driver.py output format)")
     p.add_argument("--battery-map", type=Path,
-                   default=Path(__file__).parent / "gss_battery_map.json",
+                   default=Path("/Users/joyce/Developer/gsbgen390") / "gss_battery_map.json",
                    help="path to gss_battery_map.json (default: locked v0.2)")
     p.add_argument("--output", type=Path, default=None,
                    help="path to write Battery LOO JSON output")

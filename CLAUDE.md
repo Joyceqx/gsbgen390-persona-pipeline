@@ -11,13 +11,11 @@ GSBGEN390 thesis-track research, Stanford GSB, Spring 2026. Advisor: Prof. Mohse
 ## Where things live
 
 - `RESEARCH_DESIGN.md` — single source of truth (data, design, panel, prompts, selector, analysis, budget, run commands)
-- `lit_review_prompt_variants_2026-05-15.md` — literature scan grounding the P0 / P1 / P2 prompt choices
-- `tier1_tool_schemas.md` — Phase 1c tool spec (read before implementing Battery LOO / Shapley orchestration)
 - `gss_feature_taxonomy.json`, `gss_battery_map.json` — locked feature taxonomy + battery map
 - `data/gss/390data1/` — GSS 2024 cross-section (3-batch extract, ~2 GB)
 - `outputs/` — locked reference files (`primary_eval_human_variance_2024.json`) + run artifacts
-- `*.py` — pipeline code (orchestrator: `gss_driver.py`; selector: `select_phase1b_model.py`; analyzers: `battery_loo.py`, `shapley_decomposition.py`)
-- `archive/` — historical docs (OSF preregistration, prior briefs, theory reviews, etc.). Read on demand only; the design has moved past them.
+- `src/` — all pipeline code (orchestrator: `src/gss_driver.py`; selector: `src/select_phase1b_model.py`; analyzers: `src/battery_loo.py`, `src/shapley_decomposition.py`; etc.)
+- `archive/` — historical docs (OSF preregistration, prior briefs, theory reviews, Park v2 PDF, supporting lit review, Phase 1c tool spec, etc.). Read on demand only.
 
 ## Operating principles
 

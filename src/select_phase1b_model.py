@@ -60,7 +60,7 @@ FALLBACK_COST_PCT: float = 0.01      # within 1% on cost AND ≤5% quality → f
 # Path to the precomputed per-item human variance reference. The reference is
 # computed once from GSS 2024 substantive responses (excluding MISSING_CODES
 # and non-substantive labels) for each primary_eval item. Pre-registered.
-HUMAN_VARIANCE_PATH = Path(__file__).parent / "outputs" / "primary_eval_human_variance_2024.json"
+HUMAN_VARIANCE_PATH = Path("/Users/joyce/Developer/gsbgen390") / "outputs" / "primary_eval_human_variance_2024.json"
 
 # May-2026 OpenRouter cost snapshot (USD per call). The selection rule is
 # robust to the absolute scale; only relative cost matters. Update before

@@ -218,26 +218,26 @@ Analyzer: `shapley_decomposition.py`.
 
 ## 10. Implementation
 
-### 10.1 Code (in repo)
+### 10.1 Code (in `src/`)
 
 | File | Status |
 |---|---|
-| `gss_loader.py`, `gss_pipeline.py` | Loader + persona-prompt + scoring; implemented + tested |
-| `llm_router.py` | Multi-model LLM router with per-call seed derivation; implemented + tested |
-| `select_phase1b_model.py` | §12.2 single-model selector with DQ gates; implemented + tested for 4-model selection. **Joint (model, prompt) cell version pending.** |
-| `gss_driver.py` | Orchestrator with `--phase1a` / `--phase1b` / `--phase1b-anchor` modes; implemented + tested for single-prompt panel. **3-prompt factorial extension pending.** |
-| `battery_loo.py`, `shapley_decomposition.py` | Phase 1C analyzers; implemented + self-tested. **Orchestration drivers (`--battery-loo`, `--shapley`) pending.** |
-| `regression_baseline.py` | R2 baseline (Ridge + multinomial Logistic, 5-fold CV); implemented + tested |
-| `validate_taxonomy.py`, `lint_writeup_language.py` | Lint / validation utilities; implemented + tested |
+| `src/gss_loader.py`, `src/gss_pipeline.py` | Loader + persona-prompt + scoring; implemented + tested |
+| `src/llm_router.py` | Multi-model LLM router with per-call seed derivation; implemented + tested |
+| `src/select_phase1b_model.py` | §12.2 single-model selector with DQ gates; implemented + tested for 4-model selection. **Joint (model, prompt) cell version pending.** |
+| `src/gss_driver.py` | Orchestrator with `--phase1a` / `--phase1b` / `--phase1b-anchor` modes; implemented + tested for single-prompt panel. **3-prompt factorial extension pending.** |
+| `src/battery_loo.py`, `src/shapley_decomposition.py` | Phase 1C analyzers; implemented + self-tested. **Orchestration drivers (`--battery-loo`, `--shapley`) pending.** |
+| `src/regression_baseline.py` | R2 baseline (Ridge + multinomial Logistic, 5-fold CV); implemented + tested |
+| `src/validate_taxonomy.py`, `src/lint_writeup_language.py` | Lint / validation utilities; implemented + tested |
 
 ### 10.2 Pipeline extensions needed for the Bayati-confirmed factorial
 
 Before launching paid Phase 1A:
 
-1. **`gss_driver.py --phase1a`**: extend to iterate over 3 prompts in addition to 4 models. Each call now varies on `(respondent, condition, item, prompt, model)`. Output records include `prompt_id` in metadata.
-2. **`select_phase1b_model.py`**: extend to score the 12 (model, prompt) cells jointly. Apply DQ-1 and DQ-3 per cell. Update the tiebreak fallback to Qwen × P0. Add the post-hoc random-column aggregation (uniform random pick per respondent per prompt; report 3 random aggregates).
+1. **`src/gss_driver.py --phase1a`**: extend to iterate over 3 prompts in addition to 4 models. Each call now varies on `(respondent, condition, item, prompt, model)`. Output records include `prompt_id` in metadata.
+2. **`src/select_phase1b_model.py`**: extend to score the 12 (model, prompt) cells jointly. Apply DQ-1 and DQ-3 per cell. Update the tiebreak fallback to Qwen × P0. Add the post-hoc random-column aggregation (uniform random pick per respondent per prompt; report 3 random aggregates).
 3. **Phase 1A output writer**: emit `outputs/phase1a_raw.parquet` (long-format DB) and `outputs/phase1a_summary_table.{csv,parquet}` (180-row summary) as part of the `--phase1a` mode.
-4. **`gss_driver.py --phase1b`**: accept `--phase1b-prompt` in addition to `--phase1b-model` so the selected (model, prompt) cell is fully addressable.
+4. **`src/gss_driver.py --phase1b`**: accept `--phase1b-prompt` in addition to `--phase1b-model` so the selected (model, prompt) cell is fully addressable.
 
 Estimated effort: ~2-3 days of careful coding + self-tests on synthetic fixtures before paid runs.
 
@@ -245,31 +245,31 @@ Estimated effort: ~2-3 days of careful coding + self-tests on synthetic fixtures
 
 ```bash
 # Pre-flight self-tests
-python3 validate_taxonomy.py
-python3 select_phase1b_model.py --self-test
-python3 battery_loo.py --self-test
-python3 shapley_decomposition.py --self-test
-python3 gss_pipeline.py --test-aggregation
+python3 src/validate_taxonomy.py
+python3 src/select_phase1b_model.py --self-test
+python3 src/battery_loo.py --self-test
+python3 src/shapley_decomposition.py --self-test
+python3 src/gss_pipeline.py --test-aggregation
 
 # 1. Smoke (~$3, ~5 min)
-python3 gss_driver.py --smoke
+python3 src/gss_driver.py --smoke
 
 # 2. Phase 1A factorial + GPT-4o anchor (~$199, ~24 hr)
-python3 gss_driver.py --phase1a              # 4 models × 3 prompts × N=200
-python3 gss_driver.py --phase1b-anchor       # GPT-4o × P0 × N=100
+python3 src/gss_driver.py --phase1a              # 4 models × 3 prompts × N=200
+python3 src/gss_driver.py --phase1b-anchor       # GPT-4o × P0 × N=100
 
 # 3. §12.2 joint cell selector (free, <1 min)
-python3 select_phase1b_model.py outputs/phase1a_raw.parquet
+python3 src/select_phase1b_model.py outputs/phase1a_raw.parquet
 
 # 4. Phase 1B (~$71, ~3-7 days)
-python3 gss_driver.py --phase1b \
+python3 src/gss_driver.py --phase1b \
     --phase1b-model <slug> \
     --phase1b-prompt <prompt_id>
 
 # 5. Phase 1C analyzers (~$519 paid + analyzers)
-python3 gss_driver.py --battery-loo --phase1b-model <slug> --phase1b-prompt <prompt_id>
-python3 battery_loo.py --input outputs/phase1c_battery_loo_*.parquet
-python3 shapley_decomposition.py --input outputs/phase1c_shapley_*.parquet
+python3 src/gss_driver.py --battery-loo --phase1b-model <slug> --phase1b-prompt <prompt_id>
+python3 src/battery_loo.py --input outputs/phase1c_battery_loo_*.parquet
+python3 src/shapley_decomposition.py --input outputs/phase1c_shapley_*.parquet
 ```
 
 ---
@@ -297,4 +297,4 @@ GSS data is public — no constraints. Cookiy pilot transcripts (`cookiy_transcr
 
 ---
 
-*All earlier design / OSF / brief / theory docs are in `archive/`. The supporting literature scan for the P0 / P1 / P2 prompt choices is at `lit_review_prompt_variants_2026-05-15.md`. The Phase 1C tool spec is at `tier1_tool_schemas.md`. The Park v2 PDF reference is `2411.10109v2.pdf` (gitignored).*
+*All earlier design / OSF / brief / theory docs are in `archive/`. The supporting literature scan for the P0 / P1 / P2 prompt choices is at `archive/lit_review_prompt_variants_2026-05-15.md`. The Phase 1C tool spec is at `archive/tier1_tool_schemas.md`. The Park v2 PDF reference is `archive/2411.10109v2.pdf` (gitignored).*

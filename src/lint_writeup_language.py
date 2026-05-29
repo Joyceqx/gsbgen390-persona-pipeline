@@ -30,7 +30,7 @@ import re
 import sys
 from pathlib import Path
 
-WORK = Path(__file__).resolve().parent
+WORK = Path("/Users/joyce/Developer/gsbgen390")
 
 # Forbidden phrases: literal substrings to flag. Each entry is (canonical-id,
 # pattern, why). Patterns are case-insensitive, matched on the raw line.
