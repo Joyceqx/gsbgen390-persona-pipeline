@@ -92,15 +92,15 @@ Two layers:
 
 3 China-trained + 1 Western-trained on the cheap side. GPT-4o anchor is a second Western reference for Park comparison.
 
-### 5.2 Prompts (3 candidates for §7 selection)
+### 5.2 Prompts (3 format candidates for §7 selection)
 
-| ID | Voice | Structure | Citation |
-|---|---|---|---|
-| **P0** | 2nd person | 4-bin key-value list | Park et al. 2024 v2 (arXiv:2411.10109), surveys-only condition |
-| **P1** | 1st person | 4-bin clauses | Argyle, Busby, Fulda, Gubler, Rytting, Wingate (2023) "Out of One, Many", *Political Analysis* 31(3) |
-| **P2** | 2nd person (dialogue) | 4-bin Q&A turns | Wang, Pyatkin, Bhagavatula, Choi (2025) "The Prompt Makes the Person(a)", *Findings of EMNLP 2025* |
+| ID | Format | Citation |
+|---|---|---|
+| **P0** | 4-bin key-value list, 2nd-person framing | Park et al. 2024 v2 (arXiv:2411.10109), surveys-only condition |
+| **P1** | 4-bin 1st-person prose clauses | Argyle, Busby, Fulda, Gubler, Rytting, Wingate (2023) "Out of One, Many", *Political Analysis* 31(3) |
+| **P2** | 4-bin interview Q&A turns | Wang, Pyatkin, Bhagavatula, Choi (2025) "The Prompt Makes the Person(a)", *Findings of EMNLP 2025* |
 
-The three prompts vary along two design axes — voice (1st vs. 2nd person) and structure (key-value vs. clauses vs. Q&A) — but the three points are **not crossed**. P0 and P2 share voice (2nd person) and differ in structure; P0 and P1 differ in both axes simultaneously. The set is designed for selector-level "which prompt does best on this respondent panel" (§7), **not for controlled attribution of voice vs. structure effects**. The Phase 1B headline reports MAE under the §7-selected (model, prompt) cell with no causal claim about prompt design.
+These are three published persona-prompt formats from the LLM-on-survey literature. The set is **not a crossed design** over voice or structure factors and therefore does not support causal attribution of any single design feature; it is treated end-to-end as three format candidates, one of which §7 selects for Phase 1B. The Phase 1B headline reports MAE under the §7-selected (model, prompt) cell with no causal claim about prompt design.
 
 P0 is the OSF-v1-era baseline implemented in `build_persona_prompt()`. P1 and P2 are new for Phase 1A. Full literature scan grounding these choices is at `archive/lit_review_prompt_variants_2026-05-15.md`.
 
@@ -224,7 +224,13 @@ Tie on both quality + cost: Qwen × P0 named fallback.
 All cells fail DQ: PAUSE — Phase 1B does not proceed.
 ```
 
-**Honest framing of the tiebreak**: at N=200 the SE per-cell normalized MAE is ≈ 0.071, while the 5% tiebreak window on an assumed best MAE ≈ 1.0 is 0.05. Most cells whose true MAE differs by < 10% from the best will land inside the tiebreak window, so the selector is best described as "DQ screen → MAE argmin if a single cell is clearly best by > 5%, otherwise cost-driven choice within the noise band". The "quality-primary" label only holds when one cell genuinely dominates. The Phase 1B writeup reports the per-cell MAEs (180-row summary, §6.1) alongside the headline so any reader can audit how thick the tiebreak band was on the actual run.
+**Honest framing of the tiebreak**: per-cell normalized MAE for cheap LLMs on GSS attitude prediction typically sits in the range ≈ 0.20–0.35 (cf. Park v2 SI Table 3 surveys-only baseline and comparable LLM-on-Likert work). The 5%-relative tiebreak window around best MAE ≈ 0.25 is therefore ≈ 0.013 — narrower than the per-cell standard error of ≈ 0.071 (N=200, computed across respondents). When the tiebreak window is narrower than one SE, two things follow:
+
+  (i) The argmin almost always finds a "winner" outside the tiebreak band, so the cost × (1 + parse_fail_rate) tiebreaker is rarely triggered. The selector behaves as quality-primary in practice — the Qwen × P0 fallback only fires if all DQ-passing cells also tie on cost.
+
+  (ii) That winner is largely noise-driven. With 12 cells and SE ≈ 0.07 on a quantity bounded in [0, 1], the expected gap between rank-1 and rank-2 is on the order of ~0.05 by chance alone even when all 12 cells share the same true MAE. Treat the headline cell as "best on this cohort" rather than "best in expectation".
+
+Mitigations: report the full 180-row summary (§6.1) alongside the headline so the reader can audit the cluster of near-ties; report the headline MAE with paired-respondent bootstrap CI; bind the §10 LOO ablation to the chosen cell rather than re-selecting per LOO condition.
 
 **Binary sensitivity check** (post-selection, mandatory). After §7 picks the headline cell, report that cell's **exact-match accuracy on each of the 5 binary primary_eval items** (ABANY, CAPPUN, GUNLAW, FEPOL, RACDIF1) alongside the headline normalized MAE. Per-item normalization makes binary errors equal-weighted in `primary_score`, but a cell can still have a low aggregate MAE while collapsing specifically on one or two binary items. If any of the 5 binary items has exact-match accuracy < 0.50 (worse than chance) on the held-out Phase 1B sample, that item is flagged in the limitations section as a model-specific failure on the selected cell. This is reporting only — it does NOT trigger a selection rerun.
 
@@ -232,9 +238,13 @@ All cells fail DQ: PAUSE — Phase 1B does not proceed.
 
 ## 8. Phase 1B
 
-Single (model, prompt) cell on the full N=3,309. Primary_eval only, n_samples=1, Full + 4-bin LOO conditions.
+Single §7-selected (model, prompt) cell. Primary_eval only, n_samples=1, Full + 4-bin LOO conditions.
 
-**Headline**: 4-bin LOO ΔMAE per bin (drop bin, re-score, take Δ vs. Full). Paired-respondent bootstrap CIs (B=10,000 BCa). When reporting bin rankings, apply Holm-Bonferroni at α=0.05 across the 4 bins.
+**Headline cohort**: N=3,109 — the full 2024 GSS cross-section **minus** the N=200 panel respondents used by the §7 selector. Excluding the selector cohort removes the in-sample optimism on the cell chosen by argmin. The 200 selector respondents are reusing the Phase 1A artifact (already paid), so the exclusion costs no LLM calls — it only changes which rows are aggregated for the headline. Cohort assignment is deterministic via `sample_respondents(200, seed=42)` ∩ `gss_cross_section_2024.index`.
+
+**Sensitivity cohort**: full N=3,309 (including the 200 selector respondents). Reported alongside the headline. Expected gap is small because 200 / 3,309 ≈ 6%, but the gap itself is the empirical optimism estimate and worth reporting; a large gap is a flag that the §7 winner was substantially noise-driven.
+
+**Headline**: 4-bin LOO ΔMAE per bin (drop bin, re-score, take Δ vs. Full). Paired-respondent bootstrap CIs (B=10,000 BCa) on the N=3,109 cohort. When reporting bin rankings, apply Holm-Bonferroni at α=0.05 across the 4 bins.
 
 **Effect size thresholds** (Funder & Ozer 2019): small <0.02 ΔMAE on the Likert scale; modest 0.02–0.05; substantive ≥0.05. Substantively interpret a bin's contribution only when its ΔMAE CI excludes the small threshold.
 
@@ -295,6 +305,8 @@ python3 src/select_phase1b_model.py --self-test
 python3 src/battery_loo.py --self-test
 python3 src/shapley_decomposition.py --self-test
 python3 src/gss_pipeline.py --test-aggregation
+python3 src/prompt_variants.py --self-test          # 6 single-respondent tests
+python3 tests/preflight_phase1a.py                  # N=200 panel × 12 batteries × 3 prompts coverage
 
 # 1. Smoke (~$3, ~5 min)
 python3 src/gss_driver.py --smoke
@@ -307,6 +319,8 @@ python3 src/gss_driver.py --phase1b-anchor       # GPT-4o × P0 × N=100
 python3 src/select_phase1b_model.py outputs/phase1a_raw.parquet
 
 # 4. Phase 1B (~$71, ~3-7 days)
+#    Runs on full N=3,309; headline aggregation excludes the §7 selector cohort
+#    (N=3,109 disjoint), full cohort (N=3,309) reported as sensitivity. See §8.
 python3 src/gss_driver.py --phase1b \
     --phase1b-model <slug> \
     --phase1b-prompt <prompt_id>

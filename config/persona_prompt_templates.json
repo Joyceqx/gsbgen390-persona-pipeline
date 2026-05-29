@@ -168,7 +168,7 @@
     "p1_template": "On whether a preschool child suffers if their mother works, I {val_lower}."
   },
   "FUND": {
-    "p2_question": "Would you describe your religious upbringing as fundamentalist, moderate, or liberal?",
+    "p2_question": "Would you describe your current religious affiliation as fundamentalist, moderate, or liberal?",
     "p1_template": "I would describe my current religious orientation as {val_lower}."
   },
   "GETAHEAD": {

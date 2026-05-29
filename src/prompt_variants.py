@@ -142,6 +142,12 @@ class Feature:
     bin_name: str
 
 
+# GSS occasionally encodes "Other (SPECIFY)" / "Other (please specify)" in
+# val_labels. The "(SPECIFY)" suffix is a codebook interviewer-instruction
+# artifact, not part of the respondent's answer — strip it before rendering.
+_SPECIFY_RE = re.compile(r"\s*\((?:please\s+)?specify\)\s*", re.IGNORECASE)
+
+
 def _extract_features(
     respondent: pd.Series,
     taxonomy: dict,
@@ -172,6 +178,7 @@ def _extract_features(
                 continue
             if _is_non_substantive_label(val_label):
                 continue
+            val_label = _SPECIFY_RE.sub("", val_label).strip()
             var_label = get_variable_label(v).strip()
             out.append(Feature(v, var_label, float(value), val_label, bin_name))
     return out
