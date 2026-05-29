@@ -234,20 +234,30 @@ DQ-3 (marginal-distribution-collapse guard): for each primary_eval item i,
                               var(cell_i) / var(human_i) ≥ 0.30
                               cell fails if > 50% of items fail the floor
                               human variance reference: outputs/primary_eval_human_variance_2024.json
+                              variance computed at the respondent level
+                              (mean across n_samples per (rid, item) first,
+                              then population variance across respondents —
+                              prevents n_samples>1 LLM jitter from inflating
+                              the variance estimate; Reviewer round-3 P2 #3)
 
-argmin primary_score among DQ-passers.
-Tie-break (within 5% of best score): lowest cost × (1 + parse_fail_rate).
-Tie on both quality + cost: Qwen × P0 named fallback.
-All cells fail DQ: PAUSE — Phase 1B does not proceed.
+# Tiebreak: bootstrap-CI overlap (NOT a fixed 5% MAE window).
+# Locked 2026-05-29 per Reviewer round-3 P1 #4. The old fixed 5% window
+# was ~5x narrower than the per-cell SE, so the argmin "winner" was
+# selected at noise resolution while the rationale label claimed a clean
+# win. New rule:
+tie_set = {argmin cell} ∪ {survivors whose bootstrap CI overlaps the argmin's CI}
+
+if |tie_set| == 1:  rationale = ci_unique_argmin    (statistically separated; SELECTED = argmin)
+else: cost tiebreak inside tie_set:
+    if single cost-cheapest: rationale = ci_overlap_cost_break
+    if multiple cells tied on cost (≤1%): rationale = fallback_qwen_p0_tie (named fallback)
+
+All cells fail DQ: PAUSE — Phase 1B does not proceed (rationale = all_dq_fail_pause).
 ```
 
-**Bootstrap CI per cell** (locked 2026-05-29 Reviewer round-2 Q1). Because the SE per cell (~0.071 at N=200) is ~5x wider than the 5% tiebreak window (~0.013 at typical MAE ≈ 0.25), the argmin "winner" is largely noise-driven. The selector reports a respondent-level percentile bootstrap CI (B=10,000, seeded) for every cell's conservative MAE, and the decision log includes a **CI-overlap diagnostic**: which other surviving cells' CIs overlap the headline's CI? Cells whose CIs overlap the headline are not statistically separated from it — the writeup uses this as the visual stand-in for "argmin gap < SE". The cell selector is `src/select_phase1b_cell.py`; the per-cell CI bounds are columns in the selector's per-cell output.
+**Bootstrap CI per cell** (locked 2026-05-29 Reviewer round-2 Q1, made decision-relevant 2026-05-29 Reviewer round-3 P1 #4). Respondent-level percentile bootstrap (B=10,000, seeded) per cell on the conservative normalized MAE. The selector decision now consumes CI overlap directly: cells whose CIs overlap the headline's CI are statistically indistinguishable from it and enter cost-driven secondary tiebreak; cells whose CIs sit cleanly outside the headline's CI are excluded from the tie-set. This closes the internal contradiction that the previous fixed-5% rule produced — the diagnostic ("X other cells overlap") and the rationale ("argmin_mae, clean win") could appear together on adjacent lines of the same log.
 
-**Honest framing of the tiebreak**: per-cell normalized MAE for cheap LLMs on GSS attitude prediction typically sits in the range ≈ 0.20–0.35 (cf. Park v2 SI Table 3 surveys-only baseline and comparable LLM-on-Likert work). The 5%-relative tiebreak window around best MAE ≈ 0.25 is therefore ≈ 0.013 — narrower than the per-cell standard error of ≈ 0.071 (N=200, computed across respondents). When the tiebreak window is narrower than one SE, two things follow:
-
-  (i) The argmin almost always finds a "winner" outside the tiebreak band, so the cost × (1 + parse_fail_rate) tiebreaker is rarely triggered. The selector behaves as quality-primary in practice — the Qwen × P0 fallback only fires if all DQ-passing cells also tie on cost.
-
-  (ii) That winner is largely noise-driven. With 12 cells and SE ≈ 0.07 on a quantity bounded in [0, 1], the expected gap between rank-1 and rank-2 is on the order of ~0.05 by chance alone even when all 12 cells share the same true MAE. Treat the headline cell as "best on this cohort" rather than "best in expectation".
+**Why this matters**: per-cell normalized MAE for cheap LLMs on GSS attitude prediction typically sits in the range ≈ 0.20–0.35 (cf. Park v2 SI Table 3 surveys-only baseline and comparable LLM-on-Likert work), with a per-cell SE of ≈ 0.071 (N=200, computed across respondents). The expected gap between rank-1 and rank-2 cells is on the order of ~0.05 by chance alone even when all 12 cells share the same true MAE — a fixed 5% MAE window (≈ 0.013) cannot tell signal from noise at this scale. CI overlap is the principled tie definition: two cells whose 95% CIs overlap are not statistically separated, and the selector should treat them as a tie-set rather than declaring a winner. Cells whose CIs do NOT overlap with the argmin are genuinely worse on this cohort.
 
 Mitigations: report the full 180-row summary (§6.1) alongside the headline so the reader can audit the cluster of near-ties; report the headline MAE with paired-respondent bootstrap CI; bind the §10 LOO ablation to the chosen cell rather than re-selecting per LOO condition.
 
@@ -317,15 +327,17 @@ All 4 extensions plus the post-factorial Reviewer round-2 cleanup are complete; 
 
 Reviewer round-2 cleanup also complete: ballot-off pre-filter, LOO deferral, parse_fail conservative metric, DQ-1 tightening, bootstrap CIs, fingerprint/provider/error_type logging — see commits `e17ea11`, `3236fe4`, `5ecf345`, `bacfa72`.
 
-Next step: smoke test (`python3 src/gss_driver.py --smoke`) to verify the new call_llm_meta path returns fingerprint + provider correctly on a real OpenRouter call before launching the paid Phase 1A.
+Reviewer round-3 cleanup complete (locked 2026-05-29): selector docstring + driver CLI stale text purged (`f5cfcea`); DQ-3 variance aggregated per (respondent, item) before cross-respondent variance to neutralize n_samples=2 LLM jitter (`851826a`); §7 tiebreak rule replaced from fixed 5% MAE window with bootstrap-CI overlap, new rationales `ci_unique_argmin` / `ci_overlap_cost_break` / `fallback_qwen_p0_tie` (`c773501`); OpenRouter provider preferences locked at call time via `allow_fallbacks=False` + `require_parameters=True` defaults plus a `PROVIDER_LOCK` dict the user populates after smoke (`f90f20c`); parquet provenance columns verified end-to-end with a new self-test (`f90f20c`).
+
+Next step: smoke test (`python3 src/gss_driver.py --smoke`). The smoke run will reveal which OpenRouter provider served each panel model via the new `provider` field in records. Populate `PROVIDER_LOCK` in `src/llm_router.py` with those provider names, re-smoke to verify the locked provider is served, then launch paid Phase 1A.
 
 ### 10.3 How to run (after the extensions above land)
 
 ```bash
 # Pre-flight self-tests
 python3 src/validate_taxonomy.py
-python3 src/select_phase1b_cell.py --self-test       # 8 joint-cell tests (5 rationales + random column + parse_fail conservative + bootstrap CI)
-python3 src/write_phase1a_parquet.py --self-test     # 6 writer tests (relabel, parse_fail, binary, random, count, roundtrip)
+python3 src/select_phase1b_cell.py --self-test       # 9 joint-cell tests (5 rationales + random column + parse_fail conservative + DQ-3 respondent-level + bootstrap CI)
+python3 src/write_phase1a_parquet.py --self-test     # 7 writer tests (relabel, parse_fail, binary, random, count, roundtrip, provenance E2E)
 python3 src/battery_loo.py --self-test
 python3 src/shapley_decomposition.py --self-test
 python3 src/gss_pipeline.py --test-aggregation
