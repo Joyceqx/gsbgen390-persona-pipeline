@@ -75,7 +75,14 @@ PROMPTS = ("P0", "P1", "P2")
 DQ1_PARSE_FAIL_MAX: float = 0.10
 DQ3_RELATIVE_VARIANCE_FLOOR: float = 0.30
 DQ3_PER_ITEM_FAIL_MAX: float = 0.50
-TIE_BREAK_QUALITY_PCT: float = 0.05
+# CI-overlap-driven tiebreak (locked 2026-05-29 per Reviewer round-3 P1 #4).
+# The previous 5% MAE window was an arbitrary threshold ~5x narrower than the
+# per-cell SE (~0.071 at N=200), so the argmin "winner" was selected at noise
+# resolution while the rationale label "argmin_mae" claimed a clean win. The
+# replacement: ties are determined by bootstrap-CI overlap with the headline
+# cell. Cells whose CIs overlap the headline are statistically indistinguishable
+# and enter cost-driven secondary tiebreak; cells whose CIs sit cleanly outside
+# the headline's CI are statistically dominated and excluded.
 FALLBACK_COST_PCT: float = 0.01
 
 DEFAULT_COST_PER_CALL_USD: dict[str, float] = {
@@ -321,8 +328,9 @@ def select_phase1b_cell(
 
     Returns a dict with:
       selected_cell:      {"model": slug, "prompt": pid} | None
-      rationale:          "argmin_mae" | "tie_break_cost" | "fallback_qwen_p0_tie"
-                          | "all_dq_fail_pause" | "fallback_no_data"
+      rationale:          "ci_unique_argmin" | "ci_overlap_cost_break"
+                          | "fallback_qwen_p0_tie" | "all_dq_fail_pause"
+                          | "fallback_no_data"
       per_cell:           {"model|prompt": {metrics}} for all 12 real cells
       random_column:      {prompt: normalized_mae}  (post-hoc reporting only)
       decision_log:       human-readable audit lines
@@ -426,79 +434,76 @@ def select_phase1b_cell(
     best_mae = per_cell[best_key]["normalized_mae"]
     log.append(f"Best normalized MAE: {best_mae:.4f} ({best_key})")
 
-    # CI-overlap robustness diagnostic: which surviving cells have bootstrap
-    # CIs overlapping the headline's CI? Per Reviewer round-2 Q1, an
-    # overlapping CI means the headline cell's lead is within bootstrap noise.
+    def _decode(key: str) -> dict[str, str]:
+        model, prompt = key.split("|")
+        return {"model": model, "prompt": prompt}
+
+    # CI-overlap-driven tie-set (locked 2026-05-29 per Reviewer round-3 P1 #4).
+    # Cells whose bootstrap CI overlaps the headline's CI are statistically
+    # indistinguishable from it; the tie-set is exactly these cells plus the
+    # headline. The OLD 5% MAE window was an arbitrary threshold smaller than
+    # the per-cell SE, so the argmin label "argmin_mae" could fire while the
+    # diagnostic line in the same log said "11 other cells overlap" — that
+    # internal contradiction is what this replacement closes.
     best_lo = per_cell[best_key]["bootstrap_ci_lo"]
     best_hi = per_cell[best_key]["bootstrap_ci_hi"]
-    overlapping = []
+    tie_set: list[str] = [best_key]
+    overlap_log_pairs: list[str] = []
     if best_lo is not None and best_hi is not None:
         for k in survivors[1:]:
             lo = per_cell[k]["bootstrap_ci_lo"]
             hi = per_cell[k]["bootstrap_ci_hi"]
             if lo is None or hi is None:
                 continue
-            # CIs overlap iff max(lo) <= min(hi)
             if max(best_lo, lo) <= min(best_hi, hi):
-                overlapping.append(k)
-    if overlapping:
+                tie_set.append(k)
+                overlap_log_pairs.append(f"{k} [{lo:.4f}, {hi:.4f}]")
+
+    if len(tie_set) == 1:
         log.append(
-            f"  CI-overlap diagnostic: {len(overlapping)} other surviving cell(s) "
-            f"have bootstrap CIs that overlap the headline's "
-            f"[{best_lo:.4f}, {best_hi:.4f}] — headline is best on this cohort "
-            f"but not statistically separated from: "
-            + ", ".join(f"{k} [{per_cell[k]['bootstrap_ci_lo']:.4f}, {per_cell[k]['bootstrap_ci_hi']:.4f}]" for k in overlapping[:3])
-            + (f" (+{len(overlapping)-3} more)" if len(overlapping) > 3 else "")
+            f"Headline CI [{best_lo:.4f}, {best_hi:.4f}] does not overlap any other "
+            f"surviving cell's CI → statistically separated argmin."
         )
-    elif best_lo is not None:
-        log.append(
-            f"  CI-overlap diagnostic: headline CI [{best_lo:.4f}, {best_hi:.4f}] "
-            f"does not overlap any other surviving cell's CI — argmin is "
-            f"statistically separated."
-        )
-
-    # 5% relative tiebreak window
-    tie_window_max = best_mae * (1.0 + TIE_BREAK_QUALITY_PCT)
-    in_window = [k for k in survivors if per_cell[k]["normalized_mae"] <= tie_window_max]
-
-    def _decode(key: str) -> dict[str, str]:
-        model, prompt = key.split("|")
-        return {"model": model, "prompt": prompt}
-
-    if len(in_window) == 1:
-        log.append(f"Argmin unique within 5% MAE window → SELECTED: {best_key}")
+        log.append(f"SELECTED: {best_key} (rationale=ci_unique_argmin)")
         return {
             "selected_cell": _decode(best_key),
-            "rationale": "argmin_mae",
+            "rationale": "ci_unique_argmin",
             "per_cell": per_cell,
             "random_column": random_aggs,
             "decision_log": log,
         }
 
-    # Cost tiebreak among within-5%
-    in_window.sort(key=lambda k: per_cell[k]["cost_score"])
-    best_cost = per_cell[in_window[0]]["cost_score"]
+    log.append(
+        f"Headline CI [{best_lo:.4f}, {best_hi:.4f}] overlaps {len(tie_set)-1} other "
+        f"surviving cell(s): "
+        + ", ".join(overlap_log_pairs[:3])
+        + (f" (+{len(overlap_log_pairs)-3} more)" if len(overlap_log_pairs) > 3 else "")
+    )
+
+    # Cost tiebreak within the CI-overlap tie-set
+    tie_set.sort(key=lambda k: per_cell[k]["cost_score"])
+    best_cost = per_cell[tie_set[0]]["cost_score"]
     cost_tied = [
-        k for k in in_window
+        k for k in tie_set
         if per_cell[k]["cost_score"] <= best_cost * (1.0 + FALLBACK_COST_PCT)
     ]
     log.append(
-        f"Quality tie among {len(in_window)} cells within 5% MAE → cost tiebreak. "
-        f"Best cost_score={best_cost:.3e}; cells within 1% of best cost: {cost_tied}"
+        f"  Cost tiebreak among {len(tie_set)} CI-overlap cells: "
+        f"best cost_score={best_cost:.3e}; cells within 1% of best cost: {cost_tied}"
     )
     if len(cost_tied) == 1:
         chosen = cost_tied[0]
-        log.append(f"Cost tiebreak SELECTED: {chosen}")
+        log.append(f"SELECTED: {chosen} (rationale=ci_overlap_cost_break)")
         return {
             "selected_cell": _decode(chosen),
-            "rationale": "tie_break_cost",
+            "rationale": "ci_overlap_cost_break",
             "per_cell": per_cell,
             "random_column": random_aggs,
             "decision_log": log,
         }
 
     log.append(
-        f"≥2 cells tie on quality (≤5%) AND cost (≤1%) → applying Qwen × P0 fallback (§7 rule)."
+        f"≥2 cells tie on CI overlap AND cost (≤1%) → applying Qwen × P0 named fallback (§7)."
     )
     return {
         "selected_cell": {"model": QWEN_FALLBACK_MODEL, "prompt": QWEN_FALLBACK_PROMPT},
@@ -555,7 +560,7 @@ def _test_argmin_mae() -> None:
     assert out["selected_cell"] is not None, out
     sel = out["selected_cell"]
     assert sel["model"] == "qwen/qwen-2.5-72b-instruct" and sel["prompt"] == "P0", sel
-    assert out["rationale"] == "argmin_mae", out["rationale"]
+    assert out["rationale"] == "ci_unique_argmin", out["rationale"]
     print(f"  [argmin_mae] PASSED (selected={sel['model']} × {sel['prompt']})")
 
 
@@ -617,7 +622,7 @@ def _test_tie_break_cost() -> None:
     )
     sel = out["selected_cell"]
     assert sel == {"model": "deepseek/deepseek-chat", "prompt": "P0"}, sel
-    assert out["rationale"] == "tie_break_cost", out["rationale"]
+    assert out["rationale"] == "ci_overlap_cost_break", out["rationale"]
     print("  [tie_break_cost] PASSED")
 
 
