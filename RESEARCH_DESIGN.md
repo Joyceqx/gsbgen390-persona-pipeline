@@ -10,7 +10,7 @@ This is the single source of truth for the Phase 1 study. No OSF preregistration
 
 ## 1. Research question
 
-**Phase 1**: Of four pre-registered survey-collectible feature categories — **demographic, behavioral, psychological, attitudinal** — which most contributes to LLM persona prediction of held-out GSS 2024 attitude outcomes? Within each category, which construct-level batteries drive the predictive signal?
+**Phase 1**: Of four pre-specified survey-collectible feature categories — **demographic, behavioral, psychological, attitudinal** — which most contributes to LLM persona prediction of held-out GSS 2024 attitude outcomes? Within each category, which construct-level batteries drive the predictive signal?
 
 **Project-level**: How does the contribution of each category vary across outcome dimensions? Phase 1 answers this for **attitudes**. Phase 2 will extend to **BFI personality** and **behavioral economic games** via targeted Cookiy collection (separate design, not covered here).
 
@@ -51,7 +51,7 @@ Locked in `gss_feature_taxonomy.json` (v0.3) and `gss_battery_map.json` (v0.2).
 | HELPPOOR | govt help for poor | sparse-anchored Likert-5 | 1 Govt should improve … 5 Each person should |
 | SATFIN | financial satisfaction | Likert-3 | 1 Pretty well satisfied … 3 Not at all |
 
-GSS ballot rotation means each respondent typically sees ~8 of 12 items.
+GSS ballot rotation means each respondent typically sees ~8 of 12 items. Coverage varies substantially by item — POLVIEWS / PARTYID / SATFIN are on ~99% of ballots, GUNLAW / FECHLD / CONFINAN / CONLEGIS / HELPPOOR around 65%, ABANY / CAPPUN around 30–65%, and **FEPOL (~27%) and RACDIF1 (~31%) are notably lower**. Per-item statistics (DQ-3 variance ratios, 5 × 3 × 12 summary table cells) on FEPOL and RACDIF1 are estimated from ≤ 65 respondents per cell in the N=200 panel arm; report them with explicit n and treat them as exploratory.
 
 ### 3.2 Feature pool — 140 variables × 4 bins
 
@@ -226,6 +226,8 @@ All cells fail DQ: PAUSE — Phase 1B does not proceed.
 
 **Honest framing of the tiebreak**: at N=200 the SE per-cell normalized MAE is ≈ 0.071, while the 5% tiebreak window on an assumed best MAE ≈ 1.0 is 0.05. Most cells whose true MAE differs by < 10% from the best will land inside the tiebreak window, so the selector is best described as "DQ screen → MAE argmin if a single cell is clearly best by > 5%, otherwise cost-driven choice within the noise band". The "quality-primary" label only holds when one cell genuinely dominates. The Phase 1B writeup reports the per-cell MAEs (180-row summary, §6.1) alongside the headline so any reader can audit how thick the tiebreak band was on the actual run.
 
+**Binary sensitivity check** (post-selection, mandatory). After §7 picks the headline cell, report that cell's **exact-match accuracy on each of the 5 binary primary_eval items** (ABANY, CAPPUN, GUNLAW, FEPOL, RACDIF1) alongside the headline normalized MAE. Per-item normalization makes binary errors equal-weighted in `primary_score`, but a cell can still have a low aggregate MAE while collapsing specifically on one or two binary items. If any of the 5 binary items has exact-match accuracy < 0.50 (worse than chance) on the held-out Phase 1B sample, that item is flagged in the limitations section as a model-specific failure on the selected cell. This is reporting only — it does NOT trigger a selection rerun.
+
 ---
 
 ## 8. Phase 1B
@@ -308,6 +310,15 @@ python3 src/select_phase1b_model.py outputs/phase1a_raw.parquet
 python3 src/gss_driver.py --phase1b \
     --phase1b-model <slug> \
     --phase1b-prompt <prompt_id>
+
+# 4b. R2 regression baseline (free, ~5 min) — report alongside Phase 1B headline
+#    Non-LLM Ridge (Likert) / multinomial Logistic (binary) baseline with the same
+#    R1 battery-exclusion rules. Tells reviewers what a simple supervised predictor
+#    could extract from the same feature pool; the LLM-vs-R2 gap is the LLM-specific
+#    predictive contribution (§4).
+python3 src/regression_baseline.py \
+    --input outputs/phase1b_raw.parquet \
+    --output outputs/phase1b_r2_baseline.json
 
 # 5. Phase 1C analyzers (~$519 paid + analyzers)
 python3 src/gss_driver.py --battery-loo --phase1b-model <slug> --phase1b-prompt <prompt_id>
