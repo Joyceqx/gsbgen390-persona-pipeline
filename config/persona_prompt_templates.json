@@ -1,0 +1,562 @@
+{
+  "ABDEFECT": {
+    "p2_question": "Should it be possible for a pregnant woman to obtain a legal abortion if there is a strong chance of serious defect in the baby?",
+    "p1_template": "If there is a strong chance of serious defect in the baby, I think abortion should be available: {val_lower}."
+  },
+  "ABHLTH": {
+    "p2_question": "Should it be possible for a pregnant woman to obtain a legal abortion if the woman's own health is seriously endangered by the pregnancy?",
+    "p1_template": "If the woman's own health is seriously endangered by the pregnancy, I think abortion should be available: {val_lower}."
+  },
+  "ABNOMORE": {
+    "p2_question": "Should it be possible for a pregnant woman to obtain a legal abortion if she is married and does not want any more children?",
+    "p1_template": "If she is married and does not want more children, I think abortion should be available: {val_lower}."
+  },
+  "ABPOOR": {
+    "p2_question": "Should it be possible for a pregnant woman to obtain a legal abortion if the family has a very low income and cannot afford any more children?",
+    "p1_template": "If the family has a low income and cannot afford more children, I think abortion should be available: {val_lower}."
+  },
+  "ABRAPE": {
+    "p2_question": "Should it be possible for a pregnant woman to obtain a legal abortion if she became pregnant as a result of rape?",
+    "p1_template": "If she became pregnant as a result of rape, I think abortion should be available: {val_lower}."
+  },
+  "ABSINGLE": {
+    "p2_question": "Should it be possible for a pregnant woman to obtain a legal abortion if she is not married and does not want to marry the man?",
+    "p1_template": "If she is not married and does not want to marry the man, I think abortion should be available: {val_lower}."
+  },
+  "AGE": {
+    "p2_question": "How old are you?",
+    "p1_template": "I am {val_int} years old."
+  },
+  "ATTEND": {
+    "p2_question": "How often do you attend religious services?",
+    "p1_template": "I attend religious services {val_lower}."
+  },
+  "BIBLE": {
+    "p2_question": "Which of these statements comes closest to describing your feelings about the Bible?",
+    "p1_template": "My view of the Bible: {val_lower}."
+  },
+  "BORN": {
+    "p2_question": "Were you born in this country?",
+    "p1_template": "I was born in this country: {val_lower}."
+  },
+  "COLATH": {
+    "p2_question": "Should somebody who is against all churches and religion be allowed to teach in a college or university?",
+    "p1_template": "On allowing someone against all churches and religion to teach in a college, my position is: {val_lower}."
+  },
+  "COLCOM": {
+    "p2_question": "Suppose an admitted communist is teaching in a college. Should they be fired?",
+    "p1_template": "On whether an admitted communist teaching in a college should be fired: {val_lower}."
+  },
+  "COLRAC": {
+    "p2_question": "Should somebody who believes that Blacks are genetically inferior be allowed to teach in a college or university?",
+    "p1_template": "On allowing someone who believes Blacks are genetically inferior to teach in a college, my position is: {val_lower}."
+  },
+  "COMPUSE": {
+    "p2_question": "Do you personally use a computer at home, at work, or at school?",
+    "p1_template": "I use a computer: {val_lower}."
+  },
+  "CONARMY": {
+    "p2_question": "How much confidence do you have in the people running the military?",
+    "p1_template": "On confidence in the people running the military, I have: {val_lower}."
+  },
+  "CONBUS": {
+    "p2_question": "How much confidence do you have in the people running major companies?",
+    "p1_template": "On confidence in the people running major companies, I have: {val_lower}."
+  },
+  "CONCLERG": {
+    "p2_question": "How much confidence do you have in the people running organized religion?",
+    "p1_template": "On confidence in the people running organized religion, I have: {val_lower}."
+  },
+  "CONEDUC": {
+    "p2_question": "How much confidence do you have in the people running education?",
+    "p1_template": "On confidence in the people running education, I have: {val_lower}."
+  },
+  "CONFED": {
+    "p2_question": "How much confidence do you have in the people running the executive branch of the federal government?",
+    "p1_template": "On confidence in the people running the executive branch of the federal government, I have: {val_lower}."
+  },
+  "CONJUDGE": {
+    "p2_question": "How much confidence do you have in the people running the United States Supreme Court?",
+    "p1_template": "On confidence in the people running the United States Supreme Court, I have: {val_lower}."
+  },
+  "CONLABOR": {
+    "p2_question": "How much confidence do you have in the people running organized labor?",
+    "p1_template": "On confidence in the people running organized labor, I have: {val_lower}."
+  },
+  "CONMEDIC": {
+    "p2_question": "How much confidence do you have in the people running medicine?",
+    "p1_template": "On confidence in the people running medicine, I have: {val_lower}."
+  },
+  "CONPRESS": {
+    "p2_question": "How much confidence do you have in the people running the press?",
+    "p1_template": "On confidence in the people running the press, I have: {val_lower}."
+  },
+  "CONSCI": {
+    "p2_question": "How much confidence do you have in the people running the scientific community?",
+    "p1_template": "On confidence in the people running the scientific community, I have: {val_lower}."
+  },
+  "CONTV": {
+    "p2_question": "How much confidence do you have in the people running television?",
+    "p1_template": "On confidence in the people running television, I have: {val_lower}."
+  },
+  "COURTS": {
+    "p2_question": "In general, do you think the courts in this area deal too harshly or not harshly enough with criminals?",
+    "p1_template": "On whether courts deal too harshly or not harshly enough with criminals: {val_lower}."
+  },
+  "DEGREE": {
+    "p2_question": "What is your highest educational degree?",
+    "p1_template": "My highest educational degree is {val}."
+  },
+  "DISCAFF": {
+    "p2_question": "What do you think the chances are these days that a white person won't get a job or promotion while an equally or less qualified Black person gets one instead?",
+    "p1_template": "On the chances of a white person being passed over for a job in favor of a less qualified Black person, my view is: {val_lower}."
+  },
+  "DISCAFFM": {
+    "p2_question": "What do you think the chances are these days that a man won't get a job or promotion while an equally or less qualified woman gets one instead?",
+    "p1_template": "On the chances of a man being passed over for a job in favor of an equally or less qualified woman: {val_lower}."
+  },
+  "DISCAFFW": {
+    "p2_question": "What do you think the chances are these days that a woman won't get a job or promotion while an equally or less qualified man gets one instead?",
+    "p1_template": "On the chances of a woman being passed over for a job in favor of an equally or less qualified man: {val_lower}."
+  },
+  "DIVLAW": {
+    "p2_question": "Should divorce in this country be easier or more difficult to obtain than it is now?",
+    "p1_template": "On whether divorce should be easier or more difficult to obtain: {val_lower}."
+  },
+  "DWELOWN16": {
+    "p2_question": "Did your family own or rent the home you lived in at age 16?",
+    "p1_template": "When I was 16, my family {val_lower} the home."
+  },
+  "EDUC": {
+    "p2_question": "What is the highest year of school you have completed?",
+    "p1_template": "I have completed {val}."
+  },
+  "EQWLTH": {
+    "p2_question": "Some people think the government in Washington ought to reduce income differences between rich and poor, perhaps by raising taxes of wealthy families or by giving income assistance to the poor. Others think the government should not concern itself with reducing income differences. Where would you place yourself on this 7-point scale?",
+    "p1_template": "On whether the government should reduce income differences between rich and poor: {val_lower}."
+  },
+  "ETHNIC": {
+    "p2_question": "From what country or part of the world did your ancestors come?",
+    "p1_template": "My ancestors came from {val}."
+  },
+  "EVWORK": {
+    "p2_question": "Have you ever worked for as long as one year?",
+    "p1_template": "On whether I have ever worked for as long as one year: {val_lower}."
+  },
+  "FAIR": {
+    "p2_question": "Do you think most people would try to take advantage of you if they got a chance, or would they try to be fair?",
+    "p1_template": "On whether most people try to be fair or take advantage: {val_lower}."
+  },
+  "FAMDIF16": {
+    "p2_question": "What was the main reason you were not living with both your own parents at age 16?",
+    "p1_template": "The main reason I was not living with both parents at 16: {val_lower}."
+  },
+  "FAMILY16": {
+    "p2_question": "Were you living with both your own parents when you were 16 years old?",
+    "p1_template": "At age 16, I was living with {val_lower}."
+  },
+  "FEFAM": {
+    "p2_question": "Do you agree or disagree: it is much better for everyone involved if the man is the achiever outside the home and the woman takes care of the home and family?",
+    "p1_template": "On whether it's better for the man to be the achiever and the woman to tend home, I {val_lower}."
+  },
+  "FEHIRE": {
+    "p2_question": "Do you agree or disagree: because of past discrimination, employers should make special efforts to hire and promote qualified women?",
+    "p1_template": "On whether employers should make special efforts to hire and promote qualified women, I {val_lower}."
+  },
+  "FEPRESCH": {
+    "p2_question": "Do you agree or disagree: a preschool child is likely to suffer if his or her mother works?",
+    "p1_template": "On whether a preschool child suffers if their mother works, I {val_lower}."
+  },
+  "FUND": {
+    "p2_question": "Would you describe your religious upbringing as fundamentalist, moderate, or liberal?",
+    "p1_template": "I would describe my current religious orientation as {val_lower}."
+  },
+  "GETAHEAD": {
+    "p2_question": "Some people say that people get ahead by their own hard work; others say that lucky breaks or help from other people are more important. Which do you think is most important?",
+    "p1_template": "On how people get ahead in life, I think the most important factor is: {val_lower}."
+  },
+  "GRASS": {
+    "p2_question": "Do you think the use of marijuana should be made legal or not?",
+    "p1_template": "On whether the use of marijuana should be made legal: {val_lower}."
+  },
+  "HAPMAR": {
+    "p2_question": "Taking things all together, how would you describe your marriage — very happy, pretty happy, or not too happy?",
+    "p1_template": "On the happiness of my marriage: {val_lower}."
+  },
+  "HAPPY": {
+    "p2_question": "Taken all together, how would you say things are these days — would you say that you are very happy, pretty happy, or not too happy?",
+    "p1_template": "In general, I would say I am {val_lower}."
+  },
+  "HEALTH": {
+    "p2_question": "Would you say your own health, in general, is excellent, good, fair, or poor?",
+    "p1_template": "In general, I would say my health is {val_lower}."
+  },
+  "HELPBLK": {
+    "p2_question": "Some people think that Blacks have been discriminated against for so long that the government has a special obligation to help improve their living standards. Others believe the government should not be giving special treatment. Where would you place yourself?",
+    "p1_template": "On whether the government has a special obligation to help improve Black people's living standards: {val_lower}."
+  },
+  "HELPFUL": {
+    "p2_question": "Would you say that most of the time people try to be helpful, or that they are mostly just looking out for themselves?",
+    "p1_template": "On whether people are generally helpful or self-interested: {val_lower}."
+  },
+  "HELPNOT": {
+    "p2_question": "Some people think that the government in Washington is trying to do too many things that should be left to individuals and private business. Others disagree. Where would you place yourself?",
+    "p1_template": "On whether the government in Washington is trying to do too many things: {val_lower}."
+  },
+  "HELPSICK": {
+    "p2_question": "In general, some people think it is the responsibility of the government in Washington to see to it that people have help in paying for doctors and hospital bills. Others think these matters are not the responsibility of the federal government. Where would you place yourself?",
+    "p1_template": "On whether the federal government should help pay for medical care: {val_lower}."
+  },
+  "HISPANIC": {
+    "p2_question": "Are you of Hispanic, Latino, or Spanish origin?",
+    "p1_template": "Ethnically, I am {val_lower}."
+  },
+  "HOMOSEX": {
+    "p2_question": "What about sexual relations between two adults of the same sex — is it always wrong, almost always wrong, wrong only sometimes, or not wrong at all?",
+    "p1_template": "On sexual relations between two adults of the same sex, I think it is {val_lower}."
+  },
+  "HOMPOP": {
+    "p2_question": "How many persons are there in your household, counting yourself?",
+    "p1_template": "There are {val_int} persons in my household, counting myself."
+  },
+  "HRS1": {
+    "p2_question": "How many hours did you work last week, at all jobs?",
+    "p1_template": "I worked about {val_int} hours last week."
+  },
+  "HUNT1": {
+    "p2_question": "Do you or your spouse or partner hunt?",
+    "p1_template": "On hunting: {val_lower}."
+  },
+  "INCOM16": {
+    "p2_question": "Compared with American families in general, would you say your family income at age 16 was far below average, below average, average, above average, or far above average?",
+    "p1_template": "When I was 16, my family income was {val_lower} compared with American families in general."
+  },
+  "INCOME16": {
+    "p2_question": "Roughly, what was the total income of your family at age 16, before taxes?",
+    "p1_template": "When I was 16, my family's total income was {val}."
+  },
+  "JOBFIND": {
+    "p2_question": "About how easy would it be for you to find a job with another employer with approximately the same income and fringe benefits you now have?",
+    "p1_template": "If I were to look for a similar job, I think it would be {val_lower} to find one."
+  },
+  "JOBLOSE": {
+    "p2_question": "Thinking about the next 12 months, how likely is it that you will lose your job or be laid off?",
+    "p1_template": "In the next 12 months, losing my job is {val_lower}."
+  },
+  "KIDSSOL": {
+    "p2_question": "When your children are at the age you are now, do you think their standard of living will be much better, somewhat better, about the same, somewhat worse, or much worse than yours is now?",
+    "p1_template": "Compared with my current standard of living, I think my children's standard of living when they reach my age will be: {val_lower}."
+  },
+  "LETDIE1": {
+    "p2_question": "When a person has a disease that cannot be cured, do you think doctors should be allowed by law to end the patient's life by some painless means if the patient and family request it?",
+    "p1_template": "On whether doctors should be allowed to end an incurable patient's life if the patient and family request it: {val_lower}."
+  },
+  "LETIN1A": {
+    "p2_question": "Do you think the number of immigrants to America nowadays should be increased a lot, increased a little, remain the same, reduced a little, or reduced a lot?",
+    "p1_template": "On the number of immigrants to America nowadays, I think it should be {val_lower}."
+  },
+  "LIBCOM": {
+    "p2_question": "Suppose somebody admits they are a communist and writes a book favoring communism. Should the book be removed from the public library?",
+    "p1_template": "On removing a pro-communism book from the public library: {val_lower}."
+  },
+  "LIBRAC": {
+    "p2_question": "Suppose somebody who believes Blacks are genetically inferior writes a book. Should the book be removed from the public library?",
+    "p1_template": "On removing a racist book from the public library: {val_lower}."
+  },
+  "LIFE": {
+    "p2_question": "In general, do you find life exciting, pretty routine, or dull?",
+    "p1_template": "In general, I find life {val_lower}."
+  },
+  "MADEG": {
+    "p2_question": "What is the highest educational degree your mother attained?",
+    "p1_template": "My mother's highest educational degree is {val}."
+  },
+  "MAEDUC": {
+    "p2_question": "What was the highest grade of school your mother completed?",
+    "p1_template": "My mother completed {val}."
+  },
+  "MARITAL": {
+    "p2_question": "Are you currently married, widowed, divorced, separated, or have you never been married?",
+    "p1_template": "My marital status is: {val_lower}."
+  },
+  "MARTYPE": {
+    "p2_question": "Is your spouse the opposite sex or the same sex as yourself?",
+    "p1_template": "My marriage type is: {val_lower}."
+  },
+  "MOBILE16": {
+    "p2_question": "When you were 16 years old, were you living in this same city, in a different city in this state, or in a different state?",
+    "p1_template": "Geographically, I have moved {val_lower} since age 16."
+  },
+  "NATAID": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on foreign aid?",
+    "p1_template": "On federal spending for foreign aid, I think we are spending {val_lower}."
+  },
+  "NATARMS": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on military, armaments and defense?",
+    "p1_template": "On federal spending for the military, armaments and defense, I think we are spending {val_lower}."
+  },
+  "NATCHLD": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on assistance for childcare?",
+    "p1_template": "On federal spending for childcare, I think we are spending {val_lower}."
+  },
+  "NATCITY": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on solving the problems of big cities?",
+    "p1_template": "On federal spending for solving the problems of big cities, I think we are spending {val_lower}."
+  },
+  "NATDRUG": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on dealing with drug addiction?",
+    "p1_template": "On federal spending for dealing with drug addiction, I think we are spending {val_lower}."
+  },
+  "NATEDUC": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on improving the nation's education system?",
+    "p1_template": "On federal spending for improving the nation's education system, I think we are spending {val_lower}."
+  },
+  "NATENRGY": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on developing alternative energy sources?",
+    "p1_template": "On federal spending for alternative energy, I think we are spending {val_lower}."
+  },
+  "NATENVIR": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on improving and protecting the environment?",
+    "p1_template": "On federal spending for improving and protecting the environment, I think we are spending {val_lower}."
+  },
+  "NATFARE": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on welfare?",
+    "p1_template": "On federal spending for welfare, I think we are spending {val_lower}."
+  },
+  "NATHEAL": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on improving and protecting the nation's health?",
+    "p1_template": "On federal spending for improving and protecting the nation's health, I think we are spending {val_lower}."
+  },
+  "NATRACE": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on improving the conditions of Black people?",
+    "p1_template": "On federal spending for improving the conditions of Black people, I think we are spending {val_lower}."
+  },
+  "NATROAD": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on highways and bridges?",
+    "p1_template": "On federal spending for highways and bridges, I think we are spending {val_lower}."
+  },
+  "NATSCI": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on supporting scientific research?",
+    "p1_template": "On federal spending for scientific research, I think we are spending {val_lower}."
+  },
+  "NATSOC": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on Social Security?",
+    "p1_template": "On federal spending for Social Security, I think we are spending {val_lower}."
+  },
+  "NATSPAC": {
+    "p2_question": "Are we spending too much, too little, or about the right amount on the space exploration program?",
+    "p1_template": "On federal spending for the space exploration program, I think we are spending {val_lower}."
+  },
+  "NEWS": {
+    "p2_question": "How often do you read the newspaper?",
+    "p1_template": "I read the newspaper {val_lower}."
+  },
+  "OWNGUN": {
+    "p2_question": "Do you happen to have in your home any guns or revolvers?",
+    "p1_template": "I have a gun in my home: {val_lower}."
+  },
+  "PADEG": {
+    "p2_question": "What is the highest educational degree your father attained?",
+    "p1_template": "My father's highest educational degree is {val}."
+  },
+  "PAEDUC": {
+    "p2_question": "What was the highest grade of school your father completed?",
+    "p1_template": "My father completed {val}."
+  },
+  "PARSOL": {
+    "p2_question": "Compared to your parents when they were the age you are now, do you think your own standard of living now is much better, somewhat better, about the same, somewhat worse, or much worse than theirs was?",
+    "p1_template": "Compared to my parents at the age I am now, I think my own current standard of living is: {val_lower}."
+  },
+  "PARTFULL": {
+    "p2_question": "Is your work part-time or full-time?",
+    "p1_template": "My work is {val_lower}."
+  },
+  "PILLOK": {
+    "p2_question": "Do you agree or disagree: methods of birth control should be available to teenagers between the ages of 14 and 16 even if their parents do not approve?",
+    "p1_template": "On whether birth control should be available to teenagers aged 14–16 without parental approval, I {val_lower}."
+  },
+  "POLABUSE": {
+    "p2_question": "Would you approve of a policeman striking an adult male citizen who had said vulgar or obscene things to the policeman?",
+    "p1_template": "On whether I would approve of a policeman striking an adult male citizen who said vulgar or obscene things to the policeman: {val_lower}."
+  },
+  "POLATTAK": {
+    "p2_question": "Would you approve of a policeman striking an adult male citizen who was attacking the policeman with his fists?",
+    "p1_template": "On whether I would approve of a policeman striking an adult male citizen who was attacking the policeman with his fists: {val_lower}."
+  },
+  "POLHITOK": {
+    "p2_question": "Are there any situations you can imagine in which you would approve of a policeman striking an adult male citizen?",
+    "p1_template": "On whether I can imagine any situation in which I would approve of a policeman striking an adult male citizen: {val_lower}."
+  },
+  "PORNLAW": {
+    "p2_question": "Which of these statements comes closest to your feelings about the laws regarding pornography?",
+    "p1_template": "On laws regarding pornography, I believe: {val_lower}."
+  },
+  "POSTLIFE": {
+    "p2_question": "Do you believe there is a life after death?",
+    "p1_template": "On belief in life after death: {val_lower}."
+  },
+  "PRAY": {
+    "p2_question": "How often do you pray?",
+    "p1_template": "I pray {val_lower}."
+  },
+  "PRAYER": {
+    "p2_question": "Do you approve or disapprove of the United States Supreme Court ruling that no state or local government may require the reading of the Lord's Prayer or Bible verses in public schools?",
+    "p1_template": "On the Supreme Court ruling against prayer / Bible reading in public schools: {val_lower}."
+  },
+  "PRES16": {
+    "p2_question": "Whom did you vote for President in 2016 — Hillary Clinton or Donald Trump?",
+    "p1_template": "In 2016, I voted for {val}."
+  },
+  "PRES20": {
+    "p2_question": "Whom did you vote for President in 2020 — Donald Trump or Joe Biden?",
+    "p1_template": "In 2020, I voted for {val}."
+  },
+  "RACDIF2": {
+    "p2_question": "On the average, Blacks have worse jobs, income, and housing than white people. Do you think these differences are because most Blacks have less in-born ability to learn?",
+    "p1_template": "On whether differences are because most Blacks have less in-born ability to learn, my answer is {val_lower}."
+  },
+  "RACDIF3": {
+    "p2_question": "On the average, Blacks have worse jobs, income, and housing than white people. Do you think these differences are because most Blacks don't have the chance for education that it takes to rise out of poverty?",
+    "p1_template": "On whether differences are because most Blacks lack educational opportunities, my answer is {val_lower}."
+  },
+  "RACDIF4": {
+    "p2_question": "On the average, Blacks have worse jobs, income, and housing than white people. Do you think these differences are because most Blacks just don't have the motivation or willpower to pull themselves up out of poverty?",
+    "p1_template": "On whether differences are because most Blacks lack motivation, my answer is {val_lower}."
+  },
+  "RACE": {
+    "p2_question": "What race do you consider yourself?",
+    "p1_template": "Racially, I am {val}."
+  },
+  "REBORN": {
+    "p2_question": "Would you say you have been 'born again' or have had a 'born again' experience?",
+    "p1_template": "On whether I have had a 'born again' experience, my answer is {val_lower}."
+  },
+  "REG16": {
+    "p2_question": "What region of the country did you live in when you were 16?",
+    "p1_template": "At age 16, I lived in the {val} region of the United States."
+  },
+  "REGION": {
+    "p2_question": "What region of the country do you currently live in?",
+    "p1_template": "I currently live in the {val} region of the United States."
+  },
+  "RELIG": {
+    "p2_question": "What is your religious preference?",
+    "p1_template": "My religious preference is {val}."
+  },
+  "RELIG16": {
+    "p2_question": "In what religion were you raised?",
+    "p1_template": "I was raised {val}."
+  },
+  "RELITEN": {
+    "p2_question": "Would you call yourself a strong [religious preference] or not a very strong [religious preference]?",
+    "p1_template": "The strength of my religious affiliation is: {val_lower}."
+  },
+  "RELPERSN": {
+    "p2_question": "To what extent do you consider yourself a religious person?",
+    "p1_template": "I consider myself religious to this extent: {val_lower}."
+  },
+  "SATJOB": {
+    "p2_question": "On the whole, how satisfied are you with the work you do?",
+    "p1_template": "On the whole, with my work I am {val_lower}."
+  },
+  "SEX": {
+    "p2_question": "What is your sex?",
+    "p1_template": "I am {val_lower}."
+  },
+  "SEXEDUC": {
+    "p2_question": "Would you be for or against sex education in the public schools?",
+    "p1_template": "On sex education in the public schools, I am {val_lower}."
+  },
+  "SPANKING": {
+    "p2_question": "Do you agree or disagree: sometimes it is necessary to discipline a child with a good, hard spanking?",
+    "p1_template": "On using spanking to discipline a child, I {val_lower}."
+  },
+  "SPKATH": {
+    "p2_question": "Suppose somebody is against all churches and religion and wants to make a speech in your community. Should they be allowed to speak?",
+    "p1_template": "On allowing someone against all churches and religion to speak in my community: {val_lower}."
+  },
+  "SPKCOM": {
+    "p2_question": "Suppose a man who admits he is a communist wants to make a speech in your community. Should they be allowed to speak?",
+    "p1_template": "On allowing an admitted communist to speak in my community: {val_lower}."
+  },
+  "SPKRAC": {
+    "p2_question": "Suppose a person who believes Blacks are genetically inferior wants to make a speech in your community. Should they be allowed to speak?",
+    "p1_template": "On allowing someone who believes Blacks are genetically inferior to speak in my community: {val_lower}."
+  },
+  "SPRTPRSN": {
+    "p2_question": "To what extent do you consider yourself a spiritual person?",
+    "p1_template": "I consider myself spiritual to this extent: {val_lower}."
+  },
+  "SUICIDE1": {
+    "p2_question": "Do you think a person has the right to end their own life if they have an incurable disease?",
+    "p1_template": "On the right to end one's own life with an incurable disease, my answer is {val_lower}."
+  },
+  "SUICIDE2": {
+    "p2_question": "Do you think a person has the right to end their own life if they have gone bankrupt?",
+    "p1_template": "On the right to end one's own life after going bankrupt, my answer is {val_lower}."
+  },
+  "SUICIDE4": {
+    "p2_question": "Do you think a person has the right to end their own life if they are tired of living and ready to die?",
+    "p1_template": "On the right to end one's own life because of being tired of living, my answer is {val_lower}."
+  },
+  "TAX": {
+    "p2_question": "Do you consider the amount of federal income tax that you have to pay as too high, about right, or too low?",
+    "p1_template": "I consider the federal income tax I pay to be {val_lower}."
+  },
+  "TRUST": {
+    "p2_question": "Generally speaking, would you say that most people can be trusted, or that you can't be too careful in dealing with people?",
+    "p1_template": "On whether most people can be trusted: {val_lower}."
+  },
+  "TVHOURS": {
+    "p2_question": "On the average day, about how many hours do you personally watch television?",
+    "p1_template": "I watch about {val_int} hours of television per day."
+  },
+  "UNEMP": {
+    "p2_question": "At any time during the last ten years have you been unemployed and looking for work for as long as a month?",
+    "p1_template": "On whether I have been unemployed and looking for work for as long as a month in the last 10 years: {val_lower}."
+  },
+  "UNION1": {
+    "p2_question": "Do you or does your spouse or partner belong to a labor union?",
+    "p1_template": "On union membership in my household (self or spouse): {val_lower}."
+  },
+  "VOTE16": {
+    "p2_question": "Did you vote in the 2016 presidential election?",
+    "p1_template": "On voting in 2016: {val_lower}."
+  },
+  "VOTE20": {
+    "p2_question": "Did you vote in the 2020 presidential election?",
+    "p1_template": "On voting in 2020: {val_lower}."
+  },
+  "WEBMOB": {
+    "p2_question": "Do you ever access the internet at home through a cell phone, tablet, or other handheld mobile device?",
+    "p1_template": "On accessing the internet at home through a mobile device: {val_lower}."
+  },
+  "WIDOWED": {
+    "p2_question": "Have you ever been widowed?",
+    "p1_template": "On whether I have ever been widowed: {val_lower}."
+  },
+  "WLTHBLKS": {
+    "p2_question": "On a scale from 1 (rich) to 7 (poor), where would you rate Black Americans?",
+    "p1_template": "On a scale from 1 (rich) to 7 (poor), I would rate Black Americans: {val_lower}."
+  },
+  "WLTHHSPS": {
+    "p2_question": "On a scale from 1 (rich) to 7 (poor), where would you rate Hispanic Americans?",
+    "p1_template": "On a scale from 1 (rich) to 7 (poor), I would rate Hispanic Americans: {val_lower}."
+  },
+  "WLTHWHTS": {
+    "p2_question": "On a scale from 1 (rich) to 7 (poor), where would you rate white Americans?",
+    "p1_template": "On a scale from 1 (rich) to 7 (poor), I would rate white Americans: {val_lower}."
+  },
+  "WRKSTAT": {
+    "p2_question": "Last week, were you working full-time, part-time, going to school, keeping house, or what?",
+    "p1_template": "My current labor force status is {val_lower}."
+  },
+  "XMARSEX": {
+    "p2_question": "What is your opinion about a married person having sexual relations with someone other than their spouse?",
+    "p1_template": "On a married person having sexual relations with someone other than their spouse, I think it is {val_lower}."
+  },
+  "XMOVIE": {
+    "p2_question": "Have you seen an X-rated movie in the last year?",
+    "p1_template": "On having seen an X-rated movie in the last year: {val_lower}."
+  }
+}
