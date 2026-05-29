@@ -56,6 +56,36 @@ MODEL_PANEL_PRIMARY: tuple[str, ...] = (
 # OpenRouter as "openai/gpt-4o" or directly via OpenAI SDK.
 MODEL_ANCHOR: str = "openai/gpt-4o"
 
+# OpenRouter provider locking (Reviewer round-3 P1 #5, locked 2026-05-29).
+#
+# By default call_llm_meta sends `allow_fallbacks: False` and
+# `require_parameters: True` to OpenRouter for every non-OpenAI-direct call.
+# Together those mean: pick a provider that can honor every parameter we
+# asked for (including `seed`); never silently route to a different
+# provider mid-run. Without them, OpenRouter can route `qwen-2.5-72b-instruct`
+# to provider A on call 1 and provider B on call 2 — possibly at different
+# quantizations — and our cross-model comparison loses provenance.
+#
+# Additionally, populate PROVIDER_LOCK below with the exact provider name
+# returned by the smoke test for each panel model. When non-empty, the
+# router adds `order: [<name>]` to extra_body so OpenRouter is pinned to
+# that provider for the entire paid run. Empty default = let OpenRouter
+# pick the first parameter-supporting provider on first call, but rely on
+# allow_fallbacks=False to keep that provider sticky thereafter.
+#
+# Workflow:
+#   1. Run `python3 src/gss_driver.py --smoke`; record the `provider` field
+#      printed for each panel model.
+#   2. Populate PROVIDER_LOCK[model_slug] = "<provider name>" below.
+#   3. Verify with a second --smoke that the locked provider is selected.
+#   4. Launch paid Phase 1A.
+PROVIDER_LOCK: dict[str, str] = {
+    # "qwen/qwen-2.5-72b-instruct":        "<populate from smoke output>",
+    # "deepseek/deepseek-chat":            "<populate from smoke output>",
+    # "meta-llama/llama-3.3-70b-instruct": "<populate from smoke output>",
+    # "moonshotai/kimi-k2":                "<populate from smoke output>",
+}
+
 # Default per-call hyperparameters
 DEFAULT_TEMPERATURE: float = 0.7
 # We only need a single integer code, but some models (notably DeepSeek-V3.1
@@ -248,11 +278,26 @@ def call_llm_meta(
                     {"role": "user", "content": user},
                 ],
             }
-            if seed is not None:
-                if use_openai_direct:
+            if use_openai_direct:
+                # OpenAI direct: seed goes as a top-level kwarg.
+                if seed is not None:
                     create_kwargs["seed"] = seed
-                else:
-                    create_kwargs["extra_body"] = {"seed": seed}
+            else:
+                # OpenRouter: seed + provider preferences via extra_body.
+                # Per Reviewer round-3 P1 #5: enforce allow_fallbacks=False +
+                # require_parameters=True on every call so a parameter-
+                # supporting provider is chosen and silently held mid-run.
+                # If PROVIDER_LOCK has an entry for this model, pin to it.
+                provider_prefs: dict = {
+                    "allow_fallbacks": False,
+                    "require_parameters": True,
+                }
+                if model in PROVIDER_LOCK:
+                    provider_prefs["order"] = [PROVIDER_LOCK[model]]
+                extra_body: dict = {"provider": provider_prefs}
+                if seed is not None:
+                    extra_body["seed"] = seed
+                create_kwargs["extra_body"] = extra_body
             resp = client.chat.completions.create(**create_kwargs)
             usage = getattr(resp, "usage", None)
             return {

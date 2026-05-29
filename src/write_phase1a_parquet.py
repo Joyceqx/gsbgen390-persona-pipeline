@@ -366,6 +366,88 @@ def _test_parquet_roundtrip(tmp_path: Path) -> None:
     print("  [parquet_roundtrip] PASSED")
 
 
+def _test_provenance_columns_e2e(tmp_path: Path) -> None:
+    """Reviewer round-3 additional concern: confirm error_type / provider /
+    system_fingerprint / model_returned actually flow from the JSON sample
+    dict through flatten_records into the parquet on disk.
+
+    Builds a minimal record where every sample carries populated provenance
+    fields; writes parquet; reads back; asserts each provenance column is
+    present and matches the source values."""
+    # Hand-built record with provenance fields (driver populates these via
+    # call_llm_meta + score.update(call_meta) + score["error_type"]).
+    rec = {
+        "respondent_id": 0, "condition": "full",
+        "model": "qwen/qwen-2.5-72b-instruct",
+        "prompt_id": "P0", "prompt_version": "v1",
+        "template_hash": "abc123" + "00" * 5, "n_samples": 1,
+        "per_item_scores": {
+            "POLVIEWS": [{
+                "truth": 3, "persona_code": 3, "parse_fail": False,
+                "treatment": "likert", "abs_err": 0, "within1": 1,
+                "cat_match": None, "skipped_missing_truth": False,
+                "error_type": "ok",
+                "provider": "DeepInfra",
+                "system_fingerprint": "fp_44709d6fcb",
+                "model_returned": "qwen/qwen-2.5-72b-instruct",
+                "tokens_in": 928, "tokens_out": 3,
+            }],
+            "ABANY": [{
+                "truth": 1, "persona_code": None, "parse_fail": True,
+                "treatment": None, "abs_err": None, "within1": None,
+                "cat_match": None, "skipped_missing_truth": False,
+                "error_type": "provider_error",
+                "provider": None,  # provider unknown when call_llm raised
+                "system_fingerprint": None,
+                "model_returned": None,
+                "tokens_in": None, "tokens_out": None,
+            }],
+        },
+    }
+    write_ts = datetime.now(timezone.utc).isoformat()
+    rows = flatten_records([rec], write_ts)
+    # Two rows: POLVIEWS (ok) and ABANY (provider_error)
+    assert len(rows) == 2, len(rows)
+    polviews = next(r for r in rows if r["item"] == "POLVIEWS")
+    abany = next(r for r in rows if r["item"] == "ABANY")
+    assert polviews["error_type"] == "ok"
+    assert polviews["provider"] == "DeepInfra"
+    assert polviews["system_fingerprint"] == "fp_44709d6fcb"
+    assert polviews["model_returned"] == "qwen/qwen-2.5-72b-instruct"
+    assert polviews["tokens_in"] == 928 and polviews["tokens_out"] == 3
+    assert abany["error_type"] == "provider_error"
+    assert abany["provider"] is None
+    assert abany["system_fingerprint"] is None
+
+    # Now write parquet, read back, and re-verify the provenance columns
+    df = pd.DataFrame(rows, columns=PARQUET_COLUMNS)
+    for col in ("pred_code", "abs_err", "tokens_in", "tokens_out"):
+        df[col] = df[col].astype("Int32")
+    df["true_code"] = df["true_code"].astype("int32")
+    df["respondent_id"] = df["respondent_id"].astype("int32")
+    df["sample_position"] = df["sample_position"].astype("int32")
+    out = tmp_path / "tmp_provenance.parquet"
+    df.to_parquet(out, index=False)
+    df2 = pd.read_parquet(out)
+    expected_provenance_cols = {
+        "error_type", "provider", "system_fingerprint", "model_returned",
+        "tokens_in", "tokens_out",
+    }
+    assert expected_provenance_cols <= set(df2.columns), \
+        f"missing provenance columns on read-back: {expected_provenance_cols - set(df2.columns)}"
+    polviews_back = df2[df2["item"] == "POLVIEWS"].iloc[0]
+    assert polviews_back["provider"] == "DeepInfra"
+    assert polviews_back["system_fingerprint"] == "fp_44709d6fcb"
+    assert polviews_back["model_returned"] == "qwen/qwen-2.5-72b-instruct"
+    assert polviews_back["error_type"] == "ok"
+    assert int(polviews_back["tokens_in"]) == 928
+    abany_back = df2[df2["item"] == "ABANY"].iloc[0]
+    assert abany_back["error_type"] == "provider_error"
+    assert pd.isna(abany_back["provider"])
+    out.unlink()
+    print("  [provenance_columns_e2e] PASSED")
+
+
 def run_self_tests() -> int:
     import tempfile
     print("Phase 1A parquet writer self-tests")
@@ -376,7 +458,8 @@ def run_self_tests() -> int:
     _test_row_count()
     with tempfile.TemporaryDirectory() as d:
         _test_parquet_roundtrip(Path(d))
-    print("✓ ALL 6 SELF-TESTS PASSED")
+        _test_provenance_columns_e2e(Path(d))
+    print("✓ ALL 7 SELF-TESTS PASSED")
     return 0
 
 
