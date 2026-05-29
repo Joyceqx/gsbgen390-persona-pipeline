@@ -30,22 +30,25 @@ decision Option A):
     Kimi K2 (3 China-trained + 1 Western-trained for cross-family balance;
     MiniMax-M1 → Llama swap locked pre-OSF per Audit-3).
 
-Usage (LOCKED Phase 1 paid runs — use named modes; locked 2026-05-10 per
-Audit-fresh-4 review; legacy --smoke / --anchor flags below are debug-only
-and DO NOT match the OSF Option A scope):
+Usage (LOCKED Phase 1 paid runs — use named modes; locked 2026-05-29 per
+post-factorial audit; legacy --smoke / --anchor flags below are debug-only):
 
-    # Phase 1a — N=200 cheap-panel × primary-only (sensitivity is anchor-only).
-    # 100/100 selection/validation split is enforced downstream by
-    # select_phase1b_model.py CLI. Cost: ~$17 cheap.
+    # Phase 1a — N=200 cheap-panel × 3 prompts × FULL CONDITION ONLY × n_samples=2.
+    # LOO conditions are deferred to Phase 1b (run on the selected cell × N=3,309
+    # disjoint cohort, where they actually power the §8 LOO ΔMAE headline).
+    # Ballot-off items (no GSS truth) are skipped before the LLM call. Cost: ~$14.
     python3 gss_driver.py --phase1a
 
-    # §12.2 selector — produces Phase 1b model slug + held-out validation_mae:
-    python3 select_phase1b_model.py outputs/gss_phase1_records_n200_*.json
+    # §7 joint (model, prompt) cell selector — reads outputs/phase1a_raw.parquet:
+    python3 select_phase1b_cell.py outputs/phase1a_raw.parquet
 
-    # Phase 1b — N=3,309 × single §12.2-selected model × primary-only.
-    # Cost: ~$71 (single cheap model).
-    python3 gss_driver.py --phase1b --phase1b-model qwen/qwen-2.5-72b-instruct
-    # (replace slug with the actual selector output)
+    # Phase 1b — N=3,309 × single §7-selected cell × primary-only × Full + 4 LOO
+    # × n_samples=1. Headline cohort excludes the 200 selector respondents
+    # (N=3,109 disjoint); full N=3,309 reported as sensitivity. Cost: ~$48.
+    python3 gss_driver.py --phase1b \\
+        --phase1b-model qwen/qwen-2.5-72b-instruct \\
+        --phase1b-prompt P0
+    # (replace slug + prompt with the actual selector output)
 
     # GPT-4o anchor — N=100 selection-split subset × primary + sensitivity
     # (the only Park-comparable run; produces the Park v2 SI Table 3 anchor

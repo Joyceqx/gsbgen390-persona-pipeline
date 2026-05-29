@@ -11,7 +11,7 @@ archived):
         DQ-3: per-item output variance < 30% of human variance on that item
               for any primary_eval item where the model is asked, computed as
               the fraction of items failing the threshold; disqualify if
-              ≥ 50% of items fail (i.e., a majority of items show mode collapse
+              ≥ 50% of items fail (i.e., a majority of items show marginal distribution collapse
               relative to the human distribution).
     tie-break: among models within 5% of best primary_score, pick lowest
                cost_per_call_USD × (1 + parse_failure_rate)
@@ -572,7 +572,7 @@ def _self_test() -> None:
     assert out1["rationale"] == "argmin_mae", out1["rationale"]
     print(f"    ✓ SELECTED={out1['selected']} rationale={out1['rationale']}")
 
-    # Test 2: all_dq_fail_pause — every model fails DQ-3 (mode collapse).
+    # Test 2: all_dq_fail_pause — every model fails DQ-3 (marginal distribution collapse).
     # Locked 2026-05-09 night per Audit-2 + Joyce decision: PAUSE instead of
     # silently falling back to Qwen.
     print("\n[2] all_dq_fail_pause_for_review — every model collapses to a single code")
