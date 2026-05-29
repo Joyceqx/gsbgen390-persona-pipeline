@@ -108,6 +108,8 @@ OUTPUTS = WORK / "outputs"
 OUTPUTS.mkdir(exist_ok=True)
 
 # Conditions for the primary LOO analysis (5 total: full + 4 LOO).
+# Phase 1B (selected cell × N=3,309 disjoint cohort) runs all 5 — that is
+# where the §8 4-bin LOO ΔMAE headline is produced.
 CONDITIONS_PRIMARY = [
     ("full", None),
     ("loo_drop_demographic", "demographic"),
@@ -115,6 +117,11 @@ CONDITIONS_PRIMARY = [
     ("loo_drop_psychological", "psychological"),
     ("loo_drop_attitudinal", "attitudinal"),
 ]
+
+# Phase 1A only needs the Full condition — that is what the §7 selector reads.
+# LOO conditions were generating ~80% of Phase 1A's calls but the selector did
+# not consume any of them. Defer LOO to Phase 1B.
+CONDITIONS_FULL_ONLY: list[tuple[str, str | None]] = [("full", None)]
 
 
 # ---------------------------------------------------------------------------
@@ -237,9 +244,22 @@ def run_primary_one_respondent(
     n_samples: int = 1,
     temperature: float = 0.7,
     verbose: bool = True,
+    conditions: list[tuple[str, str | None]] | None = None,
 ) -> list[dict]:
-    """For one respondent: 5 conditions × 12 items × len(models) × n_samples calls.
-    Returns a list of records, one per (condition, model).
+    """For one respondent: len(conditions) × on-ballot items × len(models)
+    × n_samples calls. Returns a list of records, one per (condition, model).
+
+    `conditions` defaults to CONDITIONS_PRIMARY (Full + 4 LOO). Phase 1A
+    passes CONDITIONS_FULL_ONLY ([("full", None)]) to skip LOO — the §7
+    selector only reads Full and the §8 LOO headline runs on a disjoint
+    N=3,309 cohort in Phase 1B.
+
+    Ballot-off items (respondent's GSS ballot did not include the item,
+    so `truth_code_or_none` returns None) are skipped BEFORE the LLM call
+    rather than after scoring. Saves ~33% of calls because each respondent
+    answers ~8 of 12 primary_eval items on average. Analytically identical
+    to filtering at scoring time — the records were dropped by the parquet
+    writer anyway.
 
     R1 (locked 2026-05-08, gss_phase1_design.md §9c.R1): battery exclusion is
     applied PER ITEM. When predicting any item that belongs to a battery (per
@@ -253,17 +273,31 @@ def run_primary_one_respondent(
     predicted item itself excluded (a no-op since primary_eval is already
     disjoint from feature bins per the validator).
     """
+    if conditions is None:
+        conditions = CONDITIONS_PRIMARY
     rid = int(respondent.get("ID_", -1))
     records: list[dict] = []
     battery_map = load_battery_map()
 
-    for cond_name, drop_bin in CONDITIONS_PRIMARY:
+    for cond_name, drop_bin in conditions:
         per_model_scores: dict[str, dict[str, list[dict]]] = {m: {} for m in models}
         # Track per-item prompt stats for transparency (each item now has its
         # own battery-excluded prompt rather than a single shared prompt).
         per_item_prompt_stats: dict[str, dict] = {}
 
         for item in primary_eval_items:
+            # Ballot-off filter: if this respondent's GSS ballot did not
+            # include the item, the truth code is None and the LLM call
+            # would contribute nothing to evaluation. Skip before paying
+            # for the call. ~33% Phase 1A cost savings on average.
+            truth = truth_code_or_none(respondent.get(item["id"]), item["id"])
+            if truth is None:
+                if verbose:
+                    print(
+                        f"    [{rid}/{cond_name}] item {item['id']:<10} skip (ballot-off)",
+                        flush=True,
+                    )
+                continue
             # R1: battery exclusion per item
             excludes = battery_excludes_for_item(item["id"], battery_map)
             out = build_prompt_variant(
@@ -287,7 +321,8 @@ def run_primary_one_respondent(
             }
 
             question, meta = format_eval_question(item)
-            truth = truth_code_or_none(respondent.get(item["id"]), item["id"])
+            # truth was already computed above (used for the ballot-off skip);
+            # reuse it here without recomputing.
             for m in models:
                 samples: list[dict] = []
                 for s_idx in range(n_samples):
@@ -518,6 +553,7 @@ def run_phase1(
     resume: bool = True,
     verbose: bool = True,
     force_resume_partial: bool = False,
+    conditions: list[tuple[str, str | None]] | None = None,
 ) -> Path:
     """Top-level driver. Sequential calls; resumable.
 
@@ -560,7 +596,8 @@ def run_phase1(
         # 4,000-record full run let stray ~200-record partials through. The
         # corrected formula multiplies by the per-respondent record count.
         records_per_respondent_per_model = (
-            (5 if do_primary else 0) + (1 if do_sensitivity else 0)
+            (len(conditions or CONDITIONS_PRIMARY) if do_primary else 0)
+            + (1 if do_sensitivity else 0)
         )
         if records_per_respondent_per_model == 0:
             # No primary AND no sensitivity → guard is moot; skip
@@ -606,17 +643,22 @@ def run_phase1(
         print(f"\n=== respondent {ri+1}/{n} (ID_={rid}, AGE={respondent.get('AGE')}) ===", flush=True)
 
         if do_primary:
-            # Skip if all (resp, condition, model) tuples already done
-            # done_keys now includes prompt_id since records vary by (rid, cond, model, prompt_id).
+            # Skip if all (resp, condition, model) tuples already done.
+            # done_keys now includes prompt_id since records vary by
+            # (rid, cond, model, prompt_id). The condition set is whatever
+            # was requested for this run (Full only for Phase 1A; Full + 4
+            # LOO for Phase 1B).
+            active_conditions = conditions or CONDITIONS_PRIMARY
             need_primary = any(
                 (rid, c, m, prompt_id) not in done_keys
-                for c, _ in CONDITIONS_PRIMARY for m in models
+                for c, _ in active_conditions for m in models
             )
             if need_primary:
                 records = run_primary_one_respondent(
                     respondent, taxonomy, primary_eval_items,
                     models=models, prompt_id=prompt_id,
                     n_samples=n_samples, verbose=verbose,
+                    conditions=active_conditions,
                 )
                 # Filter out any record that's already in done_keys (resume safety)
                 new = [r for r in records if (r["respondent_id"], r["condition"], r["model"], r["prompt_id"]) not in done_keys]
@@ -801,30 +843,35 @@ if __name__ == "__main__":
     if args.phase1a:
         models = list(MODEL_PANEL_PRIMARY)
         n = 200
-        n_samples = 1
+        # n_samples=2 on Full condition matches the GPT-4o anchor's n_samples
+        # (locked 2026-05-29 Joyce decision per Reviewer round-2). The
+        # selector's per-cell SE on N=200 drops from ~0.071 toward ~0.050
+        # in the best case (where LLM stochasticity dominates the noise).
+        n_samples = 2
         do_primary = True
         # Locked Option A 2026-05-10 (Joyce decision per Audit-fresh-2 P1 sensitivity-
         # scope review): cheap panel runs primary ONLY. sensitivity_eval is the 118-item
         # Park-comparable benchmark, used only for the GPT-4o anchor side-by-side table
         # against Park v2 SI Table 3 (per OSF §3.2). Cheap panel sensitivity adds
-        # nothing to the headline 4-bin LOO / Battery LOO / §12.2 selector and is
-        # excluded to keep budget honest (~$71 saved per Phase 1a + Phase 1b combined).
+        # nothing to the headline 4-bin LOO / Battery LOO / §7 selector and is
+        # excluded to keep budget honest.
         do_sensitivity = False
         print(
-            "  [mode=--phase1a] N=200, 4-cheap panel locked from MODEL_PANEL_PRIMARY, "
-            "primary ONLY (sensitivity_eval is anchor-only per OSF §3.2).\n"
-            "  After this completes, run: python3 select_phase1b_model.py "
-            f"<output.json> (the CLI auto-derives the locked 100/100 split via "
-            "_derive_phase1a_split — do NOT pass --no-split for paid runs.)",
+            "  [mode=--phase1a] N=200, 4-cheap panel locked from MODEL_PANEL_PRIMARY × "
+            "3 prompts, FULL condition only × n_samples=2, ballot-off items pre-filtered.\n"
+            "  LOO conditions are run in Phase 1B on the selected cell × N=3,309 disjoint.\n"
+            "  After this completes, the driver consolidates the 3 per-prompt JSONs into\n"
+            "  outputs/phase1a_raw.parquet. Next step:\n"
+            "      python3 src/select_phase1b_cell.py outputs/phase1a_raw.parquet",
             file=sys.stderr,
         )
     elif args.phase1b:
         if not args.phase1b_model:
             print(
-                "ERROR: --phase1b requires --phase1b-model SLUG (the §12.2-selected "
+                "ERROR: --phase1b requires --phase1b-model SLUG (the §7-selected "
                 "model slug, e.g., 'qwen/qwen-2.5-72b-instruct'). Run "
-                "select_phase1b_model.py on Phase 1a output first to determine the "
-                "locked-rule selection.",
+                "select_phase1b_cell.py outputs/phase1a_raw.parquet first to "
+                "determine the joint (model, prompt) cell selection.",
                 file=sys.stderr,
             )
             sys.exit(2)
@@ -836,9 +883,11 @@ if __name__ == "__main__":
         # as --phase1a above; sensitivity_eval is anchor-only per OSF §3.2).
         do_sensitivity = False
         print(
-            f"  [mode=--phase1b] N=3,309 (full GSS 2024), single §12.2-selected "
-            f"model: {args.phase1b_model}, primary ONLY "
-            f"(sensitivity_eval is anchor-only per OSF §3.2).",
+            f"  [mode=--phase1b] N=3,309 (full GSS 2024), single §7-selected "
+            f"cell: {args.phase1b_model} × {args.phase1b_prompt or 'P0'}, "
+            f"primary (Full + 4 LOO) only.\n"
+            f"  Headline cohort: N=3,109 disjoint from the §7 selector's 200 "
+            f"panel respondents; full N=3,309 reported as sensitivity (§8).",
             file=sys.stderr,
         )
     elif args.phase1b_anchor:
@@ -998,6 +1047,12 @@ if __name__ == "__main__":
     else:
         prompt_ids = ["P0"]
 
+    # Phase 1A runs Full condition only — LOO is deferred to Phase 1B on the
+    # selected cell × N=3,309 disjoint cohort (where the §8 LOO ΔMAE headline
+    # actually lives). Other modes (--phase1b, --smoke, --anchor) keep the
+    # legacy Full + 4 LOO behavior.
+    active_conditions = CONDITIONS_FULL_ONLY if args.phase1a else CONDITIONS_PRIMARY
+
     per_prompt_outputs: list[Path] = []
     for pid in prompt_ids:
         per_prompt_out = (
@@ -1017,6 +1072,7 @@ if __name__ == "__main__":
             do_sensitivity=do_sensitivity,
             resume=not args.no_resume,
             force_resume_partial=args.force_resume_partial,
+            conditions=active_conditions,
         )
 
     # After --phase1a completes the 3-prompt factorial, consolidate the per-prompt
