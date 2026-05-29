@@ -107,4 +107,4 @@ These supersede any default helpfulness instinct toward speed over rigor.
 
 ---
 
-*Last refreshed 2026-05-28. Main-branch tip: `122dee1`. Redesign-branch tip: `db37731`. Pre-redesign snapshot: tag `pre-mohsen-redesign-2026-05-13`.*
+*Last refreshed 2026-05-28. Main-branch tip: `d683068` (merge of the Bayati-confirmed Phase 1A factorial extension). Pre-Bayati-extension snapshot: tag `pre-mohsen-redesign-2026-05-13`. The 2026-05-15 advisor brief that drove the discussion is archived at `archive/Project Brief — Phase 1A Updates 2026-05-15.md`.*
