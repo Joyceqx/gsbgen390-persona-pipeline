@@ -15,7 +15,7 @@ construction, or result accumulation. Those live in gss_pipeline.py.
 Usage:
     from llm_router import call_panel, MODEL_PANEL_PRIMARY, MODEL_ANCHOR
     responses = call_panel(system, user, models=MODEL_PANEL_PRIMARY)
-    # responses = {'qwen-2.5-72b': '4', 'deepseek-v3.1': '4', 'minimax-m1': '5', 'kimi-k2': '4'}
+    # responses = {'qwen-2.5-72b': '4', 'deepseek-v3.1': '4', 'llama-3.3-70b': '5', 'kimi-k2': '4'}
 
 API key:
     set environment variable OPENROUTER_API_KEY
