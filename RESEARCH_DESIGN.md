@@ -106,7 +106,11 @@ P0 is the OSF-v1-era baseline implemented in `build_persona_prompt()`. P1 and P2
 
 ### 5.3 Factorial structure (12 cells)
 
-Each of the 200 panel respondents runs all 12 (model × prompt) cells × 5 conditions (Full + 4 single-bin LOO) × 12 primary_eval items (subject to ballot rotation). n_samples = 1 per call. The comparison across cells is within-respondent.
+Each of the 200 panel respondents runs all 12 (model × prompt) cells × **Full condition only** × 12 primary_eval items (filtered to those on the respondent's GSS ballot — ~8/12 on average per §3.1). **n_samples = 2 per call** to match the GPT-4o anchor's `n_samples` and shrink per-cell SE on the selector's primary metric (Reviewer round-2 Q1). Comparison across cells is within-respondent.
+
+**LOO conditions are deferred to Phase 1B** (Joyce 2026-05-29 decision per Reviewer round-2 Q3): the §7 selector only reads Full, and the §8 4-bin LOO ΔMAE headline runs on the disjoint N=3,309 Phase 1B cohort. Generating LOO data on the N=200 panel for all 12 cells, only to discard 11 of those cells' LOO records after selection, was the dominant cost driver in the previous Phase 1A budget.
+
+**Ballot-off pre-filter**: `run_primary_one_respondent` checks `truth_code_or_none` before each LLM call. Items where the respondent's GSS ballot did not include the item (no GSS-2024 truth code) are skipped at call time rather than at scoring time. ~33% additional cost reduction with zero analytical impact.
 
 ### 5.4 Random-model column (5th "model", 3 cells, post-hoc)
 
@@ -144,26 +148,30 @@ Bayati's requested format (2026-05-28). The Phase 1A run produces both a summary
 
 Stored at `outputs/phase1a_summary_table.{csv,parquet}` after the §12.2 selector runs.
 
-### 6.2 Raw long-format database — ~120,000 rows
+### 6.2 Raw long-format database — ~38,400 rows (Phase 1A) + Random column
 
-Schema (14 columns):
+Schema (18 columns):
 
 | Group | Column | Meaning |
 |---|---|---|
 | **Prediction** | `respondent_id` | seed=42 index into the GSS 2024 sample |
-| | `model` | one of `Qwen`, `DeepSeek`, `Llama-3.3`, `Kimi`, `Random` — see note below |
+| | `model` | full slug (e.g., `qwen/qwen-2.5-72b-instruct`) or `Random` |
 | | `prompt` | one of `P0`, `P1`, `P2` |
-| | `condition` | one of `Full`, `drop_demographic`, `drop_behavioral`, `drop_psychological`, `drop_attitudinal` |
+| | `condition` | `Full` (Phase 1A); Phase 1B also has `drop_demographic` / `drop_behavioral` / `drop_psychological` / `drop_attitudinal` |
 | | `item` | primary_eval variable (e.g., `POLVIEWS`, `GUNLAW`, …) |
 | | `true_code` | ground-truth integer code from GSS 2024 |
 | | `pred_code` | model-output integer code (NULL if parse_ok=false) |
 | | `parse_ok` | boolean — did the model output parse to a valid code? |
 | | `abs_err` | `|pred_code − true_code|` on Likert items; 0/1 on binary (NULL if parse_ok=false) |
-| | `sample_position` | 1 (cheap-panel n=1) or 1/2 (GPT-4o anchor n=2) |
-| **Call metadata** | `timestamp` | UTC datetime of the LLM call |
-| | `cost_usd` | per-call cost in USD (computed from token counts × provider rate) |
-| | `tokens_in` | input token count |
-| | `tokens_out` | output token count |
+| | `sample_position` | 1 or 2 (Phase 1A cheap panel runs n_samples=2 to match the GPT-4o anchor) |
+| **Call metadata** | `timestamp` | parquet-write time, ISO 8601 UTC (per-call timestamps are not yet returned by call_llm_meta) |
+| | `cost_usd` | NULL — `call_llm_meta` returns tokens, not USD; cost = tokens × USD-rate join downstream |
+| | `tokens_in` | input token count from `call_llm_meta` |
+| | `tokens_out` | output token count from `call_llm_meta` |
+| **Provenance** | `error_type` | `ok` \| `parse_fail` \| `provider_error`; disentangles model-output rejection from transient API failures |
+| | `provider` | OpenRouter backend identifier when available (NULL for OpenAI direct calls) |
+| | `system_fingerprint` | OpenAI reproducibility token when available |
+| | `model_returned` | provider-reported model name; may differ from the requested slug (mid-run quantization/version drift detector) |
 
 Example rows:
 
@@ -176,7 +184,7 @@ Example rows:
 
 **`model="Random"` row construction**: for each `(respondent_id, prompt)`, a seed=42 hash uniformly picks one of the four real models (no balance constraint). The `Random × prompt` rows are copies of that picked model's rows with `model` re-labeled to `Random`. No new LLM calls; the timestamp / cost / token columns are copied from the source row for auditability.
 
-**Volume**: 200 respondents × 5 (4 cheap models + Random) × 3 prompts × 5 conditions (Full + 4 single-bin LOO) × ~8 ballot-on items (GSS ballot rotation; see §3.1) ≈ **120,000 rows**. Stored at `outputs/phase1a_raw.parquet` (DuckDB-compatible).
+**Volume**: 200 respondents × 5 (4 cheap models + Random) × 3 prompts × **1 condition (Full only — LOO deferred to Phase 1B)** × ~8 ballot-on items × **n_samples=2** ≈ **48,000 rows**. Stored at `outputs/phase1a_raw.parquet` (DuckDB-compatible). The Phase 1B parquet (`outputs/phase1b_raw.parquet`) adds Full + 4 LOO conditions on the selected cell × N=3,309.
 
 The summary table (§6.1, 180 rows) is derived from the raw DB by aggregating on the `Full` condition. Any future re-analysis (different metric, different aggregation, sensitivity check) queries the raw DB directly without re-running the LLM panel. Bayati's requested 5 × 3 × 12 = 180-row MAE table is one line of pandas / SQL:
 
@@ -192,13 +200,13 @@ ORDER BY model, prompt, item;
 
 ### 6.3 Phase 1B raw DB (when it runs)
 
-Same 14-column schema. Single (model, prompt) cell × N=3,309 × 5 conditions × ~8 items ≈ **132,000 rows**. Stored at `outputs/phase1b_raw.parquet`. No Random column at the Phase 1B stage (deployment is the single selected cell).
+Same 18-column schema. Single (model, prompt) cell × N=3,309 × 5 conditions × ~8 items × n_samples=1 ≈ **132,000 rows**. Stored at `outputs/phase1b_raw.parquet`. No Random column at the Phase 1B stage (deployment is the single selected cell).
 
 ---
 
 ## 7. Selector: Phase 1A → Phase 1B
 
-Joint (model, prompt) cell selection. See `select_phase1b_model.py`.
+Joint (model, prompt) cell selection. See `select_phase1b_cell.py`.
 
 ```
 candidate cells = {(m, p) : m ∈ {Qwen, DeepSeek, Llama-3.3, Kimi}, p ∈ {P0, P1, P2}}  # 12 cells
@@ -207,14 +215,23 @@ candidate cells = {(m, p) : m ∈ {Qwen, DeepSeek, Llama-3.3, Kimi}, p ∈ {P0, 
 # comparably. Each item's normalized abs-err is in [0, 1]; macro-average runs
 # over respondents and then over items.
 normalized_abs_err(respondent, item) = abs(pred_code − true_code) / (max_code − min_code)
+
+# CONSERVATIVE primary metric (locked 2026-05-29 Reviewer round-2 Q2):
+# parse_fail rows are counted as normalized_abs_err = 1.0 (maximum). The
+# previous "optimistic" metric dropped parse_fail rows, which structurally
+# rewarded cells that strategically refused to answer hard items.
+# Both metrics are computed; conservative drives selection, optimistic is
+# reported alongside as a sensitivity check.
 primary_score(cell) = mean over respondents of (mean over Full-condition items in their ballot of
-                                                normalized_abs_err)
+                                                normalized_abs_err   # parse_fail → 1.0)
 
-# Scoring uses the FULL N=200 panel cohort (no 100/100 split — the OSF-era
-# post-selection-inference defense is dropped per 2026-05-28 Bayati signoff).
+# Scoring uses the FULL N=200 panel cohort with n_samples=2 (the OSF-era
+# 100/100 split was dropped per 2026-05-28 Bayati signoff; n_samples bumped
+# from 1 to 2 to match the GPT-4o anchor per 2026-05-29 Joyce decision).
 
-DQ-1 (parse-fail ceiling):    parse_failure_rate ≤ 30% per cell
-DQ-3 (mode-collapse guard):   for each primary_eval item i, var(cell_i) / var(human_i) ≥ 0.30
+DQ-1 (parse-fail ceiling):    parse_failure_rate ≤ 10% per cell  (was 30%)
+DQ-3 (marginal-distribution-collapse guard): for each primary_eval item i,
+                              var(cell_i) / var(human_i) ≥ 0.30
                               cell fails if > 50% of items fail the floor
                               human variance reference: outputs/primary_eval_human_variance_2024.json
 
@@ -223,6 +240,8 @@ Tie-break (within 5% of best score): lowest cost × (1 + parse_fail_rate).
 Tie on both quality + cost: Qwen × P0 named fallback.
 All cells fail DQ: PAUSE — Phase 1B does not proceed.
 ```
+
+**Bootstrap CI per cell** (locked 2026-05-29 Reviewer round-2 Q1). Because the SE per cell (~0.071 at N=200) is ~5x wider than the 5% tiebreak window (~0.013 at typical MAE ≈ 0.25), the argmin "winner" is largely noise-driven. The selector reports a respondent-level percentile bootstrap CI (B=10,000, seeded) for every cell's conservative MAE, and the decision log includes a **CI-overlap diagnostic**: which other surviving cells' CIs overlap the headline's CI? Cells whose CIs overlap the headline are not statistically separated from it — the writeup uses this as the visual stand-in for "argmin gap < SE". The cell selector is `src/select_phase1b_cell.py`; the per-cell CI bounds are columns in the selector's per-cell output.
 
 **Honest framing of the tiebreak**: per-cell normalized MAE for cheap LLMs on GSS attitude prediction typically sits in the range ≈ 0.20–0.35 (cf. Park v2 SI Table 3 surveys-only baseline and comparable LLM-on-Likert work). The 5%-relative tiebreak window around best MAE ≈ 0.25 is therefore ≈ 0.013 — narrower than the per-cell standard error of ≈ 0.071 (N=200, computed across respondents). When the tiebreak window is narrower than one SE, two things follow:
 
@@ -287,23 +306,25 @@ Analyzer: `shapley_decomposition.py`.
 | `src/regression_baseline.py` | R2 baseline (Ridge + multinomial Logistic, 5-fold CV); implemented + tested |
 | `src/validate_taxonomy.py`, `src/lint_writeup_language.py` | Lint / validation utilities; implemented + tested |
 
-### 10.2 Pipeline extensions needed for the Bayati-confirmed factorial
+### 10.2 Pipeline extensions for the Bayati-confirmed factorial — STATUS
 
-Before launching paid Phase 1A:
+All 4 extensions plus the post-factorial Reviewer round-2 cleanup are complete; smoke test is the next paid step.
 
-1. **`src/gss_driver.py --phase1a`**: extend to iterate over 3 prompts in addition to 4 models. Each call now varies on `(respondent, condition, item, prompt, model)`. Output records include `prompt_id` in metadata.
-2. **`src/select_phase1b_cell.py`** (new file, sibling of the OSF-v1 single-model `select_phase1b_model.py`): scores the 12 (model, prompt) cells jointly. Per-cell DQ-1 + DQ-3, per-item normalized MAE, 5%-relative quality tiebreak, cost-driven secondary tiebreak, Qwen × P0 named fallback. Random column (§5.4) aggregated post-hoc as 3 normalized-MAE reports — not a selector input.
-3. **Phase 1A output writer (`src/write_phase1a_parquet.py`)**: emits `outputs/phase1a_raw.parquet` (long-format DB per §6.2) after the 3-prompt loop in `--phase1a`. Random column rows generated deterministically via SHA-256(seed=42 | rid | prompt). 180-row §6.1 summary is derivable from the parquet in one pandas/SQL groupby; not materialized as a separate artifact until needed.
-4. **`src/gss_driver.py --phase1b`**: accept `--phase1b-prompt` in addition to `--phase1b-model` so the selected (model, prompt) cell is fully addressable.
+1. **`src/gss_driver.py --phase1a`** (DONE): iterates over 3 prompts × 4 models × **Full condition only** × ballot-on items × **n_samples=2**. Records carry `prompt_id` + `prompt_version` + `template_hash` + `error_type` + provider/fingerprint provenance.
+2. **`src/select_phase1b_cell.py`** (DONE, sibling of the OSF-v1 `select_phase1b_model.py`): scores 12 (model, prompt) cells jointly. Per-cell DQ-1 (tightened 30% → 10%) + DQ-3, per-item normalized MAE with the **conservative** parse_fail-as-1.0 policy as primary metric (optimistic legacy metric reported alongside), 5%-relative quality tiebreak, cost-driven secondary tiebreak, Qwen × P0 named fallback. Random column (§5.4) aggregated post-hoc — not a selector input. **Per-cell bootstrap CIs** (B=10,000) + headline CI-overlap diagnostic.
+3. **Phase 1A output writer (`src/write_phase1a_parquet.py`)** (DONE): emits `outputs/phase1a_raw.parquet` (18-column long-format DB per §6.2) after the 3-prompt loop in `--phase1a`. Random column rows generated deterministically via SHA-256(seed=42 | rid | prompt). 180-row §6.1 summary derivable from the parquet in one pandas/SQL groupby.
+4. **`src/gss_driver.py --phase1b`** (DONE): accepts `--phase1b-prompt` in addition to `--phase1b-model`. Errors out if `outputs/phase1a_raw.parquet` exists but `--phase1b-prompt` is omitted (refuses to silently default to P0 once the factorial has chosen).
 
-Estimated effort: ~2-3 days of careful coding + self-tests on synthetic fixtures before paid runs.
+Reviewer round-2 cleanup also complete: ballot-off pre-filter, LOO deferral, parse_fail conservative metric, DQ-1 tightening, bootstrap CIs, fingerprint/provider/error_type logging — see commits `e17ea11`, `3236fe4`, `5ecf345`, `bacfa72`.
+
+Next step: smoke test (`python3 src/gss_driver.py --smoke`) to verify the new call_llm_meta path returns fingerprint + provider correctly on a real OpenRouter call before launching the paid Phase 1A.
 
 ### 10.3 How to run (after the extensions above land)
 
 ```bash
 # Pre-flight self-tests
 python3 src/validate_taxonomy.py
-python3 src/select_phase1b_cell.py --self-test       # 6 joint-cell tests (rationales × 5 + random column)
+python3 src/select_phase1b_cell.py --self-test       # 8 joint-cell tests (5 rationales + random column + parse_fail conservative + bootstrap CI)
 python3 src/write_phase1a_parquet.py --self-test     # 6 writer tests (relabel, parse_fail, binary, random, count, roundtrip)
 python3 src/battery_loo.py --self-test
 python3 src/shapley_decomposition.py --self-test
@@ -314,16 +335,17 @@ python3 tests/preflight_phase1a.py                   # N=200 panel × 12 batteri
 # 1. Smoke (~$3, ~5 min)
 python3 src/gss_driver.py --smoke
 
-# 2. Phase 1A factorial + GPT-4o anchor (~$199, ~24 hr)
-python3 src/gss_driver.py --phase1a              # 4 models × 3 prompts × N=200
-python3 src/gss_driver.py --phase1b-anchor       # GPT-4o × P0 × N=100
+# 2. Phase 1A factorial + GPT-4o anchor (~$162, ~24 hr)
+python3 src/gss_driver.py --phase1a              # 4 models × 3 prompts × N=200 × Full × n=2 (~$14)
+python3 src/gss_driver.py --phase1b-anchor       # GPT-4o × P0 × N=100 (~$148)
 
 # 3. §7 joint (model, prompt) cell selector (free, <1 min)
 python3 src/select_phase1b_cell.py outputs/phase1a_raw.parquet
 
-# 4. Phase 1B (~$71, ~3-7 days)
-#    Runs on full N=3,309; headline aggregation excludes the §7 selector cohort
-#    (N=3,109 disjoint), full cohort (N=3,309) reported as sensitivity. See §8.
+# 4. Phase 1B (~$48, ~3-7 days)
+#    Runs on full N=3,309 × Full + 4 LOO conditions. Headline aggregation
+#    excludes the §7 selector cohort (N=3,109 disjoint), full cohort (N=3,309)
+#    reported as sensitivity. See §8.
 python3 src/gss_driver.py --phase1b \
     --phase1b-model <slug> \
     --phase1b-prompt <prompt_id>
@@ -349,14 +371,14 @@ python3 src/shapley_decomposition.py --input outputs/phase1c_shapley_*.parquet
 
 | Step | Cost | Notes |
 |---|---|---|
-| Smoke | ~$3 | 1 respondent × 1 model × 3 prompts × 5 conditions |
-| Phase 1A factorial (4 models × 3 prompts × N=200) | ~$51 | Cheap models at ~$0.000356/call |
+| Smoke | ~$3 | 1 respondent × 1 model × P0 × Full condition |
+| Phase 1A factorial (4 models × 3 prompts × N=200 × Full × n=2 × ballot filter) | **~$14** | Down from ~$51 — LOO deferred to Phase 1B + ballot-off pre-filter (Reviewer round-2 Q3) |
 | GPT-4o anchor (P0 only, N=100, primary + sensitivity, n=2) | ~$148 | One run serves Phase 1A + 1B reporting |
-| Phase 1B (selected cell × N=3,309) | ~$71 | |
-| **Subtotal pre-Battery LOO** | **~$273** | |
+| Phase 1B (selected cell × N=3,309 × Full + 4 LOO × n=1 × ballot filter) | **~$48** | Down from ~$71 — ballot-off pre-filter applied |
+| **Subtotal pre-Battery LOO** | **~$213** | |
 | Phase 1C Battery LOO (34 batteries × 12 items × N=3,309) | ~$481 | |
 | Phase 1C Shapley (11 multi-bin conditions × N=200) | ~$38 | |
-| **Total Phase 1** | **~$792** | Assumes no prompt caching; verify OpenRouter prices at smoke time |
+| **Total Phase 1** | **~$732** | Assumes no prompt caching; verify OpenRouter prices at smoke time |
 
 Reduction options if budget tightens: Battery LOO at N=1,500 (saves ~$263), attitudinal-bin batteries only (saves ~$209), or defer Battery LOO to Phase 1D.
 
