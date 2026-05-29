@@ -79,7 +79,7 @@ from gss_loader import load_gss
 from gss_pipeline import (
     BIN_DISPLAY,
     battery_excludes_for_item,
-    build_persona_prompt,
+    build_persona_prompt,  # legacy P0-only; still used by the sensitivity pass
     format_eval_question,
     load_battery_map,
     load_taxonomy,
@@ -87,6 +87,11 @@ from gss_pipeline import (
     score_item,
     truth_code_or_none,
     _scale_options_for,
+)
+from prompt_variants import (
+    build_prompt as build_prompt_variant,  # P0/P1/P2 dispatcher used by --phase1a
+    PROMPT_VERSION,
+    TEMPLATE_HASH,
 )
 from llm_router import (
     MODEL_ANCHOR,
@@ -209,6 +214,7 @@ def run_primary_one_respondent(
     taxonomy: dict,
     primary_eval_items: list[dict],
     models: list[str],
+    prompt_id: str = "P0",
     n_samples: int = 1,
     temperature: float = 0.7,
     verbose: bool = True,
@@ -241,13 +247,25 @@ def run_primary_one_respondent(
         for item in primary_eval_items:
             # R1: battery exclusion per item
             excludes = battery_excludes_for_item(item["id"], battery_map)
-            system, prompt_stats = build_persona_prompt(
-                respondent, taxonomy, drop_bin=drop_bin, exclude_vars=excludes
+            out = build_prompt_variant(
+                respondent, taxonomy,
+                prompt_id=prompt_id,
+                drop_bin=drop_bin,
+                exclude_vars=excludes,
             )
+            # The SYSTEM_INSTRUCTION (constant across P0/P1/P2 — audit #4) is
+            # prepended to the persona body so call_llm's `system` argument
+            # carries the same instruction text for every prompt variant; only
+            # the persona section differs across cells.
+            system = out["system_instruction"] + "\n\n" + out["persona_prompt"]
             per_item_prompt_stats[item["id"]] = {
-                k: v for k, v in prompt_stats.items() if k != "excluded_vars"
+                "prompt_id": out["metadata"]["prompt_id"],
+                "feature_count": out["metadata"]["feature_count"],
+                "char_count": out["metadata"]["char_count"],
+                "approx_tokens": out["metadata"]["approx_tokens"],
+                "bin_counts": out["metadata"]["bin_counts"],
+                "battery_excluded": sorted(excludes),
             }
-            per_item_prompt_stats[item["id"]]["battery_excluded"] = sorted(excludes)
 
             question, meta = format_eval_question(item)
             truth = truth_code_or_none(respondent.get(item["id"]), item["id"])
@@ -274,6 +292,9 @@ def run_primary_one_respondent(
                 "respondent_id": rid,
                 "condition": cond_name,
                 "model": m,
+                "prompt_id": prompt_id,
+                "prompt_version": PROMPT_VERSION,
+                "template_hash": TEMPLATE_HASH[:16],
                 "n_samples": n_samples,
                 "per_item_scores": per_item,
                 "per_item_prompt_stats": per_item_prompt_stats,
@@ -394,8 +415,13 @@ def _load_partial(path: Path) -> list[dict]:
 
 
 def _completed_keys(records: list[dict]) -> set[tuple]:
-    """Return set of (respondent_id, condition, model) tuples already done."""
-    return {(r["respondent_id"], r["condition"], r["model"]) for r in records}
+    """Return set of (respondent_id, condition, model, prompt_id) tuples
+    already done. Sensitivity-pass records (legacy, P0-only) are stamped
+    with prompt_id="P0" for compatibility."""
+    return {
+        (r["respondent_id"], r["condition"], r["model"], r.get("prompt_id", "P0"))
+        for r in records
+    }
 
 
 def _completed_sensitivity_items(records: list[dict], rid: int) -> dict[str, set[str]]:
@@ -464,6 +490,7 @@ def _upsert_sensitivity_records(all_records: list[dict], new_partial: list[dict]
 def run_phase1(
     n: int,
     models: list[str] = list(MODEL_PANEL_PRIMARY),
+    prompt_id: str = "P0",
     n_samples: int = 1,
     seed: int = 42,
     output_path: Path | None = None,
@@ -561,19 +588,21 @@ def run_phase1(
 
         if do_primary:
             # Skip if all (resp, condition, model) tuples already done
+            # done_keys now includes prompt_id since records vary by (rid, cond, model, prompt_id).
             need_primary = any(
-                (rid, c, m) not in done_keys
+                (rid, c, m, prompt_id) not in done_keys
                 for c, _ in CONDITIONS_PRIMARY for m in models
             )
             if need_primary:
                 records = run_primary_one_respondent(
                     respondent, taxonomy, primary_eval_items,
-                    models=models, n_samples=n_samples, verbose=verbose,
+                    models=models, prompt_id=prompt_id,
+                    n_samples=n_samples, verbose=verbose,
                 )
                 # Filter out any record that's already in done_keys (resume safety)
-                new = [r for r in records if (r["respondent_id"], r["condition"], r["model"]) not in done_keys]
+                new = [r for r in records if (r["respondent_id"], r["condition"], r["model"], r["prompt_id"]) not in done_keys]
                 all_records.extend(new)
-                done_keys.update((r["respondent_id"], r["condition"], r["model"]) for r in new)
+                done_keys.update((r["respondent_id"], r["condition"], r["model"], r["prompt_id"]) for r in new)
                 _persist(all_records, output_path)
                 print(f"  primary done; persisted {len(all_records)} records total")
             else:
@@ -676,7 +705,11 @@ def _cli():
                            "implemented, driver runtime deferred per OSF §13.2).")
 
     p.add_argument("--phase1b-model", default=None,
-                   help="Required with --phase1b. The §12.2-selected model slug.")
+                   help="Required with --phase1b. The §7-selected model slug.")
+    p.add_argument("--phase1b-prompt", default=None, choices=["P0", "P1", "P2"],
+                   help="Required with --phase1b after Phase 1A factorial. The §7-selected "
+                        "prompt ID (one of P0 / P1 / P2). Defaults to P0 for backward "
+                        "compatibility with OSF v1 single-prompt records.")
 
     # Legacy / debugging flags (preserved).
     p.add_argument("--n", type=int, default=10, help="number of respondents to run")
@@ -920,14 +953,34 @@ if __name__ == "__main__":
             )
             sys.exit(2)
 
-    run_phase1(
-        n=n,
-        models=models,
-        n_samples=n_samples,
-        seed=args.seed,
-        output_path=out,
-        do_primary=do_primary,
-        do_sensitivity=do_sensitivity,
-        resume=not args.no_resume,
-        force_resume_partial=args.force_resume_partial,
-    )
+    # Resolve which prompt variants to run. --phase1a runs the 3-prompt factorial
+    # (P0 + P1 + P2). --phase1b runs the single §7-selected (model, prompt) cell;
+    # --phase1b-prompt must be specified once Phase 1A factorial output exists,
+    # otherwise it defaults to P0 for OSF-v1 backward compatibility. The anchor
+    # is locked to P0 (per RESEARCH_DESIGN.md §5.5 — Park v2 SI Table 3 anchor
+    # comparability requires the surveys-only baseline).
+    if args.phase1a:
+        prompt_ids = ["P0", "P1", "P2"]
+    elif args.phase1b:
+        prompt_ids = [args.phase1b_prompt or "P0"]
+    else:
+        prompt_ids = ["P0"]
+
+    for pid in prompt_ids:
+        per_prompt_out = (
+            out.with_name(out.stem + f"_{pid}" + out.suffix)
+            if len(prompt_ids) > 1
+            else out
+        )
+        run_phase1(
+            n=n,
+            models=models,
+            prompt_id=pid,
+            n_samples=n_samples,
+            seed=args.seed,
+            output_path=per_prompt_out,
+            do_primary=do_primary,
+            do_sensitivity=do_sensitivity,
+            resume=not args.no_resume,
+            force_resume_partial=args.force_resume_partial,
+        )
