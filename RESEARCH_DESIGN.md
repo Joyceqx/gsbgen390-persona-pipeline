@@ -100,7 +100,7 @@ Two layers:
 | **P1** | 1st person | 4-bin clauses | Argyle, Busby, Fulda, Gubler, Rytting, Wingate (2023) "Out of One, Many", *Political Analysis* 31(3) |
 | **P2** | 2nd person (dialogue) | 4-bin Q&A turns | Wang, Pyatkin, Bhagavatula, Choi (2025) "The Prompt Makes the Person(a)", *Findings of EMNLP 2025* |
 
-P0 is the OSF-v1-era baseline implemented in `build_persona_prompt()`. P1 and P2 are new for Phase 1A. Full literature scan grounding these choices is at `lit_review_prompt_variants_2026-05-15.md`.
+P0 is the OSF-v1-era baseline implemented in `build_persona_prompt()`. P1 and P2 are new for Phase 1A. Full literature scan grounding these choices is at `archive/lit_review_prompt_variants_2026-05-15.md`.
 
 ### 5.3 Factorial structure (12 cells)
 
