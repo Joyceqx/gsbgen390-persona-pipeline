@@ -58,7 +58,9 @@ PANEL_MODELS = [
 RANDOM_LABEL = "Random"
 RANDOM_PICK_SEED = 42  # seeded picker for §5.4 post-hoc random column
 
-# Column order = §6.2 schema exactly. dtypes documented for parquet stability.
+# Column order = §6.2 schema + provenance extensions (locked 2026-05-29 per
+# Reviewer round-2 Q5 — cross-model paper requires per-call provider /
+# fingerprint logging since post-hoc backend identity recovery is impossible).
 PARQUET_COLUMNS = [
     "respondent_id",       # int32
     "model",               # str (slug or "Random")
@@ -70,10 +72,15 @@ PARQUET_COLUMNS = [
     "parse_ok",            # bool
     "abs_err",             # nullable int32
     "sample_position",     # int32 (1-indexed)
-    "timestamp",           # str (ISO 8601 UTC; run-write time as proxy until call_llm exposes it)
-    "cost_usd",            # nullable float64 (call_llm TODO)
-    "tokens_in",           # nullable int32 (call_llm TODO)
-    "tokens_out",          # nullable int32 (call_llm TODO)
+    "timestamp",           # str (ISO 8601 UTC; parquet-write time)
+    "cost_usd",            # nullable float64 (call_llm TODO — not exposed yet)
+    "tokens_in",           # nullable int32 (from call_llm_meta usage)
+    "tokens_out",          # nullable int32 (from call_llm_meta usage)
+    # Provenance + audit trail
+    "error_type",          # str: "ok" | "parse_fail" | "provider_error"
+    "provider",            # nullable str (OpenRouter backend; null for OpenAI direct)
+    "system_fingerprint",  # nullable str (OpenAI reproducibility token)
+    "model_returned",      # nullable str (provider-reported model name; may differ from requested slug)
 ]
 
 
@@ -126,9 +133,14 @@ def _row_from_sample(
         "abs_err": abs_err,
         "sample_position": int(sample_position),
         "timestamp": write_timestamp,
-        "cost_usd": None,
-        "tokens_in": None,
-        "tokens_out": None,
+        "cost_usd": None,  # call_llm_meta returns tokens, not USD; cost is left
+                            # for downstream USD-rate-table joins.
+        "tokens_in": sample.get("tokens_in"),
+        "tokens_out": sample.get("tokens_out"),
+        "error_type": sample.get("error_type", "ok" if parse_ok else "parse_fail"),
+        "provider": sample.get("provider"),
+        "system_fingerprint": sample.get("system_fingerprint"),
+        "model_returned": sample.get("model_returned"),
     }
 
 

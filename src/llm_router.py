@@ -182,11 +182,63 @@ def call_llm(
         )
         actual_model = model
 
+    out = call_llm_meta(
+        system=system, user=user, model=model,
+        temperature=temperature, max_tokens=max_tokens, timeout=timeout,
+        max_retries=max_retries, initial_backoff_s=initial_backoff_s,
+        seed=seed,
+    )
+    return out["text"]
+
+
+def call_llm_meta(
+    system: str,
+    user: str,
+    model: str,
+    temperature: float = DEFAULT_TEMPERATURE,
+    max_tokens: int = DEFAULT_MAX_TOKENS,
+    timeout: float = DEFAULT_TIMEOUT,
+    max_retries: int = 8,
+    initial_backoff_s: float = 4.0,
+    seed: int | None = 42,
+) -> dict:
+    """Same as call_llm but returns a metadata dict instead of bare text.
+
+    Returns:
+        {
+            "text": str,                          # the response text
+            "model_returned": str | None,         # provider-reported model name
+            "system_fingerprint": str | None,     # OpenAI's reproducibility fingerprint
+            "provider": str | None,               # OpenRouter's backend provider
+            "tokens_in": int | None,              # prompt token count
+            "tokens_out": int | None,             # completion token count
+        }
+
+    Provider identity logging is required for the cross-model paper claim —
+    without it, the same "qwen-2.5-72b" slug can be silently served by
+    different backends at different quantizations across the paid Phase 1A
+    run, and the cross-cell comparison loses provenance. The provider /
+    fingerprint fields are best-effort: not every provider returns them
+    (None when unavailable).
+    """
+    use_openai_direct = model.startswith("openai/") and "gpt-4o" in model
+    if use_openai_direct:
+        from openai import OpenAI
+        client = OpenAI(api_key=get_openai_key(), timeout=timeout)
+        actual_model = model.replace("openai/", "")
+    else:
+        from openai import OpenAI
+        client = OpenAI(
+            api_key=get_openrouter_key(),
+            base_url="https://openrouter.ai/api/v1",
+            timeout=timeout,
+        )
+        actual_model = model
+
     delay = initial_backoff_s
     last_exc: Exception | None = None
     for attempt in range(max_retries):
         try:
-            # Build kwargs to forward seed in the routing-appropriate way
             create_kwargs: dict = {
                 "model": actual_model,
                 "temperature": temperature,
@@ -202,7 +254,16 @@ def call_llm(
                 else:
                     create_kwargs["extra_body"] = {"seed": seed}
             resp = client.chat.completions.create(**create_kwargs)
-            return (resp.choices[0].message.content or "").strip()
+            usage = getattr(resp, "usage", None)
+            return {
+                "text": (resp.choices[0].message.content or "").strip(),
+                "model_returned": getattr(resp, "model", None),
+                "system_fingerprint": getattr(resp, "system_fingerprint", None),
+                # OpenRouter exposes `provider` on the response object; OpenAI does not.
+                "provider": getattr(resp, "provider", None),
+                "tokens_in": getattr(usage, "prompt_tokens", None) if usage else None,
+                "tokens_out": getattr(usage, "completion_tokens", None) if usage else None,
+            }
         except Exception as e:
             last_exc = e
             if not _is_retryable(e):
@@ -211,7 +272,7 @@ def call_llm(
                 break
             print(f"  [retry {attempt+1}/{max_retries} after {delay:.0f}s: {type(e).__name__}: {e}]", flush=True)
             time.sleep(delay)
-            delay = min(delay * 2, 60.0)  # cap at 60s
+            delay = min(delay * 2, 60.0)
     raise LLMError(f"max retries ({max_retries}) exhausted for {model}: {last_exc}")
 
 

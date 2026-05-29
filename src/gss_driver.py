@@ -101,6 +101,7 @@ from llm_router import (
     MODEL_PANEL_PRIMARY,
     LLMError,
     call_llm,
+    call_llm_meta,
 )
 
 WORK = Path("/Users/joyce/Developer/gsbgen390")
@@ -327,15 +328,36 @@ def run_primary_one_respondent(
                 samples: list[dict] = []
                 for s_idx in range(n_samples):
                     seed = _derive_seed(rid, cond_name, item["id"], m, s_idx, prompt_id=prompt_id)
+                    call_meta: dict = {
+                        "model_returned": None, "system_fingerprint": None,
+                        "provider": None, "tokens_in": None, "tokens_out": None,
+                    }
+                    error_type = "ok"
                     try:
-                        raw = call_llm(system, question, model=m,
-                                        temperature=temperature, seed=seed)
+                        out_call = call_llm_meta(
+                            system, question, model=m,
+                            temperature=temperature, seed=seed,
+                        )
+                        raw = out_call["text"]
+                        for k in call_meta:
+                            call_meta[k] = out_call.get(k)
                     except LLMError as e:
                         raw = f"<<LLM_ERROR: {e}>>"
+                        error_type = "provider_error"
                     score = score_item(
                         item["id"], item["format"], meta["valid_codes"], raw, truth
                     )
                     score["seed"] = seed  # record for reproducibility audit
+                    # error_type disentangles provider failures from parse
+                    # failures (Reviewer round-2 minor #2). At n_samples=1 these
+                    # were conflated in `parse_fail`; now error_type carries the
+                    # distinction even when parse_fail is True for both reasons.
+                    if error_type == "ok" and score.get("parse_fail"):
+                        error_type = "parse_fail"
+                    score["error_type"] = error_type
+                    # Provider / fingerprint / token-usage metadata per Reviewer
+                    # round-2 Q5 — written into every sample for post-hoc audit.
+                    score.update(call_meta)
                     samples.append(score)
                 per_model_scores[m][item["id"]] = samples
             if verbose:
