@@ -279,7 +279,9 @@ Analyzer: `shapley_decomposition.py`.
 |---|---|
 | `src/gss_loader.py`, `src/gss_pipeline.py` | Loader + persona-prompt + scoring; implemented + tested |
 | `src/llm_router.py` | Multi-model LLM router with per-call seed derivation; implemented + tested |
-| `src/select_phase1b_model.py` | §12.2 single-model selector with DQ gates; implemented + tested for 4-model selection. **Joint (model, prompt) cell version pending.** |
+| `src/select_phase1b_model.py` | OSF-v1 single-model selector with DQ gates; kept as legacy reference for the pre-factorial design. |
+| `src/select_phase1b_cell.py` | §7 joint (model, prompt) cell selector. Reads `outputs/phase1a_raw.parquet`. Implemented + 6 self-tests pass. |
+| `src/write_phase1a_parquet.py` | §6.2 long-format parquet writer + Random column. Implemented + 6 self-tests pass. |
 | `src/gss_driver.py` | Orchestrator with `--phase1a` / `--phase1b` / `--phase1b-anchor` modes; implemented + tested for single-prompt panel. **3-prompt factorial extension pending.** |
 | `src/battery_loo.py`, `src/shapley_decomposition.py` | Phase 1C analyzers; implemented + self-tested. **Orchestration drivers (`--battery-loo`, `--shapley`) pending.** |
 | `src/regression_baseline.py` | R2 baseline (Ridge + multinomial Logistic, 5-fold CV); implemented + tested |
@@ -290,8 +292,8 @@ Analyzer: `shapley_decomposition.py`.
 Before launching paid Phase 1A:
 
 1. **`src/gss_driver.py --phase1a`**: extend to iterate over 3 prompts in addition to 4 models. Each call now varies on `(respondent, condition, item, prompt, model)`. Output records include `prompt_id` in metadata.
-2. **`src/select_phase1b_model.py`**: extend to score the 12 (model, prompt) cells jointly. Apply DQ-1 and DQ-3 per cell. Update the tiebreak fallback to Qwen × P0. Add the post-hoc random-column aggregation (uniform random pick per respondent per prompt; report 3 random aggregates).
-3. **Phase 1A output writer**: emit `outputs/phase1a_raw.parquet` (long-format DB) and `outputs/phase1a_summary_table.{csv,parquet}` (180-row summary) as part of the `--phase1a` mode.
+2. **`src/select_phase1b_cell.py`** (new file, sibling of the OSF-v1 single-model `select_phase1b_model.py`): scores the 12 (model, prompt) cells jointly. Per-cell DQ-1 + DQ-3, per-item normalized MAE, 5%-relative quality tiebreak, cost-driven secondary tiebreak, Qwen × P0 named fallback. Random column (§5.4) aggregated post-hoc as 3 normalized-MAE reports — not a selector input.
+3. **Phase 1A output writer (`src/write_phase1a_parquet.py`)**: emits `outputs/phase1a_raw.parquet` (long-format DB per §6.2) after the 3-prompt loop in `--phase1a`. Random column rows generated deterministically via SHA-256(seed=42 | rid | prompt). 180-row §6.1 summary is derivable from the parquet in one pandas/SQL groupby; not materialized as a separate artifact until needed.
 4. **`src/gss_driver.py --phase1b`**: accept `--phase1b-prompt` in addition to `--phase1b-model` so the selected (model, prompt) cell is fully addressable.
 
 Estimated effort: ~2-3 days of careful coding + self-tests on synthetic fixtures before paid runs.
@@ -301,12 +303,13 @@ Estimated effort: ~2-3 days of careful coding + self-tests on synthetic fixtures
 ```bash
 # Pre-flight self-tests
 python3 src/validate_taxonomy.py
-python3 src/select_phase1b_model.py --self-test
+python3 src/select_phase1b_cell.py --self-test       # 6 joint-cell tests (rationales × 5 + random column)
+python3 src/write_phase1a_parquet.py --self-test     # 6 writer tests (relabel, parse_fail, binary, random, count, roundtrip)
 python3 src/battery_loo.py --self-test
 python3 src/shapley_decomposition.py --self-test
 python3 src/gss_pipeline.py --test-aggregation
-python3 src/prompt_variants.py --self-test          # 6 single-respondent tests
-python3 tests/preflight_phase1a.py                  # N=200 panel × 12 batteries × 3 prompts coverage
+python3 src/prompt_variants.py --self-test           # 6 single-respondent prompt tests
+python3 tests/preflight_phase1a.py                   # N=200 panel × 12 batteries × 3 prompts coverage
 
 # 1. Smoke (~$3, ~5 min)
 python3 src/gss_driver.py --smoke
@@ -315,8 +318,8 @@ python3 src/gss_driver.py --smoke
 python3 src/gss_driver.py --phase1a              # 4 models × 3 prompts × N=200
 python3 src/gss_driver.py --phase1b-anchor       # GPT-4o × P0 × N=100
 
-# 3. §12.2 joint cell selector (free, <1 min)
-python3 src/select_phase1b_model.py outputs/phase1a_raw.parquet
+# 3. §7 joint (model, prompt) cell selector (free, <1 min)
+python3 src/select_phase1b_cell.py outputs/phase1a_raw.parquet
 
 # 4. Phase 1B (~$71, ~3-7 days)
 #    Runs on full N=3,309; headline aggregation excludes the §7 selector cohort
