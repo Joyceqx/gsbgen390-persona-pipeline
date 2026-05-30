@@ -316,6 +316,64 @@ def _cell_normalized_mae(
 
 
 # ---------------------------------------------------------------------------
+# Majority-class baseline (Reviewer round-4 #1a, locked 2026-05-30)
+# ---------------------------------------------------------------------------
+
+def _majority_baseline_mae(
+    df: pd.DataFrame,
+    item_ranges: dict[str, tuple[int, int]],
+) -> tuple[float | None, dict[str, int]]:
+    """Normalized MAE of a degenerate "always predict the modal truth code"
+    cell on the same Phase 1A panel cohort.
+
+    Why this exists: per-cell normalized MAE in the 0.20–0.30 range looks
+    competitive in isolation, but a majority-class guesser scores around
+    0.27 on these 12 items (5 of which are binary with skewed marginals).
+    Without the baseline alongside the headline, the writeup cannot honestly
+    quantify what the LLM contributes beyond "pick the most common answer".
+
+    Compute: for each primary_eval item, find the modal truth code in the
+    panel (one truth per respondent, not per row). Form predictions by
+    always emitting that mode. Compute the same respondent-macro normalized
+    MAE the selector uses for cell scoring.
+
+    Returns (baseline_mae, modes_by_item). baseline_mae is None if no items
+    have a derivable mode.
+    """
+    # Take one truth per (item, respondent_id) — n_samples > 1 doesn't multiply
+    # truths, but rows do, so dedup first.
+    truths = df[df["true_code"].notna()].drop_duplicates(["item", "respondent_id"])[
+        ["item", "respondent_id", "true_code"]
+    ]
+    if truths.empty:
+        return None, {}
+    # Mode per item
+    modes: dict[str, int] = {}
+    for item, sub in truths.groupby("item"):
+        # statistics.mode picks the smallest on ties — deterministic.
+        modes[item] = int(statistics.mode(sub["true_code"].tolist()))
+    # Per-(item, rid) normalized abs_err if predicting the mode
+    per_rid_nae: dict[int, list[float]] = {}
+    for _, row in truths.iterrows():
+        item = row["item"]
+        rng = item_ranges.get(item)
+        if rng is None or (rng[1] - rng[0]) <= 0:
+            continue
+        denom = rng[1] - rng[0]
+        nae = abs(int(row["true_code"]) - modes[item]) / denom
+        per_rid_nae.setdefault(int(row["respondent_id"]), []).append(nae)
+    if not per_rid_nae:
+        return None, modes
+    # Respondent-macro mean (mirrors _cell_normalized_mae shape)
+    per_rid_mean = [
+        sum(naes) / len(naes) for naes in per_rid_nae.values() if naes
+    ]
+    if not per_rid_mean:
+        return None, modes
+    return float(sum(per_rid_mean) / len(per_rid_mean)), modes
+
+
+# ---------------------------------------------------------------------------
 # Selection
 # ---------------------------------------------------------------------------
 
@@ -419,6 +477,11 @@ def select_phase1b_cell(
     for prompt, mae in random_aggs.items():
         log.append(f"  Random × {prompt}: {mae:.4f}" if mae is not None else f"  Random × {prompt}: NA")
 
+    # Majority-class baseline (Reviewer round-4 #1a). Computed early so it is
+    # available for every return path — including the all-DQ-fail PAUSE path,
+    # where the baseline is the headline reviewers will compare against.
+    baseline_mae, baseline_modes = _majority_baseline_mae(real, item_ranges)
+
     survivors = [
         key for key, x in per_cell.items()
         if x["dq1_pass"] and x["dq3_pass"] and x["normalized_mae"] is not None
@@ -434,6 +497,8 @@ def select_phase1b_cell(
             "rationale": "all_dq_fail_pause",
             "per_cell": per_cell,
             "random_column": random_aggs,
+            "majority_baseline_mae": baseline_mae,
+            "majority_baseline_modes": baseline_modes,
             "decision_log": log,
         }
 
@@ -441,6 +506,30 @@ def select_phase1b_cell(
     best_key = survivors[0]
     best_mae = per_cell[best_key]["normalized_mae"]
     log.append(f"Best normalized MAE: {best_mae:.4f} ({best_key})")
+
+    # Majority baseline comparison (computed above before survivors check)
+    if baseline_mae is not None:
+        gap = baseline_mae - best_mae
+        log.append(
+            f"Majority-baseline MAE: {baseline_mae:.4f}  "
+            f"→ LLM-over-baseline gap: {gap:+.4f}"
+        )
+        if gap < 0:
+            log.append(
+                "  ⚠ WARNING: headline cell scores WORSE than majority-class "
+                "baseline. The selected cell is not extracting signal beyond "
+                "'predict the modal answer'. Either DQ-3 missed a collapse "
+                "case or the panel is too small/skewed for cell ranking. "
+                "Treat the Phase 1A selection as inconclusive."
+            )
+        elif gap < 0.02:
+            log.append(
+                "  ⚠ note: LLM gap over baseline is within bootstrap noise "
+                "(SE ≈ 0.07 at N=200). The headline cell does NOT cleanly "
+                "beat majority-class prediction; writeup should report this."
+            )
+    else:
+        log.append("Majority-baseline MAE: NA (no truth-bearing rows)")
 
     def _decode(key: str) -> dict[str, str]:
         model, prompt = key.split("|")
@@ -478,6 +567,8 @@ def select_phase1b_cell(
             "rationale": "ci_unique_argmin",
             "per_cell": per_cell,
             "random_column": random_aggs,
+            "majority_baseline_mae": baseline_mae,
+            "majority_baseline_modes": baseline_modes,
             "decision_log": log,
         }
 
@@ -507,6 +598,8 @@ def select_phase1b_cell(
             "rationale": "ci_overlap_cost_break",
             "per_cell": per_cell,
             "random_column": random_aggs,
+            "majority_baseline_mae": baseline_mae,
+            "majority_baseline_modes": baseline_modes,
             "decision_log": log,
         }
 
@@ -804,6 +897,64 @@ def _test_dq3_respondent_level_variance() -> None:
     print("  [dq3_respondent_level_variance] PASSED")
 
 
+def _test_majority_baseline_reported() -> None:
+    """Majority-baseline MAE is computed and surfaced in the decision dict +
+    decision_log (Reviewer round-4 #1a).
+
+    Construct: 20 respondents × 1 cell × 3 items. Item Y has 16/20 respondents
+    answering truth=2 (skewed); items A and B have truths spread (modal still
+    well-defined). Verify (a) `majority_baseline_mae` is a float, (b) the per-
+    item modes match the actual modal truths, (c) the decision_log includes
+    a "Majority-baseline MAE:" line, (d) the gap-vs-headline line is present.
+    """
+    rows: list[dict] = []
+    truths_per_rid = {}
+    for rid in range(20):
+        # Item Y: 16 respondents say 2, 4 say 1  → mode is 2
+        truth_y = 2 if rid < 16 else 1
+        # Item A: cyclic 1-5 (mode = whichever appears most in 0..19 mod 5 = 1, 2, 3, 4)
+        truth_a = (rid % 5) + 1
+        # Item B: cyclic 1-2 → mode = 1 (10 each, statistics.mode picks 1)
+        truth_b = (rid % 2) + 1
+        truths_per_rid[rid] = {"Y": truth_y, "A": truth_a, "B": truth_b}
+        for item, truth in truths_per_rid[rid].items():
+            # All cells perfect predictions; cell scoring is not the focus here.
+            rows.append({
+                "respondent_id": rid, "model": "qwen/qwen-2.5-72b-instruct",
+                "prompt": "P0", "condition": "Full", "item": item,
+                "true_code": truth, "pred_code": truth,
+                "parse_ok": True, "abs_err": 0, "sample_position": 1,
+            })
+    df = pd.DataFrame(rows)
+    item_ranges = {"Y": (1, 2), "A": (1, 5), "B": (1, 2)}
+    out = select_phase1b_cell(
+        df, item_ranges=item_ranges,
+        human_variance_by_item={"Y": 0.5, "A": 2.0, "B": 0.25},
+    )
+    # The selected cell hits truth exactly → headline mae = 0
+    assert out["per_cell"]["qwen/qwen-2.5-72b-instruct|P0"]["normalized_mae"] == 0.0
+    # Baseline must be a float and present in the returned dict
+    assert out["majority_baseline_mae"] is not None
+    assert isinstance(out["majority_baseline_mae"], float)
+    # Modes per item should match what we constructed
+    modes = out["majority_baseline_modes"]
+    assert modes["Y"] == 2, modes
+    # decision_log must reference the baseline + the gap
+    log_str = "\n".join(out["decision_log"])
+    assert "Majority-baseline MAE:" in log_str, log_str
+    assert "LLM-over-baseline gap:" in log_str, log_str
+    # Item Y baseline error: 4/20 wrong, abs_err = 1 (binary), normalized = 1
+    #   → mean over rids for Y alone = 4/20 = 0.20
+    # Items A, B: mode is the smallest tied value; abs error pattern depends.
+    # We mainly care that baseline_mae > 0 here (mode isn't always right).
+    assert out["majority_baseline_mae"] > 0
+    print(
+        f"  [majority_baseline_reported] PASSED "
+        f"(baseline_mae={out['majority_baseline_mae']:.4f}, "
+        f"modes={modes})"
+    )
+
+
 def _test_bootstrap_ci_brackets_point() -> None:
     """Bootstrap CI must bracket the point estimate, both bounds in [0, 1]
     (the normalized MAE range), and CI width should be > 0 for a non-
@@ -835,8 +986,9 @@ def run_self_tests() -> int:
     _test_random_column_reporting()
     _test_parse_fail_conservative_vs_optimistic()
     _test_dq3_respondent_level_variance()
+    _test_majority_baseline_reported()
     _test_bootstrap_ci_brackets_point()
-    print("✓ ALL 9 SELF-TESTS PASSED")
+    print("✓ ALL 10 SELF-TESTS PASSED")
     return 0
 
 
