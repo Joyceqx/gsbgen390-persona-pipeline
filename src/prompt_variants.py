@@ -151,6 +151,15 @@ class Feature:
 # artifact, not part of the respondent's answer — strip it before rendering.
 _SPECIFY_RE = re.compile(r"\s*\((?:please\s+)?specify\)\s*", re.IGNORECASE)
 
+# GSS sometimes encodes scale points as numeric val_labels — e.g., WLTHBLKS
+# val_label "5.0" for the rich/poor 7-point scale. _display_val strips the
+# trailing ".0" for P0/P2, but _fmt_p1's `{val_lower}` placeholder uses
+# val_label.lower() directly and the float string survives intact ("5.0".lower()
+# == "5.0"), leaking "rate Black Americans: 5.0" into ~5,500 P1 prompts.
+# Strip ".0" at Feature creation so the fix applies uniformly across P0/P1/P2
+# (Reviewer round-4 #2a, locked 2026-05-30).
+_TRAILING_ZERO_RE = re.compile(r"^(-?\d+)\.0$")
+
 
 def _extract_features(
     respondent: pd.Series,
@@ -183,6 +192,10 @@ def _extract_features(
             if _is_non_substantive_label(val_label):
                 continue
             val_label = _SPECIFY_RE.sub("", val_label).strip()
+            # Strip trailing ".0" on numeric-only labels (e.g. "5.0" → "5")
+            m = _TRAILING_ZERO_RE.match(val_label)
+            if m:
+                val_label = m.group(1)
             var_label = get_variable_label(v).strip()
             out.append(Feature(v, var_label, float(value), val_label, bin_name))
     return out
