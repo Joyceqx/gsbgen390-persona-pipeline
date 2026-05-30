@@ -74,7 +74,15 @@ PROMPTS = ("P0", "P1", "P2")
 # slip through the conservative MAE metric.
 DQ1_PARSE_FAIL_MAX: float = 0.10
 DQ3_RELATIVE_VARIANCE_FLOOR: float = 0.30
-DQ3_PER_ITEM_FAIL_MAX: float = 0.50
+# DQ-3 fail-fraction threshold tightened 0.50 → 0.30 (locked 2026-05-30 per
+# Reviewer round-4 #1b). The primary_eval set has 5 binary items out of 12
+# (ABANY, CAPPUN, GUNLAW, FEPOL, RACDIF1). A cell that mode-collapses on
+# every binary item but predicts normally on the 7 Likert items would have
+# 5/12 = 42% items failing the variance floor — below the old 0.50 ceiling
+# but above the new 0.30 ceiling, so DQ-3 now catches binary-only collapse.
+# (See also: the majority-baseline reporting added in commit-after-this
+# surfaces the same failure mode at the metric-comparison level.)
+DQ3_PER_ITEM_FAIL_MAX: float = 0.30
 # CI-overlap-driven tiebreak (locked 2026-05-29 per Reviewer round-3 P1 #4).
 # The previous 5% MAE window was an arbitrary threshold ~5x narrower than the
 # per-cell SE (~0.071 at N=200), so the argmin "winner" was selected at noise
