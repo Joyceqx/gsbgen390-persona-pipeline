@@ -11,6 +11,9 @@ Locked rule (RESEARCH_DESIGN.md §7):
     candidate cells = {(m, p) : m in {Qwen, DeepSeek, Llama-3.3, Kimi},
                                 p in {P0, P1, P2}}  # 12 cells
 
+    # CONSERVATIVE primary metric (parse_fail → normalized_err=1.0).
+    # Optimistic legacy metric (parse_fail dropped) reported alongside as
+    # a sensitivity check.
     normalized_abs_err(respondent, item) = |pred − true| / (max_code − min_code)
     primary_score(cell) = mean over respondents of (mean over Full-condition
                                                     items in their ballot of
@@ -20,20 +23,38 @@ Locked rule (RESEARCH_DESIGN.md §7):
           2026-05-29 per Reviewer round-2 Q2; cheap LLMs in practice
           parse-fail <5%, so 10% is still a generous safety net while
           closing the evasive-cell loophole).
-    DQ-3: per-item model variance / human variance >= 0.30 on a strict
-          majority of primary_eval items the cell answered
-          (cell fails if > 50% of items fail the floor)
+    DQ-3: per-item model variance / human variance >= 0.30; cell fails if
+          MORE THAN 30% of items fail the floor (tightened from 50%, locked
+          2026-05-30 Reviewer round-4 #1b — 5/12 binary items mode-collapsing
+          gave 41.7% which slipped under the old 50% ceiling).
+          Variance computed at the respondent level (one prediction per
+          (rid, item) — n_samples averaged first — so n_samples > 1 LLM
+          jitter cannot inflate the estimate).
 
-    argmin primary_score among DQ-passers.
-    Tie-break (within 5% of best score): lowest cost × (1 + parse_fail_rate).
-    Tie on both: Qwen × P0 named fallback.
+    # CI-overlap-driven tiebreak (locked 2026-05-29 Reviewer round-3 P1 #4,
+    # replaces the fixed 5% MAE window):
+    tie_set = {argmin cell} ∪ {survivors whose bootstrap CI overlaps
+                               the argmin's CI}
+    if |tie_set| == 1:  rationale = ci_unique_argmin    (argmin SELECTED)
+    else: cost tiebreak inside tie_set:
+        single cost-cheapest:        rationale = ci_overlap_cost_break
+        multiple cells tied on cost: rationale = fallback_qwen_p0_tie
+                                                 (Qwen × P0 named fallback)
     All cells fail DQ: PAUSE — Phase 1B does not proceed.
 
-The 5% tiebreak window at best MAE ≈ 0.25 is ≈ 0.013, narrower than the
-per-cell SE ≈ 0.071 (N=200); see §7 "Honest framing of the tiebreak" — the
-selector behaves quality-primary because argmin almost always lands outside
-the tiebreak band, and that winner is noise-driven enough that the
-180-row §6.1 summary should be reported alongside the headline.
+    # Per-cell respondent-level bootstrap CI (B=10,000, seeded). Reported on
+    # every cell. Drives the tie-set above. The old 5% fixed MAE window was
+    # 5x narrower than the per-cell SE (~0.071 at N=200) so the argmin
+    # "winner" was selected at noise resolution; CI overlap is the
+    # principled tie definition — two cells whose 95% CIs overlap are not
+    # statistically separated.
+
+    # Majority-class baseline reported alongside the headline
+    # (Reviewer round-4 #1a). Compares the selected cell against
+    # "always predict the modal truth code" — the LLM-over-baseline gap
+    # tells writeup readers what the LLM actually contributes beyond
+    # picking the most common answer. Warns automatically if gap < 0.02
+    # (within bootstrap noise) or gap < 0 (LLM lost to majority).
 
 Usage:
     python3 src/select_phase1b_cell.py outputs/phase1a_raw.parquet
@@ -76,7 +97,8 @@ DQ1_PARSE_FAIL_MAX: float = 0.10
 DQ3_RELATIVE_VARIANCE_FLOOR: float = 0.30
 # DQ-3 fail-fraction threshold tightened 0.50 → 0.30 (locked 2026-05-30 per
 # Reviewer round-4 #1b). The primary_eval set has 5 binary items out of 12
-# (ABANY, CAPPUN, GUNLAW, FEPOL, RACDIF1). A cell that mode-collapses on
+# (ABANY, CAPPUN, GUNLAW, FEPOL, RACDIF1). A cell that exhibits marginal
+# distribution collapse on
 # every binary item but predicts normally on the 7 Likert items would have
 # 5/12 = 42% items failing the variance floor — below the old 0.50 ceiling
 # but above the new 0.30 ceiling, so DQ-3 now catches binary-only collapse.

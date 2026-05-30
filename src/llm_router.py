@@ -369,6 +369,10 @@ def call_panel(
 # ---------------------------------------------------------------------------
 
 def _smoke_one_call(model: str = "qwen/qwen-2.5-72b-instruct"):
+    """Single-call smoke test. Uses call_llm_meta so provider / fingerprint
+    / token-usage are visible — the smoke output is the canonical source for
+    populating PROVIDER_LOCK before paid Phase 1A.
+    """
     system = "You answer survey questions in character. Output a single integer."
     user = (
         "GSS question: think of self as liberal or conservative\n\n"
@@ -382,8 +386,12 @@ def _smoke_one_call(model: str = "qwen/qwen-2.5-72b-instruct"):
     print(f"user prompt:\n{user}")
     print()
     try:
-        out = call_llm(system, user, model=model)
-        print(f"response: {out!r}")
+        out = call_llm_meta(system, user, model=model)
+        print(f"response:           {out['text']!r}")
+        print(f"provider:           {out['provider']!r}    ← copy this into PROVIDER_LOCK['{model}']")
+        print(f"system_fingerprint: {out['system_fingerprint']!r}")
+        print(f"model_returned:     {out['model_returned']!r}")
+        print(f"tokens_in/out:      {out['tokens_in']} / {out['tokens_out']}")
         return out
     except LLMError as e:
         print(f"ERROR: {e}")
@@ -391,6 +399,9 @@ def _smoke_one_call(model: str = "qwen/qwen-2.5-72b-instruct"):
 
 
 def _smoke_panel():
+    """Panel smoke test — calls each cheap model once and prints
+    provider / fingerprint per model so the user can populate
+    PROVIDER_LOCK before paid Phase 1A."""
     system = "You answer survey questions in character. Output a single integer."
     user = (
         "GSS question: think of self as liberal or conservative\n\n"
@@ -400,10 +411,27 @@ def _smoke_panel():
         "Output ONLY a single integer code (1-7)."
     )
     print(f"\n=== smoke test: panel of {len(MODEL_PANEL_PRIMARY)} models ===")
-    out = call_panel(system, user, on_error="record")
-    for m, r in out.items():
-        print(f"  {m:<35s} → {r!r}")
-    return out
+    print(f"{'model':<40s} {'provider':<20s} {'response':<10s} fingerprint")
+    print("-" * 95)
+    results: dict[str, dict] = {}
+    for m in MODEL_PANEL_PRIMARY:
+        try:
+            out = call_llm_meta(system, user, model=m)
+            results[m] = out
+            print(
+                f"{m:<40s} {str(out['provider']):<20s} "
+                f"{out['text']!r:<10s} {out['system_fingerprint']!r}"
+            )
+        except LLMError as e:
+            results[m] = {"error": str(e)}
+            print(f"{m:<40s} ERROR: {e}")
+    print()
+    print("Copy the providers above into PROVIDER_LOCK in src/llm_router.py:")
+    for m in MODEL_PANEL_PRIMARY:
+        r = results.get(m, {})
+        prov = r.get("provider") if isinstance(r, dict) else None
+        print(f'    "{m}": "{prov}",')
+    return results
 
 
 if __name__ == "__main__":

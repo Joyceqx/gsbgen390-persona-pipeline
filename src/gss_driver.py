@@ -936,9 +936,15 @@ if __name__ == "__main__":
             file=sys.stderr,
         )
     elif args.smoke:
+        # Smoke mirrors the Phase 1A shape on a single respondent so it
+        # actually exercises the paid run's code path (n_samples=2, Full
+        # condition only, call_llm_meta, provider lock, ballot pre-filter).
+        # ~16 calls × $0.000356 ≈ $0.006. For panel-wide provider discovery
+        # (PROVIDER_LOCK population), use `python3 src/llm_router.py --smoke-panel`
+        # which hits all 4 models in one call each.
         models = ["qwen/qwen-2.5-72b-instruct"]
         n = 1
-        n_samples = 1
+        n_samples = 2
         do_primary = True
         do_sensitivity = False
     elif args.anchor:
@@ -1079,7 +1085,14 @@ if __name__ == "__main__":
     # selected cell × N=3,309 disjoint cohort (where the §8 LOO ΔMAE headline
     # actually lives). Other modes (--phase1b, --smoke, --anchor) keep the
     # legacy Full + 4 LOO behavior.
-    active_conditions = CONDITIONS_FULL_ONLY if args.phase1a else CONDITIONS_PRIMARY
+    # --phase1a and --smoke both mirror the Phase 1A factorial shape (Full
+    # condition only). Phase 1B / phase1b-anchor / explicit-models paths
+    # default to the legacy 5-condition CONDITIONS_PRIMARY.
+    active_conditions = (
+        CONDITIONS_FULL_ONLY
+        if (args.phase1a or args.smoke)
+        else CONDITIONS_PRIMARY
+    )
 
     per_prompt_outputs: list[Path] = []
     for pid in prompt_ids:

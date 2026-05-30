@@ -329,14 +329,30 @@ Reviewer round-2 cleanup also complete: ballot-off pre-filter, LOO deferral, par
 
 Reviewer round-3 cleanup complete (locked 2026-05-29): selector docstring + driver CLI stale text purged (`f5cfcea`); DQ-3 variance aggregated per (respondent, item) before cross-respondent variance to neutralize n_samples=2 LLM jitter (`851826a`); §7 tiebreak rule replaced from fixed 5% MAE window with bootstrap-CI overlap, new rationales `ci_unique_argmin` / `ci_overlap_cost_break` / `fallback_qwen_p0_tie` (`c773501`); OpenRouter provider preferences locked at call time via `allow_fallbacks=False` + `require_parameters=True` defaults plus a `PROVIDER_LOCK` dict the user populates after smoke (`f90f20c`); parquet provenance columns verified end-to-end with a new self-test (`f90f20c`).
 
-Next step: smoke test (`python3 src/gss_driver.py --smoke`). The smoke run will reveal which OpenRouter provider served each panel model via the new `provider` field in records. Populate `PROVIDER_LOCK` in `src/llm_router.py` with those provider names, re-smoke to verify the locked provider is served, then launch paid Phase 1A.
+Reviewer round-4 cleanup also complete (locked 2026-05-30): GPT-4o anchor pinned to `gpt-4o-2024-08-06` snapshot for Park v2 comparability (`6f764e4`); `.0` strip in `_extract_features` so all P0/P1/P2 renderings share clean numeric val_labels (`a95219d`); DQ-3 fail-fraction ceiling tightened 0.50 → 0.30 to catch binary-only collapse (`390780f`); majority-class baseline reported alongside the headline in the selector decision log with automatic warnings for gap < 0.02 / gap < 0 (`5cce65d`).
+
+Next step:
+
+1. **Panel-wide provider discovery** (free, ~10 s):
+   ```
+   python3 src/llm_router.py --smoke-panel
+   ```
+   Calls each of the 4 cheap panel models once and prints a `model → provider` table plus a ready-to-paste `PROVIDER_LOCK[...]` snippet at the bottom of the output. Copy the snippet into `src/llm_router.py:PROVIDER_LOCK`.
+
+2. **Pipeline smoke test** (~$0.006, ~1 min):
+   ```
+   python3 src/gss_driver.py --smoke
+   ```
+   Runs 1 respondent × Qwen × P0 × Full × n_samples=2 — the exact shape of Phase 1A on a tiny cohort. Verifies the full pipeline (call_llm_meta → record → parquet consolidation if 3 prompts were run).
+
+3. **Re-smoke with PROVIDER_LOCK populated** to confirm the locked provider serves each model. Then launch paid Phase 1A.
 
 ### 10.3 How to run (after the extensions above land)
 
 ```bash
 # Pre-flight self-tests
 python3 src/validate_taxonomy.py
-python3 src/select_phase1b_cell.py --self-test       # 9 joint-cell tests (5 rationales + random column + parse_fail conservative + DQ-3 respondent-level + bootstrap CI)
+python3 src/select_phase1b_cell.py --self-test       # 10 joint-cell tests (5 rationales + random column + parse_fail conservative + DQ-3 respondent-level + majority baseline + bootstrap CI)
 python3 src/write_phase1a_parquet.py --self-test     # 7 writer tests (relabel, parse_fail, binary, random, count, roundtrip, provenance E2E)
 python3 src/battery_loo.py --self-test
 python3 src/shapley_decomposition.py --self-test
@@ -344,8 +360,9 @@ python3 src/gss_pipeline.py --test-aggregation
 python3 src/prompt_variants.py --self-test           # 6 single-respondent prompt tests
 python3 tests/preflight_phase1a.py                   # N=200 panel × 12 batteries × 3 prompts coverage
 
-# 1. Smoke (~$3, ~5 min)
-python3 src/gss_driver.py --smoke
+# 1. Provider discovery + smoke (~$0.01, ~1 min)
+python3 src/llm_router.py --smoke-panel        # 4 models × 1 call; populates PROVIDER_LOCK table
+python3 src/gss_driver.py --smoke              # 1 resp × Qwen × P0 × Full × n=2; exercises full Phase 1A path
 
 # 2. Phase 1A factorial + GPT-4o anchor (~$162, ~24 hr)
 python3 src/gss_driver.py --phase1a              # 4 models × 3 prompts × N=200 × Full × n=2 (~$14)
@@ -383,7 +400,7 @@ python3 src/shapley_decomposition.py --input outputs/phase1c_shapley_*.parquet
 
 | Step | Cost | Notes |
 |---|---|---|
-| Smoke | ~$3 | 1 respondent × 1 model × P0 × Full condition |
+| Smoke (panel + pipeline) | ~$0.01 | `llm_router --smoke-panel` (4 calls for PROVIDER_LOCK) + `gss_driver --smoke` (1 resp × Qwen × P0 × Full × n=2 ≈ 16 calls) |
 | Phase 1A factorial (4 models × 3 prompts × N=200 × Full × n=2 × ballot filter) | **~$14** | Down from ~$51 — LOO deferred to Phase 1B + ballot-off pre-filter (Reviewer round-2 Q3) |
 | GPT-4o anchor (P0 only, N=100, primary + sensitivity, n=2) | ~$148 | One run serves Phase 1A + 1B reporting |
 | Phase 1B (selected cell × N=3,309 × Full + 4 LOO × n=1 × ballot filter) | **~$48** | Down from ~$71 — ballot-off pre-filter applied |
