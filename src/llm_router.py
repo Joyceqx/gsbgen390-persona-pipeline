@@ -53,8 +53,16 @@ MODEL_PANEL_PRIMARY: tuple[str, ...] = (
 )
 
 # Anchor model — Park-comparable; run on N=100 subset only. Available via
-# OpenRouter as "openai/gpt-4o" or directly via OpenAI SDK.
-MODEL_ANCHOR: str = "openai/gpt-4o"
+# OpenRouter as "openai/gpt-4o-..." or directly via OpenAI SDK.
+#
+# DATED SNAPSHOT (locked 2026-05-30 per Reviewer round-4 #3): the floating
+# "openai/gpt-4o" alias is silently retargeted by OpenAI on a rolling cadence,
+# so a paid anchor run today might serve a different model than the one Park
+# v2 used during their 2024 data-collection window. Pin to the 2024-08-06
+# snapshot — closest to Park v2's collection window (paper accepted 2024-11)
+# — so the "Park-comparable per-item raw-accuracy table" in §6.1 actually
+# compares against the same model Park did.
+MODEL_ANCHOR: str = "openai/gpt-4o-2024-08-06"
 
 # OpenRouter provider locking (Reviewer round-3 P1 #5, locked 2026-05-29).
 #
@@ -411,7 +419,7 @@ if __name__ == "__main__":
     elif args.smoke_panel:
         _smoke_panel()
     elif args.smoke_anchor:
-        _smoke_one_call("openai/gpt-4o")
+        _smoke_one_call(MODEL_ANCHOR)
     else:
         print("Usage: python3 llm_router.py [--smoke-one | --smoke-panel | --smoke-anchor]")
         print(f"Cheap-panel models: {MODEL_PANEL_PRIMARY}")
