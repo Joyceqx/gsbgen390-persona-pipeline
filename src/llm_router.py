@@ -91,10 +91,13 @@ MODEL_ANCHOR: str = "openai/gpt-4o-2024-08-06"
 #      you locked.
 #   4. Launch paid Phase 1A.
 PROVIDER_LOCK: dict[str, str] = {
-    # "qwen/qwen-2.5-72b-instruct":        "<populate from smoke output>",
-    # "deepseek/deepseek-chat":            "<populate from smoke output>",
-    # "meta-llama/llama-3.3-70b-instruct": "<populate from smoke output>",
-    # "moonshotai/kimi-k2":                "<populate from smoke output>",
+    # Locked 2026-05-31 from `python3 src/llm_router.py --smoke-panel`.
+    # OpenRouter `fingerprint` returned None for all 4 — provenance via
+    # `provider` + `model_returned` fields written per record.
+    "qwen/qwen-2.5-72b-instruct":        "DeepInfra",
+    "deepseek/deepseek-chat":            "DeepInfra",
+    "meta-llama/llama-3.3-70b-instruct": "AkashML",
+    "moonshotai/kimi-k2":                "Novita",
 }
 
 # Default per-call hyperparameters
