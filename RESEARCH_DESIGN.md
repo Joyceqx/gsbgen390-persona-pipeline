@@ -232,7 +232,10 @@ primary_score(cell) = mean over respondents of (mean over Full-condition items i
 DQ-1 (parse-fail ceiling):    parse_failure_rate ≤ 10% per cell  (was 30%)
 DQ-3 (marginal-distribution-collapse guard): for each primary_eval item i,
                               var(cell_i) / var(human_i) ≥ 0.30
-                              cell fails if > 50% of items fail the floor
+                              cell fails if > 30% of items fail the floor
+                              (tightened from > 50% per commit 390780f Reviewer
+                              round-4 #1b — the 5/12 = 41.7% binary-only
+                              collapse case slipped through the old 50% ceiling)
                               human variance reference: outputs/primary_eval_human_variance_2024.json
                               variance computed at the respondent level
                               (mean across n_samples per (rid, item) first,
@@ -321,7 +324,7 @@ Analyzer: `shapley_decomposition.py`.
 All 4 extensions plus the post-factorial Reviewer round-2 cleanup are complete; smoke test is the next paid step.
 
 1. **`src/gss_driver.py --phase1a`** (DONE): iterates over 3 prompts × 4 models × **Full condition only** × ballot-on items × **n_samples=2**. Records carry `prompt_id` + `prompt_version` + `template_hash` + `error_type` + provider/fingerprint provenance.
-2. **`src/select_phase1b_cell.py`** (DONE, sibling of the OSF-v1 `select_phase1b_model.py`): scores 12 (model, prompt) cells jointly. Per-cell DQ-1 (tightened 30% → 10%) + DQ-3, per-item normalized MAE with the **conservative** parse_fail-as-1.0 policy as primary metric (optimistic legacy metric reported alongside), 5%-relative quality tiebreak, cost-driven secondary tiebreak, Qwen × P0 named fallback. Random column (§5.4) aggregated post-hoc — not a selector input. **Per-cell bootstrap CIs** (B=10,000) + headline CI-overlap diagnostic.
+2. **`src/select_phase1b_cell.py`** (DONE, sibling of the OSF-v1 `select_phase1b_model.py`): scores 12 (model, prompt) cells jointly. Per-cell DQ-1 (tightened 30% → 10%) + DQ-3 (tightened 50% → 30% fail-fraction ceiling). Per-item normalized MAE with the **conservative** parse_fail-as-1.0 policy as primary metric (optimistic legacy metric reported alongside). **CI-overlap-driven tiebreak** (NOT a fixed 5% MAE window — see §7): the tie-set is the headline cell plus all surviving cells whose bootstrap CI overlaps the headline's CI; cost-driven secondary tiebreak fires only within that tie-set; Qwen × P0 named fallback when both ties hit. Random column (§5.4) aggregated post-hoc — not a selector input. **Per-cell bootstrap CIs** (B=10,000, respondent-level) plus a majority-class baseline (§7 round-4 addition) reported alongside the headline.
 3. **Phase 1A output writer (`src/write_phase1a_parquet.py`)** (DONE): emits `outputs/phase1a_raw.parquet` (18-column long-format DB per §6.2) after the 3-prompt loop in `--phase1a`. Random column rows generated deterministically via SHA-256(seed=42 | rid | prompt). 180-row §6.1 summary derivable from the parquet in one pandas/SQL groupby.
 4. **`src/gss_driver.py --phase1b`** (DONE): accepts `--phase1b-prompt` in addition to `--phase1b-model`. Errors out if `outputs/phase1a_raw.parquet` exists but `--phase1b-prompt` is omitted (refuses to silently default to P0 once the factorial has chosen).
 
@@ -352,6 +355,7 @@ Next step:
 ```bash
 # Pre-flight self-tests
 python3 src/validate_taxonomy.py
+python3 src/llm_router.py --self-test                # 1 mock-client test verifying PROVIDER_LOCK extra_body shape
 python3 src/select_phase1b_cell.py --self-test       # 10 joint-cell tests (5 rationales + random column + parse_fail conservative + DQ-3 respondent-level + majority baseline + bootstrap CI)
 python3 src/write_phase1a_parquet.py --self-test     # 7 writer tests (relabel, parse_fail, binary, random, count, roundtrip, provenance E2E)
 python3 src/battery_loo.py --self-test

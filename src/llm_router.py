@@ -82,10 +82,13 @@ MODEL_ANCHOR: str = "openai/gpt-4o-2024-08-06"
 # allow_fallbacks=False to keep that provider sticky thereafter.
 #
 # Workflow:
-#   1. Run `python3 src/gss_driver.py --smoke`; record the `provider` field
-#      printed for each panel model.
-#   2. Populate PROVIDER_LOCK[model_slug] = "<provider name>" below.
-#   3. Verify with a second --smoke that the locked provider is selected.
+#   1. Run `python3 src/llm_router.py --smoke-panel` — hits all 4 cheap
+#      panel models once each and prints a ready-to-paste PROVIDER_LOCK
+#      snippet at the bottom. (Driver --smoke runs Qwen ONLY, so it cannot
+#      discover providers for the other 3 panel models.)
+#   2. Paste the snippet into PROVIDER_LOCK below.
+#   3. Re-run --smoke-panel; confirm the `provider` column matches what
+#      you locked.
 #   4. Launch paid Phase 1A.
 PROVIDER_LOCK: dict[str, str] = {
     # "qwen/qwen-2.5-72b-instruct":        "<populate from smoke output>",
@@ -206,27 +209,18 @@ def call_llm(
       - Pass `seed=None` to disable explicitly (e.g., for deliberate
         non-determinism testing).
     """
-    use_openai_direct = model.startswith("openai/") and "gpt-4o" in model
-    if use_openai_direct:
-        from openai import OpenAI
-        client = OpenAI(api_key=get_openai_key(), timeout=timeout)
-        actual_model = model.replace("openai/", "")
-    else:
-        from openai import OpenAI
-        client = OpenAI(
-            api_key=get_openrouter_key(),
-            base_url="https://openrouter.ai/api/v1",
-            timeout=timeout,
-        )
-        actual_model = model
-
-    out = call_llm_meta(
+    # Thin wrapper for backward compatibility — text only. New callers
+    # should prefer call_llm_meta to get provider / fingerprint / tokens.
+    # (Reviewer round-5 SHOULD-FIX #6: a previous version of this wrapper
+    # eagerly constructed an OpenAI client + fetched API keys before
+    # delegating, which double-instantiated the client and could raise
+    # "no API key found" before the delegation ever ran.)
+    return call_llm_meta(
         system=system, user=user, model=model,
         temperature=temperature, max_tokens=max_tokens, timeout=timeout,
         max_retries=max_retries, initial_backoff_s=initial_backoff_s,
         seed=seed,
-    )
-    return out["text"]
+    )["text"]
 
 
 def call_llm_meta(
@@ -434,14 +428,110 @@ def _smoke_panel():
     return results
 
 
+def _self_test_provider_lock_contract() -> None:
+    """Reviewer round-5 #8 — verify call_llm_meta injects the expected
+    OpenRouter provider preferences into `extra_body`. This is the only
+    unit-level guarantee that the PROVIDER_LOCK contract (introduced in
+    commit f90f20c) actually constrains the request before paid run.
+
+    Strategy: monkey-patch the OpenAI client constructor with a fake whose
+    `chat.completions.create` records the kwargs it received, then call
+    call_llm_meta. Assert that extra_body contains:
+      - provider.allow_fallbacks == False
+      - provider.require_parameters == True
+      - provider.order == [PROVIDER_LOCK[model]] when locked, absent otherwise
+      - seed is present when passed
+    """
+    import openai as _openai_pkg
+
+    captured: list[dict] = []
+
+    class _FakeChatCompletions:
+        @staticmethod
+        def create(**kwargs):
+            captured.append(kwargs)
+
+            class _Msg:
+                content = "4"
+
+            class _Choice:
+                message = _Msg()
+
+            class _Usage:
+                prompt_tokens = 100
+                completion_tokens = 1
+
+            class _Resp:
+                choices = [_Choice()]
+                model = kwargs.get("model")
+                system_fingerprint = "fp_stub"
+                provider = "FakeProvider"
+                usage = _Usage()
+
+            return _Resp()
+
+    class _FakeChat:
+        completions = _FakeChatCompletions()
+
+    class _FakeClient:
+        def __init__(self, *args, **kwargs):
+            self.chat = _FakeChat()
+
+    real_openai = _openai_pkg.OpenAI
+    _openai_pkg.OpenAI = _FakeClient
+    try:
+        # Case 1: model NOT in PROVIDER_LOCK → no `order` key
+        captured.clear()
+        PROVIDER_LOCK.clear()
+        out = call_llm_meta("s", "u", model="qwen/qwen-2.5-72b-instruct", seed=42)
+        assert out["text"] == "4"
+        eb = captured[0]["extra_body"]
+        assert eb["provider"]["allow_fallbacks"] is False, eb
+        assert eb["provider"]["require_parameters"] is True, eb
+        assert "order" not in eb["provider"], eb
+        assert eb["seed"] == 42, eb
+
+        # Case 2: model IS in PROVIDER_LOCK → order pinned to that provider
+        captured.clear()
+        PROVIDER_LOCK["qwen/qwen-2.5-72b-instruct"] = "DeepInfra"
+        call_llm_meta("s", "u", model="qwen/qwen-2.5-72b-instruct", seed=42)
+        eb = captured[0]["extra_body"]
+        assert eb["provider"]["order"] == ["DeepInfra"], eb
+        assert eb["provider"]["allow_fallbacks"] is False, eb
+
+        # Case 3: OpenAI-direct path (gpt-4o anchor) → no extra_body, seed top-level
+        captured.clear()
+        PROVIDER_LOCK.clear()
+        call_llm_meta("s", "u", model="openai/gpt-4o-2024-08-06", seed=42)
+        assert "extra_body" not in captured[0], captured[0]
+        assert captured[0]["seed"] == 42, captured[0]
+    finally:
+        _openai_pkg.OpenAI = real_openai
+        PROVIDER_LOCK.clear()
+
+    print("  [provider_lock_contract] PASSED")
+
+
+def _self_tests() -> int:
+    print("llm_router self-tests")
+    _self_test_provider_lock_contract()
+    print("✓ ALL 1 LLM-ROUTER SELF-TESTS PASSED")
+    return 0
+
+
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--smoke-one", action="store_true", help="single-call test, default Qwen")
     ap.add_argument("--smoke-panel", action="store_true", help="all 4 cheap models")
     ap.add_argument("--smoke-anchor", action="store_true", help="GPT-4o anchor")
+    ap.add_argument("--self-test", action="store_true",
+                    help="run offline self-tests (mocks OpenAI client; no paid calls)")
     ap.add_argument("--model", default="qwen/qwen-2.5-72b-instruct")
     args = ap.parse_args()
+    if args.self_test:
+        import sys as _sys
+        _sys.exit(_self_tests())
     if args.smoke_one:
         _smoke_one_call(args.model)
     elif args.smoke_panel:
@@ -449,6 +539,6 @@ if __name__ == "__main__":
     elif args.smoke_anchor:
         _smoke_one_call(MODEL_ANCHOR)
     else:
-        print("Usage: python3 llm_router.py [--smoke-one | --smoke-panel | --smoke-anchor]")
+        print("Usage: python3 llm_router.py [--smoke-one | --smoke-panel | --smoke-anchor | --self-test]")
         print(f"Cheap-panel models: {MODEL_PANEL_PRIMARY}")
         print(f"Anchor model:        {MODEL_ANCHOR}")

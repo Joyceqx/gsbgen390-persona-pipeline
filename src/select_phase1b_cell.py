@@ -633,6 +633,8 @@ def select_phase1b_cell(
         "rationale": "fallback_qwen_p0_tie",
         "per_cell": per_cell,
         "random_column": random_aggs,
+        "majority_baseline_mae": baseline_mae,
+        "majority_baseline_modes": baseline_modes,
         "decision_log": log,
     }
 
@@ -779,6 +781,10 @@ def _test_fallback_qwen_p0_tie() -> None:
     assert out["selected_cell"] == {"model": QWEN_FALLBACK_MODEL, "prompt": "P0"}, \
         out["selected_cell"]
     assert out["rationale"] == "fallback_qwen_p0_tie", out["rationale"]
+    # Round-5 audit BLOCKING #3: every return path must carry the baseline keys.
+    # Regression guard against accidentally dropping them from one branch.
+    assert "majority_baseline_mae" in out, "fallback path dropped majority_baseline_mae"
+    assert "majority_baseline_modes" in out, "fallback path dropped majority_baseline_modes"
     print("  [fallback_qwen_p0_tie] PASSED")
 
 
