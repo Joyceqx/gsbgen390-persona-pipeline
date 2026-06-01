@@ -937,12 +937,20 @@ if __name__ == "__main__":
         )
     elif args.smoke:
         # Smoke mirrors the Phase 1A shape on a single respondent so it
-        # actually exercises the paid run's code path (n_samples=2, Full
-        # condition only, call_llm_meta, provider lock, ballot pre-filter).
-        # ~16 calls × $0.000356 ≈ $0.006. For panel-wide provider discovery
-        # (PROVIDER_LOCK population), use `python3 src/llm_router.py --smoke-panel`
-        # which hits all 4 models in one call each.
-        models = ["qwen/qwen-2.5-72b-instruct"]
+        # exercises the FULL paid-run code path:
+        #   - 4 panel models (all of MODEL_PANEL_PRIMARY, including the
+        #     thinking sensitivity cell)
+        #   - 3 prompts (P0/P1/P2 — also triggers parquet consolidation
+        #     branch below)
+        #   - Full condition only × n_samples=2
+        #   - call_llm_meta with REASONING_ENABLED_MODELS + PROVIDER_LOCK
+        #   - ballot pre-filter
+        #   - per-prompt JSON + parquet writer + Random column post-hoc
+        # ~4 × 3 × 1 × ~8 × 2 = ~192 calls × $0.0005 (panel F' avg + V4-Pro
+        # thinking output overhead) ≈ $0.10. For panel-wide provider
+        # discovery before this step, use `python3 src/llm_router.py
+        # --smoke-panel` (cheaper, no driver overhead).
+        models = list(MODEL_PANEL_PRIMARY)
         n = 1
         n_samples = 2
         do_primary = True
@@ -1063,7 +1071,10 @@ if __name__ == "__main__":
     # has been run yet (OSF-v1 backward compatibility path), --phase1b-prompt
     # may be omitted and defaults to P0. The anchor mode is locked to P0
     # (per RESEARCH_DESIGN.md §5.5 — Park v2 SI Table 3 anchor comparability).
-    if args.phase1a:
+    if args.phase1a or args.smoke:
+        # Smoke mirrors --phase1a's 3-prompt loop so the parquet consolidation
+        # branch below actually fires (without 3 prompts, len(per_prompt_outputs)
+        # would never equal 3 and the smoke would not exercise the writer).
         prompt_ids = ["P0", "P1", "P2"]
     elif args.phase1b:
         factorial_parquet = OUTPUTS / "phase1a_raw.parquet"
@@ -1116,15 +1127,22 @@ if __name__ == "__main__":
             conditions=active_conditions,
         )
 
-    # After --phase1a completes the 3-prompt factorial, consolidate the per-prompt
-    # JSON artifacts into the canonical long-format parquet (RESEARCH_DESIGN.md
-    # §6.2). The §7 selector reads the parquet, not the JSONs. Failure here is
-    # non-fatal — the JSON artifacts are the source of truth and the writer can
-    # be re-run manually via `python3 src/write_phase1a_parquet.py --inputs ...`.
-    if args.phase1a and len(per_prompt_outputs) == 3:
+    # After --phase1a (or --smoke, which mirrors --phase1a's shape on N=1)
+    # completes the 3-prompt factorial, consolidate the per-prompt JSON
+    # artifacts into the canonical long-format parquet (RESEARCH_DESIGN.md
+    # §6.2). The §7 selector reads the parquet, not the JSONs. Failure here
+    # is non-fatal — the JSON artifacts are the source of truth and the
+    # writer can be re-run manually via `python3 src/write_phase1a_parquet.py
+    # --inputs ...`.
+    #
+    # Smoke writes to a SEPARATE parquet path (`smoke_phase1a_raw.parquet`)
+    # so it never overwrites a real paid Phase 1A artifact.
+    if (args.phase1a or args.smoke) and len(per_prompt_outputs) == 3:
         try:
             from write_phase1a_parquet import build_dataframe
-            parquet_out = OUTPUTS / "phase1a_raw.parquet"
+            parquet_out = OUTPUTS / (
+                "smoke_phase1a_raw.parquet" if args.smoke else "phase1a_raw.parquet"
+            )
             print(f"\nConsolidating 3 per-prompt JSONs → {parquet_out.name}")
             df = build_dataframe(per_prompt_outputs)
             df.to_parquet(parquet_out, index=False)
