@@ -60,9 +60,9 @@ GSS ballot rotation means each respondent typically sees ~8 of 12 items. Coverag
 - **Psychological**: 8 variables, 2 batteries (happiness, health, work satisfaction, exciting life)
 - **Attitudinal**: 83 variables, 15 batteries (abortion battery, civil-liberties triad, gender-role attitudes, economic-policy attitudes, etc.)
 
-### 3.3 Sensitivity eval — 118 items (Park-comparable, anchor-only)
+### 3.3 Sensitivity eval — 118 items (DEFERRED 2026-06-01)
 
-The Park v2 GSS list minus 15 items retired or renamed in 2024. Used only on the GPT-4o anchor (N=100 subset) to produce the per-item raw-accuracy table side-by-side with Park v2 SI Table 3. NOT used in the headline LOO or selector.
+Originally designed to produce a side-by-side per-item raw-accuracy table against Park v2's SI Table 3 reference. **Deferred** after the 2026-06-01 anchor reframing (see §5.5–5.6): we now use the anchor as a within-study frontier baseline on our 12 items rather than as a Park-comparable cross-item table, so the 118 extra sensitivity items are not needed for the headline analysis. Sensitivity_eval code path remains in the driver for future Park-comparable runs if reviewers request them.
 
 ---
 
@@ -128,9 +128,69 @@ For each respondent `r` and each prompt `p`, a model is selected uniformly at ra
 
 The random column is a deployment-mode sensitivity comparator (each Phase 1B respondent in deployment sees one model; this estimates "if a Phase 1A respondent had only seen one randomly-assigned model"). It is reporting-only, **not a §12.2 selector input**.
 
-### 5.5 GPT-4o anchor (P0 only)
+### 5.5 GPT-4o anchor — within-study frontier baseline
 
-N=100 selection-split subset, n_samples=2, **P0 only** (preserves Park v2 SI Table 3 comparability). Runs primary + 118 sensitivity items. One anchor invocation serves both Phase 1A and Phase 1B reporting.
+**Updated 2026-06-01 23:55** after dropping the direct Park v2 raw-accuracy comparison (see §5.6 for rationale). The anchor's primary role is now **within-study frontier baseline** for the cheap-vs-frontier comparison on **our 12 items, our protocol, our cohort**.
+
+Two anchor conditions are run, both N=100 (= first 100 IDs of `sample_respondents(200, seed=42)` — identical IDs to Phase 1A's first 100 panel respondents, enabling paired comparison):
+
+| Condition | Model | R1 battery exclusion | Items | n_samples | Purpose |
+|---|---|---|---|---|---|
+| **Anchor B** (our protocol) | `openai/gpt-4o-2024-08-06` | **ON** | 12 primary_eval | 2 | Apples-to-apples frontier vs cheap panel — isolates the model-tier effect under identical R1 protocol |
+| **Anchor A** (Park-exact) | `openai/gpt-4o-2024-08-06` | **OFF** | 12 primary_eval | 2 | Park v2's leakage protocol on our items + model — isolates the R1-protection cost |
+
+Cost: ~$24 each = $48 total. Sensitivity_eval (118 items) deferred — no longer needed once we abandon the direct Park-comparable per-item Table 3 frame.
+
+**Paired comparison structure**: the 100 anchor respondents are the *same individuals* as Phase 1A's first 100 panel respondents (verified by ID-set equality on `sample_respondents(n, seed=42)`'s deterministic shuffle). For each (respondent, item) the paper reports:
+- Cheap × (model, prompt) prediction (Phase 1A panel data)
+- GPT-4o R1-ON prediction (Anchor B)
+- GPT-4o R1-OFF prediction (Anchor A)
+
+A paired Wilcoxon / paired bootstrap on the per-respondent normalized MAE difference quantifies the cheap-vs-frontier gap with substantially more power than an unpaired N=200 comparison would have given.
+
+### 5.6 Park v2 comparability stance
+
+**Updated 2026-06-01 23:55 after Researcher subagent audit of Park v2 SI Table 3.** Initial worry was that Park's headline 65.67% raw GSS accuracy averaged over 177 mixed items (including easy demographic items like sex, race, citizenship which score 0.93–1.00) wouldn't apples-to-apples with our 12 politically-charged attitudes. **Researcher resolved this** by extracting Park v2 SI Table 3 per-item raw accuracy:
+
+| Our item | Park v2 SI Table 3 raw accuracy | Park v2 normalized accuracy |
+|---|---|---|
+| polviews | 0.55 | 0.66 |
+| partyid | 0.74 | 0.90 |
+| abany | 0.79 | 0.88 |
+| cappun | 0.67 | 0.77 |
+| gunlaw | 0.70 | 0.83 |
+| fechld | 0.48 | 0.75 |
+| fepol | 0.78 | 0.88 |
+| racdif1 | 0.81 | 0.95 |
+| confinan | 0.52 | 0.72 |
+| conlegis | 0.55 | 0.75 |
+| satfin | 0.67 | 0.97 |
+| HELPPOOR | not in Park v2 SI Table 3 | — |
+| **Mean over 11 items** | **0.66 raw** | **0.82 normalized** |
+
+The 11-item mean (0.66) is essentially identical to Park's overall headline (0.6567). The "politically-charged items are systematically harder" worry is **empirically false** — Park's agents do as well on our slice as on the full set.
+
+This unlocks a **clean per-item Park-comparable benchmark**: side-by-side accuracy for each of our 11 items, cheap-panel × P0/P1/P2 vs Park v2's reported numbers.
+
+**Three remaining genuine differences (acknowledged in writeup, not used to dismiss comparison):**
+
+1. **Persona-richness mismatch.** Park's agents have access to 2-hour interview transcripts (mean 6,491 words/transcript) — semi-structured narrative of life history, values, opinions. Our agents have 140 GSS structured variables. Park's higher accuracy partly reflects richer persona inputs, not just better LLMs. **This is the substantive scientific tradeoff our paper measures**: how much accuracy does the cheap-personas-via-public-survey route lose vs the expensive-personas-via-interview route?
+
+2. **Headline number convention.** Park v2's headline 82-86% is normalized by 79.53% human two-week test-retest consistency, not raw. Their raw is 65.67%. GSS 2024 public release has no test-retest, so we report raw accuracy throughout and footnote Park's normalized headline for reader context.
+
+3. **Sample-frame.** Park v2 recruited their own 1,052-respondent stratified panel and ran 2-hour interviews + custom Qualtrics GSS administration. We use public GSS 2024 cross-section. Different respondents, different administration mode.
+
+**Decision** (locked 2026-06-01): we report **two Park-comparable benchmarks** side by side with cheap-panel headline:
+
+(a) **Internal GPT-4o anchor** (§5.5) — same 12 items, same cohort, same R1 protocol. Primary frontier baseline; pairs cleanly with cheap panel for paired statistical comparison.
+
+(b) **Park v2 SI Table 3 per-item accuracy** (this section) — external reference; per-item table shown side-by-side with our results. Specifically the headline summary table in the writeup will read:
+
+| Item | Cheap × P1 (ours) | GPT-4o anchor R1-OFF (ours) | Park v2 (interview agents, raw) |
+
+Park v2's persona-richness advantage (interview vs survey-only personas) is named in the limitations, not used to dismiss the comparison. **Park's 65.67% headline is NOT a comparison target**; per-item Table 3 entries are.
+
+**Sources**: Park v2 SI Table 3, PDF pp. 39–43 (raw accuracy per GSS item, both interview and surveys-only conditions). Park's strict exact-match scoring (SI §5 p.19) matches ours.
 
 ---
 
