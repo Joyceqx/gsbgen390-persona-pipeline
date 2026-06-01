@@ -60,3 +60,7 @@ outputs/gss_phase1_records_*.json
 outputs/phase1a_raw.parquet
 outputs/phase1b_raw.parquet
 outputs/phase1c_*.parquet
+
+# Smoke artifacts not previously covered
+outputs/phase1a_run.log
+outputs/.archive_*

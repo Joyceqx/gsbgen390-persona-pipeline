@@ -8,13 +8,13 @@ is reported as a post-hoc sensitivity aggregate but is NOT a selection input
 
 Locked rule (RESEARCH_DESIGN.md §7):
 
-    candidate cells = {(m, p) : m in {qwen3-max, deepseek-v4-pro,
+    candidate cells = {(m, p) : m in {qwen3-max, deepseek-v3.1-terminus,
                                        llama-4-maverick, kimi-k2-0905},
                                 p in {P0, P1, P2}}  # 12 cells
 
-    Panel locked 2026-05-31 (F'). DeepSeek-V4-Pro runs with reasoning ENABLED
-    via llm_router.REASONING_ENABLED_MODELS — it is the thinking-sensitivity
-    cell. The other three are pure non-thinking. See RESEARCH_DESIGN.md §5.1.
+    Panel locked 2026-05-31 23:52 (F''): all 4 models non-thinking. F' (with
+    V4-Pro thinking sensitivity cell) was scrapped after 5 respondents — see
+    RESEARCH_DESIGN.md §5.1.
 
     # CONSERVATIVE primary metric (parse_fail → normalized_err=1.0).
     # Optimistic legacy metric (parse_fail dropped) reported alongside as
@@ -85,12 +85,12 @@ HUMAN_VARIANCE_PATH = WORK / "outputs" / "primary_eval_human_variance_2024.json"
 QWEN_FALLBACK_MODEL = "qwen/qwen3-max"
 QWEN_FALLBACK_PROMPT = "P0"
 RANDOM_LABEL = "Random"
-# Panel F' (locked 2026-05-31 per Joyce decision; see RESEARCH_DESIGN.md §5.1).
-# 3 China + 1 Western, 3 non-thinking + 1 thinking (DeepSeek V4-Pro is the
-# thinking sensitivity cell — handled by REASONING_ENABLED_MODELS in llm_router).
+# Panel F'' (locked 2026-05-31 23:52 per Joyce decision; see RESEARCH_DESIGN.md §5.1).
+# 3 China + 1 Western, all 4 non-thinking. F' (with v4-pro thinking cell) was
+# scrapped after 5 respondents due to thinking-cell latency + parse-fail trend.
 PANEL_MODELS = (
     "qwen/qwen3-max",
-    "deepseek/deepseek-v4-pro",
+    "deepseek/deepseek-v3.1-terminus",   # F'' swap: was deepseek-v4-pro thinking cell
     "meta-llama/llama-4-maverick",
     "moonshotai/kimi-k2-0905",
 )
@@ -124,12 +124,10 @@ DQ3_PER_ITEM_FAIL_MAX: float = 0.30
 FALLBACK_COST_PCT: float = 0.01
 
 DEFAULT_COST_PER_CALL_USD: dict[str, float] = {
-    # Panel F' costs (OpenRouter-listed per ~1000-input + 50-output, mid-2026).
-    # V4-Pro is the thinking cell so real per-call cost is ~3x the listed value
-    # (extra output tokens for CoT). Inflated here to reflect that for the
-    # selector's cost × parse_fail tiebreak.
+    # Panel F'' costs (OpenRouter-listed per ~1000-input + 50-output, mid-2026).
+    # All 4 are non-thinking so no thinking-overhead inflation.
     "qwen/qwen3-max":                    9.8e-4,
-    "deepseek/deepseek-v4-pro":          1.4e-3,  # V4-Pro × thinking ON ≈ 3x listed
+    "deepseek/deepseek-v3.1-terminus":   3.2e-4,  # F'' swap: V3 lineage non-thinking, OpenRouter mid-2026
     "meta-llama/llama-4-maverick":       1.8e-4,
     "moonshotai/kimi-k2-0905":           7.2e-4,
 }
@@ -744,7 +742,7 @@ def _test_tie_break_cost() -> None:
     rows: list[dict] = []
     for rid in range(20):
         truths = {"P1": (rid % 5) + 1, "P2": (rid % 4) + 1, "P3": (rid % 7) + 1}
-        for model in ("qwen/qwen3-max", "deepseek/deepseek-v4-pro"):
+        for model in ("qwen/qwen3-max", "deepseek/deepseek-v3.1-terminus"):
             for item, truth in truths.items():
                 rows.append({
                     "respondent_id": rid, "model": model, "prompt": "P0",
@@ -758,10 +756,10 @@ def _test_tie_break_cost() -> None:
         human_variance_by_item={"P1": 4.0, "P2": 4.0, "P3": 4.0},
     )
     sel = out["selected_cell"]
-    # Panel F' costs: qwen3-max (9.8e-4) < deepseek-v4-pro (1.4e-3) so qwen wins
-    # the cost tiebreak. (Pre-panel-refresh assertion was the reverse — deepseek-chat
-    # 4.5e-5 < qwen-2.5-72b 6.0e-5 — flipped by the 2026-05-31 cost-table update.)
-    assert sel == {"model": "qwen/qwen3-max", "prompt": "P0"}, sel
+    # Panel F'' costs: deepseek-v3.1-terminus (3.2e-4) < qwen3-max (9.8e-4) so
+    # deepseek wins the cost tiebreak. (F' had deepseek-v4-pro at 1.4e-3 with
+    # qwen winning; the swap to v3.1-terminus flipped the cost ordering.)
+    assert sel == {"model": "deepseek/deepseek-v3.1-terminus", "prompt": "P0"}, sel
     assert out["rationale"] == "ci_overlap_cost_break", out["rationale"]
     print("  [tie_break_cost] PASSED")
 
@@ -772,7 +770,7 @@ def _test_fallback_qwen_p0_tie() -> None:
     rows: list[dict] = []
     for rid in range(20):
         truths = {"P1": (rid % 5) + 1, "P2": (rid % 4) + 1, "P3": (rid % 7) + 1}
-        for model in ("qwen/qwen3-max", "deepseek/deepseek-v4-pro",
+        for model in ("qwen/qwen3-max", "deepseek/deepseek-v3.1-terminus",
                       "meta-llama/llama-4-maverick"):
             for item, truth in truths.items():
                 rows.append({
@@ -784,7 +782,7 @@ def _test_fallback_qwen_p0_tie() -> None:
     df = pd.DataFrame(rows)
     cost_override = {m: 6.0e-5 for m in (
         "qwen/qwen3-max",
-        "deepseek/deepseek-v4-pro",
+        "deepseek/deepseek-v3.1-terminus",
         "meta-llama/llama-4-maverick",
     )}
     out = select_phase1b_cell(
@@ -857,14 +855,14 @@ def _test_parse_fail_conservative_vs_optimistic() -> None:
         for item, truth in truths.items():
             if item == "P1" and rid < 8:
                 rows.append({
-                    "respondent_id": rid, "model": "deepseek/deepseek-v4-pro",
+                    "respondent_id": rid, "model": "deepseek/deepseek-v3.1-terminus",
                     "prompt": "P0", "condition": "Full", "item": item,
                     "true_code": truth, "pred_code": None,
                     "parse_ok": False, "abs_err": None, "sample_position": 1,
                 })
             else:
                 rows.append({
-                    "respondent_id": rid, "model": "deepseek/deepseek-v4-pro",
+                    "respondent_id": rid, "model": "deepseek/deepseek-v3.1-terminus",
                     "prompt": "P0", "condition": "Full", "item": item,
                     "true_code": truth, "pred_code": truth,
                     "parse_ok": True, "abs_err": 0, "sample_position": 1,
@@ -874,7 +872,7 @@ def _test_parse_fail_conservative_vs_optimistic() -> None:
     human_var = {"P1": 4.0, "P2": 4.0, "P3": 4.0}
     out = select_phase1b_cell(df, item_ranges=item_ranges,
                               human_variance_by_item=human_var)
-    deepseek = out["per_cell"]["deepseek/deepseek-v4-pro|P0"]
+    deepseek = out["per_cell"]["deepseek/deepseek-v3.1-terminus|P0"]
     qwen = out["per_cell"]["qwen/qwen3-max|P0"]
     # DQ-1: deepseek's parse_failure_rate ≈ 0.133 > 0.10 → disqualified.
     assert not deepseek["dq1_pass"], deepseek["parse_failure_rate"]
@@ -1011,7 +1009,7 @@ def _test_bootstrap_ci_brackets_point() -> None:
     assert lo == 0.0 and hi == 0.0, (lo, hi)
 
     # Now pick a cell with non-zero MAE: any "other model × P0" with shift = 1.
-    deepseek_p0 = df[(df["model"] == "deepseek/deepseek-v4-pro") & (df["prompt"] == "P0")]
+    deepseek_p0 = df[(df["model"] == "deepseek/deepseek-v3.1-terminus") & (df["prompt"] == "P0")]
     point, lo, hi = _cell_bootstrap_ci(deepseek_p0, item_ranges, B=2_000, seed=1)
     assert point is not None and lo is not None and hi is not None
     assert 0.0 <= lo <= point <= hi <= 1.0, (lo, point, hi)

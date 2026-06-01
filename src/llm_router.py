@@ -62,32 +62,32 @@ WORK = Path("/Users/joyce/Developer/gsbgen390")
 #                       architecture as locked panel's Kimi, smaller drift.
 #                       K2.5 / K2.6 are hybrid (thinking-tuned) and reserved as
 #                       potential future sensitivity cells.
+# Panel F'' (locked 2026-05-31 23:52 per Joyce decision after 5 respondents
+# on F'): swap deepseek-v4-pro (thinking sensitivity cell) → v3.1-terminus
+# (non-thinking V3 lineage). Trigger: V4-Pro showed 6 parse failures in the
+# first 5 respondents (7.3% — within DQ-1 ceiling but trending poorly, and
+# the V4-Pro thinking budget made the run ~4x slower than non-thinking). The
+# panel is now 4 non-thinking models; the "thinking-vs-non-thinking
+# sensitivity cell" methodological contribution is dropped in favor of
+# faster, more reliable execution. The archived V4-Pro JSON for the first
+# 5 respondents is at outputs/.archive_v4pro_attempt_2026-05-31.json as a
+# methodology footnote.
 MODEL_PANEL_PRIMARY: tuple[str, ...] = (
     "qwen/qwen3-max",                    # China, Qwen 3 flagship non-thinking
-    "deepseek/deepseek-v4-pro",          # China, V4 hybrid w/ reasoning ON (thinking sensitivity cell)
+    "deepseek/deepseek-v3.1-terminus",   # China, V3 lineage final non-thinking (replaces V4-Pro thinking)
     "meta-llama/llama-4-maverick",       # Western (Meta), Llama 4 instruct non-thinking
     "moonshotai/kimi-k2-0905",           # China, K2 non-thinking refresh
 )
 
-# Per-model reasoning config for hybrid models. Currently only DeepSeek V4-Pro
-# runs with reasoning ENABLED — it serves as the thinking sensitivity cell per
-# RESEARCH_DESIGN.md §5.1. Other panel models are pure non-thinking and ignore
-# this dict. Format follows OpenRouter's `reasoning` parameter schema:
-#   {"reasoning": {"effort": "high"}}        — heavy chain-of-thought
-#   {"reasoning": {"max_tokens": <n>}}       — bounded
-#   {"reasoning": {"enabled": True}}         — default thinking ON
-# Smoke output confirms the exact accepted format per model.
-# Thinking models need a token budget large enough that the chain-of-thought
-# AND the final answer both fit. With reasoning effort='medium' and the
-# default 64-token cap, V4-Pro's CoT eats the entire budget and the final
-# integer never gets emitted (smoke 2026-05-31 showed 3 consecutive empty
-# responses). Use `reasoning.max_tokens` to bound the CoT and a much higher
-# overall `max_tokens` so the final integer always fits.
+# Per-model reasoning config for hybrid models. Currently EMPTY — panel F''
+# is all non-thinking, no thinking sensitivity cell. Keep the constant +
+# call_llm_meta integration so a future thinking-cell can be added without
+# code change (just populate this dict).
 REASONING_ENABLED_MODELS: dict[str, dict] = {
-    "deepseek/deepseek-v4-pro": {"max_tokens": 400},  # bounds the CoT
+    # No thinking cells in current panel. Keep schema available for future use:
+    #   {"deepseek/deepseek-v4-pro": {"max_tokens": 400}}
 }
-# Token budget for thinking calls: CoT (≤400) + format + final answer + slack.
-REASONING_MODEL_MAX_TOKENS: int = 1024
+REASONING_MODEL_MAX_TOKENS: int = 1024  # used when REASONING_ENABLED_MODELS populated
 
 # Anchor model — Park-comparable; run on N=100 subset only. Available via
 # OpenRouter as "openai/gpt-4o-..." or directly via OpenAI SDK.
@@ -128,15 +128,13 @@ MODEL_ANCHOR: str = "openai/gpt-4o-2024-08-06"
 #      you locked.
 #   4. Launch paid Phase 1A.
 PROVIDER_LOCK: dict[str, str] = {
-    # Panel F' locked 2026-05-31 from `python3 src/llm_router.py --smoke-panel`.
-    # Qwen served by Alibaba official (better provenance than 3rd-party);
-    # DeepSeek V4-Pro thinking ON confirmed (52 output tokens + 204-char reasoning).
-    # OpenRouter `fingerprint` returned None for all 4 — provenance via
-    # `provider` + `model_returned` fields written per record.
-    "qwen/qwen3-max":              "Alibaba",
-    "deepseek/deepseek-v4-pro":    "DeepInfra",
-    "meta-llama/llama-4-maverick": "DeepInfra",
-    "moonshotai/kimi-k2-0905":     "Novita",
+    # Panel F'' locked 2026-05-31 23:55 from `python3 src/llm_router.py --smoke-panel`.
+    # v3.1-terminus served by DeepInfra (same provider as V4-Pro was). Other 3
+    # providers unchanged from F'. All 4 models output 1-2 tokens (non-thinking).
+    "qwen/qwen3-max":                    "Alibaba",
+    "deepseek/deepseek-v3.1-terminus":   "DeepInfra",
+    "meta-llama/llama-4-maverick":       "DeepInfra",
+    "moonshotai/kimi-k2-0905":           "Novita",
 }
 
 # Default per-call hyperparameters
@@ -578,14 +576,22 @@ def _self_test_provider_lock_contract() -> None:
         assert eb["provider"]["allow_fallbacks"] is False, eb
         assert "reasoning" not in eb, eb
 
-        # Case 3: REASONING_ENABLED model → reasoning + include_reasoning present
+        # Case 3: REASONING_ENABLED model → reasoning + include_reasoning present.
+        # Panel F'' has REASONING_ENABLED_MODELS empty by design, so inject a
+        # synthetic entry just for this test to verify the contract still holds
+        # for any future thinking sensitivity cell.
         captured.clear()
         PROVIDER_LOCK.clear()
-        call_llm_meta("s", "u", model="deepseek/deepseek-v4-pro", seed=42)
-        eb = captured[0]["extra_body"]
-        assert eb["reasoning"] == REASONING_ENABLED_MODELS["deepseek/deepseek-v4-pro"], eb
-        assert eb["include_reasoning"] is True, eb
-        assert eb["provider"]["allow_fallbacks"] is False, eb
+        SYNTHETIC = {"max_tokens": 400}
+        REASONING_ENABLED_MODELS["synthetic/thinking-test"] = SYNTHETIC
+        try:
+            call_llm_meta("s", "u", model="synthetic/thinking-test", seed=42)
+            eb = captured[0]["extra_body"]
+            assert eb["reasoning"] == SYNTHETIC, eb
+            assert eb["include_reasoning"] is True, eb
+            assert eb["provider"]["allow_fallbacks"] is False, eb
+        finally:
+            REASONING_ENABLED_MODELS.pop("synthetic/thinking-test", None)
 
         # Case 4: OpenAI-direct path (gpt-4o anchor) → no extra_body, seed top-level
         captured.clear()

@@ -50,7 +50,7 @@ CONDITION_LABEL = {
 # Cheap-panel real models (deterministic order; matters for the seeded random pick).
 PANEL_MODELS = [
     "qwen/qwen3-max",
-    "deepseek/deepseek-v4-pro",
+    "deepseek/deepseek-v3.1-terminus",   # F'' swap: was deepseek-v4-pro thinking cell
     "meta-llama/llama-4-maverick",
     "moonshotai/kimi-k2-0905",
 ]
