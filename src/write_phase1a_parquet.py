@@ -49,10 +49,10 @@ CONDITION_LABEL = {
 
 # Cheap-panel real models (deterministic order; matters for the seeded random pick).
 PANEL_MODELS = [
-    "qwen/qwen-2.5-72b-instruct",
-    "deepseek/deepseek-chat",
-    "meta-llama/llama-3.3-70b-instruct",
-    "moonshotai/kimi-k2",
+    "qwen/qwen3-max",
+    "deepseek/deepseek-v4-pro",
+    "meta-llama/llama-4-maverick",
+    "moonshotai/kimi-k2-0905",
 ]
 
 RANDOM_LABEL = "Random"
@@ -378,7 +378,7 @@ def _test_provenance_columns_e2e(tmp_path: Path) -> None:
     # call_llm_meta + score.update(call_meta) + score["error_type"]).
     rec = {
         "respondent_id": 0, "condition": "full",
-        "model": "qwen/qwen-2.5-72b-instruct",
+        "model": "qwen/qwen3-max",
         "prompt_id": "P0", "prompt_version": "v1",
         "template_hash": "abc123" + "00" * 5, "n_samples": 1,
         "per_item_scores": {
@@ -389,7 +389,7 @@ def _test_provenance_columns_e2e(tmp_path: Path) -> None:
                 "error_type": "ok",
                 "provider": "DeepInfra",
                 "system_fingerprint": "fp_44709d6fcb",
-                "model_returned": "qwen/qwen-2.5-72b-instruct",
+                "model_returned": "qwen/qwen3-max",
                 "tokens_in": 928, "tokens_out": 3,
             }],
             "ABANY": [{
@@ -413,7 +413,7 @@ def _test_provenance_columns_e2e(tmp_path: Path) -> None:
     assert polviews["error_type"] == "ok"
     assert polviews["provider"] == "DeepInfra"
     assert polviews["system_fingerprint"] == "fp_44709d6fcb"
-    assert polviews["model_returned"] == "qwen/qwen-2.5-72b-instruct"
+    assert polviews["model_returned"] == "qwen/qwen3-max"
     assert polviews["tokens_in"] == 928 and polviews["tokens_out"] == 3
     assert abany["error_type"] == "provider_error"
     assert abany["provider"] is None
@@ -438,7 +438,7 @@ def _test_provenance_columns_e2e(tmp_path: Path) -> None:
     polviews_back = df2[df2["item"] == "POLVIEWS"].iloc[0]
     assert polviews_back["provider"] == "DeepInfra"
     assert polviews_back["system_fingerprint"] == "fp_44709d6fcb"
-    assert polviews_back["model_returned"] == "qwen/qwen-2.5-72b-instruct"
+    assert polviews_back["model_returned"] == "qwen/qwen3-max"
     assert polviews_back["error_type"] == "ok"
     assert int(polviews_back["tokens_in"]) == 928
     abany_back = df2[df2["item"] == "ABANY"].iloc[0]

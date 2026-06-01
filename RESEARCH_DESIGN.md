@@ -80,17 +80,32 @@ Two layers:
 
 **Locked 2026-05-28 per Bayati signoff.** The Phase 1A panel arm is a 4-model × 3-prompt factorial on N=200 panel respondents (`sample_respondents(200, seed=42)`).
 
-### 5.1 Models (4 cheap + 1 anchor)
+### 5.1 Models (4-cell panel + 1 anchor) — Panel F'
 
-| Slot | Model | Provider | Why |
-|---|---|---|---|
-| Cheap | Qwen-2.5-72B-Instruct | Alibaba | Strong instruction-following |
-| Cheap | DeepSeek-V3.1 | DeepSeek | Cheap, strong reasoning |
-| Cheap | Llama-3.3-70B-Instruct | Meta | Western-trained (cross-family balance) |
-| Cheap | Kimi K2 | Moonshot | Long-context, 4th family |
-| Anchor | GPT-4o | OpenAI | Park v2 reference; runs only the N=100 selection subset, P0 only |
+**Locked 2026-05-31** (Joyce decision after Researcher subagent audit; supersedes the 2026-05-09 OSF-era panel which had drifted ~14 months out of date). Cross-family balance preserved: 3 China-trained + 1 Western. Methodological structure: **3 non-thinking main cells + 1 thinking sensitivity cell** to provide an empirical comparison of reasoning vs non-reasoning models on persona-attitude prediction.
 
-3 China-trained + 1 Western-trained on the cheap side. GPT-4o anchor is a second Western reference for Park comparison.
+| Slot | Model (OpenRouter slug) | Provider (locked) | Type | Cost/call | Role |
+|---|---|---|---|---|---|
+| 1 (China) | `qwen/qwen3-max` | Alibaba (official) | non-thinking | $0.00098 | Main cell. Newer-flagship Qwen 3 instruct; description ("instruction following, multilingual, long-tail knowledge") matches GSS task. `supported_parameters` lacks `reasoning` → pure non-thinking architecture. |
+| 2 (China) | `deepseek/deepseek-v4-pro` | DeepInfra | **thinking ON (effort: medium, max_tokens: 400)** | ~$0.0014 | **Thinking sensitivity cell.** DeepSeek's R1-paper pedigree makes V4-Pro the natural thinking choice; 1.6T MoE / 49B activated. Run with reasoning enabled to test the hypothesis "thinking models help persona simulation" (PB&J / Reasoning-or-Overthinking literature predicts no gain on classification). |
+| 3 (Western) | `meta-llama/llama-4-maverick` | DeepInfra | non-thinking | $0.00018 | Main cell. Sole Western family; Llama 4 instruct succeeds Llama-3.3-70B. |
+| 4 (China) | `moonshotai/kimi-k2-0905` | Novita | non-thinking | $0.00072 | Main cell. 2025-09 non-thinking refresh of K2-0711; same MoE architecture, smaller drift. (K2.5 / K2.6 are hybrid and reserved as future sensitivity cells.) |
+| Anchor | `openai/gpt-4o-2024-08-06` | OpenAI direct | non-thinking | $148 total | Park v2 reference (dated snapshot per round-4 #3); N=100 selection subset, P0 only, n_samples=2. |
+
+**V4-Pro thinking-cell behavior verified at smoke 2026-05-31**: 3 consecutive calls returned format-compliant integer ("4") with reasoning text captured (135-277 output tokens including ≤400-token CoT). DeepSeek R1's "format compliance" limitation surfaced once at smoke (effort=high, no `reasoning.max_tokens` bound, 64-token default — CoT consumed the entire budget); mitigated by raising max_tokens to 1024 and bounding the CoT explicitly. Selector DQ-1 (parse_failure_rate ≤ 0.10) is the live gate — if V4-Pro thinking still parse_fails > 10% on the paid Phase 1A panel, it gets DQ'd out, and the writeup reports that as a finding consistent with the R1 paper.
+
+**Methodological contribution from this panel structure**: comparing the thinking cell's MAE + parse-rate against the 3 non-thinking cells answers "does explicit reasoning help persona simulation?" — one of three publishable outcomes regardless of result direction:
+  - V4-Pro thinking ≈ other cells → confirms PB&J finding extends to native thinking models
+  - V4-Pro thinking dominant → challenges PB&J; suggests Park v2's GPT-4o anchor's strength was implicit reasoning
+  - V4-Pro thinking DQ-fails → confirms DeepSeek R1 paper's own "structured output" limitation as a panel-relevant constraint
+
+**Citations supporting panel choice**:
+- PB&J (arXiv:2504.17993): plain CoT gives ~0 gain on OpinionQA.
+- "Reasoning or Overthinking" (arXiv:2506.04574): classification accuracy underperforms with deliberative reasoning.
+- DeepSeek-R1 Nature paper (arXiv:2501.12948): structured output + format compliance flagged as limitation.
+- Sun et al. 2025 (arXiv:2506.21587): DeepSeek-V3 / Qwen2.5 / Llama-3.3 / GPT-4o cross-cultural ANES comparison establishes cheap-LLM-vs-frontier baseline competitiveness on opinion prediction.
+
+**Cost summary**: average cheap cell ~$0.00059/call (vs $0.00037 pre-refresh, +60%); Phase 1A ~$22 (vs $14, +$8); Phase 1 total ~$740 (vs $732). The +$8 buys (a) ~6-month-newer model architectures, (b) the thinking-sensitivity cell methodological contribution, (c) Alibaba-official Qwen provenance.
 
 ### 5.2 Prompts (3 format candidates for §7 selection)
 

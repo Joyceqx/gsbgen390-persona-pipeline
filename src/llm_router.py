@@ -15,7 +15,7 @@ construction, or result accumulation. Those live in gss_pipeline.py.
 Usage:
     from llm_router import call_panel, MODEL_PANEL_PRIMARY, MODEL_ANCHOR
     responses = call_panel(system, user, models=MODEL_PANEL_PRIMARY)
-    # responses = {'qwen-2.5-72b': '4', 'deepseek-v3.1': '4', 'llama-3.3-70b': '5', 'kimi-k2': '4'}
+    # responses = {'qwen3-max': '4', 'deepseek-v4-pro': '4', 'llama-4-maverick': '5', 'kimi-k2-0905': '4'}
 
 API key:
     set environment variable OPENROUTER_API_KEY
@@ -39,18 +39,55 @@ WORK = Path("/Users/joyce/Developer/gsbgen390")
 # OpenRouter model slugs — verify exact slugs at https://openrouter.ai/models
 # before launching Phase 1b. These are reasonable defaults as of 2026-05.
 #
-# Cross-family balance (locked 2026-05-09 night per Audit-3 review): the
-# original all-China panel (Qwen + DeepSeek + MiniMax + Kimi) was swapped
-# pre-OSF to introduce one Western-trained model. MiniMax-M1 → Llama-3.3-70B-
-# Instruct (Meta); the panel now reads as 3 China-trained + 1 Western, which
-# preserves cost-efficiency while defending Western-venue cross-family
-# generalization claims. Llama-3.3-70B is comparable in OpenRouter pricing.
+# Cross-family balance: 3 China-trained + 1 Western. Locked 2026-05-09 pre-OSF
+# (MiniMax-M1 → Llama-3.3-70B-Instruct swap per Audit-3 review). Panel
+# subsequently refreshed 2026-05-31 per Joyce decision after Researcher subagent
+# audit (panel F'): the original 4 models had drifted ~14 months out of date and
+# all 4 families had newer, more capable instruct variants on OpenRouter.
+#
+# F' rationale (full table + per-slot citations in RESEARCH_DESIGN.md §5.1):
+#   - qwen3-max:        Newer flagship Qwen 3; model-card description ("instruction
+#                       following, multilingual, long-tail knowledge") matches GSS
+#                       task better than agent/coding-tuned qwen3.7-max. Pure
+#                       non-thinking (supported_parameters lacks `reasoning`).
+#   - deepseek-v4-pro:  Latest DeepSeek (1.6T MoE, 49B activated); hybrid model
+#                       used with reasoning ENABLED as the thinking sensitivity
+#                       cell — the panel's methodological contribution is
+#                       comparing thinking vs non-thinking on persona simulation.
+#                       DeepSeek's R1-paper pedigree makes this the natural
+#                       thinking-cell choice.
+#   - llama-4-maverick: Latest Meta Llama 4 instruct; non-thinking; sole Western
+#                       family preserving cross-family balance.
+#   - kimi-k2-0905:     2025-09 non-thinking refresh of K2-0711; same MoE
+#                       architecture as locked panel's Kimi, smaller drift.
+#                       K2.5 / K2.6 are hybrid (thinking-tuned) and reserved as
+#                       potential future sensitivity cells.
 MODEL_PANEL_PRIMARY: tuple[str, ...] = (
-    "qwen/qwen-2.5-72b-instruct",
-    "deepseek/deepseek-chat",            # V3.1 family
-    "meta-llama/llama-3.3-70b-instruct", # Western (Meta) — swapped in pre-OSF for cross-family balance
-    "moonshotai/kimi-k2",
+    "qwen/qwen3-max",                    # China, Qwen 3 flagship non-thinking
+    "deepseek/deepseek-v4-pro",          # China, V4 hybrid w/ reasoning ON (thinking sensitivity cell)
+    "meta-llama/llama-4-maverick",       # Western (Meta), Llama 4 instruct non-thinking
+    "moonshotai/kimi-k2-0905",           # China, K2 non-thinking refresh
 )
+
+# Per-model reasoning config for hybrid models. Currently only DeepSeek V4-Pro
+# runs with reasoning ENABLED — it serves as the thinking sensitivity cell per
+# RESEARCH_DESIGN.md §5.1. Other panel models are pure non-thinking and ignore
+# this dict. Format follows OpenRouter's `reasoning` parameter schema:
+#   {"reasoning": {"effort": "high"}}        — heavy chain-of-thought
+#   {"reasoning": {"max_tokens": <n>}}       — bounded
+#   {"reasoning": {"enabled": True}}         — default thinking ON
+# Smoke output confirms the exact accepted format per model.
+# Thinking models need a token budget large enough that the chain-of-thought
+# AND the final answer both fit. With reasoning effort='medium' and the
+# default 64-token cap, V4-Pro's CoT eats the entire budget and the final
+# integer never gets emitted (smoke 2026-05-31 showed 3 consecutive empty
+# responses). Use `reasoning.max_tokens` to bound the CoT and a much higher
+# overall `max_tokens` so the final integer always fits.
+REASONING_ENABLED_MODELS: dict[str, dict] = {
+    "deepseek/deepseek-v4-pro": {"max_tokens": 400},  # bounds the CoT
+}
+# Token budget for thinking calls: CoT (≤400) + format + final answer + slack.
+REASONING_MODEL_MAX_TOKENS: int = 1024
 
 # Anchor model — Park-comparable; run on N=100 subset only. Available via
 # OpenRouter as "openai/gpt-4o-..." or directly via OpenAI SDK.
@@ -91,13 +128,15 @@ MODEL_ANCHOR: str = "openai/gpt-4o-2024-08-06"
 #      you locked.
 #   4. Launch paid Phase 1A.
 PROVIDER_LOCK: dict[str, str] = {
-    # Locked 2026-05-31 from `python3 src/llm_router.py --smoke-panel`.
+    # Panel F' locked 2026-05-31 from `python3 src/llm_router.py --smoke-panel`.
+    # Qwen served by Alibaba official (better provenance than 3rd-party);
+    # DeepSeek V4-Pro thinking ON confirmed (52 output tokens + 204-char reasoning).
     # OpenRouter `fingerprint` returned None for all 4 — provenance via
     # `provider` + `model_returned` fields written per record.
-    "qwen/qwen-2.5-72b-instruct":        "DeepInfra",
-    "deepseek/deepseek-chat":            "DeepInfra",
-    "meta-llama/llama-3.3-70b-instruct": "AkashML",
-    "moonshotai/kimi-k2":                "Novita",
+    "qwen/qwen3-max":              "Alibaba",
+    "deepseek/deepseek-v4-pro":    "DeepInfra",
+    "meta-llama/llama-4-maverick": "DeepInfra",
+    "moonshotai/kimi-k2-0905":     "Novita",
 }
 
 # Default per-call hyperparameters
@@ -274,10 +313,18 @@ def call_llm_meta(
     last_exc: Exception | None = None
     for attempt in range(max_retries):
         try:
+            # Reasoning-enabled models need a larger token budget so the
+            # final answer survives after the CoT (see REASONING_MODEL_MAX_TOKENS
+            # constant). Caller-supplied max_tokens (if explicitly higher than
+            # the default) wins.
+            effective_max_tokens = max_tokens
+            if model in REASONING_ENABLED_MODELS and max_tokens == DEFAULT_MAX_TOKENS:
+                effective_max_tokens = REASONING_MODEL_MAX_TOKENS
+
             create_kwargs: dict = {
                 "model": actual_model,
                 "temperature": temperature,
-                "max_tokens": max_tokens,
+                "max_tokens": effective_max_tokens,
                 "messages": [
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
@@ -288,11 +335,15 @@ def call_llm_meta(
                 if seed is not None:
                     create_kwargs["seed"] = seed
             else:
-                # OpenRouter: seed + provider preferences via extra_body.
-                # Per Reviewer round-3 P1 #5: enforce allow_fallbacks=False +
-                # require_parameters=True on every call so a parameter-
-                # supporting provider is chosen and silently held mid-run.
-                # If PROVIDER_LOCK has an entry for this model, pin to it.
+                # OpenRouter: seed + provider preferences + (per-model) reasoning
+                # config via extra_body. Per Reviewer round-3 P1 #5: enforce
+                # allow_fallbacks=False + require_parameters=True on every call
+                # so a parameter-supporting provider is chosen and silently held
+                # mid-run. If PROVIDER_LOCK has an entry for this model, pin to
+                # it. If model is in REASONING_ENABLED_MODELS (panel F': only
+                # deepseek-v4-pro), append the reasoning sub-dict so OpenRouter
+                # actually enables chain-of-thought for the thinking sensitivity
+                # cell (RESEARCH_DESIGN.md §5.1).
                 provider_prefs: dict = {
                     "allow_fallbacks": False,
                     "require_parameters": True,
@@ -302,11 +353,23 @@ def call_llm_meta(
                 extra_body: dict = {"provider": provider_prefs}
                 if seed is not None:
                     extra_body["seed"] = seed
+                if model in REASONING_ENABLED_MODELS:
+                    extra_body["reasoning"] = REASONING_ENABLED_MODELS[model]
+                    # Capture the reasoning text in the response so we can audit
+                    # what the thinking cell concluded (optional but useful for
+                    # methodology section of the paper).
+                    extra_body["include_reasoning"] = True
                 create_kwargs["extra_body"] = extra_body
             resp = client.chat.completions.create(**create_kwargs)
             usage = getattr(resp, "usage", None)
+            # When the model is a thinking sensitivity cell (REASONING_ENABLED_MODELS),
+            # the reasoning text may live on resp.choices[0].message.reasoning per
+            # OpenRouter's reasoning-content spec. Capture if present so we can
+            # audit what the thinking cell concluded.
+            message = resp.choices[0].message
             return {
-                "text": (resp.choices[0].message.content or "").strip(),
+                "text": (message.content or "").strip(),
+                "reasoning": getattr(message, "reasoning", None),
                 "model_returned": getattr(resp, "model", None),
                 "system_fingerprint": getattr(resp, "system_fingerprint", None),
                 # OpenRouter exposes `provider` on the response object; OpenAI does not.
@@ -365,7 +428,7 @@ def call_panel(
 # Smoke test (requires API keys)
 # ---------------------------------------------------------------------------
 
-def _smoke_one_call(model: str = "qwen/qwen-2.5-72b-instruct"):
+def _smoke_one_call(model: str = "qwen/qwen3-max"):
     """Single-call smoke test. Uses call_llm_meta so provider / fingerprint
     / token-usage are visible — the smoke output is the canonical source for
     populating PROVIDER_LOCK before paid Phase 1A.
@@ -389,6 +452,10 @@ def _smoke_one_call(model: str = "qwen/qwen-2.5-72b-instruct"):
         print(f"system_fingerprint: {out['system_fingerprint']!r}")
         print(f"model_returned:     {out['model_returned']!r}")
         print(f"tokens_in/out:      {out['tokens_in']} / {out['tokens_out']}")
+        if out.get("reasoning"):
+            rsn = out["reasoning"]
+            preview = rsn[:300] + ("..." if len(rsn) > 300 else "")
+            print(f"reasoning (thinking cell): {preview!r}")
         return out
     except LLMError as e:
         print(f"ERROR: {e}")
@@ -408,16 +475,21 @@ def _smoke_panel():
         "Output ONLY a single integer code (1-7)."
     )
     print(f"\n=== smoke test: panel of {len(MODEL_PANEL_PRIMARY)} models ===")
-    print(f"{'model':<40s} {'provider':<20s} {'response':<10s} fingerprint")
-    print("-" * 95)
+    print(f"{'model':<40s} {'provider':<20s} {'response':<10s} {'tok_in/out':<12s} reasoning?")
+    print("-" * 110)
     results: dict[str, dict] = {}
     for m in MODEL_PANEL_PRIMARY:
         try:
             out = call_llm_meta(system, user, model=m)
             results[m] = out
+            rsn_flag = (
+                f"YES ({len(out['reasoning'])} chars)"
+                if out.get("reasoning") else "no"
+            )
+            tok_str = f"{out['tokens_in']}/{out['tokens_out']}"
             print(
                 f"{m:<40s} {str(out['provider']):<20s} "
-                f"{out['text']!r:<10s} {out['system_fingerprint']!r}"
+                f"{out['text']!r:<10s} {tok_str:<12s} {rsn_flag}"
             )
         except LLMError as e:
             results[m] = {"error": str(e)}
@@ -456,6 +528,7 @@ def _self_test_provider_lock_contract() -> None:
 
             class _Msg:
                 content = "4"
+                reasoning = None  # populated when reasoning ON
 
             class _Choice:
                 message = _Msg()
@@ -483,28 +556,39 @@ def _self_test_provider_lock_contract() -> None:
     real_openai = _openai_pkg.OpenAI
     _openai_pkg.OpenAI = _FakeClient
     try:
-        # Case 1: model NOT in PROVIDER_LOCK → no `order` key
+        # Case 1: non-reasoning model NOT in PROVIDER_LOCK → no `order`, no `reasoning`
         captured.clear()
         PROVIDER_LOCK.clear()
-        out = call_llm_meta("s", "u", model="qwen/qwen-2.5-72b-instruct", seed=42)
+        out = call_llm_meta("s", "u", model="qwen/qwen3-max", seed=42)
         assert out["text"] == "4"
         eb = captured[0]["extra_body"]
         assert eb["provider"]["allow_fallbacks"] is False, eb
         assert eb["provider"]["require_parameters"] is True, eb
         assert "order" not in eb["provider"], eb
+        assert "reasoning" not in eb, eb
+        assert "include_reasoning" not in eb, eb
         assert eb["seed"] == 42, eb
 
-        # Case 2: model IS in PROVIDER_LOCK → order pinned to that provider
+        # Case 2: non-reasoning model IS in PROVIDER_LOCK → order pinned
         captured.clear()
-        PROVIDER_LOCK["qwen/qwen-2.5-72b-instruct"] = "DeepInfra"
-        call_llm_meta("s", "u", model="qwen/qwen-2.5-72b-instruct", seed=42)
+        PROVIDER_LOCK["qwen/qwen3-max"] = "DeepInfra"
+        call_llm_meta("s", "u", model="qwen/qwen3-max", seed=42)
         eb = captured[0]["extra_body"]
         assert eb["provider"]["order"] == ["DeepInfra"], eb
         assert eb["provider"]["allow_fallbacks"] is False, eb
+        assert "reasoning" not in eb, eb
 
-        # Case 3: OpenAI-direct path (gpt-4o anchor) → no extra_body, seed top-level
+        # Case 3: REASONING_ENABLED model → reasoning + include_reasoning present
         captured.clear()
         PROVIDER_LOCK.clear()
+        call_llm_meta("s", "u", model="deepseek/deepseek-v4-pro", seed=42)
+        eb = captured[0]["extra_body"]
+        assert eb["reasoning"] == REASONING_ENABLED_MODELS["deepseek/deepseek-v4-pro"], eb
+        assert eb["include_reasoning"] is True, eb
+        assert eb["provider"]["allow_fallbacks"] is False, eb
+
+        # Case 4: OpenAI-direct path (gpt-4o anchor) → no extra_body, seed top-level
+        captured.clear()
         call_llm_meta("s", "u", model="openai/gpt-4o-2024-08-06", seed=42)
         assert "extra_body" not in captured[0], captured[0]
         assert captured[0]["seed"] == 42, captured[0]
@@ -530,7 +614,7 @@ if __name__ == "__main__":
     ap.add_argument("--smoke-anchor", action="store_true", help="GPT-4o anchor")
     ap.add_argument("--self-test", action="store_true",
                     help="run offline self-tests (mocks OpenAI client; no paid calls)")
-    ap.add_argument("--model", default="qwen/qwen-2.5-72b-instruct")
+    ap.add_argument("--model", default="qwen/qwen3-max")
     args = ap.parse_args()
     if args.self_test:
         import sys as _sys
