@@ -542,7 +542,7 @@ python3 src/gss_driver.py --phase1b-anchor       # GPT-4o × P0 × N=100 (~$148)
 # 3. §7 joint (model, prompt) cell selector (free, <1 min)
 python3 src/select_phase1b_cell.py outputs/phase1a_raw.parquet
 
-# 4. Phase 1B (~$58, ~3-7 days) — cell locked 2026-07-12: Random × P1 (§7.1)
+# 4. Phase 1B (~$87, ~3-7 days) — cell locked 2026-07-12: Random × P1 (§7.1)
 #    Runs on full N=3,309 × 6 conditions (Full + 4 bin-LOO +
 #    random_battery_drop; §8). Headline aggregation excludes the §7 selector
 #    cohort (N=3,109 disjoint), full cohort (N=3,309) reported as sensitivity.
@@ -574,11 +574,11 @@ python3 src/shapley_decomposition.py --input outputs/phase1c_shapley_*.parquet
 | Smoke (panel + pipeline) | ~$0.01 | `llm_router --smoke-panel` (4 calls for PROVIDER_LOCK) + `gss_driver --smoke` (1 resp × Qwen × P0 × Full × n=2 ≈ 16 calls) |
 | Phase 1A factorial (4 models × 3 prompts × N=200 × Full × n=2 × ballot filter) | **~$14** | Down from ~$51 — LOO deferred to Phase 1B + ballot-off pre-filter (Reviewer round-2 Q3) |
 | GPT-4o anchor (P0 only, N=100, primary + sensitivity, n=2) | ~$148 | One run serves Phase 1A + 1B reporting |
-| Phase 1B (Random × P1 × N=3,309 × 6 conditions × n=1 × ballot filter) | **~$58** | 5 → 6 conditions 2026-07-12 (+random_battery_drop, ~$10); ballot-off pre-filter applied |
-| **Subtotal pre-Battery LOO** | **~$223** | |
+| Phase 1B (Random × P1 × N=3,309 × 6 conditions × n=1 × ballot filter) | **~$87** | Re-estimated 2026-07-12 at smoke time with verified OpenRouter prices (qwen $0.78/M, kimi $0.60/M, deepseek $0.27/M, llama $0.20/M input) × ~157.5k calls × ~1,190 avg input tokens (rendered per-condition, calibrated to Phase 1A empirical tokens_in). Higher than the earlier ~$58: random dispatch mixes in the two expensive models uniformly, where the old estimate assumed one cheap cell. |
+| **Subtotal pre-Battery LOO** | **~$250** | |
 | Phase 1C Battery LOO (34 batteries × 12 items × N=3,309) | ~$481 **(contingent)** | May be dropped or reduced — the §8 Layer-2 randomized ablation covers the same estimand; decision after Phase 1B (§9.1) |
 | Phase 1C Shapley (11 multi-bin conditions × N=200) | ~$38 | |
-| **Total Phase 1** | **~$742 max / ~$261 if Battery LOO dropped** | Assumes no prompt caching; verify OpenRouter prices at smoke time |
+| **Total Phase 1** | **~$769 max / ~$288 if Battery LOO dropped** | No prompt caching assumed; prices verified 2026-07-12 |
 
 Reduction options if budget tightens: Battery LOO at N=1,500 (saves ~$263), attitudinal-bin batteries only (saves ~$209), or defer Battery LOO to Phase 1D.
 

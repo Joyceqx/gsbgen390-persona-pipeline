@@ -11,7 +11,7 @@ Stanford GSB master's thesis, Spring 2026. Lead: Joyce Yu. Advisor: Prof. Mohsen
 | Phase 1A factorial (4 models × 3 prompts × N=200) | ✅ done → `outputs/phase1a_raw.parquet` |
 | GPT-4o anchors A (R1-OFF) + B (R1-ON), N=100 | ✅ done → `outputs/anchor_r1{off,on}_n100.json` |
 | §7 selector + §7.1 advisor decision | ✅ cell locked: **Random × P1** |
-| Phase 1B (N=3,309 × 6 conditions, ~$58) | ⏳ next — see "How to run" |
+| Phase 1B (N=3,309 × 6 conditions, ~$87) | ⏳ next — see "How to run" |
 | Layer-2 paired-difference analyzer | ⏳ pending (before Phase 1B analysis) |
 | Phase 1C (Battery LOO $481 / Shapley $38) | Battery LOO contingent on Layer-2 results |
 
@@ -54,7 +54,7 @@ python3 src/llm_router.py --smoke-panel
 # 2. Driver smoke (~$0.01)
 python3 src/gss_driver.py --smoke
 
-# 3. Phase 1B (~$58, 3-7 days; resumable — rerun the same command to continue)
+# 3. Phase 1B (~$87, 3-7 days; resumable — rerun the same command to continue)
 python3 src/gss_driver.py --phase1b --phase1b-model random --phase1b-prompt P1
 
 # 4. Consolidate Phase 1B parquet (NOTE: flags are REQUIRED — guards refuse otherwise)
@@ -67,7 +67,7 @@ python3 src/regression_baseline.py --input outputs/phase1b_raw.parquet \
     --output outputs/phase1b_r2_baseline.json
 ```
 
-Full sequence + Phase 1C: `RESEARCH_DESIGN.md` §10.3. Budget: §11 (~$742 max / ~$261 if Battery LOO is dropped).
+Full sequence + Phase 1C: `RESEARCH_DESIGN.md` §10.3. Budget: §11 (~$769 max / ~$288 if Battery LOO is dropped).
 
 ## Privacy
 

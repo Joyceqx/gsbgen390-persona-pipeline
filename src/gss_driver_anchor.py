@@ -758,7 +758,7 @@ def _cli():
             "clear OSF §13.2 pointer — analyzer is ready, orchestration runtime "
             "deferred until before Phase 1c.) Manual flag composition (--n, "
             "--models, etc.) is preserved for debugging, but for paid runs at "
-            "the locked ~$756 budget (Option A: cheap-panel primary-only + "
+            "the locked ~$769 budget (Option A: cheap-panel primary-only + "
             "anchor with sensitivity), use the named modes — they pin N + panel "
             "+ sensitivity scope to the locked spec. See RUNBOOK.md for the "
             "step-by-step paid-run sequence with expected outputs + cost per step."

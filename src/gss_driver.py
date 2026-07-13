@@ -47,7 +47,7 @@ post-factorial audit; legacy --smoke / --anchor flags below are debug-only):
     # Phase 1b — N=3,309 × Random × P1 (§7.1) × primary-only × 6 conditions
     # (Full + 4 bin-LOO + random_battery_drop) × n_samples=1. Headline cohort
     # excludes the 200 selector respondents (N=3,109 disjoint); full N=3,309
-    # reported as sensitivity. Cost: ~$58.
+    # reported as sensitivity. Cost: ~$87.
     python3 gss_driver.py --phase1b \\
         --phase1b-model random \\
         --phase1b-prompt P1
@@ -911,7 +911,7 @@ def _cli():
             "clear OSF §13.2 pointer — analyzer is ready, orchestration runtime "
             "deferred until before Phase 1c.) Manual flag composition (--n, "
             "--models, etc.) is preserved for debugging, but for paid runs at "
-            "the locked ~$756 budget (Option A: cheap-panel primary-only + "
+            "the locked ~$769 budget (Option A: cheap-panel primary-only + "
             "anchor with sensitivity), use the named modes — they pin N + panel "
             "+ sensitivity scope to the locked spec. See RUNBOOK.md for the "
             "step-by-step paid-run sequence with expected outputs + cost per step."
@@ -1175,7 +1175,7 @@ if __name__ == "__main__":
     # wide-large-n is explicitly passed. The named --phase1b mode hard-codes a
     # single model (so it bypasses this guard), but a manual command like
     # `--n 3309` with the default 4-cheap panel + sensitivity would burn ~$836
-    # vs the planned ~$58 single-dispatch 1b run.
+    # vs the planned ~$87 single-dispatch 1b run.
     if (
         n >= 1000
         and len(models) > 1
@@ -1190,7 +1190,7 @@ if __name__ == "__main__":
             f"REFUSING [F9 cost guard]: --n={n} with {len(models)} models AND "
             f"sensitivity pass would dispatch ~{approx_calls:,} LLM calls "
             f"(~${approx_cost:,.0f}). The locked Phase 1b design (§7.1) "
-            f"runs a single per-respondent dispatch at N=3,309 (~$58). To "
+            f"runs a single per-respondent dispatch at N=3,309 (~$87). To "
             f"replicate that, use:\n"
             f"    python3 gss_driver.py --phase1b --phase1b-model random "
             f"--phase1b-prompt P1\n"
