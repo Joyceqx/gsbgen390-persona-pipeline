@@ -2,7 +2,7 @@
 
 **Author**: Joyce Yu · Stanford GSB · GSBGEN390 thesis-track · Spring 2026
 **Advisor**: Prof. Mohsen Bayati
-**Last updated**: 2026-05-28
+**Last updated**: 2026-07-12 (Phase 1B cell = Random × P1 per Bayati email; random-battery-ablation 6th condition added; see §7.1, §8)
 
 This is the single source of truth for the Phase 1 study. No OSF preregistration (advisor decision 2026-05-28). Earlier OSF / brief / theory docs are in `archive/`.
 
@@ -124,7 +124,7 @@ Each of the 200 panel respondents runs all 12 (model × prompt) cells × **Full 
 
 ### 5.4 Random-model column (5th "model", 3 cells, post-hoc)
 
-For each respondent `r` and each prompt `p`, a model is selected uniformly at random from {Qwen, DeepSeek, Llama-3.3, Kimi} via a seed=42 hash on `(r, p)`. The respondent's "Random × p" value is set equal to the corresponding (model, p) panel result. **Pure uniform random — no 50/50/50/50 balance constraint.** No new LLM calls.
+For each respondent `r` and each prompt `p`, a model is selected uniformly at random from {Qwen3-max, DeepSeek-v3.1, Llama-4-maverick, Kimi-K2} via a seed=42 hash on `(r, p)`. The respondent's "Random × p" value is set equal to the corresponding (model, p) panel result. **Pure uniform random — no 50/50/50/50 balance constraint.** No new LLM calls.
 
 The random column is a deployment-mode sensitivity comparator (each Phase 1B respondent in deployment sees one model; this estimates "if a Phase 1A respondent had only seen one randomly-assigned model"). It is reporting-only, **not a §12.2 selector input**.
 
@@ -220,7 +220,7 @@ Stored at `outputs/phase1a_summary_table.{csv,parquet}` after the §12.2 selecto
 
 ### 6.2 Raw long-format database — ~38,400 rows (Phase 1A) + Random column
 
-Schema (18 columns):
+Schema (19 columns; `random_dropped_battery` added 2026-07-12, NULL for all Phase 1A rows):
 
 | Group | Column | Meaning |
 |---|---|---|
@@ -242,6 +242,7 @@ Schema (18 columns):
 | | `provider` | OpenRouter backend identifier when available (NULL for OpenAI direct calls) |
 | | `system_fingerprint` | OpenAI reproducibility token when available |
 | | `model_returned` | provider-reported model name; may differ from the requested slug (mid-run quantization/version drift detector) |
+| **Ablation** | `random_dropped_battery` | battery dropped in the `random_battery_drop` condition (§8 Layer 2); NULL in all other conditions and all Phase 1A rows. The per-battery absent-vs-present analysis joins on this column. |
 
 Example rows:
 
@@ -254,7 +255,7 @@ Example rows:
 
 **`model="Random"` row construction**: for each `(respondent_id, prompt)`, a seed=42 hash uniformly picks one of the four real models (no balance constraint). The `Random × prompt` rows are copies of that picked model's rows with `model` re-labeled to `Random`. No new LLM calls; the timestamp / cost / token columns are copied from the source row for auditability.
 
-**Volume**: 200 respondents × 5 (4 cheap models + Random) × 3 prompts × **1 condition (Full only — LOO deferred to Phase 1B)** × ~8 ballot-on items × **n_samples=2** ≈ **48,000 rows**. Stored at `outputs/phase1a_raw.parquet` (DuckDB-compatible). The Phase 1B parquet (`outputs/phase1b_raw.parquet`) adds Full + 4 LOO conditions on the selected cell × N=3,309.
+**Volume**: 200 respondents × 5 (4 cheap models + Random) × 3 prompts × **1 condition (Full only — LOO deferred to Phase 1B)** × ~8 ballot-on items × **n_samples=2** ≈ **48,000 rows**. Stored at `outputs/phase1a_raw.parquet` (DuckDB-compatible). The Phase 1B parquet (`outputs/phase1b_raw.parquet`) adds the 6 §8 conditions (Full + 4 bin-LOO + random_battery_drop) on the §7.1 cell × N=3,309 — consolidated with `--no-random-column` + explicit `--output` (the §5.4 Random column is Phase 1A-only; under random dispatch it would duplicate every row).
 
 The summary table (§6.1, 180 rows) is derived from the raw DB by aggregating on the `Full` condition. Any future re-analysis (different metric, different aggregation, sensitivity check) queries the raw DB directly without re-running the LLM panel. Bayati's requested 5 × 3 × 12 = 180-row MAE table is one line of pandas / SQL:
 
@@ -270,7 +271,12 @@ ORDER BY model, prompt, item;
 
 ### 6.3 Phase 1B raw DB (when it runs)
 
-Same 18-column schema. Single (model, prompt) cell × N=3,309 × 5 conditions × ~8 items × n_samples=1 ≈ **132,000 rows**. Stored at `outputs/phase1b_raw.parquet`. No Random column at the Phase 1B stage (deployment is the single selected cell).
+Same 19-column schema. Random-dispatch cell (§7.1) × N=3,309 × **6 conditions**
+(Full + 4 bin-LOO + random_battery_drop, §8) × ~8 items × n_samples=1 ≈
+**158,000 rows**. Stored at `outputs/phase1b_raw.parquet`. The `model` column
+records the actually-dispatched slug per respondent (the random assignment is
+recoverable from SHA-256(42|rid|P1)); no post-hoc Random relabeling at the
+Phase 1B stage.
 
 ---
 
@@ -328,6 +334,39 @@ else: cost tiebreak inside tie_set:
 All cells fail DQ: PAUSE — Phase 1B does not proceed (rationale = all_dq_fail_pause).
 ```
 
+### 7.1 Selection outcome + advisor override (2026-07-12)
+
+The selector ran on `outputs/phase1a_raw.parquet` (2026-06-01 data) and returned
+**Qwen × P0 via `fallback_qwen_p0_tie`** — 8 of 12 cells were statistically
+indistinguishable (CI overlap) and 2 tied on cost, so the named fallback fired.
+No cell won on quality.
+
+**Phase 1B cell decision (Bayati email 2026-07-12, superseding the fallback): Random × P1.**
+Rationale:
+
+1. **No model separates statistically.** With respondent-clustered SEs no cheap
+   model beats the Random column on either raw accuracy or normalized MAE;
+   only Qwen separates, and it is *worse*.
+2. **Mode collapse.** On CONFINAN/CONLEGIS the individual models give one
+   answer to nearly all 200 respondents (top-code fraction 0.77–1.00).
+   Random dispatch mixes models that collapse to *different* codes, restoring
+   spread on CONLEGIS (top-code fraction 0.53, close to the truth marginal).
+   It does NOT fix CONFINAN, where all four models collapse to the same code
+   (0.92) — reported as a per-item limitation.
+3. **Deployment realism.** Random dispatch matches the §5.4 deployment-mode
+   framing: each Phase 1B respondent is served by one model.
+
+Prompt = **P1** (best Random-column normalized MAE: 0.2607 vs 0.2617 P2 /
+0.2685 P0; also the best prompt across the panel overall).
+
+**Mechanics**: `--phase1b-model random` dispatches per respondent via
+SHA-256(42|rid|prompt) into the 4-model panel — hash-identical to the §5.4
+Phase 1A Random column, so the Phase 1A random assignments extend verbatim.
+The assignment is fixed per respondent across all 6 conditions (LOO ΔMAE
+stays within-model). The §7 selector output (Qwen × P0) and this override
+are both reported in the paper; the override is an advisor decision on the
+"no model beats Random + collapse" evidence, not a re-run of the selector.
+
 **Bootstrap CI per cell** (locked 2026-05-29 Reviewer round-2 Q1, made decision-relevant 2026-05-29 Reviewer round-3 P1 #4). Respondent-level percentile bootstrap (B=10,000, seeded) per cell on the conservative normalized MAE. The selector decision now consumes CI overlap directly: cells whose CIs overlap the headline's CI are statistically indistinguishable from it and enter cost-driven secondary tiebreak; cells whose CIs sit cleanly outside the headline's CI are excluded from the tie-set. This closes the internal contradiction that the previous fixed-5% rule produced — the diagnostic ("X other cells overlap") and the rationale ("argmin_mae, clean win") could appear together on adjacent lines of the same log.
 
 **Why this matters**: per-cell normalized MAE for cheap LLMs on GSS attitude prediction typically sits in the range ≈ 0.20–0.35 (cf. Park v2 SI Table 3 surveys-only baseline and comparable LLM-on-Likert work), with a per-cell SE of ≈ 0.071 (N=200, computed across respondents). The expected gap between rank-1 and rank-2 cells is on the order of ~0.05 by chance alone even when all 12 cells share the same true MAE — a fixed 5% MAE window (≈ 0.013) cannot tell signal from noise at this scale. CI overlap is the principled tie definition: two cells whose 95% CIs overlap are not statistically separated, and the selector should treat them as a tie-set rather than declaring a winner. Cells whose CIs do NOT overlap with the argmin are genuinely worse on this cohort.
@@ -340,7 +379,58 @@ Mitigations: report the full 180-row summary (§6.1) alongside the headline so t
 
 ## 8. Phase 1B
 
-Single §7-selected (model, prompt) cell. Primary_eval only, n_samples=1, Full + 4-bin LOO conditions.
+Cell = **Random × P1** (§7.1 advisor decision). Primary_eval only, n_samples=1,
+**6 conditions** (locked 2026-07-12, Joyce + Bayati email): the original 5
+(Full + 4-bin LOO) plus a randomized-battery-ablation condition. Two layers:
+
+**Layer 1 — bin-level LOO (headline, unchanged).** Full + drop_{demographic,
+behavioral, psychological, attitudinal}. Exclusions per prediction: the item's
+own battery (R1, all conditions) + the dropped bin. All 34 batteries nest
+within single bins (verified), and every primary_eval own-battery is
+attitudinal — so under drop_attitudinal the bin drop subsumes R1 (the code's
+drop_bin + exclude_vars union handles this automatically), and the
+drop_attitudinal ΔMAE estimates the contribution of the attitudinal bin
+*beyond* the own battery, which is the intended estimand since R1 holds on
+both sides of every Δ.
+
+**Layer 2 — randomized battery ablation (`random_battery_drop`, new).** Per
+(respondent, item): drop the own battery (R1) + ONE additional battery drawn
+uniformly at random from the remaining 33 (34 for singleton items), via
+seeded hash SHA-256(42|battery|rid|item). Deterministic, resume-safe; the
+drawn battery name is recorded in the `random_dropped_battery` column.
+
+Because the draw is randomized per (rid, item), each of the 34 batteries is
+absent in ~1/33 of ablation calls (**~650–800** (rid, item) pairs per battery
+across N=3,309 × ~8 items — the lower end applies to batteries that own
+multiple primary items, e.g. `gender_role_attitudes` and
+`confidence_in_institutions`, which can never be drawn on their own items).
+Each ablation row pairs with the Full row for the same (rid, item), so battery
+`b`'s marginal contribution is estimated by the **paired difference**
+`mean(err_ablated − err_full)` over the pairs where `b` was drawn — pairing
+cancels respondent- and item-level variation (expected SE ≈ 0.005 on
+normalized error; detectable effects ≥ ~0.01). This is the randomized-sampling
+approximation of the §9.1 enumerated Battery LOO at ~1/8 of its cost; §9.1's
+fate (full / reduced / dropped) is decided after these results are in.
+
+**Estimand definition**: battery `b`'s effect is identified only on items
+*outside* `b` — its own primary items exclude `b` via R1 in both arms, so
+those cells are structural zeros. This matches §9.1 (the enumerated LOO's
+drop-`b` is equally a no-op on `b`'s own items under R1): the estimand in
+both designs is `b`'s **marginal contribution to predicting out-of-battery
+items**. Two analysis-time notes: (a) cross-battery comparisons ride on
+slightly different item supports (own-batteries of primary items are
+evaluated on 10–11 items; the other 29 batteries on all 12); (b) the paired
+estimator requires `parse_ok` in both arms — differential parse failure
+between arms is a (small) missingness channel to check before interpreting.
+
+**Analyzer status**: the paired-difference analyzer for this layer is
+**pending** — `battery_loo.py` only consumes `condition='battery_loo_drop_*'`
+records and ignores `random_battery_drop`. To be implemented before Phase 1B
+analysis (data collection is not blocked).
+
+Note for cross-run comparisons: Layer 2 is a *new condition*; the Full
+condition is untouched (still all features − own battery), so the headline
+MAE remains directly comparable to Phase 1A and the GPT-4o anchor.
 
 **Headline cohort**: N=3,109 — the full 2024 GSS cross-section **minus** the N=200 panel respondents used by the §7 selector. Excluding the selector cohort removes the in-sample optimism on the cell chosen by argmin. The 200 selector respondents are reusing the Phase 1A artifact (already paid), so the exclusion costs no LLM calls — it only changes which rows are aggregated for the headline. Cohort assignment is deterministic via `sample_respondents(200, seed=42)` ∩ `gss_cross_section_2024.index`.
 
@@ -357,6 +447,13 @@ Single §7-selected (model, prompt) cell. Primary_eval only, n_samples=1, Full +
 Two analyses on the Phase 1B records:
 
 ### 9.1 Battery LOO — 34 batteries × 12 items × N=3,309
+
+**Status update 2026-07-12**: the §8 Layer-2 randomized battery ablation
+estimates the same per-battery estimand from the Phase 1B run itself (~800
+paired observations per battery, SE ≈ 0.005). Whether this enumerated Battery
+LOO still runs — in full (~$481), reduced to the batteries the ablation flags
+as significant, or not at all — is **decided after Phase 1B data is in**.
+Design below retained for the full-enumeration case.
 
 Drop one battery at a time from the persona prompt; recompute MAE; report ΔMAE per battery. Two corrections:
 
@@ -381,10 +478,10 @@ Analyzer: `shapley_decomposition.py`.
 |---|---|
 | `src/gss_loader.py`, `src/gss_pipeline.py` | Loader + persona-prompt + scoring; implemented + tested |
 | `src/llm_router.py` | Multi-model LLM router with per-call seed derivation; implemented + tested |
-| `src/select_phase1b_model.py` | OSF-v1 single-model selector with DQ gates; kept as legacy reference for the pre-factorial design. |
+| `archive/select_phase1b_model.py` | OSF-v1 single-model selector with DQ gates; superseded by `select_phase1b_cell.py`, archived 2026-07-12. |
 | `src/select_phase1b_cell.py` | §7 joint (model, prompt) cell selector. Reads `outputs/phase1a_raw.parquet`. Implemented + 6 self-tests pass. |
-| `src/write_phase1a_parquet.py` | §6.2 long-format parquet writer + Random column. Implemented + 6 self-tests pass. |
-| `src/gss_driver.py` | Orchestrator with `--phase1a` / `--phase1b` / `--phase1b-anchor` modes. 3-prompt factorial extension implemented: `--phase1a` loops over P0/P1/P2 (writes three per-prompt JSONs) and auto-consolidates into `outputs/phase1a_raw.parquet`. `--phase1b-prompt {P0,P1,P2}` required for non-anchor Phase 1B runs once the factorial parquet exists. Smoke test pending. |
+| `src/write_phase1a_parquet.py` | §6.2 long-format parquet writer + Random column. Implemented + 9 self-tests pass (incl. 2026-07-12: populated `random_dropped_battery` roundtrip, Phase-1B-shape guard, panel-list lock vs `llm_router`). |
+| `src/gss_driver.py` | Orchestrator with `--phase1a` / `--phase1b` / `--phase1b-anchor` modes. 3-prompt factorial extension implemented: `--phase1a` loops over P0/P1/P2 (writes three per-prompt JSONs) and auto-consolidates into `outputs/phase1a_raw.parquet`. `--phase1b-prompt {P0,P1,P2}` required for non-anchor Phase 1B runs once the factorial parquet exists. **2026-07-12 additions**: `--phase1b-model random` (per-respondent SHA-256 dispatch, hash-identical to the §5.4 Random column, fixed across conditions) + `random_battery_drop` 6th condition (CONDITIONS_PHASE1B; seeded per-(rid,item) battery draw avoiding the own battery; battery name stamped into records + parquet `random_dropped_battery` column). Verified: picker determinism, own-battery avoidance (N=3,309), 33/33 + 34/34 coverage, prompt-shrinkage E2E. |
 | `src/battery_loo.py`, `src/shapley_decomposition.py` | Phase 1C analyzers; implemented + self-tested. **Orchestration drivers (`--battery-loo`, `--shapley`) pending.** |
 | `src/regression_baseline.py` | R2 baseline (Ridge + multinomial Logistic, 5-fold CV); implemented + tested |
 | `src/validate_taxonomy.py`, `src/lint_writeup_language.py` | Lint / validation utilities; implemented + tested |
@@ -395,7 +492,7 @@ All 4 extensions plus the post-factorial Reviewer round-2 cleanup are complete; 
 
 1. **`src/gss_driver.py --phase1a`** (DONE): iterates over 3 prompts × 4 models × **Full condition only** × ballot-on items × **n_samples=2**. Records carry `prompt_id` + `prompt_version` + `template_hash` + `error_type` + provider/fingerprint provenance.
 2. **`src/select_phase1b_cell.py`** (DONE, sibling of the OSF-v1 `select_phase1b_model.py`): scores 12 (model, prompt) cells jointly. Per-cell DQ-1 (tightened 30% → 10%) + DQ-3 (tightened 50% → 30% fail-fraction ceiling). Per-item normalized MAE with the **conservative** parse_fail-as-1.0 policy as primary metric (optimistic legacy metric reported alongside). **CI-overlap-driven tiebreak** (NOT a fixed 5% MAE window — see §7): the tie-set is the headline cell plus all surviving cells whose bootstrap CI overlaps the headline's CI; cost-driven secondary tiebreak fires only within that tie-set; Qwen × P0 named fallback when both ties hit. Random column (§5.4) aggregated post-hoc — not a selector input. **Per-cell bootstrap CIs** (B=10,000, respondent-level) plus a majority-class baseline (§7 round-4 addition) reported alongside the headline.
-3. **Phase 1A output writer (`src/write_phase1a_parquet.py`)** (DONE): emits `outputs/phase1a_raw.parquet` (18-column long-format DB per §6.2) after the 3-prompt loop in `--phase1a`. Random column rows generated deterministically via SHA-256(seed=42 | rid | prompt). 180-row §6.1 summary derivable from the parquet in one pandas/SQL groupby.
+3. **Phase 1A output writer (`src/write_phase1a_parquet.py`)** (DONE): emits `outputs/phase1a_raw.parquet` (19-column long-format DB per §6.2) after the 3-prompt loop in `--phase1a`. Random column rows generated deterministically via SHA-256(seed=42 | rid | prompt). 180-row §6.1 summary derivable from the parquet in one pandas/SQL groupby. **2026-07-12**: Phase-1B-shape guard added (refuses to add the Random column to non-Full-condition records — it would duplicate 100% of dispatch rows) + `--no-random-column` flag + clobber guard requiring explicit `--output` for Phase 1B consolidation.
 4. **`src/gss_driver.py --phase1b`** (DONE): accepts `--phase1b-prompt` in addition to `--phase1b-model`. Errors out if `outputs/phase1a_raw.parquet` exists but `--phase1b-prompt` is omitted (refuses to silently default to P0 once the factorial has chosen).
 
 Reviewer round-2 cleanup also complete: ballot-off pre-filter, LOO deferral, parse_fail conservative metric, DQ-1 tightening, bootstrap CIs, fingerprint/provider/error_type logging — see commits `e17ea11`, `3236fe4`, `5ecf345`, `bacfa72`.
@@ -445,13 +542,13 @@ python3 src/gss_driver.py --phase1b-anchor       # GPT-4o × P0 × N=100 (~$148)
 # 3. §7 joint (model, prompt) cell selector (free, <1 min)
 python3 src/select_phase1b_cell.py outputs/phase1a_raw.parquet
 
-# 4. Phase 1B (~$48, ~3-7 days)
-#    Runs on full N=3,309 × Full + 4 LOO conditions. Headline aggregation
-#    excludes the §7 selector cohort (N=3,109 disjoint), full cohort (N=3,309)
-#    reported as sensitivity. See §8.
+# 4. Phase 1B (~$58, ~3-7 days) — cell locked 2026-07-12: Random × P1 (§7.1)
+#    Runs on full N=3,309 × 6 conditions (Full + 4 bin-LOO +
+#    random_battery_drop; §8). Headline aggregation excludes the §7 selector
+#    cohort (N=3,109 disjoint), full cohort (N=3,309) reported as sensitivity.
 python3 src/gss_driver.py --phase1b \
-    --phase1b-model <slug> \
-    --phase1b-prompt <prompt_id>
+    --phase1b-model random \
+    --phase1b-prompt P1
 
 # 4b. R2 regression baseline (free, ~5 min) — report alongside Phase 1B headline
 #    Non-LLM Ridge (Likert) / multinomial Logistic (binary) baseline with the same
@@ -477,11 +574,11 @@ python3 src/shapley_decomposition.py --input outputs/phase1c_shapley_*.parquet
 | Smoke (panel + pipeline) | ~$0.01 | `llm_router --smoke-panel` (4 calls for PROVIDER_LOCK) + `gss_driver --smoke` (1 resp × Qwen × P0 × Full × n=2 ≈ 16 calls) |
 | Phase 1A factorial (4 models × 3 prompts × N=200 × Full × n=2 × ballot filter) | **~$14** | Down from ~$51 — LOO deferred to Phase 1B + ballot-off pre-filter (Reviewer round-2 Q3) |
 | GPT-4o anchor (P0 only, N=100, primary + sensitivity, n=2) | ~$148 | One run serves Phase 1A + 1B reporting |
-| Phase 1B (selected cell × N=3,309 × Full + 4 LOO × n=1 × ballot filter) | **~$48** | Down from ~$71 — ballot-off pre-filter applied |
-| **Subtotal pre-Battery LOO** | **~$213** | |
-| Phase 1C Battery LOO (34 batteries × 12 items × N=3,309) | ~$481 | |
+| Phase 1B (Random × P1 × N=3,309 × 6 conditions × n=1 × ballot filter) | **~$58** | 5 → 6 conditions 2026-07-12 (+random_battery_drop, ~$10); ballot-off pre-filter applied |
+| **Subtotal pre-Battery LOO** | **~$223** | |
+| Phase 1C Battery LOO (34 batteries × 12 items × N=3,309) | ~$481 **(contingent)** | May be dropped or reduced — the §8 Layer-2 randomized ablation covers the same estimand; decision after Phase 1B (§9.1) |
 | Phase 1C Shapley (11 multi-bin conditions × N=200) | ~$38 | |
-| **Total Phase 1** | **~$732** | Assumes no prompt caching; verify OpenRouter prices at smoke time |
+| **Total Phase 1** | **~$742 max / ~$261 if Battery LOO dropped** | Assumes no prompt caching; verify OpenRouter prices at smoke time |
 
 Reduction options if budget tightens: Battery LOO at N=1,500 (saves ~$263), attitudinal-bin batteries only (saves ~$209), or defer Battery LOO to Phase 1D.
 

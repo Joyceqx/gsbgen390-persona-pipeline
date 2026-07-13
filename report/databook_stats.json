@@ -1,0 +1,781 @@
+{
+  "cells": {
+    "q3m|P0": {
+      "model": "q3m",
+      "name": "Qwen3-Max",
+      "prompt": "P0",
+      "em": 0.4994,
+      "em_ci": [
+        0.4722,
+        0.5272
+      ],
+      "mae_n": 0.286,
+      "mae_ci": [
+        0.2645,
+        0.3067
+      ],
+      "parse_fail": 0.0,
+      "n_collapse": 1,
+      "collapse_items": [
+        "CONLEGIS"
+      ],
+      "n_lift_pos": 3,
+      "cost": 0.00098,
+      "_em_boot_pt": 0.4995,
+      "_mae_boot_pt": 0.286
+    },
+    "q3m|P1": {
+      "model": "q3m",
+      "name": "Qwen3-Max",
+      "prompt": "P1",
+      "em": 0.5085,
+      "em_ci": [
+        0.4837,
+        0.5345
+      ],
+      "mae_n": 0.2827,
+      "mae_ci": [
+        0.2606,
+        0.3034
+      ],
+      "parse_fail": 0.0,
+      "n_collapse": 1,
+      "collapse_items": [
+        "CONLEGIS"
+      ],
+      "n_lift_pos": 5,
+      "cost": 0.00098,
+      "_em_boot_pt": 0.5085,
+      "_mae_boot_pt": 0.2827
+    },
+    "q3m|P2": {
+      "model": "q3m",
+      "name": "Qwen3-Max",
+      "prompt": "P2",
+      "em": 0.5138,
+      "em_ci": [
+        0.4889,
+        0.5398
+      ],
+      "mae_n": 0.2776,
+      "mae_ci": [
+        0.2568,
+        0.2982
+      ],
+      "parse_fail": 0.0,
+      "n_collapse": 1,
+      "collapse_items": [
+        "CONLEGIS"
+      ],
+      "n_lift_pos": 5,
+      "cost": 0.00098,
+      "_em_boot_pt": 0.5138,
+      "_mae_boot_pt": 0.2776
+    },
+    "ds31|P0": {
+      "model": "ds31",
+      "name": "DeepSeek-V3.1",
+      "prompt": "P0",
+      "em": 0.5004,
+      "em_ci": [
+        0.4758,
+        0.526
+      ],
+      "mae_n": 0.2942,
+      "mae_ci": [
+        0.2743,
+        0.3144
+      ],
+      "parse_fail": 0.0,
+      "n_collapse": 1,
+      "collapse_items": [
+        "CONFINAN"
+      ],
+      "n_lift_pos": 4,
+      "cost": 0.00032,
+      "_em_boot_pt": 0.5004,
+      "_mae_boot_pt": 0.2942
+    },
+    "ds31|P1": {
+      "model": "ds31",
+      "name": "DeepSeek-V3.1",
+      "prompt": "P1",
+      "em": 0.5258,
+      "em_ci": [
+        0.5024,
+        0.5486
+      ],
+      "mae_n": 0.2826,
+      "mae_ci": [
+        0.2638,
+        0.3023
+      ],
+      "parse_fail": 0.0,
+      "n_collapse": 1,
+      "collapse_items": [
+        "CONFINAN"
+      ],
+      "n_lift_pos": 7,
+      "cost": 0.00032,
+      "_em_boot_pt": 0.5258,
+      "_mae_boot_pt": 0.2826
+    },
+    "ds31|P2": {
+      "model": "ds31",
+      "name": "DeepSeek-V3.1",
+      "prompt": "P2",
+      "em": 0.5291,
+      "em_ci": [
+        0.5046,
+        0.5539
+      ],
+      "mae_n": 0.2745,
+      "mae_ci": [
+        0.2533,
+        0.2941
+      ],
+      "parse_fail": 0.0,
+      "n_collapse": 1,
+      "collapse_items": [
+        "CONFINAN"
+      ],
+      "n_lift_pos": 6,
+      "cost": 0.00032,
+      "_em_boot_pt": 0.5291,
+      "_mae_boot_pt": 0.2745
+    },
+    "l4m|P0": {
+      "model": "l4m",
+      "name": "Llama-4-Mav",
+      "prompt": "P0",
+      "em": 0.5078,
+      "em_ci": [
+        0.4831,
+        0.5327
+      ],
+      "mae_n": 0.2749,
+      "mae_ci": [
+        0.2557,
+        0.2941
+      ],
+      "parse_fail": 0.0012,
+      "n_collapse": 2,
+      "collapse_items": [
+        "CONFINAN",
+        "CONLEGIS"
+      ],
+      "n_lift_pos": 6,
+      "cost": 0.00018,
+      "_em_boot_pt": 0.5078,
+      "_mae_boot_pt": 0.2749
+    },
+    "l4m|P1": {
+      "model": "l4m",
+      "name": "Llama-4-Mav",
+      "prompt": "P1",
+      "em": 0.5134,
+      "em_ci": [
+        0.4881,
+        0.5386
+      ],
+      "mae_n": 0.2717,
+      "mae_ci": [
+        0.2518,
+        0.2922
+      ],
+      "parse_fail": 0.0017,
+      "n_collapse": 2,
+      "collapse_items": [
+        "CONFINAN",
+        "CONLEGIS"
+      ],
+      "n_lift_pos": 4,
+      "cost": 0.00018,
+      "_em_boot_pt": 0.5134,
+      "_mae_boot_pt": 0.2717
+    },
+    "l4m|P2": {
+      "model": "l4m",
+      "name": "Llama-4-Mav",
+      "prompt": "P2",
+      "em": 0.5115,
+      "em_ci": [
+        0.4871,
+        0.536
+      ],
+      "mae_n": 0.2686,
+      "mae_ci": [
+        0.2496,
+        0.2886
+      ],
+      "parse_fail": 0.0,
+      "n_collapse": 3,
+      "collapse_items": [
+        "CONFINAN",
+        "CONLEGIS",
+        "SATFIN"
+      ],
+      "n_lift_pos": 5,
+      "cost": 0.00018,
+      "_em_boot_pt": 0.5115,
+      "_mae_boot_pt": 0.2686
+    },
+    "kk2|P0": {
+      "model": "kk2",
+      "name": "Kimi-K2",
+      "prompt": "P0",
+      "em": 0.5199,
+      "em_ci": [
+        0.4942,
+        0.547
+      ],
+      "mae_n": 0.2887,
+      "mae_ci": [
+        0.2648,
+        0.3115
+      ],
+      "parse_fail": 0.0078,
+      "n_collapse": 0,
+      "collapse_items": [],
+      "n_lift_pos": 5,
+      "cost": 0.00072,
+      "_em_boot_pt": 0.5199,
+      "_mae_boot_pt": 0.2886
+    },
+    "kk2|P1": {
+      "model": "kk2",
+      "name": "Kimi-K2",
+      "prompt": "P1",
+      "em": 0.5336,
+      "em_ci": [
+        0.5076,
+        0.5616
+      ],
+      "mae_n": 0.2834,
+      "mae_ci": [
+        0.26,
+        0.3055
+      ],
+      "parse_fail": 0.0124,
+      "n_collapse": 0,
+      "collapse_items": [],
+      "n_lift_pos": 8,
+      "cost": 0.00072,
+      "_em_boot_pt": 0.5336,
+      "_mae_boot_pt": 0.2834
+    },
+    "kk2|P2": {
+      "model": "kk2",
+      "name": "Kimi-K2",
+      "prompt": "P2",
+      "em": 0.5353,
+      "em_ci": [
+        0.5107,
+        0.5615
+      ],
+      "mae_n": 0.2824,
+      "mae_ci": [
+        0.2605,
+        0.303
+      ],
+      "parse_fail": 0.0126,
+      "n_collapse": 0,
+      "collapse_items": [],
+      "n_lift_pos": 8,
+      "cost": 0.00072,
+      "_em_boot_pt": 0.5353,
+      "_mae_boot_pt": 0.2824
+    }
+  },
+  "per_item": {
+    "POLVIEWS": {
+      "em": 0.3038774115578994,
+      "mae_n": 0.18610672379696766,
+      "maj_em": 0.3316,
+      "lift_maj": -0.04141705119753901,
+      "K": 7,
+      "tx": "ord",
+      "n_eff": 380
+    },
+    "PARTYID": {
+      "em": 0.31252075632037396,
+      "mae_n": 0.19008714680263436,
+      "maj_em": 0.1827,
+      "lift_maj": 0.15878559592096872,
+      "K": 8,
+      "tx": "ord",
+      "n_eff": 394
+    },
+    "ABANY": {
+      "em": 0.63596906025601,
+      "mae_n": 0.3668043709022792,
+      "maj_em": 0.5746,
+      "lift_maj": 0.1441874804870434,
+      "K": 2,
+      "tx": "cat",
+      "n_eff": 268
+    },
+    "CAPPUN": {
+      "em": 0.6203349422161796,
+      "mae_n": 0.3817723997280762,
+      "maj_em": 0.6179,
+      "lift_maj": 0.006383480625424882,
+      "K": 2,
+      "tx": "cat",
+      "n_eff": 246
+    },
+    "GUNLAW": {
+      "em": 0.7110603643216082,
+      "mae_n": 0.2907055904522613,
+      "maj_em": 0.7068,
+      "lift_maj": 0.014608228643216082,
+      "K": 2,
+      "tx": "cat",
+      "n_eff": 266
+    },
+    "FECHLD": {
+      "em": 0.39576035889070144,
+      "mae_n": 0.2565421533442088,
+      "maj_em": 0.4219,
+      "lift_maj": -0.04517461663947797,
+      "K": 4,
+      "tx": "ord",
+      "n_eff": 256
+    },
+    "FEPOL": {
+      "em": 0.7755982677165355,
+      "mae_n": 0.22539259842519685,
+      "maj_em": 0.8491,
+      "lift_maj": -0.4867149606299212,
+      "K": 2,
+      "tx": "cat",
+      "n_eff": 106
+    },
+    "RACDIF1": {
+      "em": 0.6013918466898955,
+      "mae_n": 0.4010217421602788,
+      "maj_em": 0.6,
+      "lift_maj": 0.0034756097560975515,
+      "K": 2,
+      "tx": "cat",
+      "n_eff": 120
+    },
+    "CONFINAN": {
+      "em": 0.5249812776723592,
+      "mae_n": 0.24368557874762806,
+      "maj_em": 0.553,
+      "lift_maj": -0.0627442441492726,
+      "K": 3,
+      "tx": "ord",
+      "n_eff": 264
+    },
+    "CONLEGIS": {
+      "em": 0.5017845576232453,
+      "mae_n": 0.26334129937969314,
+      "maj_em": 0.5234,
+      "lift_maj": -0.04539983676134508,
+      "K": 3,
+      "tx": "ord",
+      "n_eff": 256
+    },
+    "HELPPOOR": {
+      "em": 0.3394291081345965,
+      "mae_n": 0.27972358706305134,
+      "maj_em": 0.4141,
+      "lift_maj": -0.12736468474354784,
+      "K": 5,
+      "tx": "ord",
+      "n_eff": 256
+    },
+    "SATFIN": {
+      "em": 0.47511624290817395,
+      "mae_n": 0.28212706450935066,
+      "maj_em": 0.4523,
+      "lift_maj": 0.041699663794914896,
+      "K": 3,
+      "tx": "ord",
+      "n_eff": 398
+    }
+  },
+  "collapse_mat": {
+    "q3m": {
+      "POLVIEWS": {
+        "top1": 0.3588,
+        "distinct": 6.666666666666667,
+        "K": 7
+      },
+      "PARTYID": {
+        "top1": 0.4078,
+        "distinct": 7.666666666666667,
+        "K": 8
+      },
+      "ABANY": {
+        "top1": 0.7412666666666667,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "CAPPUN": {
+        "top1": 0.5921666666666666,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "GUNLAW": {
+        "top1": 0.891,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "FECHLD": {
+        "top1": 0.4453,
+        "distinct": 4.0,
+        "K": 4
+      },
+      "FEPOL": {
+        "top1": 0.7326999999999999,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "RACDIF1": {
+        "top1": 0.5666333333333333,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "CONFINAN": {
+        "top1": 0.8623666666666666,
+        "distinct": 2.0,
+        "K": 3
+      },
+      "CONLEGIS": {
+        "top1": 1.0,
+        "distinct": 1.0,
+        "K": 3
+      },
+      "HELPPOOR": {
+        "top1": 0.44533333333333336,
+        "distinct": 5.0,
+        "K": 5
+      },
+      "SATFIN": {
+        "top1": 0.6340333333333333,
+        "distinct": 3.0,
+        "K": 3
+      }
+    },
+    "ds31": {
+      "POLVIEWS": {
+        "top1": 0.31053333333333333,
+        "distinct": 5.0,
+        "K": 7
+      },
+      "PARTYID": {
+        "top1": 0.29610000000000003,
+        "distinct": 7.333333333333333,
+        "K": 8
+      },
+      "ABANY": {
+        "top1": 0.6928000000000001,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "CAPPUN": {
+        "top1": 0.9701666666666666,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "GUNLAW": {
+        "top1": 0.9586333333333333,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "FECHLD": {
+        "top1": 0.5937333333333333,
+        "distinct": 3.6666666666666665,
+        "K": 4
+      },
+      "FEPOL": {
+        "top1": 0.9025,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "RACDIF1": {
+        "top1": 0.8194666666666667,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "CONFINAN": {
+        "top1": 0.9798,
+        "distinct": 2.6666666666666665,
+        "K": 3
+      },
+      "CONLEGIS": {
+        "top1": 0.7148333333333333,
+        "distinct": 2.0,
+        "K": 3
+      },
+      "HELPPOOR": {
+        "top1": 0.45703333333333335,
+        "distinct": 3.3333333333333335,
+        "K": 5
+      },
+      "SATFIN": {
+        "top1": 0.7035,
+        "distinct": 3.0,
+        "K": 3
+      }
+    },
+    "l4m": {
+      "POLVIEWS": {
+        "top1": 0.4219333333333333,
+        "distinct": 4.666666666666667,
+        "K": 7
+      },
+      "PARTYID": {
+        "top1": 0.4423333333333333,
+        "distinct": 6.0,
+        "K": 8
+      },
+      "ABANY": {
+        "top1": 0.6364,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "CAPPUN": {
+        "top1": 0.7059333333333333,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "GUNLAW": {
+        "top1": 0.9674,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "FECHLD": {
+        "top1": 0.7552,
+        "distinct": 4.0,
+        "K": 4
+      },
+      "FEPOL": {
+        "top1": 0.8962333333333333,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "RACDIF1": {
+        "top1": 0.8583333333333334,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "CONFINAN": {
+        "top1": 1.0,
+        "distinct": 1.0,
+        "K": 3
+      },
+      "CONLEGIS": {
+        "top1": 0.9948,
+        "distinct": 1.6666666666666667,
+        "K": 3
+      },
+      "HELPPOOR": {
+        "top1": 0.5364666666666668,
+        "distinct": 4.0,
+        "K": 5
+      },
+      "SATFIN": {
+        "top1": 0.9260333333333334,
+        "distinct": 2.3333333333333335,
+        "K": 3
+      }
+    },
+    "kk2": {
+      "POLVIEWS": {
+        "top1": 0.35013333333333335,
+        "distinct": 6.333333333333333,
+        "K": 7
+      },
+      "PARTYID": {
+        "top1": 0.3236666666666666,
+        "distinct": 8.0,
+        "K": 8
+      },
+      "ABANY": {
+        "top1": 0.5432,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "CAPPUN": {
+        "top1": 0.7747666666666667,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "GUNLAW": {
+        "top1": 0.8483,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "FECHLD": {
+        "top1": 0.43753333333333333,
+        "distinct": 4.0,
+        "K": 4
+      },
+      "FEPOL": {
+        "top1": 0.5411333333333334,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "RACDIF1": {
+        "top1": 0.5691333333333333,
+        "distinct": 2.0,
+        "K": 2
+      },
+      "CONFINAN": {
+        "top1": 0.8550666666666666,
+        "distinct": 2.0,
+        "K": 3
+      },
+      "CONLEGIS": {
+        "top1": 0.8104,
+        "distinct": 2.0,
+        "K": 3
+      },
+      "HELPPOOR": {
+        "top1": 0.33949999999999997,
+        "distinct": 5.0,
+        "K": 5
+      },
+      "SATFIN": {
+        "top1": 0.6777000000000001,
+        "distinct": 3.0,
+        "K": 3
+      }
+    }
+  },
+  "anchor": {
+    "Anchor-B-R1ON": {
+      "em_macro": 0.5302333333333333,
+      "em_micro": 0.48758089330024806,
+      "mae_macro": 0.26914166666666667,
+      "per_item": {
+        "POLVIEWS": {
+          "em": 0.2656,
+          "mae": 0.2057
+        },
+        "PARTYID": {
+          "em": 0.3131,
+          "mae": 0.2222
+        },
+        "ABANY": {
+          "em": 0.5956,
+          "mae": 0.4044
+        },
+        "CAPPUN": {
+          "em": 0.6148,
+          "mae": 0.3852
+        },
+        "GUNLAW": {
+          "em": 0.7132,
+          "mae": 0.2868
+        },
+        "FECHLD": {
+          "em": 0.4516,
+          "mae": 0.2151
+        },
+        "FEPOL": {
+          "em": 0.8333,
+          "mae": 0.1667
+        },
+        "RACDIF1": {
+          "em": 0.7419,
+          "mae": 0.2581
+        },
+        "CONFINAN": {
+          "em": 0.4701,
+          "mae": 0.291
+        },
+        "CONLEGIS": {
+          "em": 0.5938,
+          "mae": 0.2383
+        },
+        "HELPPOOR": {
+          "em": 0.2698,
+          "mae": 0.2837
+        },
+        "SATFIN": {
+          "em": 0.5,
+          "mae": 0.2725
+        }
+      }
+    },
+    "Anchor-A-R1OFF": {
+      "em_macro": 0.5839,
+      "em_micro": 0.5403276674937966,
+      "mae_macro": 0.23969166666666666,
+      "per_item": {
+        "POLVIEWS": {
+          "em": 0.2708,
+          "mae": 0.2049
+        },
+        "PARTYID": {
+          "em": 0.3131,
+          "mae": 0.2237
+        },
+        "ABANY": {
+          "em": 0.6691,
+          "mae": 0.3309
+        },
+        "CAPPUN": {
+          "em": 0.6066,
+          "mae": 0.3934
+        },
+        "GUNLAW": {
+          "em": 0.7353,
+          "mae": 0.2647
+        },
+        "FECHLD": {
+          "em": 0.5242,
+          "mae": 0.1909
+        },
+        "FEPOL": {
+          "em": 0.8519,
+          "mae": 0.1481
+        },
+        "RACDIF1": {
+          "em": 0.7097,
+          "mae": 0.2903
+        },
+        "CONFINAN": {
+          "em": 0.6493,
+          "mae": 0.1828
+        },
+        "CONLEGIS": {
+          "em": 0.6797,
+          "mae": 0.1836
+        },
+        "HELPPOOR": {
+          "em": 0.4921,
+          "mae": 0.1905
+        },
+        "SATFIN": {
+          "em": 0.505,
+          "mae": 0.2725
+        }
+      }
+    },
+    "cheap_q3m_P0_100": {
+      "em_micro": 0.47703808933002484,
+      "mae_macro": 0.279175
+    },
+    "cheap_ds31_P0_100": {
+      "em_micro": 0.45161538461538453,
+      "mae_macro": 0.3036083333333333
+    },
+    "cheap_l4m_P0_100": {
+      "em_micro": 0.4660843808338519,
+      "mae_macro": 0.2753416666666667
+    },
+    "cheap_kk2_P0_100": {
+      "em_micro": 0.49126910112359545,
+      "mae_macro": 0.28474166666666667
+    }
+  },
+  "majority_note": "databook maj_em per item; item-macro majority EM below",
+  "majority_em_macro": 0.5189499999999999,
+  "base_rate_mae_macro": 0.2747783879183044
+}

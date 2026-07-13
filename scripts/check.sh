@@ -2,7 +2,7 @@
 # Phase 1A 进度 + 健康检查（panel F'' 跑期间任何时候可用）
 # Usage: bash check.sh
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 echo "═══════════════════════════════════════════"
 echo "  Phase 1A 状态 — $(date '+%a %b %d %H:%M')"

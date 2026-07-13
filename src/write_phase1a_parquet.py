@@ -45,6 +45,10 @@ CONDITION_LABEL = {
     "loo_drop_behavioral": "drop_behavioral",
     "loo_drop_psychological": "drop_psychological",
     "loo_drop_attitudinal": "drop_attitudinal",
+    # Phase 1B 6th condition (locked 2026-07-12): R1 + one random battery
+    # per (rid, item). The dropped battery name travels in the
+    # random_dropped_battery column.
+    "random_battery_drop": "random_battery_drop",
 }
 
 # Cheap-panel real models (deterministic order; matters for the seeded random pick).
@@ -81,6 +85,11 @@ PARQUET_COLUMNS = [
     "provider",            # nullable str (OpenRouter backend; null for OpenAI direct)
     "system_fingerprint",  # nullable str (OpenAI reproducibility token)
     "model_returned",      # nullable str (provider-reported model name; may differ from requested slug)
+    # Randomized battery ablation (Phase 1B 6th condition, locked 2026-07-12)
+    "random_dropped_battery",  # nullable str: battery dropped in the
+                               # random_battery_drop condition; NULL elsewhere
+                               # (incl. all Phase 1A rows). The absent-vs-present
+                               # per-battery analysis joins on this column.
 ]
 
 
@@ -141,6 +150,7 @@ def _row_from_sample(
         "provider": sample.get("provider"),
         "system_fingerprint": sample.get("system_fingerprint"),
         "model_returned": sample.get("model_returned"),
+        "random_dropped_battery": sample.get("random_dropped_battery"),
     }
 
 
@@ -202,7 +212,7 @@ def add_random_column(rows: list[dict], panel_models: list[str] = PANEL_MODELS) 
 # Top-level write
 # ---------------------------------------------------------------------------
 
-def build_dataframe(json_paths: list[Path]) -> pd.DataFrame:
+def build_dataframe(json_paths: list[Path], add_random: bool = True) -> pd.DataFrame:
     write_timestamp = datetime.now(timezone.utc).isoformat()
     all_records: list[dict] = []
     for p in json_paths:
@@ -212,7 +222,24 @@ def build_dataframe(json_paths: list[Path]) -> pd.DataFrame:
         with p.open() as f:
             all_records.extend(json.load(f))
     rows = flatten_records(all_records, write_timestamp)
-    rows = add_random_column(rows)
+    # Phase 1B guard (Reviewer 2026-07-12 CRITICAL): under random dispatch the
+    # picked model IS the §5.4 random pick (hash-identical by design), so
+    # add_random_column would duplicate 100% of Phase 1B rows under
+    # model="Random" — doubling N and silently shrinking bootstrap/clustered
+    # SEs by ~√2. The Random column is a Phase 1A construct; §6.3 locks
+    # "no post-hoc Random relabeling at the Phase 1B stage". Detect
+    # Phase-1B-shaped input (any non-Full condition) and refuse.
+    phase1b_shaped = any(r["condition"] != "Full" for r in rows)
+    if add_random and phase1b_shaped:
+        raise ValueError(
+            "Input records contain non-Full conditions (Phase 1B shape). "
+            "The §5.4 Random column applies to Phase 1A only — adding it here "
+            "would duplicate every row (random dispatch pick == Random-column "
+            "pick by design). Re-run with --no-random-column and an explicit "
+            "--output (e.g. outputs/phase1b_raw.parquet)."
+        )
+    if add_random:
+        rows = add_random_column(rows)
     df = pd.DataFrame(rows, columns=PARQUET_COLUMNS)
     # Cast nullable int columns
     for col in ("pred_code", "abs_err", "tokens_in", "tokens_out"):
@@ -448,6 +475,69 @@ def _test_provenance_columns_e2e(tmp_path: Path) -> None:
     print("  [provenance_columns_e2e] PASSED")
 
 
+def _test_random_battery_drop_column(tmp_path: Path) -> None:
+    """Reviewer 2026-07-12 findings 1 + 5: (a) a POPULATED
+    random_dropped_battery value must survive flatten → parquet → read-back;
+    (b) build_dataframe must REFUSE to add the Random column on
+    Phase-1B-shaped (non-Full) records."""
+    rec = {
+        "respondent_id": 7, "condition": "random_battery_drop",
+        "model": "moonshotai/kimi-k2-0905",
+        "prompt_id": "P1", "prompt_version": "v1",
+        "template_hash": "abc123" + "00" * 5, "n_samples": 1,
+        "per_item_scores": {
+            "POLVIEWS": [{
+                "truth": 3, "persona_code": 2, "parse_fail": False,
+                "treatment": "likert", "abs_err": 1, "within1": 1,
+                "cat_match": None, "skipped_missing_truth": False,
+                "random_dropped_battery": "voting_choice",
+            }],
+        },
+    }
+    rows = flatten_records([rec], datetime.now(timezone.utc).isoformat())
+    assert len(rows) == 1
+    assert rows[0]["condition"] == "random_battery_drop", rows[0]["condition"]
+    assert rows[0]["random_dropped_battery"] == "voting_choice"
+
+    df = pd.DataFrame(rows, columns=PARQUET_COLUMNS)
+    out = tmp_path / "tmp_ablation.parquet"
+    df.to_parquet(out, index=False)
+    back = pd.read_parquet(out)
+    assert back.iloc[0]["random_dropped_battery"] == "voting_choice"
+    out.unlink()
+
+    # (b) the Phase 1B guard: build_dataframe(add_random=True) must raise
+    import tempfile as _tf
+    with _tf.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+        json.dump([rec], f)
+        tmp_json = Path(f.name)
+    try:
+        try:
+            build_dataframe([tmp_json], add_random=True)
+            raise AssertionError("build_dataframe did not refuse Phase-1B-shaped input with add_random=True")
+        except ValueError:
+            pass
+        df_ok = build_dataframe([tmp_json], add_random=False)
+        assert len(df_ok) == 1 and "Random" not in set(df_ok["model"])
+    finally:
+        tmp_json.unlink()
+    print("  [random_battery_drop_column] PASSED")
+
+
+def _test_panel_lock_matches_router() -> None:
+    """Reviewer 2026-07-12 finding 4: PANEL_MODELS here and
+    MODEL_PANEL_PRIMARY in llm_router must stay identical IN ORDER — the
+    §5.4 Random column and the Phase 1B random dispatch hash into these
+    lists independently, and any silent reorder breaks the '§7.1 Phase 1A
+    random assignments extend verbatim' contract."""
+    from llm_router import MODEL_PANEL_PRIMARY
+    assert PANEL_MODELS == list(MODEL_PANEL_PRIMARY), (
+        f"PANEL_MODELS != llm_router.MODEL_PANEL_PRIMARY:\n"
+        f"  writer: {PANEL_MODELS}\n  router: {list(MODEL_PANEL_PRIMARY)}"
+    )
+    print("  [panel_lock_matches_router] PASSED")
+
+
 def run_self_tests() -> int:
     import tempfile
     print("Phase 1A parquet writer self-tests")
@@ -456,10 +546,12 @@ def run_self_tests() -> int:
     _test_binary_abs_err()
     _test_random_determinism()
     _test_row_count()
+    _test_panel_lock_matches_router()
     with tempfile.TemporaryDirectory() as d:
         _test_parquet_roundtrip(Path(d))
         _test_provenance_columns_e2e(Path(d))
-    print("✓ ALL 7 SELF-TESTS PASSED")
+        _test_random_battery_drop_column(Path(d))
+    print("✓ ALL 9 SELF-TESTS PASSED")
     return 0
 
 
@@ -474,6 +566,11 @@ def main() -> int:
                    help="JSON input paths. Default: auto-discover P0/P1/P2 for panel n=200 seed=42.")
     p.add_argument("--output", type=Path, default=DEFAULT_OUTPUT,
                    help=f"Output parquet path. Default: {DEFAULT_OUTPUT}")
+    p.add_argument("--no-random-column", action="store_true",
+                   help="Skip the §5.4 post-hoc Random column. REQUIRED for "
+                        "Phase 1B consolidation (random dispatch already IS "
+                        "the random pick; adding the column would duplicate "
+                        "every row — Reviewer 2026-07-12 CRITICAL).")
     p.add_argument("--model-tag", default="panel")
     p.add_argument("--n", type=int, default=200)
     p.add_argument("--seed", type=int, default=42)
@@ -481,6 +578,17 @@ def main() -> int:
 
     if args.self_test:
         return run_self_tests()
+
+    # Clobber guard: Phase 1B consolidation (--no-random-column) must not
+    # silently overwrite the paid Phase 1A artifact at the default path.
+    if args.no_random_column and args.output == DEFAULT_OUTPUT:
+        print(
+            "error: --no-random-column (Phase 1B consolidation) requires an "
+            "explicit --output (e.g. outputs/phase1b_raw.parquet) — the "
+            f"default {DEFAULT_OUTPUT.name} is the paid Phase 1A artifact.",
+            file=sys.stderr,
+        )
+        return 2
 
     if args.inputs:
         json_paths = list(args.inputs)
@@ -503,7 +611,11 @@ def main() -> int:
     print(f"Building parquet from {len(json_paths)} input JSON(s):")
     for p in json_paths:
         print(f"  - {p}")
-    df = build_dataframe(json_paths)
+    try:
+        df = build_dataframe(json_paths, add_random=not args.no_random_column)
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
     df.to_parquet(args.output, index=False)
     print(f"Wrote {len(df):,} rows → {args.output}")
     print(f"  unique cells (model × prompt): {df.groupby(['model', 'prompt']).ngroups}")

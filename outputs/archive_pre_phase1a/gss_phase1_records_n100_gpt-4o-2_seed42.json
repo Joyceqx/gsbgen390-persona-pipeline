@@ -1,0 +1,2022 @@
+[
+  {
+    "respondent_id": 53,
+    "condition": "full",
+    "model": "openai/gpt-4o-2024-08-06",
+    "prompt_id": "P0",
+    "prompt_version": "v1",
+    "template_hash": "60e64acf03b8a0b5",
+    "n_samples": 2,
+    "per_item_scores": {
+      "POLVIEWS": [
+        {
+          "truth": 3,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 324779266,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 1014,
+          "tokens_out": 1
+        },
+        {
+          "truth": 3,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 741023400,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 1014,
+          "tokens_out": 1
+        }
+      ],
+      "PARTYID": [
+        {
+          "truth": 1,
+          "persona_raw": "0",
+          "persona_code": 0,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 258657710,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 1028,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 0,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1492569362,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 1028,
+          "tokens_out": 1
+        }
+      ],
+      "ABANY": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 487172019,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 919,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 1248429297,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 919,
+          "tokens_out": 1
+        }
+      ],
+      "GUNLAW": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 668556159,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 972,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 1938872455,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 972,
+          "tokens_out": 1
+        }
+      ],
+      "FECHLD": [
+        {
+          "truth": 2,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1501409006,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 1010,
+          "tokens_out": 1
+        },
+        {
+          "truth": 2,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1551447225,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 1010,
+          "tokens_out": 1
+        }
+      ],
+      "RACDIF1": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 1393649349,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 951,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 1031898548,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 951,
+          "tokens_out": 1
+        }
+      ],
+      "SATFIN": [
+        {
+          "truth": 1,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 773671651,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 984,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 224999898,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 984,
+          "tokens_out": 1
+        }
+      ]
+    },
+    "per_item_prompt_stats": {
+      "POLVIEWS": {
+        "prompt_id": "P0",
+        "feature_count": 75,
+        "char_count": 3503,
+        "approx_tokens": 875,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "POLVIEWS"
+        ]
+      },
+      "PARTYID": {
+        "prompt_id": "P0",
+        "feature_count": 75,
+        "char_count": 3503,
+        "approx_tokens": 875,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "PARTYID"
+        ]
+      },
+      "ABANY": {
+        "prompt_id": "P0",
+        "feature_count": 69,
+        "char_count": 3284,
+        "approx_tokens": 821,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 27
+        },
+        "battery_excluded": [
+          "ABANY",
+          "ABDEFECT",
+          "ABHLTH",
+          "ABNOMORE",
+          "ABPOOR",
+          "ABRAPE",
+          "ABSINGLE"
+        ]
+      },
+      "GUNLAW": {
+        "prompt_id": "P0",
+        "feature_count": 75,
+        "char_count": 3503,
+        "approx_tokens": 875,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "GUNLAW"
+        ]
+      },
+      "FECHLD": {
+        "prompt_id": "P0",
+        "feature_count": 72,
+        "char_count": 3332,
+        "approx_tokens": 833,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 30
+        },
+        "battery_excluded": [
+          "FECHLD",
+          "FEFAM",
+          "FEHIRE",
+          "FEPOL",
+          "FEPRESCH"
+        ]
+      },
+      "RACDIF1": {
+        "prompt_id": "P0",
+        "feature_count": 71,
+        "char_count": 3325,
+        "approx_tokens": 831,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 29
+        },
+        "battery_excluded": [
+          "DISCAFF",
+          "DISCAFFM",
+          "DISCAFFW",
+          "RACDIF1",
+          "RACDIF2",
+          "RACDIF3",
+          "RACDIF4",
+          "WLTHBLKS",
+          "WLTHHSPS",
+          "WLTHWHTS"
+        ]
+      },
+      "SATFIN": {
+        "prompt_id": "P0",
+        "feature_count": 75,
+        "char_count": 3503,
+        "approx_tokens": 875,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "SATFIN"
+        ]
+      }
+    },
+    "r1_battery_exclusion": true
+  },
+  {
+    "respondent_id": 53,
+    "condition": "loo_drop_demographic",
+    "model": "openai/gpt-4o-2024-08-06",
+    "prompt_id": "P0",
+    "prompt_version": "v1",
+    "template_hash": "60e64acf03b8a0b5",
+    "n_samples": 2,
+    "per_item_scores": {
+      "POLVIEWS": [
+        {
+          "truth": 3,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 326550324,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 766,
+          "tokens_out": 1
+        },
+        {
+          "truth": 3,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1645191757,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 766,
+          "tokens_out": 1
+        }
+      ],
+      "PARTYID": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 0,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 425140046,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 780,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "0",
+          "persona_code": 0,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1660360436,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 780,
+          "tokens_out": 1
+        }
+      ],
+      "ABANY": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 707637057,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 671,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 680578770,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 671,
+          "tokens_out": 1
+        }
+      ],
+      "GUNLAW": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 139896815,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 724,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 500215981,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 724,
+          "tokens_out": 1
+        }
+      ],
+      "FECHLD": [
+        {
+          "truth": 2,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1064041587,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 762,
+          "tokens_out": 1
+        },
+        {
+          "truth": 2,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 263302943,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 762,
+          "tokens_out": 1
+        }
+      ],
+      "RACDIF1": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 923071291,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 703,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 222141729,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 703,
+          "tokens_out": 1
+        }
+      ],
+      "SATFIN": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 0,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1008663283,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 736,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 0,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 461837785,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_2c1bd5cc0e",
+          "provider": null,
+          "tokens_in": 736,
+          "tokens_out": 1
+        }
+      ]
+    },
+    "per_item_prompt_stats": {
+      "POLVIEWS": {
+        "prompt_id": "P0",
+        "feature_count": 55,
+        "char_count": 2491,
+        "approx_tokens": 622,
+        "bin_counts": {
+          "demographic": 0,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "POLVIEWS"
+        ]
+      },
+      "PARTYID": {
+        "prompt_id": "P0",
+        "feature_count": 55,
+        "char_count": 2491,
+        "approx_tokens": 622,
+        "bin_counts": {
+          "demographic": 0,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "PARTYID"
+        ]
+      },
+      "ABANY": {
+        "prompt_id": "P0",
+        "feature_count": 49,
+        "char_count": 2272,
+        "approx_tokens": 568,
+        "bin_counts": {
+          "demographic": 0,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 27
+        },
+        "battery_excluded": [
+          "ABANY",
+          "ABDEFECT",
+          "ABHLTH",
+          "ABNOMORE",
+          "ABPOOR",
+          "ABRAPE",
+          "ABSINGLE"
+        ]
+      },
+      "GUNLAW": {
+        "prompt_id": "P0",
+        "feature_count": 55,
+        "char_count": 2491,
+        "approx_tokens": 622,
+        "bin_counts": {
+          "demographic": 0,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "GUNLAW"
+        ]
+      },
+      "FECHLD": {
+        "prompt_id": "P0",
+        "feature_count": 52,
+        "char_count": 2320,
+        "approx_tokens": 580,
+        "bin_counts": {
+          "demographic": 0,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 30
+        },
+        "battery_excluded": [
+          "FECHLD",
+          "FEFAM",
+          "FEHIRE",
+          "FEPOL",
+          "FEPRESCH"
+        ]
+      },
+      "RACDIF1": {
+        "prompt_id": "P0",
+        "feature_count": 51,
+        "char_count": 2313,
+        "approx_tokens": 578,
+        "bin_counts": {
+          "demographic": 0,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 29
+        },
+        "battery_excluded": [
+          "DISCAFF",
+          "DISCAFFM",
+          "DISCAFFW",
+          "RACDIF1",
+          "RACDIF2",
+          "RACDIF3",
+          "RACDIF4",
+          "WLTHBLKS",
+          "WLTHHSPS",
+          "WLTHWHTS"
+        ]
+      },
+      "SATFIN": {
+        "prompt_id": "P0",
+        "feature_count": 55,
+        "char_count": 2491,
+        "approx_tokens": 622,
+        "bin_counts": {
+          "demographic": 0,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "SATFIN"
+        ]
+      }
+    },
+    "r1_battery_exclusion": true
+  },
+  {
+    "respondent_id": 53,
+    "condition": "loo_drop_behavioral",
+    "model": "openai/gpt-4o-2024-08-06",
+    "prompt_id": "P0",
+    "prompt_version": "v1",
+    "template_hash": "60e64acf03b8a0b5",
+    "n_samples": 2,
+    "per_item_scores": {
+      "POLVIEWS": [
+        {
+          "truth": 3,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1022390249,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 811,
+          "tokens_out": 1
+        },
+        {
+          "truth": 3,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 2,
+          "within1": 0,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1636454209,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 811,
+          "tokens_out": 1
+        }
+      ],
+      "PARTYID": [
+        {
+          "truth": 1,
+          "persona_raw": "0",
+          "persona_code": 0,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 189446272,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 825,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1898300310,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 825,
+          "tokens_out": 1
+        }
+      ],
+      "ABANY": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 911360005,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 716,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 930923180,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_1e3b68831e",
+          "provider": null,
+          "tokens_in": 716,
+          "tokens_out": 1
+        }
+      ],
+      "GUNLAW": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 967518240,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 769,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 587922969,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 769,
+          "tokens_out": 1
+        }
+      ],
+      "FECHLD": [
+        {
+          "truth": 2,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1373708928,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 807,
+          "tokens_out": 1
+        },
+        {
+          "truth": 2,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 155170957,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 807,
+          "tokens_out": 1
+        }
+      ],
+      "RACDIF1": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 1473063487,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 748,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 991898275,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_5f78e76dfa",
+          "provider": null,
+          "tokens_in": 748,
+          "tokens_out": 1
+        }
+      ],
+      "SATFIN": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 0,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 892329844,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 781,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 0,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 604924978,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 781,
+          "tokens_out": 1
+        }
+      ]
+    },
+    "per_item_prompt_stats": {
+      "POLVIEWS": {
+        "prompt_id": "P0",
+        "feature_count": 57,
+        "char_count": 2761,
+        "approx_tokens": 690,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 0,
+          "psychological": 4,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "POLVIEWS"
+        ]
+      },
+      "PARTYID": {
+        "prompt_id": "P0",
+        "feature_count": 57,
+        "char_count": 2761,
+        "approx_tokens": 690,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 0,
+          "psychological": 4,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "PARTYID"
+        ]
+      },
+      "ABANY": {
+        "prompt_id": "P0",
+        "feature_count": 51,
+        "char_count": 2542,
+        "approx_tokens": 635,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 0,
+          "psychological": 4,
+          "attitudinal": 27
+        },
+        "battery_excluded": [
+          "ABANY",
+          "ABDEFECT",
+          "ABHLTH",
+          "ABNOMORE",
+          "ABPOOR",
+          "ABRAPE",
+          "ABSINGLE"
+        ]
+      },
+      "GUNLAW": {
+        "prompt_id": "P0",
+        "feature_count": 57,
+        "char_count": 2761,
+        "approx_tokens": 690,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 0,
+          "psychological": 4,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "GUNLAW"
+        ]
+      },
+      "FECHLD": {
+        "prompt_id": "P0",
+        "feature_count": 54,
+        "char_count": 2590,
+        "approx_tokens": 647,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 0,
+          "psychological": 4,
+          "attitudinal": 30
+        },
+        "battery_excluded": [
+          "FECHLD",
+          "FEFAM",
+          "FEHIRE",
+          "FEPOL",
+          "FEPRESCH"
+        ]
+      },
+      "RACDIF1": {
+        "prompt_id": "P0",
+        "feature_count": 53,
+        "char_count": 2583,
+        "approx_tokens": 645,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 0,
+          "psychological": 4,
+          "attitudinal": 29
+        },
+        "battery_excluded": [
+          "DISCAFF",
+          "DISCAFFM",
+          "DISCAFFW",
+          "RACDIF1",
+          "RACDIF2",
+          "RACDIF3",
+          "RACDIF4",
+          "WLTHBLKS",
+          "WLTHHSPS",
+          "WLTHWHTS"
+        ]
+      },
+      "SATFIN": {
+        "prompt_id": "P0",
+        "feature_count": 57,
+        "char_count": 2761,
+        "approx_tokens": 690,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 0,
+          "psychological": 4,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "SATFIN"
+        ]
+      }
+    },
+    "r1_battery_exclusion": true
+  },
+  {
+    "respondent_id": 53,
+    "condition": "loo_drop_psychological",
+    "model": "openai/gpt-4o-2024-08-06",
+    "prompt_id": "P0",
+    "prompt_version": "v1",
+    "template_hash": "60e64acf03b8a0b5",
+    "n_samples": 2,
+    "per_item_scores": {
+      "POLVIEWS": [
+        {
+          "truth": 3,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1661825222,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 972,
+          "tokens_out": 1
+        },
+        {
+          "truth": 3,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1021466650,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 972,
+          "tokens_out": 1
+        }
+      ],
+      "PARTYID": [
+        {
+          "truth": 1,
+          "persona_raw": "0",
+          "persona_code": 0,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1304179513,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_5f78e76dfa",
+          "provider": null,
+          "tokens_in": 986,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "0",
+          "persona_code": 0,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1944824602,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 986,
+          "tokens_out": 1
+        }
+      ],
+      "ABANY": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 1154338640,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 877,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 1339870522,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 877,
+          "tokens_out": 1
+        }
+      ],
+      "GUNLAW": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 1738929904,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_5f78e76dfa",
+          "provider": null,
+          "tokens_in": 930,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 1778363385,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 930,
+          "tokens_out": 1
+        }
+      ],
+      "FECHLD": [
+        {
+          "truth": 2,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 554461887,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 968,
+          "tokens_out": 1
+        },
+        {
+          "truth": 2,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 381870528,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 968,
+          "tokens_out": 1
+        }
+      ],
+      "RACDIF1": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 353381226,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 909,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 238234317,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 909,
+          "tokens_out": 1
+        }
+      ],
+      "SATFIN": [
+        {
+          "truth": 1,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1155848522,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 942,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1798790418,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 942,
+          "tokens_out": 1
+        }
+      ]
+    },
+    "per_item_prompt_stats": {
+      "POLVIEWS": {
+        "prompt_id": "P0",
+        "feature_count": 71,
+        "char_count": 3334,
+        "approx_tokens": 833,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 0,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "POLVIEWS"
+        ]
+      },
+      "PARTYID": {
+        "prompt_id": "P0",
+        "feature_count": 71,
+        "char_count": 3334,
+        "approx_tokens": 833,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 0,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "PARTYID"
+        ]
+      },
+      "ABANY": {
+        "prompt_id": "P0",
+        "feature_count": 65,
+        "char_count": 3115,
+        "approx_tokens": 778,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 0,
+          "attitudinal": 27
+        },
+        "battery_excluded": [
+          "ABANY",
+          "ABDEFECT",
+          "ABHLTH",
+          "ABNOMORE",
+          "ABPOOR",
+          "ABRAPE",
+          "ABSINGLE"
+        ]
+      },
+      "GUNLAW": {
+        "prompt_id": "P0",
+        "feature_count": 71,
+        "char_count": 3334,
+        "approx_tokens": 833,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 0,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "GUNLAW"
+        ]
+      },
+      "FECHLD": {
+        "prompt_id": "P0",
+        "feature_count": 68,
+        "char_count": 3163,
+        "approx_tokens": 790,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 0,
+          "attitudinal": 30
+        },
+        "battery_excluded": [
+          "FECHLD",
+          "FEFAM",
+          "FEHIRE",
+          "FEPOL",
+          "FEPRESCH"
+        ]
+      },
+      "RACDIF1": {
+        "prompt_id": "P0",
+        "feature_count": 67,
+        "char_count": 3156,
+        "approx_tokens": 789,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 0,
+          "attitudinal": 29
+        },
+        "battery_excluded": [
+          "DISCAFF",
+          "DISCAFFM",
+          "DISCAFFW",
+          "RACDIF1",
+          "RACDIF2",
+          "RACDIF3",
+          "RACDIF4",
+          "WLTHBLKS",
+          "WLTHHSPS",
+          "WLTHWHTS"
+        ]
+      },
+      "SATFIN": {
+        "prompt_id": "P0",
+        "feature_count": 71,
+        "char_count": 3334,
+        "approx_tokens": 833,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 0,
+          "attitudinal": 33
+        },
+        "battery_excluded": [
+          "SATFIN"
+        ]
+      }
+    },
+    "r1_battery_exclusion": true
+  },
+  {
+    "respondent_id": 53,
+    "condition": "loo_drop_attitudinal",
+    "model": "openai/gpt-4o-2024-08-06",
+    "prompt_id": "P0",
+    "prompt_version": "v1",
+    "template_hash": "60e64acf03b8a0b5",
+    "n_samples": 2,
+    "per_item_scores": {
+      "POLVIEWS": [
+        {
+          "truth": 3,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 827183641,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_1e3b68831e",
+          "provider": null,
+          "tokens_in": 671,
+          "tokens_out": 1
+        },
+        {
+          "truth": 3,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 83250189,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 671,
+          "tokens_out": 1
+        }
+      ],
+      "PARTYID": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 0,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1820417218,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 685,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "0",
+          "persona_code": 0,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1299958674,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 685,
+          "tokens_out": 1
+        }
+      ],
+      "ABANY": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 1637640426,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 630,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 2116038620,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 630,
+          "tokens_out": 1
+        }
+      ],
+      "GUNLAW": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 1092272914,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 629,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 1454058766,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 629,
+          "tokens_out": 1
+        }
+      ],
+      "FECHLD": [
+        {
+          "truth": 2,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1963749267,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 705,
+          "tokens_out": 1
+        },
+        {
+          "truth": 2,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 2005957665,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 705,
+          "tokens_out": 1
+        }
+      ],
+      "RACDIF1": [
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 239692283,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_5f78e76dfa",
+          "provider": null,
+          "tokens_in": 651,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "categorical",
+          "abs_err": null,
+          "within1": null,
+          "cat_match": 1,
+          "skipped_missing_truth": false,
+          "seed": 559657029,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_310038b1e7",
+          "provider": null,
+          "tokens_in": 651,
+          "tokens_out": 1
+        }
+      ],
+      "SATFIN": [
+        {
+          "truth": 1,
+          "persona_raw": "2",
+          "persona_code": 2,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 1,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 1254483290,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_5f78e76dfa",
+          "provider": null,
+          "tokens_in": 641,
+          "tokens_out": 1
+        },
+        {
+          "truth": 1,
+          "persona_raw": "1",
+          "persona_code": 1,
+          "parse_fail": false,
+          "treatment": "likert",
+          "abs_err": 0,
+          "within1": 1,
+          "cat_match": null,
+          "skipped_missing_truth": false,
+          "seed": 173090928,
+          "error_type": "ok",
+          "model_returned": "gpt-4o-2024-08-06",
+          "system_fingerprint": "fp_5f78e76dfa",
+          "provider": null,
+          "tokens_in": 641,
+          "tokens_out": 1
+        }
+      ]
+    },
+    "per_item_prompt_stats": {
+      "POLVIEWS": {
+        "prompt_id": "P0",
+        "feature_count": 42,
+        "char_count": 2047,
+        "approx_tokens": 511,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 0
+        },
+        "battery_excluded": [
+          "POLVIEWS"
+        ]
+      },
+      "PARTYID": {
+        "prompt_id": "P0",
+        "feature_count": 42,
+        "char_count": 2047,
+        "approx_tokens": 511,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 0
+        },
+        "battery_excluded": [
+          "PARTYID"
+        ]
+      },
+      "ABANY": {
+        "prompt_id": "P0",
+        "feature_count": 42,
+        "char_count": 2047,
+        "approx_tokens": 511,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 0
+        },
+        "battery_excluded": [
+          "ABANY",
+          "ABDEFECT",
+          "ABHLTH",
+          "ABNOMORE",
+          "ABPOOR",
+          "ABRAPE",
+          "ABSINGLE"
+        ]
+      },
+      "GUNLAW": {
+        "prompt_id": "P0",
+        "feature_count": 42,
+        "char_count": 2047,
+        "approx_tokens": 511,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 0
+        },
+        "battery_excluded": [
+          "GUNLAW"
+        ]
+      },
+      "FECHLD": {
+        "prompt_id": "P0",
+        "feature_count": 42,
+        "char_count": 2047,
+        "approx_tokens": 511,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 0
+        },
+        "battery_excluded": [
+          "FECHLD",
+          "FEFAM",
+          "FEHIRE",
+          "FEPOL",
+          "FEPRESCH"
+        ]
+      },
+      "RACDIF1": {
+        "prompt_id": "P0",
+        "feature_count": 42,
+        "char_count": 2047,
+        "approx_tokens": 511,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 0
+        },
+        "battery_excluded": [
+          "DISCAFF",
+          "DISCAFFM",
+          "DISCAFFW",
+          "RACDIF1",
+          "RACDIF2",
+          "RACDIF3",
+          "RACDIF4",
+          "WLTHBLKS",
+          "WLTHHSPS",
+          "WLTHWHTS"
+        ]
+      },
+      "SATFIN": {
+        "prompt_id": "P0",
+        "feature_count": 42,
+        "char_count": 2047,
+        "approx_tokens": 511,
+        "bin_counts": {
+          "demographic": 20,
+          "behavioral": 18,
+          "psychological": 4,
+          "attitudinal": 0
+        },
+        "battery_excluded": [
+          "SATFIN"
+        ]
+      }
+    },
+    "r1_battery_exclusion": true
+  }
+]

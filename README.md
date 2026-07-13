@@ -4,43 +4,71 @@ Stanford GSB master's thesis, Spring 2026. Lead: Joyce Yu. Advisor: Prof. Mohsen
 
 **What this is**: a methodological paper that estimates which categories of survey-collectible features (demographic / behavioral / psychological / attitudinal) drive LLM persona prediction of held-out GSS 2024 attitudes, benchmarked against Park et al. 2024 v2.
 
-## Where to start
+## Status (2026-07-12)
 
-- **Design**: `RESEARCH_DESIGN.md` is the single source of truth — research question, data, eval set, panel, prompts, selector, analysis plan, budget.
-- **Code**: `src/` — pipeline in `src/gss_driver.py` (orchestrator) → `src/gss_pipeline.py`, `src/select_phase1b_model.py`, `src/battery_loo.py`, `src/shapley_decomposition.py`, `src/regression_baseline.py`, `src/validate_taxonomy.py`, `src/llm_router.py`, `src/lint_writeup_language.py`.
-- **Data**: `data/gss/390data1/` — 3-batch GSS extract covering 1972–2024 (~2 GB).
-- **Locked artifacts**: `gss_feature_taxonomy.json` (140 variables × 4 bins) and `gss_battery_map.json` (34 batteries + 17 singletons).
-- **History + reference materials**: `archive/` (earlier design docs, OSF preregistration, prior advisor briefs, theory reviews, Park v2 PDF `2411.10109v2.pdf`, supporting lit review `lit_review_prompt_variants_2026-05-15.md`, Phase 1c tool spec `tier1_tool_schemas.md`). Read on demand only.
+| Stage | Status |
+|---|---|
+| Phase 1A factorial (4 models × 3 prompts × N=200) | ✅ done → `outputs/phase1a_raw.parquet` |
+| GPT-4o anchors A (R1-OFF) + B (R1-ON), N=100 | ✅ done → `outputs/anchor_r1{off,on}_n100.json` |
+| §7 selector + §7.1 advisor decision | ✅ cell locked: **Random × P1** |
+| Phase 1B (N=3,309 × 6 conditions, ~$58) | ⏳ next — see "How to run" |
+| Layer-2 paired-difference analyzer | ⏳ pending (before Phase 1B analysis) |
+| Phase 1C (Battery LOO $481 / Shapley $38) | Battery LOO contingent on Layer-2 results |
 
-## How to run
+## Layout
 
-See `RESEARCH_DESIGN.md` §10.3 for the full command sequence. Quick version:
+- `RESEARCH_DESIGN.md` — **single source of truth** (design, panel, prompts, selector, §7.1 cell decision, §8 two-layer Phase 1B, budget, run commands)
+- `CLAUDE.md` — AI-session guidance + changelog
+- `gss_feature_taxonomy.json` / `gss_battery_map.json` — locked taxonomy (140 vars × 4 bins) + battery map (34 batteries + 17 singletons)
+- `config/persona_prompt_templates.json` — canonical P1/P2 per-variable templates (hash-stamped into records)
+- `src/` — pipeline code:
+  - `gss_driver.py` — orchestrator (`--phase1a` / `--phase1b` / `--phase1b-anchor` / `--smoke` / `--self-test-dispatch`)
+  - `gss_pipeline.py`, `gss_loader.py` — scoring / prompts / data loading
+  - `prompt_variants.py` — P0/P1/P2 renderers
+  - `llm_router.py` — OpenRouter/OpenAI layer + `PROVIDER_LOCK`
+  - `select_phase1b_cell.py` — §7 joint (model, prompt) selector
+  - `write_phase1a_parquet.py` — §6.2 parquet writer (Random column; Phase-1B guards)
+  - `battery_loo.py`, `shapley_decomposition.py`, `regression_baseline.py` — analyzers
+  - `gss_driver_anchor.py` — anchor-run driver
+  - `validate_taxonomy.py`, `lint_writeup_language.py` — validators
+- `tests/preflight_phase1a.py` — paid-run pre-flight coverage checks
+- `scripts/` — run launchers + ops (`launch_phase1a.sh`, `launch_anchor_a.sh`, `check.sh` Phase 1A-era progress monitor, `export_databook_xlsx.py`)
+- `data/gss/390data1/` — GSS 2024 3-batch extract (~2 GB)
+- `outputs/` — run artifacts + locked references (`primary_eval_human_variance_2024.json`); pre-Phase-1A strays in `outputs/archive_pre_phase1a/`
+- `report/` — Phase 1A analysis bundle (stats, figures, databook, advisor correspondence)
+- `notes/` — advisor deliverables (Phase 1A report .docx/.pdf) + `park_comparability.md`
+- `archive/` — superseded docs + code (OSF prereg, old design docs, `select_phase1b_model.py` legacy selector, Park v2 PDF). Read on demand only.
+
+## How to run (Phase 1B, next step)
 
 ```bash
-# Pre-flight (free)
-python3 src/validate_taxonomy.py
-python3 src/select_phase1b_model.py --self-test
+# 0. Pre-flight (free)
+python3 src/gss_driver.py --self-test-dispatch     # dispatch pickers
+python3 src/write_phase1a_parquet.py --self-test   # writer (9 tests)
+python3 src/select_phase1b_cell.py --self-test
+python3 tests/preflight_phase1a.py
 
-# Smoke
-python3 src/gss_driver.py --smoke              # ~$3, 5 min
+# 1. Provider re-check (free — PROVIDER_LOCK is from 2026-05-31)
+python3 src/llm_router.py --smoke-panel
 
-# Phase 1A (4 models × 3 prompts × N=200) + GPT-4o anchor
-python3 src/gss_driver.py --phase1a            # ~$51, ~24 hr
-python3 src/gss_driver.py --phase1b-anchor     # ~$148, 2-4 hr
+# 2. Driver smoke (~$0.01)
+python3 src/gss_driver.py --smoke
 
-# Joint (model, prompt) cell selector
-python3 src/select_phase1b_model.py outputs/phase1a_raw.parquet
+# 3. Phase 1B (~$58, 3-7 days; resumable — rerun the same command to continue)
+python3 src/gss_driver.py --phase1b --phase1b-model random --phase1b-prompt P1
 
-# Phase 1B (selected cell × N=3,309)
-python3 src/gss_driver.py --phase1b --phase1b-model <slug> --phase1b-prompt <p>   # ~$71, 3-7 days
+# 4. Consolidate Phase 1B parquet (NOTE: flags are REQUIRED — guards refuse otherwise)
+python3 src/write_phase1a_parquet.py \
+    --inputs outputs/gss_phase1_records_n3309_random_seed42.json \
+    --no-random-column --output outputs/phase1b_raw.parquet
 
-# Phase 1C
-python3 src/gss_driver.py --battery-loo --phase1b-model <slug> --phase1b-prompt <p>  # ~$481
-python3 src/gss_driver.py --shapley                                                  # ~$38
+# 5. R2 regression baseline (free)
+python3 src/regression_baseline.py --input outputs/phase1b_raw.parquet \
+    --output outputs/phase1b_r2_baseline.json
 ```
 
-Total Phase 1 budget: ~$792. The factorial extension (3 prompts) and parquet writer in `gss_driver.py` are not yet implemented; see `RESEARCH_DESIGN.md` §10.2 for the extension scope.
+Full sequence + Phase 1C: `RESEARCH_DESIGN.md` §10.3. Budget: §11 (~$742 max / ~$261 if Battery LOO is dropped).
 
 ## Privacy
 
-GSS data is public — no constraints. Cookiy participant transcripts (`cookiy_transcripts/`, `responses/`, `responses_s2/`) are gitignored and stay local. API keys are gitignored.
+GSS data is public. Cookiy transcripts and API keys (`Openai_api.txt`, `OpenRouter_api.txt`) are gitignored — never commit or echo them.

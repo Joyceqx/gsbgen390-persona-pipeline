@@ -13,14 +13,12 @@ Phase 1A scope reduced + n_samples bumped 2026-05-29 per Reviewer round-2):
     the LLM call). 12 items only × 1 condition × ~8 ballot-on × n=2 ≈ 192
     prompts/model/respondent. LOO conditions are deferred to Phase 1B on
     the disjoint cohort; the §7 selector reads Full only.
-  - Phase 1b (N=3,309 — full GSS 2024 cross-section): single §7-selected
-    (model, prompt) cell × n_samples=1, **primary_eval ONLY** × Full + 4 LOO
-    conditions, with ballot-off pre-filter. Headline cohort excludes the
-    N=200 §7 selector cohort (N=3,109 disjoint); full N=3,309 reported as
-    sensitivity. The §7 selector is CI-overlap-driven: ties are determined
-    by bootstrap-CI overlap rather than a fixed 5% MAE window, so the
-    selector behaves quality-primary only when the headline cell is
-    statistically separated from the rest.
+  - Phase 1b (N=3,309 — full GSS 2024 cross-section): Random × P1 cell
+    (§7.1 advisor decision 2026-07-12; --phase1b-model random dispatches
+    per respondent) × n_samples=1, **primary_eval ONLY** × 6 conditions
+    (Full + 4 bin-LOO + random_battery_drop; CONDITIONS_PHASE1B), with
+    ballot-off pre-filter. Headline cohort excludes the N=200 §7 selector
+    cohort (N=3,109 disjoint); full N=3,309 reported as sensitivity.
   - GPT-4o anchor: N=100 selection-split subset, n_samples=2, **primary +
     sensitivity** (60 + 118 = 178 prompts × n=2 = 356 calls/respondent — the
     ONLY Park-comparable run; produces the per-item raw-accuracy anchor table
@@ -46,13 +44,13 @@ post-factorial audit; legacy --smoke / --anchor flags below are debug-only):
     # §7 joint (model, prompt) cell selector — reads outputs/phase1a_raw.parquet:
     python3 select_phase1b_cell.py outputs/phase1a_raw.parquet
 
-    # Phase 1b — N=3,309 × single §7-selected cell × primary-only × Full + 4 LOO
-    # × n_samples=1. Headline cohort excludes the 200 selector respondents
-    # (N=3,109 disjoint); full N=3,309 reported as sensitivity. Cost: ~$48.
+    # Phase 1b — N=3,309 × Random × P1 (§7.1) × primary-only × 6 conditions
+    # (Full + 4 bin-LOO + random_battery_drop) × n_samples=1. Headline cohort
+    # excludes the 200 selector respondents (N=3,109 disjoint); full N=3,309
+    # reported as sensitivity. Cost: ~$58.
     python3 gss_driver.py --phase1b \\
-        --phase1b-model qwen/qwen-2.5-72b-instruct \\
-        --phase1b-prompt P0
-    # (replace slug + prompt with the actual selector output)
+        --phase1b-model random \\
+        --phase1b-prompt P1
 
     # GPT-4o anchor — N=100 selection-split subset × primary + sensitivity
     # (the only Park-comparable run; produces the Park v2 SI Table 3 anchor
@@ -127,6 +125,115 @@ CONDITIONS_PRIMARY = [
 # LOO conditions were generating ~80% of Phase 1A's calls but the selector did
 # not consume any of them. Defer LOO to Phase 1B.
 CONDITIONS_FULL_ONLY: list[tuple[str, str | None]] = [("full", None)]
+
+# Phase 1B conditions (locked 2026-07-12, Joyce + Bayati): the 5 legacy
+# primary conditions PLUS the random-battery-ablation condition. The 6th
+# condition drops the item's own battery (R1, as everywhere) plus ONE
+# additional battery drawn at random per (rid, item) — seeded, avoiding the
+# own battery. Compared against the Full condition for the same (rid, item),
+# this yields a paired estimate of each battery's marginal contribution:
+# across N=3,309 × ~8 items each of the 34 batteries is randomly absent in
+# ~1/33 of draws (~800 paired observations per battery). This is the
+# randomized-ablation approximation of the §9.1 enumerated Battery LOO
+# (34 × N=3,309, ~$481); whether §9.1 still runs (in full, reduced, or not
+# at all) is decided AFTER these results are in.
+# NOTE: kept separate from CONDITIONS_PRIMARY so legacy/debug/anchor paths
+# that default to CONDITIONS_PRIMARY are unaffected.
+CONDITIONS_PHASE1B: list[tuple[str, str | None]] = CONDITIONS_PRIMARY + [
+    ("random_battery_drop", None),
+]
+
+
+# ---------------------------------------------------------------------------
+# Phase 1B random-model dispatch (Bayati-approved 2026-07-12)
+# ---------------------------------------------------------------------------
+# When --phase1b-model random is passed, each Phase 1B respondent is assigned
+# one model deterministically via SHA-256(42|rid|prompt_id). This mirrors the
+# Phase 1A post-hoc random column in write_phase1a_parquet.py exactly, so
+# the same respondent × prompt assignment holds across Phase 1A reporting and
+# Phase 1B calls. The assignment is resolved once per respondent and held fixed
+# across Full + all 4 LOO conditions, so LOO comparisons are within-model.
+_RANDOM_DISPATCH_SEED = 42
+_RANDOM_DISPATCH_MODELS: list[str] = list(MODEL_PANEL_PRIMARY)
+
+
+def _pick_random_model_for_phase1b(rid: int, prompt_id: str) -> str:
+    """Deterministic per-respondent model pick for Phase 1B random-dispatch.
+    SHA-256(42|rid|prompt_id) → uniform index into MODEL_PANEL_PRIMARY.
+    Identical hash logic to write_phase1a_parquet._picked_model_for."""
+    key = f"{_RANDOM_DISPATCH_SEED}|{rid}|{prompt_id}".encode("utf-8")
+    h = hashlib.sha256(key).digest()
+    idx = int.from_bytes(h[:8], "big") % len(_RANDOM_DISPATCH_MODELS)
+    return _RANDOM_DISPATCH_MODELS[idx]
+
+
+def _pick_random_battery_for_item(
+    rid: int, item_id: str, battery_map: dict
+) -> str:
+    """Deterministic random-battery pick for the random_battery_drop condition
+    (locked 2026-07-12, Joyce + Bayati — randomized battery ablation).
+
+    SHA-256(42|battery|rid|item_id) → uniform index into the sorted battery
+    names, EXCLUDING the item's own battery (which is already removed by R1 in
+    every condition — drawing it here would silently turn the ablation row
+    into a duplicate of Full). Uniform over the remaining 33 (or 34 for
+    singleton items with no own battery). Deterministic per (rid, item):
+    resume-safe and auditable post-hoc.
+    """
+    own = battery_map["_var_to_battery"].get(item_id)
+    candidates = sorted(b for b in battery_map["batteries"].keys() if b != own)
+    key = f"{_RANDOM_DISPATCH_SEED}|battery|{rid}|{item_id}".encode("utf-8")
+    h = hashlib.sha256(key).digest()
+    idx = int.from_bytes(h[:8], "big") % len(candidates)
+    return candidates[idx]
+
+
+def run_dispatch_self_tests() -> int:
+    """Self-tests for the two Phase 1B dispatch pickers (Reviewer 2026-07-12
+    finding 9 — the §10.1 verification claims must be reproducible from the
+    repo, not ad-hoc). Free, no LLM calls, ~5 s."""
+    from collections import Counter
+    from gss_pipeline import load_battery_map as _lbm
+
+    bm = _lbm()
+    n_batteries = len(bm["batteries"])
+
+    # 1. Model picker: hash-identity with the parquet writer's Random column
+    from write_phase1a_parquet import PANEL_MODELS, _picked_model_for
+    assert _RANDOM_DISPATCH_MODELS == PANEL_MODELS, (
+        f"panel list drift: driver={_RANDOM_DISPATCH_MODELS} writer={PANEL_MODELS}"
+    )
+    for rid in range(200):
+        for pid in ("P0", "P1", "P2"):
+            a = _pick_random_model_for_phase1b(rid, pid)
+            b = _picked_model_for(rid, pid, PANEL_MODELS)
+            assert a == b, f"model-pick mismatch rid={rid} {pid}: {a} != {b}"
+    print("  [model_picker_hash_identity] PASSED (200 rids × 3 prompts vs writer)")
+
+    # 2. Battery picker: determinism
+    assert (_pick_random_battery_for_item(53, "ABANY", bm)
+            == _pick_random_battery_for_item(53, "ABANY", bm))
+    print("  [battery_picker_determinism] PASSED")
+
+    # 3. Battery picker: own-battery avoidance + coverage, all 12 items × N=3,309
+    taxonomy = load_taxonomy()
+    items = [it["id"] for it in taxonomy["primary_eval"]["items"]]
+    for item_id in items:
+        own = bm["_var_to_battery"].get(item_id)
+        picks = Counter(
+            _pick_random_battery_for_item(rid, item_id, bm)
+            for rid in range(3309)
+        )
+        assert own not in picks, f"{item_id}: own battery {own} drawn"
+        expected = n_batteries - (1 if own else 0)
+        assert len(picks) == expected, (
+            f"{item_id}: coverage {len(picks)}/{expected}"
+        )
+    print(f"  [battery_picker_avoidance_coverage] PASSED "
+          f"(12 items × 3,309 rids; own never drawn; full coverage)")
+
+    print("✓ ALL 3 DISPATCH SELF-TESTS PASSED")
+    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -305,6 +412,20 @@ def run_primary_one_respondent(
                 continue
             # R1: battery exclusion per item
             excludes = battery_excludes_for_item(item["id"], battery_map)
+            # Random-battery ablation (Phase 1B 6th condition, locked
+            # 2026-07-12): R1 own-battery exclusion PLUS one additional
+            # battery drawn deterministically per (rid, item), avoiding the
+            # own battery. Paired against Full for the same (rid, item),
+            # this estimates each battery's marginal contribution without
+            # the 34-condition enumerated Battery LOO.
+            random_dropped_battery: str | None = None
+            if cond_name == "random_battery_drop":
+                random_dropped_battery = _pick_random_battery_for_item(
+                    rid, item["id"], battery_map
+                )
+                excludes = set(excludes) | set(
+                    battery_map["_battery_items_set"][random_dropped_battery]
+                )
             out = build_prompt_variant(
                 respondent, taxonomy,
                 prompt_id=prompt_id,
@@ -323,6 +444,7 @@ def run_primary_one_respondent(
                 "approx_tokens": out["metadata"]["approx_tokens"],
                 "bin_counts": out["metadata"]["bin_counts"],
                 "battery_excluded": sorted(excludes),
+                "random_dropped_battery": random_dropped_battery,
             }
 
             question, meta = format_eval_question(item)
@@ -352,6 +474,12 @@ def run_primary_one_respondent(
                         item["id"], item["format"], meta["valid_codes"], raw, truth
                     )
                     score["seed"] = seed  # record for reproducibility audit
+                    # Random-ablation key: which battery was randomly dropped
+                    # for this (rid, item) — None outside the
+                    # random_battery_drop condition. Stamped per-sample so the
+                    # parquet writer can emit it as a column; the entire
+                    # absent-vs-present battery analysis joins on this field.
+                    score["random_dropped_battery"] = random_dropped_battery
                     # error_type disentangles provider failures from parse
                     # failures (Reviewer round-2 minor #2). At n_samples=1 these
                     # were conflated in `parse_fail`; now error_type carries the
@@ -587,6 +715,24 @@ def run_phase1(
     is one (respondent, condition, model). Per-condition prompt + per-item
     scores live inside `per_item_scores` in the record.
     """
+    # Random-dispatch sentinel hygiene (Reviewer 2026-07-12 finding 3).
+    # Normalize case ("Random" would otherwise collide with the parquet
+    # writer's RANDOM_LABEL) and reject unsupported combinations: the
+    # sentinel resolves per-respondent in the primary loop ONLY — the
+    # sensitivity pass would send the literal string "random" to the API.
+    if any(m.lower() == "random" for m in models):
+        if len(models) > 1:
+            raise SystemExit(
+                "ERROR: model sentinel 'random' cannot be combined with "
+                "other models (it dispatches into the full panel already)."
+            )
+        if do_sensitivity:
+            raise SystemExit(
+                "ERROR: model sentinel 'random' is supported for the primary "
+                "pass only (--phase1b); the sensitivity pass does not resolve "
+                "per-respondent dispatch."
+            )
+        models = ["random"]
     taxonomy = load_taxonomy()
     primary_eval_items = taxonomy["primary_eval"]["items"]
     sensitivity_eval_ids = list(taxonomy["sensitivity_eval"]["items"])
@@ -614,7 +760,8 @@ def run_phase1(
         # Conservative lower-bound on expected records for a realistic resume
         # of an interrupted full run: at least 5% of the full record count.
         # Each respondent contributes one record per (condition × model):
-        #   - primary pass: 5 conditions (Full + 4 single-bin LOO)
+        #   - primary pass: len(conditions) — 1 for Phase 1A (Full only),
+        #     6 for Phase 1B (CONDITIONS_PHASE1B), 5 for legacy paths
         #   - sensitivity pass: 1 condition ("sensitivity")
         # Bug fix locked 2026-05-10 night per Audit-fresh-5 RevB P2 review:
         # earlier formula was `n * n_models` (no condition factor), which made
@@ -675,14 +822,27 @@ def run_phase1(
             # was requested for this run (Full only for Phase 1A; Full + 4
             # LOO for Phase 1B).
             active_conditions = conditions or CONDITIONS_PRIMARY
+
+            # Phase 1B random dispatch: resolve once per respondent so the
+            # same model is used across Full + all LOO conditions (stable
+            # within-respondent assignment required for LOO ΔMAE to be
+            # meaningful). For non-random runs effective_models == models.
+            if models == ["random"]:
+                picked = _pick_random_model_for_phase1b(rid, prompt_id)
+                effective_models = [picked]
+                if verbose:
+                    print(f"  [random dispatch] ID_={rid} → {picked.split('/')[-1]}", flush=True)
+            else:
+                effective_models = models
+
             need_primary = any(
                 (rid, c, m, prompt_id) not in done_keys
-                for c, _ in active_conditions for m in models
+                for c, _ in active_conditions for m in effective_models
             )
             if need_primary:
                 records = run_primary_one_respondent(
                     respondent, taxonomy, primary_eval_items,
-                    models=models, prompt_id=prompt_id,
+                    models=effective_models, prompt_id=prompt_id,
                     n_samples=n_samples, verbose=verbose,
                     conditions=active_conditions,
                 )
@@ -771,10 +931,11 @@ def _cli():
                            "outputs/phase1a_raw.parquet.")
     mode.add_argument("--phase1b", action="store_true",
                       help="Phase 1b (N=3,309 full GSS 2024 cross-section, "
-                           "single §7-selected cell, n_samples=1, Full + 4 LOO "
-                           "conditions, PRIMARY only). REQUIRES --phase1b-model "
-                           "SLUG and --phase1b-prompt {P0,P1,P2} (the §7 "
-                           "selector output).")
+                           "n_samples=1, 6 conditions: Full + 4 bin-LOO + "
+                           "random_battery_drop, PRIMARY only). REQUIRES "
+                           "--phase1b-model (SLUG or 'random' for per-"
+                           "respondent dispatch — §7.1 locked cell is "
+                           "random × P1) and --phase1b-prompt {P0,P1,P2}.")
     mode.add_argument("--phase1b-anchor", action="store_true",
                       help="GPT-4o anchor (N=100 selection-split subset; one run "
                            "serves both Phase 1a and Phase 1b reporting), "
@@ -799,6 +960,12 @@ def _cli():
                    help="Required with --phase1b after Phase 1A factorial. The §7-selected "
                         "prompt ID (one of P0 / P1 / P2). Defaults to P0 for backward "
                         "compatibility with OSF v1 single-prompt records.")
+
+    p.add_argument("--self-test-dispatch", action="store_true",
+                   help="Run the Phase 1B dispatch picker self-tests (model "
+                        "picker hash-identity vs parquet writer; battery "
+                        "picker determinism / own-battery avoidance / "
+                        "coverage). Free, no LLM calls.")
 
     # Legacy / debugging flags (preserved).
     p.add_argument("--n", type=int, default=10, help="number of respondents to run")
@@ -842,6 +1009,9 @@ def _cli():
 if __name__ == "__main__":
     import sys
     args = _cli()
+
+    if args.self_test_dispatch:
+        sys.exit(run_dispatch_self_tests())
 
     # Stub modes (analyzer exists; orchestration runtime deferred per OSF §13.2).
     if args.battery_loo or args.shapley:
@@ -897,23 +1067,33 @@ if __name__ == "__main__":
         if not args.phase1b_model:
             print(
                 "ERROR: --phase1b requires --phase1b-model SLUG (the §7-selected "
-                "model slug, e.g., 'qwen/qwen-2.5-72b-instruct'). Run "
+                "model slug, e.g., 'qwen/qwen-2.5-72b-instruct') or 'random' for "
+                "per-respondent random dispatch (Bayati-approved 2026-07-12). Run "
                 "select_phase1b_cell.py outputs/phase1a_raw.parquet first to "
                 "determine the joint (model, prompt) cell selection.",
                 file=sys.stderr,
             )
             sys.exit(2)
-        models = [args.phase1b_model]
+        if args.phase1b_model.lower() == "random":
+            models = ["random"]  # sentinel resolved per-respondent in run_phase1
+        else:
+            models = [args.phase1b_model]
         n = 3309
         n_samples = 1
         do_primary = True
         # Locked Option A 2026-05-10: cheap panel sensitivity off (same rationale
         # as --phase1a above; sensitivity_eval is anchor-only per OSF §3.2).
         do_sensitivity = False
+        _model_desc = (
+            f"random dispatch (per-respondent SHA-256 pick from panel, Bayati-approved 2026-07-12)"
+            if args.phase1b_model.lower() == "random"
+            else args.phase1b_model
+        )
         print(
-            f"  [mode=--phase1b] N=3,309 (full GSS 2024), single §7-selected "
-            f"cell: {args.phase1b_model} × {args.phase1b_prompt or 'P0'}, "
-            f"primary (Full + 4 LOO) only.\n"
+            f"  [mode=--phase1b] N=3,309 (full GSS 2024), "
+            f"cell: {_model_desc} × {args.phase1b_prompt or 'P0'}, "
+            f"primary only, 6 conditions (Full + 4 bin-LOO + "
+            f"random_battery_drop; locked 2026-07-12).\n"
             f"  Headline cohort: N=3,109 disjoint from the §7 selector's 200 "
             f"panel respondents; full N=3,309 reported as sensitivity (§8).",
             file=sys.stderr,
@@ -995,7 +1175,7 @@ if __name__ == "__main__":
     # wide-large-n is explicitly passed. The named --phase1b mode hard-codes a
     # single model (so it bypasses this guard), but a manual command like
     # `--n 3309` with the default 4-cheap panel + sensitivity would burn ~$836
-    # vs the planned ~$209 single-model 1b run.
+    # vs the planned ~$58 single-dispatch 1b run.
     if (
         n >= 1000
         and len(models) > 1
@@ -1009,10 +1189,11 @@ if __name__ == "__main__":
         print(
             f"REFUSING [F9 cost guard]: --n={n} with {len(models)} models AND "
             f"sensitivity pass would dispatch ~{approx_calls:,} LLM calls "
-            f"(~${approx_cost:,.0f}). The locked Phase 1b design (per §7) "
-            f"runs a SINGLE §7-selected model at N=3,309 (~$209). To "
+            f"(~${approx_cost:,.0f}). The locked Phase 1b design (§7.1) "
+            f"runs a single per-respondent dispatch at N=3,309 (~$58). To "
             f"replicate that, use:\n"
-            f"    python3 gss_driver.py --phase1b --phase1b-model SLUG\n"
+            f"    python3 gss_driver.py --phase1b --phase1b-model random "
+            f"--phase1b-prompt P1\n"
             f"\n"
             f"If you intentionally want a cross-panel reanalysis at large N, "
             f"pass --allow-panel-wide-large-n explicitly AND ensure the "
@@ -1094,16 +1275,18 @@ if __name__ == "__main__":
 
     # Phase 1A runs Full condition only — LOO is deferred to Phase 1B on the
     # selected cell × N=3,309 disjoint cohort (where the §8 LOO ΔMAE headline
-    # actually lives). Other modes (--phase1b, --smoke, --anchor) keep the
-    # legacy Full + 4 LOO behavior.
+    # actually lives).
     # --phase1a and --smoke both mirror the Phase 1A factorial shape (Full
-    # condition only). Phase 1B / phase1b-anchor / explicit-models paths
-    # default to the legacy 5-condition CONDITIONS_PRIMARY.
-    active_conditions = (
-        CONDITIONS_FULL_ONLY
-        if (args.phase1a or args.smoke)
-        else CONDITIONS_PRIMARY
-    )
+    # condition only). --phase1b runs the 6-condition CONDITIONS_PHASE1B
+    # (Full + 4 bin-LOO + random_battery_drop; locked 2026-07-12).
+    # phase1b-anchor / explicit-models debug paths keep the legacy
+    # 5-condition CONDITIONS_PRIMARY.
+    if args.phase1a or args.smoke:
+        active_conditions = CONDITIONS_FULL_ONLY
+    elif args.phase1b:
+        active_conditions = CONDITIONS_PHASE1B
+    else:
+        active_conditions = CONDITIONS_PRIMARY
 
     per_prompt_outputs: list[Path] = []
     for pid in prompt_ids:

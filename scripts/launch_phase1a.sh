@@ -3,7 +3,7 @@
 # Usage: bash launch_phase1a.sh
 
 set -e
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 echo "=== Pre-flight ==="
 tmux kill-session -t phase1a 2>/dev/null && echo "  killed existing phase1a session" || echo "  no existing session"

@@ -1,0 +1,1158 @@
+{
+  "meta": {
+    "n_panel": 200,
+    "n_anchor": 100,
+    "items": [
+      "POLVIEWS",
+      "PARTYID",
+      "ABANY",
+      "CAPPUN",
+      "GUNLAW",
+      "FECHLD",
+      "FEPOL",
+      "RACDIF1",
+      "CONFINAN",
+      "CONLEGIS",
+      "HELPPOOR",
+      "SATFIN"
+    ],
+    "construct": {
+      "POLVIEWS": "political ideology",
+      "PARTYID": "party identification",
+      "ABANY": "abortion attitudes",
+      "CAPPUN": "death penalty",
+      "GUNLAW": "gun control",
+      "FECHLD": "gender role attitudes",
+      "FEPOL": "women in politics",
+      "RACDIF1": "racial attitudes",
+      "CONFINAN": "institutional confidence",
+      "CONLEGIS": "trust in Congress",
+      "HELPPOOR": "economic-policy attitudes",
+      "SATFIN": "financial life-evaluation"
+    },
+    "scale_kind": {
+      "POLVIEWS": "ordinal",
+      "PARTYID": "ordinal",
+      "ABANY": "binary",
+      "CAPPUN": "binary",
+      "GUNLAW": "binary",
+      "FECHLD": "ordinal",
+      "FEPOL": "binary",
+      "RACDIF1": "binary",
+      "CONFINAN": "ordinal",
+      "CONLEGIS": "ordinal",
+      "HELPPOOR": "ordinal",
+      "SATFIN": "ordinal"
+    },
+    "K": {
+      "POLVIEWS": 7,
+      "PARTYID": 8,
+      "ABANY": 2,
+      "CAPPUN": 2,
+      "GUNLAW": 2,
+      "FECHLD": 4,
+      "FEPOL": 2,
+      "RACDIF1": 2,
+      "CONFINAN": 3,
+      "CONLEGIS": 3,
+      "HELPPOOR": 5,
+      "SATFIN": 3
+    },
+    "cost_per_call": {
+      "qwen/qwen3-max": 0.00098,
+      "deepseek/deepseek-v3.1-terminus": 0.00032,
+      "meta-llama/llama-4-maverick": 0.00018,
+      "moonshotai/kimi-k2-0905": 0.00072,
+      "openai/gpt-4o-2024-08-06": 0.0024
+    },
+    "short": {
+      "qwen/qwen3-max": "Qwen3-Max",
+      "deepseek/deepseek-v3.1-terminus": "DeepSeek-V3.1",
+      "meta-llama/llama-4-maverick": "Llama-4-Mav",
+      "moonshotai/kimi-k2-0905": "Kimi-K2"
+    }
+  },
+  "cells": {
+    "Qwen3-Max|P0": {
+      "model": "Qwen3-Max",
+      "model_slug": "qwen/qwen3-max",
+      "prompt": "P0",
+      "norm_mae": 0.28186740599017385,
+      "ci_lo": 0.26438443995653815,
+      "ci_hi": 0.299080577404573,
+      "parse_fail_rate": 0.0,
+      "cost": 0.00098,
+      "dq3_fail_frac": 0.25,
+      "dq3_n_fail": 3,
+      "dq3_n_items": 12
+    },
+    "Qwen3-Max|P1": {
+      "model": "Qwen3-Max",
+      "model_slug": "qwen/qwen3-max",
+      "prompt": "P1",
+      "norm_mae": 0.2746876299130763,
+      "ci_lo": 0.25649110302106953,
+      "ci_hi": 0.2922030736252834,
+      "parse_fail_rate": 0.0,
+      "cost": 0.00098,
+      "dq3_fail_frac": 0.16666666666666666,
+      "dq3_n_fail": 2,
+      "dq3_n_items": 12
+    },
+    "Qwen3-Max|P2": {
+      "model": "Qwen3-Max",
+      "model_slug": "qwen/qwen3-max",
+      "prompt": "P2",
+      "norm_mae": 0.2710820578231293,
+      "ci_lo": 0.25326675701530615,
+      "ci_hi": 0.28836523968962585,
+      "parse_fail_rate": 0.0,
+      "cost": 0.00098,
+      "dq3_fail_frac": 0.16666666666666666,
+      "dq3_n_fail": 2,
+      "dq3_n_items": 12
+    },
+    "DeepSeek-V3.1|P0": {
+      "model": "DeepSeek-V3.1",
+      "model_slug": "deepseek/deepseek-v3.1-terminus",
+      "prompt": "P0",
+      "norm_mae": 0.27654209183673467,
+      "ci_lo": 0.2590627391581633,
+      "ci_hi": 0.2939611211498488,
+      "parse_fail_rate": 0.0,
+      "cost": 0.00032,
+      "dq3_fail_frac": 0.25,
+      "dq3_n_fail": 3,
+      "dq3_n_items": 12
+    },
+    "DeepSeek-V3.1|P1": {
+      "model": "DeepSeek-V3.1",
+      "model_slug": "deepseek/deepseek-v3.1-terminus",
+      "prompt": "P1",
+      "norm_mae": 0.26447217498110354,
+      "ci_lo": 0.2474163885345805,
+      "ci_hi": 0.281692293202003,
+      "parse_fail_rate": 0.0,
+      "cost": 0.00032,
+      "dq3_fail_frac": 0.3333333333333333,
+      "dq3_n_fail": 4,
+      "dq3_n_items": 12
+    },
+    "DeepSeek-V3.1|P2": {
+      "model": "DeepSeek-V3.1",
+      "model_slug": "deepseek/deepseek-v3.1-terminus",
+      "prompt": "P2",
+      "norm_mae": 0.26274974017384733,
+      "ci_lo": 0.24493089687263794,
+      "ci_hi": 0.2806677797855253,
+      "parse_fail_rate": 0.0,
+      "cost": 0.00032,
+      "dq3_fail_frac": 0.25,
+      "dq3_n_fail": 3,
+      "dq3_n_items": 12
+    },
+    "Llama-4-Mav|P0": {
+      "model": "Llama-4-Mav",
+      "model_slug": "meta-llama/llama-4-maverick",
+      "prompt": "P0",
+      "norm_mae": 0.2585537603930461,
+      "ci_lo": 0.24149074959845052,
+      "ci_hi": 0.27596587360638697,
+      "parse_fail_rate": 0.001557632398753894,
+      "cost": 0.00018,
+      "dq3_fail_frac": 0.3333333333333333,
+      "dq3_n_fail": 4,
+      "dq3_n_items": 12
+    },
+    "Llama-4-Mav|P1": {
+      "model": "Llama-4-Mav",
+      "model_slug": "meta-llama/llama-4-maverick",
+      "prompt": "P1",
+      "norm_mae": 0.25721154572940286,
+      "ci_lo": 0.24003741555650038,
+      "ci_hi": 0.27472959419879056,
+      "parse_fail_rate": 0.0024922118380062306,
+      "cost": 0.00018,
+      "dq3_fail_frac": 0.3333333333333333,
+      "dq3_n_fail": 4,
+      "dq3_n_items": 12
+    },
+    "Llama-4-Mav|P2": {
+      "model": "Llama-4-Mav",
+      "model_slug": "meta-llama/llama-4-maverick",
+      "prompt": "P2",
+      "norm_mae": 0.25564452239229024,
+      "ci_lo": 0.2389448899872449,
+      "ci_hi": 0.2724029135959939,
+      "parse_fail_rate": 0.0,
+      "cost": 0.00018,
+      "dq3_fail_frac": 0.3333333333333333,
+      "dq3_n_fail": 4,
+      "dq3_n_items": 12
+    },
+    "Kimi-K2|P0": {
+      "model": "Kimi-K2",
+      "model_slug": "moonshotai/kimi-k2-0905",
+      "prompt": "P0",
+      "norm_mae": 0.2733874362244898,
+      "ci_lo": 0.2549265811011905,
+      "ci_hi": 0.2921611285312736,
+      "parse_fail_rate": 0.00809968847352025,
+      "cost": 0.00072,
+      "dq3_fail_frac": 0.16666666666666666,
+      "dq3_n_fail": 2,
+      "dq3_n_items": 12
+    },
+    "Kimi-K2|P1": {
+      "model": "Kimi-K2",
+      "model_slug": "moonshotai/kimi-k2-0905",
+      "prompt": "P1",
+      "norm_mae": 0.26467528817082386,
+      "ci_lo": 0.24606410058815192,
+      "ci_hi": 0.2833320802626606,
+      "parse_fail_rate": 0.012461059190031152,
+      "cost": 0.00072,
+      "dq3_fail_frac": 0.16666666666666666,
+      "dq3_n_fail": 2,
+      "dq3_n_items": 12
+    },
+    "Kimi-K2|P2": {
+      "model": "Kimi-K2",
+      "model_slug": "moonshotai/kimi-k2-0905",
+      "prompt": "P2",
+      "norm_mae": 0.26569438539304613,
+      "ci_lo": 0.24742260133219957,
+      "ci_hi": 0.28454468478363565,
+      "parse_fail_rate": 0.012149532710280374,
+      "cost": 0.00072,
+      "dq3_fail_frac": 0.08333333333333333,
+      "dq3_n_fail": 1,
+      "dq3_n_items": 12
+    }
+  },
+  "random_cells": {
+    "P0": {
+      "norm_mae": 0.268489276266062,
+      "ci_lo": 0.25127524181547617,
+      "ci_hi": 0.28589836191421014
+    },
+    "P1": {
+      "norm_mae": 0.2606892715419501,
+      "ci_lo": 0.2428314221348261,
+      "ci_hi": 0.27869310899707106
+    },
+    "P2": {
+      "norm_mae": 0.2616770124716553,
+      "ci_lo": 0.24433849531131896,
+      "ci_hi": 0.2788410844198791
+    }
+  },
+  "majority_baseline_mae": 0.27071317554799695,
+  "model_main": {
+    "Qwen3-Max": {
+      "norm_mae": 0.2758790312421265,
+      "ci_lo": 0.2587723966206853,
+      "ci_hi": 0.29257121519904256
+    },
+    "DeepSeek-V3.1": {
+      "norm_mae": 0.2679213356638952,
+      "ci_lo": 0.2515904257999496,
+      "ci_hi": 0.2845883552610859
+    },
+    "Llama-4-Mav": {
+      "norm_mae": 0.25713660950491307,
+      "ci_lo": 0.24101192670934113,
+      "ci_hi": 0.27356222954459564
+    },
+    "Kimi-K2": {
+      "norm_mae": 0.26791903659611993,
+      "ci_lo": 0.2507792425477135,
+      "ci_hi": 0.2854346726190476
+    }
+  },
+  "prompt_main": {
+    "P0": {
+      "norm_mae": 0.27258767361111114,
+      "ci_lo": 0.2577258405966553,
+      "ci_hi": 0.28793089827510865
+    },
+    "P1": {
+      "norm_mae": 0.26526165969860166,
+      "ci_lo": 0.2503340891174178,
+      "ci_hi": 0.2803576349767337
+    },
+    "P2": {
+      "norm_mae": 0.26379267644557824,
+      "ci_lo": 0.24859133775037795,
+      "ci_hi": 0.2791962701660525
+    }
+  },
+  "item_difficulty": {
+    "POLVIEWS": {
+      "norm_mae": 0.18611111111111112,
+      "ci_lo": 0.167140899122807,
+      "ci_hi": 0.20657894736842106,
+      "em": 0.30328947368421055,
+      "maj_em": 0.33157894736842103,
+      "uniform_em": 0.14285714285714285,
+      "lift_maj": -0.04232283464566921,
+      "K": 7,
+      "scale": "ordinal",
+      "construct": "political ideology",
+      "n_eff_per_cell": 190
+    },
+    "PARTYID": {
+      "norm_mae": 0.17053420352912738,
+      "ci_lo": 0.15442953831278702,
+      "ci_hi": 0.1876971537345903,
+      "em": 0.31112521150592215,
+      "maj_em": 0.18274111675126903,
+      "uniform_em": 0.125,
+      "lift_maj": 0.1570910973084886,
+      "K": 8,
+      "scale": "ordinal",
+      "construct": "party identification",
+      "n_eff_per_cell": 197
+    },
+    "ABANY": {
+      "norm_mae": 0.3666044776119403,
+      "ci_lo": 0.3016091417910448,
+      "ci_hi": 0.4337686567164179,
+      "em": 0.6333955223880597,
+      "maj_em": 0.5746268656716418,
+      "uniform_em": 0.5,
+      "lift_maj": 0.1381578947368422,
+      "K": 2,
+      "scale": "binary",
+      "construct": "abortion attitudes",
+      "n_eff_per_cell": 134
+    },
+    "CAPPUN": {
+      "norm_mae": 0.3817750677506775,
+      "ci_lo": 0.31673441734417346,
+      "ci_hi": 0.4491869918699187,
+      "em": 0.6182249322493225,
+      "maj_em": 0.6178861788617886,
+      "uniform_em": 0.5,
+      "lift_maj": 0.000886524822695004,
+      "K": 2,
+      "scale": "binary",
+      "construct": "death penalty",
+      "n_eff_per_cell": 123
+    },
+    "GUNLAW": {
+      "norm_mae": 0.2907268170426065,
+      "ci_lo": 0.22619047619047622,
+      "ci_hi": 0.35714285714285715,
+      "em": 0.7092731829573935,
+      "maj_em": 0.706766917293233,
+      "uniform_em": 0.5,
+      "lift_maj": 0.008547008547008735,
+      "K": 2,
+      "scale": "binary",
+      "construct": "gun control",
+      "n_eff_per_cell": 133
+    },
+    "FECHLD": {
+      "norm_mae": 0.25651041666666663,
+      "ci_lo": 0.22645399305555552,
+      "ci_hi": 0.2883029513888889,
+      "em": 0.3948567708333333,
+      "maj_em": 0.421875,
+      "uniform_em": 0.25,
+      "lift_maj": -0.04673423423423426,
+      "K": 4,
+      "scale": "ordinal",
+      "construct": "gender role attitudes",
+      "n_eff_per_cell": 128
+    },
+    "FEPOL": {
+      "norm_mae": 0.22562893081761007,
+      "ci_lo": 0.15487421383647795,
+      "ci_hi": 0.3026729559748428,
+      "em": 0.77437106918239,
+      "maj_em": 0.8490566037735849,
+      "uniform_em": 0.5,
+      "lift_maj": -0.49479166666666685,
+      "K": 2,
+      "scale": "binary",
+      "construct": "women in politics",
+      "n_eff_per_cell": 53
+    },
+    "RACDIF1": {
+      "norm_mae": 0.40069444444444446,
+      "ci_lo": 0.3222222222222222,
+      "ci_hi": 0.48124999999999996,
+      "em": 0.5993055555555555,
+      "maj_em": 0.6,
+      "uniform_em": 0.5,
+      "lift_maj": -0.001736111111111105,
+      "K": 2,
+      "scale": "binary",
+      "construct": "racial attitudes",
+      "n_eff_per_cell": 60
+    },
+    "CONFINAN": {
+      "norm_mae": 0.2436868686868687,
+      "ci_lo": 0.20486111111111116,
+      "ci_hi": 0.28298611111111116,
+      "em": 0.523989898989899,
+      "maj_em": 0.553030303030303,
+      "uniform_em": 0.3333333333333333,
+      "lift_maj": -0.06497175141242924,
+      "K": 3,
+      "scale": "ordinal",
+      "construct": "institutional confidence",
+      "n_eff_per_cell": 132
+    },
+    "CONLEGIS": {
+      "norm_mae": 0.2633463541666667,
+      "ci_lo": 0.24234619140624997,
+      "ci_hi": 0.2866251627604166,
+      "em": 0.5003255208333334,
+      "maj_em": 0.5234375,
+      "uniform_em": 0.3333333333333333,
+      "lift_maj": -0.048497267759562764,
+      "K": 3,
+      "scale": "ordinal",
+      "construct": "trust in Congress",
+      "n_eff_per_cell": 128
+    },
+    "HELPPOOR": {
+      "norm_mae": 0.27978515625,
+      "ci_lo": 0.24926554361979167,
+      "ci_hi": 0.31119791666666663,
+      "em": 0.3382161458333333,
+      "maj_em": 0.4140625,
+      "uniform_em": 0.2,
+      "lift_maj": -0.12944444444444447,
+      "K": 5,
+      "scale": "ordinal",
+      "construct": "economic-policy attitudes",
+      "n_eff_per_cell": 128
+    },
+    "SATFIN": {
+      "norm_mae": 0.2821398659966499,
+      "ci_lo": 0.25073021356783914,
+      "ci_hi": 0.31375628140703515,
+      "em": 0.47340871021775544,
+      "maj_em": 0.45226130653266333,
+      "uniform_em": 0.3333333333333333,
+      "lift_maj": 0.03860856269113145,
+      "K": 3,
+      "scale": "ordinal",
+      "construct": "financial life-evaluation",
+      "n_eff_per_cell": 199
+    }
+  },
+  "binary_em_by_model": {
+    "Qwen3-Max": {
+      "ABANY": 0.599502487562189,
+      "CAPPUN": 0.5894308943089431,
+      "GUNLAW": 0.7230576441102757,
+      "FEPOL": 0.7955974842767296,
+      "RACDIF1": 0.7055555555555556
+    },
+    "DeepSeek-V3.1": {
+      "ABANY": 0.6156716417910447,
+      "CAPPUN": 0.6422764227642277,
+      "GUNLAW": 0.7005012531328321,
+      "FEPOL": 0.8207547169811321,
+      "RACDIF1": 0.5083333333333333
+    },
+    "Llama-4-Mav": {
+      "ABANY": 0.6326276463262764,
+      "CAPPUN": 0.6246612466124661,
+      "GUNLAW": 0.7042606516290727,
+      "FEPOL": 0.8522012578616353,
+      "RACDIF1": 0.49166666666666664
+    },
+    "Kimi-K2": {
+      "ABANY": 0.696969696969697,
+      "CAPPUN": 0.625,
+      "GUNLAW": 0.7164556962025317,
+      "FEPOL": 0.6329113924050633,
+      "RACDIF1": 0.7014084507042253
+    }
+  },
+  "binary_items": [
+    "ABANY",
+    "CAPPUN",
+    "GUNLAW",
+    "FEPOL",
+    "RACDIF1"
+  ],
+  "collapse": {
+    "Qwen3-Max": {
+      "POLVIEWS": {
+        "distinct": 7,
+        "K": 7,
+        "top1_share": 0.356140350877193
+      },
+      "PARTYID": {
+        "distinct": 8,
+        "K": 8,
+        "top1_share": 0.4077834179357022
+      },
+      "ABANY": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.7412935323383084
+      },
+      "CAPPUN": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.592140921409214
+      },
+      "GUNLAW": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.8909774436090225
+      },
+      "FECHLD": {
+        "distinct": 4,
+        "K": 4,
+        "top1_share": 0.4453125
+      },
+      "FEPOL": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.7327044025157232
+      },
+      "RACDIF1": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.5666666666666667
+      },
+      "CONFINAN": {
+        "distinct": 2,
+        "K": 3,
+        "top1_share": 0.8623737373737373
+      },
+      "CONLEGIS": {
+        "distinct": 1,
+        "K": 3,
+        "top1_share": 1.0
+      },
+      "HELPPOOR": {
+        "distinct": 5,
+        "K": 5,
+        "top1_share": 0.4453125
+      },
+      "SATFIN": {
+        "distinct": 3,
+        "K": 3,
+        "top1_share": 0.6340033500837521
+      }
+    },
+    "DeepSeek-V3.1": {
+      "POLVIEWS": {
+        "distinct": 5,
+        "K": 7,
+        "top1_share": 0.3105263157894737
+      },
+      "PARTYID": {
+        "distinct": 8,
+        "K": 8,
+        "top1_share": 0.2961082910321489
+      },
+      "ABANY": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.6927860696517413
+      },
+      "CAPPUN": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.9701897018970189
+      },
+      "GUNLAW": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.9586466165413534
+      },
+      "FECHLD": {
+        "distinct": 4,
+        "K": 4,
+        "top1_share": 0.59375
+      },
+      "FEPOL": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.9025157232704403
+      },
+      "RACDIF1": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.8194444444444444
+      },
+      "CONFINAN": {
+        "distinct": 3,
+        "K": 3,
+        "top1_share": 0.9797979797979798
+      },
+      "CONLEGIS": {
+        "distinct": 2,
+        "K": 3,
+        "top1_share": 0.71484375
+      },
+      "HELPPOOR": {
+        "distinct": 4,
+        "K": 5,
+        "top1_share": 0.45703125
+      },
+      "SATFIN": {
+        "distinct": 3,
+        "K": 3,
+        "top1_share": 0.7035175879396985
+      }
+    },
+    "Llama-4-Mav": {
+      "POLVIEWS": {
+        "distinct": 5,
+        "K": 7,
+        "top1_share": 0.4219298245614035
+      },
+      "PARTYID": {
+        "distinct": 6,
+        "K": 8,
+        "top1_share": 0.44283276450511944
+      },
+      "ABANY": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.6363636363636364
+      },
+      "CAPPUN": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.7059620596205962
+      },
+      "GUNLAW": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.9674185463659147
+      },
+      "FECHLD": {
+        "distinct": 4,
+        "K": 4,
+        "top1_share": 0.7552083333333334
+      },
+      "FEPOL": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.8962264150943396
+      },
+      "RACDIF1": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.8583333333333333
+      },
+      "CONFINAN": {
+        "distinct": 1,
+        "K": 3,
+        "top1_share": 1.0
+      },
+      "CONLEGIS": {
+        "distinct": 2,
+        "K": 3,
+        "top1_share": 0.9947916666666666
+      },
+      "HELPPOOR": {
+        "distinct": 4,
+        "K": 5,
+        "top1_share": 0.5364583333333334
+      },
+      "SATFIN": {
+        "distinct": 3,
+        "K": 3,
+        "top1_share": 0.9261744966442953
+      }
+    },
+    "Kimi-K2": {
+      "POLVIEWS": {
+        "distinct": 7,
+        "K": 7,
+        "top1_share": 0.35013262599469497
+      },
+      "PARTYID": {
+        "distinct": 8,
+        "K": 8,
+        "top1_share": 0.3108454312553373
+      },
+      "ABANY": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.5429292929292929
+      },
+      "CAPPUN": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.7747252747252747
+      },
+      "GUNLAW": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.8481012658227848
+      },
+      "FECHLD": {
+        "distinct": 4,
+        "K": 4,
+        "top1_share": 0.4375821287779238
+      },
+      "FEPOL": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.5411392405063291
+      },
+      "RACDIF1": {
+        "distinct": 2,
+        "K": 2,
+        "top1_share": 0.5690140845070423
+      },
+      "CONFINAN": {
+        "distinct": 2,
+        "K": 3,
+        "top1_share": 0.8549618320610687
+      },
+      "CONLEGIS": {
+        "distinct": 2,
+        "K": 3,
+        "top1_share": 0.8102766798418972
+      },
+      "HELPPOOR": {
+        "distinct": 5,
+        "K": 5,
+        "top1_share": 0.3394980184940555
+      },
+      "SATFIN": {
+        "distinct": 3,
+        "K": 3,
+        "top1_share": 0.6776929601357082
+      }
+    }
+  },
+  "anchor_per_item": {
+    "POLVIEWS": {
+      "cheap_panel_em": 0.2786458333333333,
+      "gpt4o_R1on_em": 0.265625,
+      "gpt4o_R1off_em": 0.2708333333333333,
+      "cheap_panel_mae": 0.19270833333333331,
+      "gpt4o_R1on_mae": 0.20572916666666666,
+      "gpt4o_R1off_mae": 0.2048611111111111,
+      "scale": "ordinal",
+      "K": 7,
+      "n_eff": 192
+    },
+    "PARTYID": {
+      "cheap_panel_em": 0.2623574144486692,
+      "gpt4o_R1on_em": 0.31313131313131315,
+      "gpt4o_R1off_em": 0.31313131313131315,
+      "cheap_panel_mae": 0.18073593073593072,
+      "gpt4o_R1on_mae": 0.2222222222222222,
+      "gpt4o_R1off_mae": 0.22366522366522365,
+      "scale": "ordinal",
+      "K": 8,
+      "n_eff": 198
+    },
+    "ABANY": {
+      "cheap_panel_em": 0.569060773480663,
+      "gpt4o_R1on_em": 0.5955882352941176,
+      "gpt4o_R1off_em": 0.6691176470588235,
+      "cheap_panel_mae": 0.4319852941176471,
+      "gpt4o_R1on_mae": 0.40441176470588236,
+      "gpt4o_R1off_mae": 0.33088235294117646,
+      "scale": "binary",
+      "K": 2,
+      "n_eff": 136
+    },
+    "CAPPUN": {
+      "cheap_panel_em": 0.555327868852459,
+      "gpt4o_R1on_em": 0.6147540983606558,
+      "gpt4o_R1off_em": 0.6065573770491803,
+      "cheap_panel_mae": 0.444672131147541,
+      "gpt4o_R1on_mae": 0.38524590163934425,
+      "gpt4o_R1off_mae": 0.39344262295081966,
+      "scale": "binary",
+      "K": 2,
+      "n_eff": 122
+    },
+    "GUNLAW": {
+      "cheap_panel_em": 0.7389705882352942,
+      "gpt4o_R1on_em": 0.7132352941176471,
+      "gpt4o_R1off_em": 0.7352941176470589,
+      "cheap_panel_mae": 0.2610294117647059,
+      "gpt4o_R1on_mae": 0.2867647058823529,
+      "gpt4o_R1off_mae": 0.2647058823529412,
+      "scale": "binary",
+      "K": 2,
+      "n_eff": 136
+    },
+    "FECHLD": {
+      "cheap_panel_em": 0.40404040404040403,
+      "gpt4o_R1on_em": 0.45161290322580644,
+      "gpt4o_R1off_em": 0.5241935483870968,
+      "cheap_panel_mae": 0.24126344086021503,
+      "gpt4o_R1on_mae": 0.2150537634408602,
+      "gpt4o_R1off_mae": 0.19086021505376344,
+      "scale": "ordinal",
+      "K": 4,
+      "n_eff": 124
+    },
+    "FEPOL": {
+      "cheap_panel_em": 0.8194444444444444,
+      "gpt4o_R1on_em": 0.8333333333333334,
+      "gpt4o_R1off_em": 0.8518518518518519,
+      "cheap_panel_mae": 0.18055555555555555,
+      "gpt4o_R1on_mae": 0.16666666666666666,
+      "gpt4o_R1off_mae": 0.14814814814814814,
+      "scale": "binary",
+      "K": 2,
+      "n_eff": 54
+    },
+    "RACDIF1": {
+      "cheap_panel_em": 0.611336032388664,
+      "gpt4o_R1on_em": 0.7419354838709677,
+      "gpt4o_R1off_em": 0.7096774193548387,
+      "cheap_panel_mae": 0.3911290322580645,
+      "gpt4o_R1on_mae": 0.25806451612903225,
+      "gpt4o_R1off_mae": 0.2903225806451613,
+      "scale": "binary",
+      "K": 2,
+      "n_eff": 62
+    },
+    "CONFINAN": {
+      "cheap_panel_em": 0.5093283582089553,
+      "gpt4o_R1on_em": 0.4701492537313433,
+      "gpt4o_R1off_em": 0.6492537313432836,
+      "cheap_panel_mae": 0.25093283582089554,
+      "gpt4o_R1on_mae": 0.291044776119403,
+      "gpt4o_R1off_mae": 0.1828358208955224,
+      "scale": "ordinal",
+      "K": 3,
+      "n_eff": 134
+    },
+    "CONLEGIS": {
+      "cheap_panel_em": 0.4647058823529412,
+      "gpt4o_R1on_em": 0.59375,
+      "gpt4o_R1off_em": 0.6796875,
+      "cheap_panel_mae": 0.2919921875,
+      "gpt4o_R1on_mae": 0.23828125,
+      "gpt4o_R1off_mae": 0.18359375,
+      "scale": "ordinal",
+      "K": 3,
+      "n_eff": 128
+    },
+    "HELPPOOR": {
+      "cheap_panel_em": 0.3545816733067729,
+      "gpt4o_R1on_em": 0.2698412698412698,
+      "gpt4o_R1off_em": 0.49206349206349204,
+      "cheap_panel_mae": 0.26091269841269843,
+      "gpt4o_R1on_mae": 0.2837301587301587,
+      "gpt4o_R1off_mae": 0.19047619047619047,
+      "scale": "ordinal",
+      "K": 5,
+      "n_eff": 126
+    },
+    "SATFIN": {
+      "cheap_panel_em": 0.5207547169811321,
+      "gpt4o_R1on_em": 0.5,
+      "gpt4o_R1off_em": 0.505,
+      "cheap_panel_mae": 0.265,
+      "gpt4o_R1on_mae": 0.2725,
+      "gpt4o_R1off_mae": 0.2725,
+      "scale": "ordinal",
+      "K": 3,
+      "n_eff": 200
+    }
+  },
+  "paired_cheap_vs_frontier": {
+    "n_pairs": 100,
+    "cheap_sel_mae": 0.2745834041950113,
+    "gpt4o_R1on_mae": 0.2678807397959184,
+    "mean_diff_frontier_minus_cheap": -0.006702664399092971,
+    "diff_ci_lo": -0.025582783564814814,
+    "diff_ci_hi": 0.013017451459750567,
+    "wilcoxon_p": 0.4109601583707999,
+    "frac_respondents_gpt_better": 0.53,
+    "diff_values": [
+      -0.05092592592592593,
+      0.06122448979591838,
+      0.011904761904761918,
+      0.047619047619047616,
+      0.009523809523809545,
+      -0.07605820105820105,
+      -0.010582010582010581,
+      -0.09523809523809523,
+      0.0,
+      -0.12698412698412698,
+      0.02314814814814814,
+      -0.035714285714285726,
+      0.07142857142857142,
+      0.030952380952380953,
+      -0.008503401360544213,
+      0.0,
+      0.11111111111111113,
+      0.047619047619047616,
+      -0.10884353741496598,
+      -0.020408163265306145,
+      -0.13888888888888892,
+      -0.16666666666666666,
+      0.07142857142857142,
+      -0.17923280423280424,
+      0.07291666666666666,
+      -0.17857142857142855,
+      -0.07804232804232805,
+      -0.015873015873015872,
+      -0.015625,
+      -0.17857142857142858,
+      -0.007936507936507936,
+      0.07142857142857142,
+      0.2361111111111111,
+      -0.16836734693877548,
+      0.06746031746031744,
+      -0.039682539682539694,
+      0.08333333333333331,
+      0.011904761904761918,
+      -0.1054421768707483,
+      0.18055555555555547,
+      0.06150793650793657,
+      -0.002645502645502673,
+      -0.08503401360544217,
+      -0.020502645502645467,
+      0.0,
+      -0.09077380952380953,
+      -0.013888888888888881,
+      0.12797619047619052,
+      0.04629629629629631,
+      -0.09226190476190477,
+      0.10267857142857145,
+      0.01388888888888895,
+      -0.20833333333333331,
+      -0.015625,
+      -0.16369047619047616,
+      0.04931972789115646,
+      -0.10317460317460314,
+      -0.010204081632653073,
+      0.08673469387755102,
+      -0.04538690476190477,
+      0.2579365079365079,
+      0.07589285714285715,
+      -0.03571428571428571,
+      0.22949735449735453,
+      -0.043898809523809534,
+      0.1111111111111111,
+      0.06944444444444442,
+      -0.00462962962962965,
+      0.11375661375661383,
+      -0.04910714285714285,
+      0.08184523809523811,
+      0.11458333333333331,
+      0.15997023809523814,
+      0.011904761904761918,
+      -0.008928571428571425,
+      -0.05555555555555555,
+      -0.07886904761904762,
+      -0.16666666666666666,
+      -0.02777777777777779,
+      0.12301587301587297,
+      0.041666666666666685,
+      0.1138392857142857,
+      0.02182539682539683,
+      -0.12103174603174602,
+      -0.010416666666666657,
+      -0.20833333333333331,
+      0.23214285714285715,
+      -0.06944444444444445,
+      0.001984126984126977,
+      0.02040816326530613,
+      -0.10416666666666669,
+      -0.027116402116402122,
+      -0.09523809523809526,
+      -0.12962962962962962,
+      0.02314814814814814,
+      -0.12797619047619047,
+      0.032407407407407385,
+      -0.08333333333333334,
+      0.009259259259259245,
+      -0.10846560846560849
+    ]
+  },
+  "r1_cost_per_item": {
+    "POLVIEWS": {
+      "mae_R1on": 0.20572916666666666,
+      "mae_R1off": 0.2048611111111111,
+      "em_R1on": 0.265625,
+      "em_R1off": 0.2708333333333333,
+      "delta_mae_cost": 0.0008680555555555525,
+      "n_eff": 192,
+      "scale": "ordinal"
+    },
+    "PARTYID": {
+      "mae_R1on": 0.2222222222222222,
+      "mae_R1off": 0.22366522366522365,
+      "em_R1on": 0.31313131313131315,
+      "em_R1off": 0.31313131313131315,
+      "delta_mae_cost": -0.0014430014430014404,
+      "n_eff": 198,
+      "scale": "ordinal"
+    },
+    "ABANY": {
+      "mae_R1on": 0.40441176470588236,
+      "mae_R1off": 0.33088235294117646,
+      "em_R1on": 0.5955882352941176,
+      "em_R1off": 0.6691176470588235,
+      "delta_mae_cost": 0.0735294117647059,
+      "n_eff": 136,
+      "scale": "binary"
+    },
+    "CAPPUN": {
+      "mae_R1on": 0.38524590163934425,
+      "mae_R1off": 0.39344262295081966,
+      "em_R1on": 0.6147540983606558,
+      "em_R1off": 0.6065573770491803,
+      "delta_mae_cost": -0.008196721311475419,
+      "n_eff": 122,
+      "scale": "binary"
+    },
+    "GUNLAW": {
+      "mae_R1on": 0.2867647058823529,
+      "mae_R1off": 0.2647058823529412,
+      "em_R1on": 0.7132352941176471,
+      "em_R1off": 0.7352941176470589,
+      "delta_mae_cost": 0.022058823529411742,
+      "n_eff": 136,
+      "scale": "binary"
+    },
+    "FECHLD": {
+      "mae_R1on": 0.2150537634408602,
+      "mae_R1off": 0.19086021505376344,
+      "em_R1on": 0.45161290322580644,
+      "em_R1off": 0.5241935483870968,
+      "delta_mae_cost": 0.024193548387096753,
+      "n_eff": 124,
+      "scale": "ordinal"
+    },
+    "FEPOL": {
+      "mae_R1on": 0.16666666666666666,
+      "mae_R1off": 0.14814814814814814,
+      "em_R1on": 0.8333333333333334,
+      "em_R1off": 0.8518518518518519,
+      "delta_mae_cost": 0.018518518518518517,
+      "n_eff": 54,
+      "scale": "binary"
+    },
+    "RACDIF1": {
+      "mae_R1on": 0.25806451612903225,
+      "mae_R1off": 0.2903225806451613,
+      "em_R1on": 0.7419354838709677,
+      "em_R1off": 0.7096774193548387,
+      "delta_mae_cost": -0.03225806451612906,
+      "n_eff": 62,
+      "scale": "binary"
+    },
+    "CONFINAN": {
+      "mae_R1on": 0.291044776119403,
+      "mae_R1off": 0.1828358208955224,
+      "em_R1on": 0.4701492537313433,
+      "em_R1off": 0.6492537313432836,
+      "delta_mae_cost": 0.1082089552238806,
+      "n_eff": 134,
+      "scale": "ordinal"
+    },
+    "CONLEGIS": {
+      "mae_R1on": 0.23828125,
+      "mae_R1off": 0.18359375,
+      "em_R1on": 0.59375,
+      "em_R1off": 0.6796875,
+      "delta_mae_cost": 0.0546875,
+      "n_eff": 128,
+      "scale": "ordinal"
+    },
+    "HELPPOOR": {
+      "mae_R1on": 0.2837301587301587,
+      "mae_R1off": 0.19047619047619047,
+      "em_R1on": 0.2698412698412698,
+      "em_R1off": 0.49206349206349204,
+      "delta_mae_cost": 0.09325396825396826,
+      "n_eff": 126,
+      "scale": "ordinal"
+    },
+    "SATFIN": {
+      "mae_R1on": 0.2725,
+      "mae_R1off": 0.2725,
+      "em_R1on": 0.5,
+      "em_R1off": 0.505,
+      "delta_mae_cost": 0.0,
+      "n_eff": 200,
+      "scale": "ordinal"
+    }
+  },
+  "r1_cost_overall": {
+    "mae_R1on": 0.26788073979591837,
+    "mae_R1off": 0.23945847505668935,
+    "em_R1on": 0.48759305210918114,
+    "em_R1off": 0.5403225806451613,
+    "delta_mae": 0.028422264739229024,
+    "delta_ci_lo": 0.013388998133975812,
+    "delta_ci_hi": 0.0432249320908919
+  },
+  "anchor_overall": {
+    "gpt4o_R1on": {
+      "norm_mae": 0.26788073979591837,
+      "ci_lo": 0.24072952865173847,
+      "ci_hi": 0.29615944468065003,
+      "em": 0.48759305210918114
+    },
+    "gpt4o_R1off": {
+      "norm_mae": 0.23945847505668935,
+      "ci_lo": 0.21371146541950117,
+      "ci_hi": 0.2657667322137188,
+      "em": 0.5403225806451613
+    },
+    "cheap_panel_P0_100": {
+      "norm_mae": 0.2724310220616024,
+      "ci_lo": 0.2512288378980064,
+      "ci_hi": 0.294425674366969
+    },
+    "cheap_panel_byprompt_100": {
+      "P0": {
+        "norm_mae": 0.2724310220616024,
+        "ci_lo": 0.2512288378980064,
+        "ci_hi": 0.294425674366969
+      },
+      "P1": {
+        "norm_mae": 0.26438900699168555,
+        "ci_lo": 0.2440129560244237,
+        "ci_hi": 0.2853521804728836
+      },
+      "P2": {
+        "norm_mae": 0.26029956774376417,
+        "ci_lo": 0.23930703892668173,
+        "ci_hi": 0.2817257252988001
+      }
+    },
+    "selected_cell_qwen_p0_100": {
+      "norm_mae": 0.2745834041950113,
+      "ci_lo": 0.2497074416572184,
+      "ci_hi": 0.3000062234268707,
+      "em": 0.4770471464019851
+    }
+  },
+  "park_reference": {
+    "strategyA_norm": 0.82,
+    "strategyA_raw": 0.6425,
+    "strategyB_norm": 0.77,
+    "strategyB_raw": 0.6057,
+    "headline_norm": 0.82,
+    "headline_raw": 0.6567,
+    "note": "AGGREGATE only. Park v2 published NO per-item surveys-only table; SI Table 3 per-item numbers are the INTERVIEW condition (see notes/park_comparability.md \u00a72,\u00a76). Do not present per-item ours-vs-Park as surveys-only. Park raw is exact-match; normalized divides by 0.7953 human test-retest consistency (no GSS-2024 equivalent -> we report raw)."
+  },
+  "overall_em_100": {
+    "majority": 0.47890818858560796,
+    "cheap_panel_P0": 0.4714752059692212,
+    "qwen_p0_selected": 0.4770471464019851,
+    "gpt4o_R1on": 0.48759305210918114,
+    "gpt4o_R1off": 0.5403225806451613
+  }
+}

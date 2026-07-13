@@ -1,0 +1,30 @@
+model=moonshotai/kimi-k2-0905  prompt=P2  temp=0.7  M=40
+empty-persona feature_count = 0 for all 12 items  ✓
+persona char_count = 422 (vs full-persona ~3500)
+  40/480 calls done
+[POLVIEWS ] mode=2 dist={4: 6, 2: 25, 3: 6, 5: 1, 6: 2} parse_fail=0
+  80/480 calls done
+[PARTYID  ] mode=0 dist={0: 24, 6: 10, 5: 1, 1: 1, 2: 1, 3: 2, 4: 1} parse_fail=0
+  120/480 calls done
+[ABANY    ] mode=1 dist={1: 36, 2: 3} parse_fail=1
+  160/480 calls done
+[CAPPUN   ] mode=1 dist={1: 33, 2: 7} parse_fail=0
+  200/480 calls done
+[GUNLAW   ] mode=1 dist={1: 38, 2: 2} parse_fail=0
+  240/480 calls done
+[FECHLD   ] mode=1 dist={1: 38, 2: 1} parse_fail=1
+  280/480 calls done
+[FEPOL    ] mode=2 dist={2: 39, 1: 1} parse_fail=0
+  320/480 calls done
+[RACDIF1  ] mode=1 dist={1: 33, 2: 6} parse_fail=1
+  360/480 calls done
+[CONFINAN ] mode=2 dist={2: 31, 3: 9} parse_fail=0
+  400/480 calls done
+[CONLEGIS ] mode=3 dist={3: 38} parse_fail=2
+  440/480 calls done
+[HELPPOOR ] mode=3 dist={1: 12, 3: 13, 4: 5, 2: 7, 5: 2} parse_fail=1
+  480/480 calls done
+[SATFIN   ] mode=2 dist={2: 28, 3: 1, 1: 11} parse_fail=0
+
+provider(s): ['Novita']
+wrote /Users/joyce/Developer/gsbgen390/report/no_persona_samples.json
