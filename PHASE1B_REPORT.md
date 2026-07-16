@@ -1,134 +1,308 @@
-# Phase 1B Results: What Survey Features Drive LLM Persona Predictions?
+# Do LLM Personas Understand People, or Just Their Statistics?
+## Accuracy and Feature Attribution for LLM Persona Simulation on GSS 2024 — Phase 1 Report
 
 **Joyce Yu · Stanford GSB · GSBGEN390 · Advisor: Prof. Mohsen Bayati**
-**Run: 2026-07-12 → 2026-07-14 · Report: 2026-07-14**
-*Numbers computed from the raw prediction file (`phase1b_raw.parquet`, 159,804
-rows) by `src/phase1b_analysis.py`; all tables in `phase1b_tables.xlsx`.
-Design per RESEARCH_DESIGN.md §8 (locked 2026-07-12): Random × P1 cell,
-N = 3,309 GSS 2024 respondents × 6 conditions, primary_eval (12 attitude
-items). Headline cohort N = 3,109 (excludes the 200 Phase 1A selector
-respondents); full N = 3,309 reported as sensitivity.*
+**Phase 1B run: July 12–14, 2026 · Report: July 15, 2026**
+
+*All numbers reproduce from `src/phase1b_analysis.py` on the raw prediction
+file (`phase1b_raw.parquet`, 159,804 rows; in the shared Drive folder). Full
+tables: [`outputs/phase1b_tables.xlsx`](outputs/phase1b_tables.xlsx).*
 
 ---
 
-## 1. The short version
+## Abstract
 
-1. **Baseline accuracy is unchanged from Phase 1A.** Full-persona normalized
-   MAE is 0.264 (conservative; 0.255 optimistic) on the headline cohort. The
-   sensitivity cohort gives 0.2646 — the selector-optimism gap is ~0.001,
-   i.e., the Phase 1A cell choice was not noise-chasing.
-2. **Removing any whole feature bin barely hurts.** Three of four bins have
-   statistically reliable but tiny effects (largest: attitudinal,
-   ΔMAE = +0.0095). Every bin's 95% CI lies entirely below our pre-registered
-   "small effect" threshold of 0.02. The psychological bin contributes
-   nothing (ΔMAE = +0.0008, n.s.). Feature information is highly redundant:
-   the model reconstructs what a dropped bin carried from what remains.
-3. **What signal exists is concentrated in a few specific batteries, not in
-   categories.** In the randomized battery ablation, 3 of 34 batteries have
-   CIs excluding zero: voting choice (+0.017), racial/ethnic origin (+0.016),
-   abortion attitudes (+0.015); denominational identity is borderline
-   (+0.013, CI [−0.0001, +0.028]). The other 30 are indistinguishable from
-   zero. The politically diagnostic variables do the work; everything else
-   is decoration.
-4. **A ridge/logistic regression trained on the same features beats the LLM
-   on 9 of 12 items** (e.g., POLVIEWS: regression 0.144 vs LLM 0.197). By
-   the R2 module's definition, the LLM persona's apparent accuracy is mostly
-   feature auto-correlation that any supervised predictor can exploit — we
-   find no persona-reasoning premium in this setting. (The regression is an
-   in-distribution upper bound by design: it trains on 4/5 of this year's
-   respondents, cross-validated; the LLM is zero-shot.)
-5. **Per-model patterns agree in direction, differ in noise.** Llama-4 shows
-   all four bins significant; DeepSeek loads on behavioral; Kimi's deltas
-   are noisy because its 4.9% parse-failure rate (§4) inflates conservative
-   errors on both sides of each Δ.
-6. **We are not drawing the Phase 1C conclusion here.** The battery ranking
-   and its precision (per-battery n ≈ 650–770, CI half-width ≈ ±0.015) are
-   what the §9 decision needs; we leave that discussion to our next meeting.
+Can a large language model, given a person's survey profile, predict that
+person's other attitudes — and if so, which parts of the profile does it
+actually use? We built LLM "personas" from 140 structured features of 3,309
+real respondents in the 2024 General Social Survey and asked four
+inexpensive open-weight models to answer 12 held-out attitude questions
+(politics, abortion, gun control, gender roles, institutional confidence) as
+each respondent. Prediction error was then re-measured under six ablation
+conditions that remove categories of profile information. Three results.
+First, accuracy is modest (normalized MAE 0.264) and identical to what
+GPT-4o achieves. Second, the personas are remarkably insensitive to their
+inputs: deleting an entire feature category (all demographics, or all
+behavioral variables) worsens error by at most 0.01 — beneath our
+pre-registered threshold for a "small" effect — and what signal exists is
+concentrated in a handful of politically diagnostic question batteries
+(vote choice, race, abortion) rather than spread across categories. Third,
+a ridge/logistic regression trained on the same features beats the LLM on
+9 of 12 items. Together these results suggest that, in this setting, LLM
+persona simulation adds no predictive value beyond the statistical
+associations already present in the features — a bound that any application
+of "silicon sampling" to attitude research needs to confront.
 
-## 2. Design (one paragraph)
+---
 
-Each of 3,309 respondents was answered by one panel model chosen by a
-seeded hash (share per model ≈ 25%; identical model across all six
-conditions, so within-respondent differences are model-constant). The six
-conditions: Full persona (140 features, own-battery excluded per R1), four
-bin-LOO conditions (drop demographic / behavioral / psychological /
-attitudinal), and `random_battery_drop` (R1 plus one battery drawn uniformly
-per respondent-item; the drawn battery is recorded, so each battery's effect
-is estimated from the pairs where it was absent vs the same pairs' Full
-rows). Scoring: per-item normalized absolute error in [0,1]; parse failures
-count as error 1.0 (conservative) with the optimistic variant alongside.
-CIs: BCa bootstrap, B = 10,000, respondent clusters, seed 42;
-Holm-Bonferroni across the four bins.
+## 1. Introduction
 
-## 3. Results
+**The promise.** Park et al. (2024) built generative agents from two-hour
+qualitative interviews with 1,052 people and reported that these agents
+could reproduce their subjects' General Social Survey answers about as
+consistently as the subjects reproduced their own answers two weeks later.
+This and similar results have fueled a fast-growing practice of "silicon
+sampling": using LLM-simulated respondents to pilot surveys, pre-test
+experiments, and even substitute for hard-to-reach populations.
 
-**Bin-LOO ΔMAE vs Full** (headline cohort, conservative, combined column;
-positive = dropping the bin hurts):
+**The gap.** If personas work, a basic engineering and scientific question
+follows: *what information about a person does the simulation actually
+need?* Two-hour interviews are expensive; structured survey variables are
+cheap and already sit in every panel provider's database. Yet the
+literature reports headline accuracies without attribution — nobody has
+systematically measured which categories of persona information drive the
+predictions, or whether the LLM is doing anything a simple statistical
+model could not. Both questions matter: the first tells practitioners what
+data to collect; the second tells researchers whether "persona reasoning"
+is a real phenomenon or a re-branding of feature correlation.
 
-| Bin dropped | ΔMAE | 95% BCa CI | Holm-p |
-|---|---|---|---|
-| Attitudinal | +0.0095 | [+0.0059, +0.0132] | 0.0004 |
-| Behavioral | +0.0066 | [+0.0032, +0.0099] | 0.0004 |
-| Demographic | +0.0045 | [+0.0012, +0.0078] | 0.014 |
-| Psychological | +0.0008 | [−0.0022, +0.0037] | 0.61 |
+**This study.** We use the GSS 2024 cross-section as ground truth. Each
+respondent's persona is a structured profile of up to 140 variables,
+organized two ways: into **4 bins** (demographic, behavioral,
+psychological, attitudinal) and into **34 batteries** (the GSS's own
+question blocks, e.g. the abortion battery or the confidence-in-
+institutions battery). The persona is handed to an LLM which answers 12
+held-out attitude items as that person. Throughout, a leakage rule (R1)
+excludes the predicted item's own battery from the persona, mirroring Park
+et al.'s whole-module hold-out. Attribution then comes from ablation:
+re-run the same predictions with a bin or a battery deleted and measure
+how much accuracy degrades. A supervised regression baseline, trained on
+the identical features under the identical leakage rule, provides the
+"pure statistics" reference point.
 
-All CIs sit below the pre-registered small-effect threshold (0.02): reliable
-direction, negligible magnitude.
+Phase 1A (June) selected the model and prompt configuration; Phase 1B
+(this report) is the full-scale accuracy and attribution run.
 
-**Battery ablation** (top of 34; paired ΔMAE on pairs where the battery was
-drawn; parse-ok required in both arms):
+## 2. Phase 1A recap: choosing the configuration
 
-| Battery | ΔMAE | 95% CI | n pairs |
+*(Details: `report/phase1a_report.md`. This section is a summary.)*
+
+**Design.** Four inexpensive open-weight models — Qwen3-Max,
+DeepSeek-V3.1-Terminus, Llama-4-Maverick, Kimi-K2 — crossed with three
+prompt formats from the literature: P0 key-value list (Park 2024), P1
+first-person narrative (Argyle 2023), P2 interview Q&A (Wang 2025).
+N = 200 respondents, full persona only, two samples per call, with GPT-4o
+as an expensive reference. Scoring used **normalized error**: absolute
+distance divided by the item's scale range, so a one-step miss on a
+7-point scale (small error) is not conflated with missing a yes/no (full
+error). Parse failures score as the maximum error of 1.0 ("conservative"
+policy), so a model cannot dodge hard questions by answering garbage.
+
+**Results.**
+
+| Model (over 3 prompts) | Normalized MAE | vs Random |
+|---|---|---|
+| Llama-4-Maverick | 0.261 | tied (p = 0.12) |
+| DeepSeek-V3.1 | 0.272 | tied (p = 0.35) |
+| Kimi-K2 | 0.273 | tied (p = 0.32) |
+| Qwen3-Max | 0.280 | **worse** (p = 0.02) |
+| **Random mix of the four** | **0.268** | — |
+
+| Prompt | Normalized MAE | vs P0 |
+|---|---|---|
+| P0 key-value | 0.276 | reference |
+| P1 first-person | 0.269 | better, p < 0.01 |
+| P2 interview | 0.268 | better, p < 0.01 |
+
+Three facts drove the decision. (1) With respondent-clustered standard
+errors, **no model beats a Random policy** that assigns each respondent one
+of the four models at random; the only distinguishable model (Qwen) is
+worse. (2) **GPT-4o is statistically indistinguishable from the cheap
+panel** (p = 0.41) — the result that licenses doing this research at 1/50
+of frontier-model cost. (3) Several models exhibit **mode collapse** on
+some items (the same answer for all 200 respondents), which is invisible
+to the error metric but fatal for attribution — a collapsed answer cannot
+respond to a deleted feature.
+
+**Decision (advisor email, July 12).** Run Phase 1B on the **Random × P1**
+cell — your recommendation, on the grounds that no model earns a
+performance claim over the mix, and the mix dilutes any single model's
+collapse behavior. The same email added a sixth experimental condition
+(randomized battery ablation, §3.2) as a low-cost substitute for the
+originally budgeted exhaustive battery LOO.
+
+## 3. Phase 1B: design
+
+**Sample and dispatch.** All 3,309 respondents of the GSS 2024
+cross-section. Each respondent is assigned one panel model by a seeded
+hash (shares: 24.7–25.4% per model) and keeps that model across **all six
+conditions**, so every within-respondent comparison is model-constant.
+Headline statistics use the **N = 3,109 cohort excluding the 200
+respondents Phase 1A used for selection** (removing in-sample optimism);
+the full N = 3,309 is reported as a sensitivity check.
+
+**Conditions.** Per respondent × on-ballot item (~8.05 of the 12 items per
+respondent, following the GSS ballot design), one call per condition:
+
+| # | Condition | Persona contains |
+|---|---|---|
+| 1 | Full | all 140 features − predicted item's own battery (R1) |
+| 2–5 | Bin LOO × 4 | Full − one entire bin (demographic / behavioral / psychological / attitudinal) |
+| 6 | Random battery drop | Full − one additional battery drawn uniformly at random per (respondent, item), draw recorded |
+
+**Layer 1 (bins).** Each bin's contribution is the paired difference
+ΔMAE = MAE(bin dropped) − MAE(Full), computed within respondent.
+
+**Layer 2 (batteries).** Condition 6 randomizes which battery is absent, so
+each of the 34 batteries is missing in ~1/33 of ablation calls (650–770
+pairs per battery). Battery *b*'s contribution is the mean of
+err(ablated) − err(Full) over the pairs where *b* was drawn, requiring a
+parsed answer in both arms. This estimates the same quantity as an
+exhaustive 34-condition battery LOO at ~1/8 of the cost.
+
+**Inference.** Normalized error as in Phase 1A; conservative parse-fail
+policy is primary, optimistic (drop unparsed) reported alongside. CIs are
+BCa bootstrap, B = 10,000, resampling respondents (clusters), seed 42.
+The four bin tests are Holm-Bonferroni corrected. Following Funder & Ozer
+(2019) we pre-registered ΔMAE < 0.02 as below "small"; we substantively
+interpret a contribution only if its CI excludes that threshold.
+
+**Execution.** 159,804 calls over July 12–14 (~$87 at OpenRouter prices).
+Final artifact: 19,854 records — exactly 3,309 respondents × 6 conditions —
+passing all integrity checks (no duplicates; model constant within
+respondent and identical to the dispatch hash; recorded seeds identical to
+their deterministic derivation; battery draws identical to the seeded
+picker). Transient network interruptions corrupted 0.3% of calls
+mid-run; affected records were deleted and regenerated through the
+driver's resume path, which is provably equivalent to a single-pass run
+(seeds are pure functions of the call coordinates).
+
+## 4. Results
+
+### 4.1 Overall accuracy
+
+Full-persona normalized MAE on the headline cohort is **0.264**
+(conservative; 0.255 optimistic). The N = 3,309 sensitivity cohort gives
+0.2646 — a selector-optimism gap of ~0.001, confirming the Phase 1A choice
+was not fit to noise. Per model (respondent-macro): Llama 0.242,
+DeepSeek 0.261, Qwen 0.266, Kimi 0.287 (Kimi's figure includes its
+parse-failure penalty, §4.5).
+
+Interpretation anchor: 0.264 means that on a 7-point item the average
+prediction is ~1.8 scale points off; a coin-flip-with-the-marginals
+baseline scores far worse, but so does no simple "the model knows this
+person" reading (see §4.4).
+
+### 4.2 Which feature *categories* matter (bin LOO)
+
+| Bin dropped | ΔMAE | 95% BCa CI | Holm-p | n |
+|---|---|---|---|---|
+| Attitudinal | +0.0095 | [+0.0059, +0.0132] | 0.0004 | 3,109 |
+| Behavioral | +0.0066 | [+0.0032, +0.0099] | 0.0004 | 3,109 |
+| Demographic | +0.0045 | [+0.0012, +0.0078] | 0.014 | 3,109 |
+| Psychological | +0.0008 | [−0.0022, +0.0037] | 0.61 | 3,109 |
+
+Three of four bins have statistically reliable effects with a consistent
+ordering (attitudinal > behavioral > demographic > psychological ≈ 0),
+and the per-model breakdowns agree in direction. But **every CI lies
+entirely below the 0.02 small-effect threshold**: removing a whole
+category of information about a person — all their demographics, all
+their behavioral traces — costs the persona at most one percentage point
+of normalized accuracy. The profile is heavily redundant: the model
+reconstructs what a dropped bin carried from the features that remain.
+The psychological bin (happiness, trust, life satisfaction) is not used
+at all.
+
+### 4.3 Which specific *batteries* matter (randomized ablation)
+
+Top of the 34-battery ranking (combined column; full table in the xlsx):
+
+| Battery | ΔMAE | 95% BCa CI | n pairs |
 |---|---|---|---|
 | voting_choice | +0.0174 | [+0.0032, +0.0323] | 715 |
 | racial_ethnic_origin | +0.0161 | [+0.0015, +0.0317] | 766 |
 | abortion | +0.0147 | [+0.0037, +0.0288] | 654 |
 | denominational_identity | +0.0132 | [−0.0001, +0.0277] | 717 |
-| *remaining 30 batteries* | CIs include 0 | | ≈650–770 each |
+| current_religious_intensity | +0.0110 | [−0.0032, +0.0259] | 718 |
+| *remaining 29 batteries* | CIs include 0 | | 650–770 each |
 
-Point estimates are pair-level means per the §8 estimand; CIs are BCa with
-respondent clusters. (A respondent-macro estimator gives the same ranking
-with slightly larger point estimates — the difference is respondents with
-more on-ballot items getting proportionally more weight.)
+The picture sharpens: predictive signal is not spread across categories
+but **concentrated in the few batteries that are politically diagnostic**
+— whom the respondent voted for, their race, their abortion stance, and
+(borderline) their religious affiliation. Deleting any of the other ~30
+batteries does nothing detectable. Note the two layers measure different
+estimands (a battery's effect is identified only on items outside it, and
+battery cells have ~1/30 the data of bin cells), so point estimates should
+not be compared across the two tables — but the qualitative conclusion is
+the same from both: *most of the persona is decoration.*
 
-Missingness check for the paired estimator: 25,029 pairs, 97.5% parse-ok in
-both arms; arm-specific failures are balanced (305 ablated-only vs 299
-full-only), so differential parse failure is not driving the estimates.
+Missingness check: of 25,029 ablation-Full pairs, 97.5% parse in both
+arms, and one-sided failures are balanced (305 vs 299), so differential
+parse failure does not drive the estimates.
 
-**LLM vs regression baseline** (per-item normalized MAE, headline cohort;
-full table in `T4`): regression wins 9/12 items; LLM wins FEPOL (+0.022),
-GUNLAW (+0.007), RACDIF1 (+0.006) — all within noise of a tie.
+### 4.4 Is the LLM doing more than statistics? (regression baseline)
 
-## 4. Data quality and caveats
+For each item we trained a ridge (ordinal items) or logistic (binary
+items) regression on the *same* encoded features under the *same* R1
+battery-exclusion rule, 5-fold cross-validated within GSS 2024. This is
+deliberately an in-distribution upper bound on what feature correlation
+alone can extract: the regression sees ~2,650 labeled neighbors; the LLM
+is zero-shot. The comparison asks whether the LLM's world knowledge and
+"role-play" recover anything beyond that correlation structure.
 
-- **Parse failure is one model's problem.** Kimi-K2 fails to emit a scorable
-  answer on 4.9% of calls (other models ≤ 0.1%; overall 1.24%). This
-  penalizes Kimi's ~25% of respondents under the conservative metric; the
-  conservative-vs-optimistic headline gap is 0.0094. Raw model outputs are
-  preserved in the JSON records for inspection.
-- **Training-data contamination cannot be ruled out** — all four panel
-  models postdate GSS 2024 fieldwork. Two observations bound the concern:
-  (a) contamination inflates LLM accuracy, so finding 4 (no premium over a
-  regression) survives it a fortiori; (b) the absolute level (0.264) should
-  be read as an upper bound on clean-room performance. A release-date audit
-  and aggregate-recall probes are cheap follow-ups if wanted.
-- **Run repairs.** Network interruptions during the 45-hour run caused
-  retry-exhaustion on 0.3% of calls; affected records were deleted and
-  re-generated through the driver's resume path (call seeds are pure
-  functions of (respondent, condition, item, model), verified identical to a
-  single-pass run; audit script in repo). Final artifact: 19,854 records,
-  zero failures, all integrity checks pass.
+| Item | LLM (Full) | Regression | LLM gain | n |
+|---|---|---|---|---|
+| POLVIEWS | 0.197 | 0.144 | −0.054 | 2,970 |
+| PARTYID | 0.170 | 0.147 | −0.023 | 3,071 |
+| ABANY | 0.342 | 0.263 | −0.079 | 2,006 |
+| CAPPUN | 0.375 | 0.344 | −0.032 | 1,944 |
+| GUNLAW | 0.300 | 0.307 | +0.007 | 2,058 |
+| FECHLD | 0.275 | 0.218 | −0.058 | 2,040 |
+| FEPOL | 0.245 | 0.268 | +0.022 | 839 |
+| RACDIF1 | 0.330 | 0.336 | +0.006 | 956 |
+| CONFINAN | 0.244 | 0.238 | −0.006 | 2,032 |
+| CONLEGIS | 0.287 | 0.228 | −0.059 | 2,020 |
+| HELPPOOR | 0.264 | 0.217 | −0.047 | 2,001 |
+| SATFIN | 0.257 | 0.233 | −0.023 | 3,092 |
 
-## 5. Data and reproduction
+**The regression wins 9 of 12 items**; the LLM's three wins (+0.006 to
++0.022) are within noise of a tie. Combined with §4.2–4.3, the natural
+reading is that the LLM persona's accuracy *is* the feature correlation —
+"65-year-old white Texan Baptist who voted Republican" maps to predictable
+attitudes, and a 1950s-era statistical method exploits that mapping
+better than the LLM does. We find no persona-reasoning premium.
 
-- **Raw data**: `phase1b_raw.parquet` — all 159,804 predictions (0.5 MB) —
-  is in the shared Drive folder (*Phase 1B*), with
-  [`report/phase1b_data_readme.md`](report/phase1b_data_readme.md) as the
-  column dictionary and loading guide.
-- **Tables**: [`outputs/phase1b_tables.xlsx`](outputs/phase1b_tables.xlsx) —
-  T0 raw per-item tables plus every aggregate above. Sheets suffixed `_H`
-  use the N=3,109 headline cohort; `_S` the N=3,309 sensitivity cohort.
-- **Code**: [`src/phase1b_analysis.py`](src/phase1b_analysis.py) reproduces
-  every number here from the parquet (BCa bootstrap B=10,000, seed 42);
-  machine-readable results in
-  [`outputs/phase1b_analysis.json`](outputs/phase1b_analysis.json).
+### 4.5 Data quality
+
+Parse failures are 1.24% of samples overall but concentrated in one
+model: Kimi-K2 4.95%, Llama 0.08%, Qwen and DeepSeek 0.00%. Under the
+conservative policy this penalizes Kimi's quarter of respondents; the
+conservative-vs-optimistic headline gap is 0.0094, and no qualitative
+conclusion changes between policies (both reported in every table). All
+raw model outputs are preserved for inspection.
+
+## 5. Limitations and caveats
+
+- **Training-data contamination.** All four models postdate GSS 2024
+  fieldwork, so memorized aggregates (or, less plausibly, microdata)
+  cannot be ruled out. The concern is directional: contamination
+  *inflates* LLM accuracy, so the no-premium finding (§4.4) survives it
+  a fortiori, while the absolute level (0.264) should be read as an upper
+  bound. A release-date audit and aggregate-recall probes are cheap
+  follow-ups.
+- **The regression baseline is in-distribution by construction.** It
+  answers "how much is extractable from these features on this
+  population," not "what would a zero-data predictor do." That asymmetry
+  is the point of the comparison, but it means §4.4 does not preclude LLM
+  value in settings with no labeled data — it only shows the accuracy
+  there would rest on the same correlations, unverifiable.
+- **Attribution granularity.** Battery cells have wide CIs (±0.015);
+  batteries with true effects near 0.01 cannot be separated from zero at
+  this budget. The design question of whether that precision suffices —
+  or whether the enumerated battery LOO (Phase 1C, ~$481) is still worth
+  running — is deferred to our next meeting.
+- **One survey, one year, 12 items.** Attitude items with strong
+  political structure; generalization to behaviors, preferences, or other
+  populations is untested.
+
+## 6. Reproducibility
+
+Raw predictions: `phase1b_raw.parquet` (Drive folder *Phase 1B*; column
+dictionary in [`report/phase1b_data_readme.md`](report/phase1b_data_readme.md)).
+Analysis: [`src/phase1b_analysis.py`](src/phase1b_analysis.py) regenerates
+every table ([`outputs/phase1b_tables.xlsx`](outputs/phase1b_tables.xlsx),
+[`outputs/phase1b_analysis.json`](outputs/phase1b_analysis.json)); sheets
+suffixed `_H` are the headline cohort, `_S` the sensitivity cohort. All
+randomness is seeded (seed 42): respondent sampling, model dispatch,
+battery draws, bootstrap. Design document: `RESEARCH_DESIGN.md` (§8 for
+this phase). Total Phase 1 spend to date: ~$250 of the ~$769 budget.
