@@ -32,9 +32,11 @@ worsens error by at most 0.01, beneath our pre-registered threshold for a
 profile is redundant to it. Third, a ridge/logistic regression trained on the same features
 matches or exceeds the LLM's accuracy on most items. The regression needs
 labeled data from the same population and the LLM does not, so the two are
-not substitutes; what the comparison shows is that on this task the LLM's
-accuracy stays within what feature correlation alone supports. Applications
-of "silicon sampling" that count on something beyond that should take note.
+not substitutes: where such data exists the supervised model is the
+stronger predictor, and where it does not, the LLM is the only option and
+this design cannot score it. What the comparison establishes is a
+calibration point: in the setting where both can be measured, the LLM's
+accuracy stays within what feature correlation alone supports.
 
 ---
 
@@ -276,12 +278,21 @@ learner can extract, versus knowledge the LLM brings on its own.
 The regression matches or exceeds the LLM on 9 of 12 items; the LLM's
 three wins (+0.006 to +0.022) are small. Read together with §4.2 and
 §4.3, the zero-shot persona appears to operate on the same correlational
-signal the regression uses, and to extract somewhat less of it. What the
-LLM uniquely offers is availability without training data. Whether that
-zero-shot convenience is worth the accuracy gap, and whether the
-correlational reading generalizes to settings where no labeled data
-exists to check it, are questions this comparison raises rather than
-settles.
+signal the regression uses, and to extract somewhat less of it here.
+
+Two things this result does and does not mean. Where a researcher already
+holds thousands of labeled responses from the target population, as in
+this benchmark, a supervised model is the stronger and cheaper predictor.
+But that setting is the exception, not the rule: for a new population, a
+novel question, or a survey that has not been fielded yet, the labeled
+data the regression depends on simply does not exist, and the LLM still
+produces a prediction. That zero-shot regime is exactly where persona
+simulation would earn its keep, and it is a regime this design cannot
+evaluate, because evaluating it requires the very labels whose absence
+defines it. Our contribution is the calibration point: in the one setting
+where both predictors can be scored, the LLM's accuracy stayed within,
+not above, what feature correlation supports. How far that carries into
+the data-free regime is an open question, not a verdict.
 
 ### 4.5 Data quality
 
