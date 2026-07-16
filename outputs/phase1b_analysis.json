@@ -1,0 +1,5606 @@
+{
+ "headline_N3109": {
+  "cohort": "headline_N3109",
+  "n_respondents": 3109,
+  "T0_raw": [
+   {
+    "item": "ABANY",
+    "condition": "Full",
+    "deepseek-v3.1": 0.3958,
+    "kimi-k2": 0.302,
+    "llama-4-mav": 0.2828,
+    "qwen3-max": 0.3838,
+    "random(combined)": 0.342
+   },
+   {
+    "item": "ABANY",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.3384,
+    "kimi-k2": 0.348,
+    "llama-4-mav": 0.3422,
+    "qwen3-max": 0.4081,
+    "random(combined)": 0.3589
+   },
+   {
+    "item": "ABANY",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.4474,
+    "kimi-k2": 0.284,
+    "llama-4-mav": 0.3074,
+    "qwen3-max": 0.4,
+    "random(combined)": 0.3609
+   },
+   {
+    "item": "ABANY",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.3595,
+    "kimi-k2": 0.28,
+    "llama-4-mav": 0.2992,
+    "qwen3-max": 0.3697,
+    "random(combined)": 0.3275
+   },
+   {
+    "item": "ABANY",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.4092,
+    "kimi-k2": 0.29,
+    "llama-4-mav": 0.2992,
+    "qwen3-max": 0.3778,
+    "random(combined)": 0.345
+   },
+   {
+    "item": "ABANY",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.4092,
+    "kimi-k2": 0.288,
+    "llama-4-mav": 0.2869,
+    "qwen3-max": 0.3778,
+    "random(combined)": 0.3415
+   },
+   {
+    "item": "CAPPUN",
+    "condition": "Full",
+    "deepseek-v3.1": 0.3771,
+    "kimi-k2": 0.3963,
+    "llama-4-mav": 0.3613,
+    "qwen3-max": 0.3659,
+    "random(combined)": 0.375
+   },
+   {
+    "item": "CAPPUN",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.3833,
+    "kimi-k2": 0.4129,
+    "llama-4-mav": 0.3733,
+    "qwen3-max": 0.3721,
+    "random(combined)": 0.3853
+   },
+   {
+    "item": "CAPPUN",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.3812,
+    "kimi-k2": 0.3755,
+    "llama-4-mav": 0.3752,
+    "qwen3-max": 0.3534,
+    "random(combined)": 0.3714
+   },
+   {
+    "item": "CAPPUN",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.3667,
+    "kimi-k2": 0.3817,
+    "llama-4-mav": 0.3333,
+    "qwen3-max": 0.3825,
+    "random(combined)": 0.3657
+   },
+   {
+    "item": "CAPPUN",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.375,
+    "kimi-k2": 0.3817,
+    "llama-4-mav": 0.3772,
+    "qwen3-max": 0.3534,
+    "random(combined)": 0.3719
+   },
+   {
+    "item": "CAPPUN",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.3708,
+    "kimi-k2": 0.3776,
+    "llama-4-mav": 0.3673,
+    "qwen3-max": 0.3659,
+    "random(combined)": 0.3704
+   },
+   {
+    "item": "CONFINAN",
+    "condition": "Full",
+    "deepseek-v3.1": 0.2295,
+    "kimi-k2": 0.2904,
+    "llama-4-mav": 0.2144,
+    "qwen3-max": 0.243,
+    "random(combined)": 0.2441
+   },
+   {
+    "item": "CONFINAN",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.2295,
+    "kimi-k2": 0.2874,
+    "llama-4-mav": 0.2144,
+    "qwen3-max": 0.247,
+    "random(combined)": 0.2443
+   },
+   {
+    "item": "CONFINAN",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.2265,
+    "kimi-k2": 0.2805,
+    "llama-4-mav": 0.2144,
+    "qwen3-max": 0.2329,
+    "random(combined)": 0.2384
+   },
+   {
+    "item": "CONFINAN",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.2275,
+    "kimi-k2": 0.2923,
+    "llama-4-mav": 0.2144,
+    "qwen3-max": 0.242,
+    "random(combined)": 0.2438
+   },
+   {
+    "item": "CONFINAN",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.2305,
+    "kimi-k2": 0.2717,
+    "llama-4-mav": 0.2144,
+    "qwen3-max": 0.2249,
+    "random(combined)": 0.2352
+   },
+   {
+    "item": "CONFINAN",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.2275,
+    "kimi-k2": 0.2933,
+    "llama-4-mav": 0.2144,
+    "qwen3-max": 0.247,
+    "random(combined)": 0.2453
+   },
+   {
+    "item": "CONLEGIS",
+    "condition": "Full",
+    "deepseek-v3.1": 0.2699,
+    "kimi-k2": 0.3084,
+    "llama-4-mav": 0.3248,
+    "qwen3-max": 0.2429,
+    "random(combined)": 0.2874
+   },
+   {
+    "item": "CONLEGIS",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.2821,
+    "kimi-k2": 0.2976,
+    "llama-4-mav": 0.3248,
+    "qwen3-max": 0.2429,
+    "random(combined)": 0.2876
+   },
+   {
+    "item": "CONLEGIS",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.2749,
+    "kimi-k2": 0.3153,
+    "llama-4-mav": 0.3239,
+    "qwen3-max": 0.2429,
+    "random(combined)": 0.2901
+   },
+   {
+    "item": "CONLEGIS",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.2525,
+    "kimi-k2": 0.3045,
+    "llama-4-mav": 0.322,
+    "qwen3-max": 0.2429,
+    "random(combined)": 0.2814
+   },
+   {
+    "item": "CONLEGIS",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.2668,
+    "kimi-k2": 0.2888,
+    "llama-4-mav": 0.3248,
+    "qwen3-max": 0.2429,
+    "random(combined)": 0.2817
+   },
+   {
+    "item": "CONLEGIS",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.2668,
+    "kimi-k2": 0.2986,
+    "llama-4-mav": 0.3248,
+    "qwen3-max": 0.2429,
+    "random(combined)": 0.2842
+   },
+   {
+    "item": "FECHLD",
+    "condition": "Full",
+    "deepseek-v3.1": 0.2486,
+    "kimi-k2": 0.3134,
+    "llama-4-mav": 0.2194,
+    "qwen3-max": 0.3183,
+    "random(combined)": 0.2753
+   },
+   {
+    "item": "FECHLD",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.3049,
+    "kimi-k2": 0.3227,
+    "llama-4-mav": 0.211,
+    "qwen3-max": 0.285,
+    "random(combined)": 0.2804
+   },
+   {
+    "item": "FECHLD",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.2541,
+    "kimi-k2": 0.2942,
+    "llama-4-mav": 0.2201,
+    "qwen3-max": 0.2982,
+    "random(combined)": 0.2668
+   },
+   {
+    "item": "FECHLD",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.2493,
+    "kimi-k2": 0.3386,
+    "llama-4-mav": 0.2324,
+    "qwen3-max": 0.3289,
+    "random(combined)": 0.2877
+   },
+   {
+    "item": "FECHLD",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.2554,
+    "kimi-k2": 0.3167,
+    "llama-4-mav": 0.2272,
+    "qwen3-max": 0.3296,
+    "random(combined)": 0.2827
+   },
+   {
+    "item": "FECHLD",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.2622,
+    "kimi-k2": 0.3141,
+    "llama-4-mav": 0.2214,
+    "qwen3-max": 0.3264,
+    "random(combined)": 0.2814
+   },
+   {
+    "item": "FEPOL",
+    "condition": "Full",
+    "deepseek-v3.1": 0.1707,
+    "kimi-k2": 0.274,
+    "llama-4-mav": 0.2344,
+    "qwen3-max": 0.296,
+    "random(combined)": 0.2455
+   },
+   {
+    "item": "FEPOL",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.161,
+    "kimi-k2": 0.2694,
+    "llama-4-mav": 0.2031,
+    "qwen3-max": 0.2691,
+    "random(combined)": 0.2277
+   },
+   {
+    "item": "FEPOL",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.1805,
+    "kimi-k2": 0.2237,
+    "llama-4-mav": 0.2135,
+    "qwen3-max": 0.296,
+    "random(combined)": 0.23
+   },
+   {
+    "item": "FEPOL",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.2,
+    "kimi-k2": 0.2694,
+    "llama-4-mav": 0.2396,
+    "qwen3-max": 0.296,
+    "random(combined)": 0.2527
+   },
+   {
+    "item": "FEPOL",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.1756,
+    "kimi-k2": 0.2466,
+    "llama-4-mav": 0.2292,
+    "qwen3-max": 0.3139,
+    "random(combined)": 0.2431
+   },
+   {
+    "item": "FEPOL",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.1707,
+    "kimi-k2": 0.242,
+    "llama-4-mav": 0.2344,
+    "qwen3-max": 0.3274,
+    "random(combined)": 0.2455
+   },
+   {
+    "item": "GUNLAW",
+    "condition": "Full",
+    "deepseek-v3.1": 0.3359,
+    "kimi-k2": 0.3101,
+    "llama-4-mav": 0.2659,
+    "qwen3-max": 0.2857,
+    "random(combined)": 0.2998
+   },
+   {
+    "item": "GUNLAW",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.3472,
+    "kimi-k2": 0.3023,
+    "llama-4-mav": 0.2619,
+    "qwen3-max": 0.3307,
+    "random(combined)": 0.311
+   },
+   {
+    "item": "GUNLAW",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.3472,
+    "kimi-k2": 0.3178,
+    "llama-4-mav": 0.2937,
+    "qwen3-max": 0.2935,
+    "random(combined)": 0.3134
+   },
+   {
+    "item": "GUNLAW",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.3359,
+    "kimi-k2": 0.3217,
+    "llama-4-mav": 0.2718,
+    "qwen3-max": 0.2955,
+    "random(combined)": 0.3066
+   },
+   {
+    "item": "GUNLAW",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.3302,
+    "kimi-k2": 0.2888,
+    "llama-4-mav": 0.2758,
+    "qwen3-max": 0.2935,
+    "random(combined)": 0.2974
+   },
+   {
+    "item": "GUNLAW",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.3378,
+    "kimi-k2": 0.3178,
+    "llama-4-mav": 0.2659,
+    "qwen3-max": 0.2838,
+    "random(combined)": 0.3017
+   },
+   {
+    "item": "HELPPOOR",
+    "condition": "Full",
+    "deepseek-v3.1": 0.277,
+    "kimi-k2": 0.3141,
+    "llama-4-mav": 0.2153,
+    "qwen3-max": 0.252,
+    "random(combined)": 0.2641
+   },
+   {
+    "item": "HELPPOOR",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.2755,
+    "kimi-k2": 0.3201,
+    "llama-4-mav": 0.2303,
+    "qwen3-max": 0.2703,
+    "random(combined)": 0.2736
+   },
+   {
+    "item": "HELPPOOR",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.2633,
+    "kimi-k2": 0.3031,
+    "llama-4-mav": 0.2245,
+    "qwen3-max": 0.2505,
+    "random(combined)": 0.26
+   },
+   {
+    "item": "HELPPOOR",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.3102,
+    "kimi-k2": 0.3156,
+    "llama-4-mav": 0.225,
+    "qwen3-max": 0.2551,
+    "random(combined)": 0.2759
+   },
+   {
+    "item": "HELPPOOR",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.2622,
+    "kimi-k2": 0.3151,
+    "llama-4-mav": 0.2197,
+    "qwen3-max": 0.249,
+    "random(combined)": 0.2611
+   },
+   {
+    "item": "HELPPOOR",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.2827,
+    "kimi-k2": 0.3071,
+    "llama-4-mav": 0.2187,
+    "qwen3-max": 0.2525,
+    "random(combined)": 0.2647
+   },
+   {
+    "item": "PARTYID",
+    "condition": "Full",
+    "deepseek-v3.1": 0.1494,
+    "kimi-k2": 0.2039,
+    "llama-4-mav": 0.1587,
+    "qwen3-max": 0.1674,
+    "random(combined)": 0.1698
+   },
+   {
+    "item": "PARTYID",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.1453,
+    "kimi-k2": 0.2123,
+    "llama-4-mav": 0.1692,
+    "qwen3-max": 0.1607,
+    "random(combined)": 0.1718
+   },
+   {
+    "item": "PARTYID",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.219,
+    "kimi-k2": 0.2329,
+    "llama-4-mav": 0.2114,
+    "qwen3-max": 0.2159,
+    "random(combined)": 0.2198
+   },
+   {
+    "item": "PARTYID",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.1541,
+    "kimi-k2": 0.199,
+    "llama-4-mav": 0.1766,
+    "qwen3-max": 0.172,
+    "random(combined)": 0.1754
+   },
+   {
+    "item": "PARTYID",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.1511,
+    "kimi-k2": 0.1981,
+    "llama-4-mav": 0.1665,
+    "qwen3-max": 0.1678,
+    "random(combined)": 0.1708
+   },
+   {
+    "item": "PARTYID",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.1554,
+    "kimi-k2": 0.2001,
+    "llama-4-mav": 0.1642,
+    "qwen3-max": 0.1711,
+    "random(combined)": 0.1727
+   },
+   {
+    "item": "POLVIEWS",
+    "condition": "Full",
+    "deepseek-v3.1": 0.185,
+    "kimi-k2": 0.2259,
+    "llama-4-mav": 0.1587,
+    "qwen3-max": 0.2204,
+    "random(combined)": 0.1974
+   },
+   {
+    "item": "POLVIEWS",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.1959,
+    "kimi-k2": 0.2536,
+    "llama-4-mav": 0.176,
+    "qwen3-max": 0.2503,
+    "random(combined)": 0.2189
+   },
+   {
+    "item": "POLVIEWS",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.1692,
+    "kimi-k2": 0.2038,
+    "llama-4-mav": 0.1722,
+    "qwen3-max": 0.1952,
+    "random(combined)": 0.1851
+   },
+   {
+    "item": "POLVIEWS",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.2037,
+    "kimi-k2": 0.236,
+    "llama-4-mav": 0.1596,
+    "qwen3-max": 0.2274,
+    "random(combined)": 0.2065
+   },
+   {
+    "item": "POLVIEWS",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.1792,
+    "kimi-k2": 0.2106,
+    "llama-4-mav": 0.1607,
+    "qwen3-max": 0.218,
+    "random(combined)": 0.1921
+   },
+   {
+    "item": "POLVIEWS",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.1786,
+    "kimi-k2": 0.2365,
+    "llama-4-mav": 0.1576,
+    "qwen3-max": 0.2202,
+    "random(combined)": 0.1981
+   },
+   {
+    "item": "RACDIF1",
+    "condition": "Full",
+    "deepseek-v3.1": 0.3511,
+    "kimi-k2": 0.3433,
+    "llama-4-mav": 0.3415,
+    "qwen3-max": 0.2857,
+    "random(combined)": 0.3295
+   },
+   {
+    "item": "RACDIF1",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.3867,
+    "kimi-k2": 0.3906,
+    "llama-4-mav": 0.3902,
+    "qwen3-max": 0.3452,
+    "random(combined)": 0.3776
+   },
+   {
+    "item": "RACDIF1",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.3644,
+    "kimi-k2": 0.3734,
+    "llama-4-mav": 0.3496,
+    "qwen3-max": 0.3214,
+    "random(combined)": 0.3515
+   },
+   {
+    "item": "RACDIF1",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.4133,
+    "kimi-k2": 0.3777,
+    "llama-4-mav": 0.374,
+    "qwen3-max": 0.3254,
+    "random(combined)": 0.3713
+   },
+   {
+    "item": "RACDIF1",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.36,
+    "kimi-k2": 0.3391,
+    "llama-4-mav": 0.3455,
+    "qwen3-max": 0.2976,
+    "random(combined)": 0.3347
+   },
+   {
+    "item": "RACDIF1",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.36,
+    "kimi-k2": 0.3519,
+    "llama-4-mav": 0.3374,
+    "qwen3-max": 0.2976,
+    "random(combined)": 0.3358
+   },
+   {
+    "item": "SATFIN",
+    "condition": "Full",
+    "deepseek-v3.1": 0.2425,
+    "kimi-k2": 0.2789,
+    "llama-4-mav": 0.2641,
+    "qwen3-max": 0.2403,
+    "random(combined)": 0.2565
+   },
+   {
+    "item": "SATFIN",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.2634,
+    "kimi-k2": 0.2821,
+    "llama-4-mav": 0.2653,
+    "qwen3-max": 0.2565,
+    "random(combined)": 0.2668
+   },
+   {
+    "item": "SATFIN",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.2575,
+    "kimi-k2": 0.286,
+    "llama-4-mav": 0.2596,
+    "qwen3-max": 0.2397,
+    "random(combined)": 0.2607
+   },
+   {
+    "item": "SATFIN",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.2569,
+    "kimi-k2": 0.2834,
+    "llama-4-mav": 0.2615,
+    "qwen3-max": 0.241,
+    "random(combined)": 0.2607
+   },
+   {
+    "item": "SATFIN",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.2549,
+    "kimi-k2": 0.2944,
+    "llama-4-mav": 0.2698,
+    "qwen3-max": 0.2578,
+    "random(combined)": 0.2692
+   },
+   {
+    "item": "SATFIN",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.2444,
+    "kimi-k2": 0.2737,
+    "llama-4-mav": 0.2634,
+    "qwen3-max": 0.2442,
+    "random(combined)": 0.2565
+   }
+  ],
+  "T1_full_baseline": [
+   {
+    "item": "ABANY",
+    "qwen3-max": 0.3838,
+    "deepseek-v3.1": 0.3958,
+    "llama-4-mav": 0.2828,
+    "kimi-k2": 0.302,
+    "random(combined)": 0.342,
+    "n_pairs(combined)": 2006
+   },
+   {
+    "item": "CAPPUN",
+    "qwen3-max": 0.3659,
+    "deepseek-v3.1": 0.3771,
+    "llama-4-mav": 0.3613,
+    "kimi-k2": 0.3963,
+    "random(combined)": 0.375,
+    "n_pairs(combined)": 1944
+   },
+   {
+    "item": "CONFINAN",
+    "qwen3-max": 0.243,
+    "deepseek-v3.1": 0.2295,
+    "llama-4-mav": 0.2144,
+    "kimi-k2": 0.2904,
+    "random(combined)": 0.2441,
+    "n_pairs(combined)": 2032
+   },
+   {
+    "item": "CONLEGIS",
+    "qwen3-max": 0.2429,
+    "deepseek-v3.1": 0.2699,
+    "llama-4-mav": 0.3248,
+    "kimi-k2": 0.3084,
+    "random(combined)": 0.2874,
+    "n_pairs(combined)": 2020
+   },
+   {
+    "item": "FECHLD",
+    "qwen3-max": 0.3183,
+    "deepseek-v3.1": 0.2486,
+    "llama-4-mav": 0.2194,
+    "kimi-k2": 0.3134,
+    "random(combined)": 0.2753,
+    "n_pairs(combined)": 2040
+   },
+   {
+    "item": "FEPOL",
+    "qwen3-max": 0.296,
+    "deepseek-v3.1": 0.1707,
+    "llama-4-mav": 0.2344,
+    "kimi-k2": 0.274,
+    "random(combined)": 0.2455,
+    "n_pairs(combined)": 839
+   },
+   {
+    "item": "GUNLAW",
+    "qwen3-max": 0.2857,
+    "deepseek-v3.1": 0.3359,
+    "llama-4-mav": 0.2659,
+    "kimi-k2": 0.3101,
+    "random(combined)": 0.2998,
+    "n_pairs(combined)": 2058
+   },
+   {
+    "item": "HELPPOOR",
+    "qwen3-max": 0.252,
+    "deepseek-v3.1": 0.277,
+    "llama-4-mav": 0.2153,
+    "kimi-k2": 0.3141,
+    "random(combined)": 0.2641,
+    "n_pairs(combined)": 2001
+   },
+   {
+    "item": "PARTYID",
+    "qwen3-max": 0.1674,
+    "deepseek-v3.1": 0.1494,
+    "llama-4-mav": 0.1587,
+    "kimi-k2": 0.2039,
+    "random(combined)": 0.1698,
+    "n_pairs(combined)": 3071
+   },
+   {
+    "item": "POLVIEWS",
+    "qwen3-max": 0.2204,
+    "deepseek-v3.1": 0.185,
+    "llama-4-mav": 0.1587,
+    "kimi-k2": 0.2259,
+    "random(combined)": 0.1974,
+    "n_pairs(combined)": 2970
+   },
+   {
+    "item": "RACDIF1",
+    "qwen3-max": 0.2857,
+    "deepseek-v3.1": 0.3511,
+    "llama-4-mav": 0.3415,
+    "kimi-k2": 0.3433,
+    "random(combined)": 0.3295,
+    "n_pairs(combined)": 956
+   },
+   {
+    "item": "SATFIN",
+    "qwen3-max": 0.2403,
+    "deepseek-v3.1": 0.2425,
+    "llama-4-mav": 0.2641,
+    "kimi-k2": 0.2789,
+    "random(combined)": 0.2565,
+    "n_pairs(combined)": 3092
+   }
+  ],
+  "T2_bin_loo": [
+   {
+    "bin": "drop_demographic",
+    "column": "qwen3-max",
+    "delta_mae": 0.0044,
+    "ci_lo": -0.0007,
+    "ci_hi": 0.0096,
+    "p_boot": 0.0929,
+    "n_respondents": 780,
+    "p_holm": 0.2787
+   },
+   {
+    "bin": "drop_behavioral",
+    "column": "qwen3-max",
+    "delta_mae": 0.002,
+    "ci_lo": -0.0042,
+    "ci_hi": 0.0082,
+    "p_boot": 0.5263,
+    "n_respondents": 780,
+    "p_holm": 0.6014
+   },
+   {
+    "bin": "drop_psychological",
+    "column": "qwen3-max",
+    "delta_mae": 0.0022,
+    "ci_lo": -0.0021,
+    "ci_hi": 0.0065,
+    "p_boot": 0.3007,
+    "n_respondents": 780,
+    "p_holm": 0.6014
+   },
+   {
+    "bin": "drop_attitudinal",
+    "column": "qwen3-max",
+    "delta_mae": 0.0107,
+    "ci_lo": 0.0038,
+    "ci_hi": 0.018,
+    "p_boot": 0.0035,
+    "n_respondents": 780,
+    "p_holm": 0.014
+   },
+   {
+    "bin": "drop_demographic",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0062,
+    "ci_lo": 0.0003,
+    "ci_hi": 0.012,
+    "p_boot": 0.0373,
+    "n_respondents": 772,
+    "p_holm": 0.0777
+   },
+   {
+    "bin": "drop_behavioral",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0157,
+    "ci_lo": 0.0101,
+    "ci_hi": 0.0212,
+    "p_boot": 0.0001,
+    "n_respondents": 772,
+    "p_holm": 0.0004
+   },
+   {
+    "bin": "drop_psychological",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0021,
+    "ci_lo": -0.0026,
+    "ci_hi": 0.0069,
+    "p_boot": 0.4013,
+    "n_respondents": 772,
+    "p_holm": 0.4013
+   },
+   {
+    "bin": "drop_attitudinal",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0069,
+    "ci_lo": 0.0008,
+    "ci_hi": 0.0134,
+    "p_boot": 0.0259,
+    "n_respondents": 772,
+    "p_holm": 0.0777
+   },
+   {
+    "bin": "drop_demographic",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0052,
+    "ci_lo": 0.0,
+    "ci_hi": 0.0104,
+    "p_boot": 0.0487,
+    "n_respondents": 784,
+    "p_holm": 0.0487
+   },
+   {
+    "bin": "drop_behavioral",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0136,
+    "ci_lo": 0.009,
+    "ci_hi": 0.0181,
+    "p_boot": 0.0001,
+    "n_respondents": 784,
+    "p_holm": 0.0004
+   },
+   {
+    "bin": "drop_psychological",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0063,
+    "ci_lo": 0.003,
+    "ci_hi": 0.0095,
+    "p_boot": 0.0003,
+    "n_respondents": 784,
+    "p_holm": 0.0009
+   },
+   {
+    "bin": "drop_attitudinal",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0098,
+    "ci_lo": 0.0044,
+    "ci_hi": 0.0153,
+    "p_boot": 0.0009,
+    "n_respondents": 784,
+    "p_holm": 0.0018
+   },
+   {
+    "bin": "drop_demographic",
+    "column": "kimi-k2",
+    "delta_mae": 0.0022,
+    "ci_lo": -0.0071,
+    "ci_hi": 0.0116,
+    "p_boot": 0.6595,
+    "n_respondents": 773,
+    "p_holm": 0.6595
+   },
+   {
+    "bin": "drop_behavioral",
+    "column": "kimi-k2",
+    "delta_mae": -0.0049,
+    "ci_lo": -0.0142,
+    "ci_hi": 0.0049,
+    "p_boot": 0.2941,
+    "n_respondents": 773,
+    "p_holm": 0.5882
+   },
+   {
+    "bin": "drop_psychological",
+    "column": "kimi-k2",
+    "delta_mae": -0.0077,
+    "ci_lo": -0.0168,
+    "ci_hi": 0.0015,
+    "p_boot": 0.0997,
+    "n_respondents": 773,
+    "p_holm": 0.2991
+   },
+   {
+    "bin": "drop_attitudinal",
+    "column": "kimi-k2",
+    "delta_mae": 0.0107,
+    "ci_lo": 0.0004,
+    "ci_hi": 0.0209,
+    "p_boot": 0.0463,
+    "n_respondents": 773,
+    "p_holm": 0.1852
+   },
+   {
+    "bin": "drop_demographic",
+    "column": "random(combined)",
+    "delta_mae": 0.0045,
+    "ci_lo": 0.0012,
+    "ci_hi": 0.0078,
+    "p_boot": 0.0071,
+    "n_respondents": 3109,
+    "p_holm": 0.0142
+   },
+   {
+    "bin": "drop_behavioral",
+    "column": "random(combined)",
+    "delta_mae": 0.0066,
+    "ci_lo": 0.0032,
+    "ci_hi": 0.0099,
+    "p_boot": 0.0001,
+    "n_respondents": 3109,
+    "p_holm": 0.0004
+   },
+   {
+    "bin": "drop_psychological",
+    "column": "random(combined)",
+    "delta_mae": 0.0008,
+    "ci_lo": -0.0022,
+    "ci_hi": 0.0037,
+    "p_boot": 0.6067,
+    "n_respondents": 3109,
+    "p_holm": 0.6067
+   },
+   {
+    "bin": "drop_attitudinal",
+    "column": "random(combined)",
+    "delta_mae": 0.0095,
+    "ci_lo": 0.0059,
+    "ci_hi": 0.0132,
+    "p_boot": 0.0001,
+    "n_respondents": 3109,
+    "p_holm": 0.0004
+   }
+  ],
+  "battery_missingness": {
+   "pairs_total": 25029,
+   "pairs_both_parse_ok": 24407,
+   "abl_only_fail": 305,
+   "full_only_fail": 299
+  },
+  "T3_battery_ablation": [
+   {
+    "battery": "voting_choice",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0117,
+    "ci_lo": -0.0139,
+    "ci_hi": 0.037,
+    "n_pairs": 193,
+    "n_respondents": 178,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_choice",
+    "column": "kimi-k2",
+    "delta_mae": 0.0409,
+    "ci_lo": 0.0043,
+    "ci_hi": 0.0819,
+    "n_pairs": 170,
+    "n_respondents": 155,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_choice",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0085,
+    "ci_lo": -0.011,
+    "ci_hi": 0.0231,
+    "n_pairs": 187,
+    "n_respondents": 169,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_choice",
+    "column": "qwen3-max",
+    "delta_mae": 0.0101,
+    "ci_lo": -0.0214,
+    "ci_hi": 0.0485,
+    "n_pairs": 165,
+    "n_respondents": 156,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_choice",
+    "column": "random(combined)",
+    "delta_mae": 0.0174,
+    "ci_lo": 0.0032,
+    "ci_hi": 0.0323,
+    "n_pairs": 715,
+    "n_respondents": 658,
+    "n_items_support": 12
+   },
+   {
+    "battery": "racial_ethnic_origin",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0245,
+    "ci_lo": 0.0052,
+    "ci_hi": 0.0556,
+    "n_pairs": 184,
+    "n_respondents": 163,
+    "n_items_support": 12
+   },
+   {
+    "battery": "racial_ethnic_origin",
+    "column": "kimi-k2",
+    "delta_mae": 0.0174,
+    "ci_lo": -0.0268,
+    "ci_hi": 0.0629,
+    "n_pairs": 193,
+    "n_respondents": 169,
+    "n_items_support": 12
+   },
+   {
+    "battery": "racial_ethnic_origin",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0,
+    "ci_lo": -0.0171,
+    "ci_hi": 0.0169,
+    "n_pairs": 181,
+    "n_respondents": 167,
+    "n_items_support": 12
+   },
+   {
+    "battery": "racial_ethnic_origin",
+    "column": "qwen3-max",
+    "delta_mae": 0.0214,
+    "ci_lo": -0.0034,
+    "ci_hi": 0.0506,
+    "n_pairs": 208,
+    "n_respondents": 188,
+    "n_items_support": 12
+   },
+   {
+    "battery": "racial_ethnic_origin",
+    "column": "random(combined)",
+    "delta_mae": 0.0161,
+    "ci_lo": 0.0015,
+    "ci_hi": 0.0317,
+    "n_pairs": 766,
+    "n_respondents": 687,
+    "n_items_support": 12
+   },
+   {
+    "battery": "abortion",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0135,
+    "ci_lo": -0.0039,
+    "ci_hi": 0.0367,
+    "n_pairs": 174,
+    "n_respondents": 156,
+    "n_items_support": 11
+   },
+   {
+    "battery": "abortion",
+    "column": "kimi-k2",
+    "delta_mae": 0.0304,
+    "ci_lo": -0.0036,
+    "ci_hi": 0.0788,
+    "n_pairs": 142,
+    "n_respondents": 131,
+    "n_items_support": 11
+   },
+   {
+    "battery": "abortion",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0068,
+    "ci_lo": -0.0045,
+    "ci_hi": 0.03,
+    "n_pairs": 163,
+    "n_respondents": 147,
+    "n_items_support": 11
+   },
+   {
+    "battery": "abortion",
+    "column": "qwen3-max",
+    "delta_mae": 0.0105,
+    "ci_lo": -0.0094,
+    "ci_hi": 0.0322,
+    "n_pairs": 175,
+    "n_respondents": 151,
+    "n_items_support": 11
+   },
+   {
+    "battery": "abortion",
+    "column": "random(combined)",
+    "delta_mae": 0.0147,
+    "ci_lo": 0.0037,
+    "ci_hi": 0.0288,
+    "n_pairs": 654,
+    "n_respondents": 585,
+    "n_items_support": 11
+   },
+   {
+    "battery": "denominational_identity",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0043,
+    "ci_lo": -0.026,
+    "ci_hi": 0.017,
+    "n_pairs": 179,
+    "n_respondents": 162,
+    "n_items_support": 12
+   },
+   {
+    "battery": "denominational_identity",
+    "column": "kimi-k2",
+    "delta_mae": 0.0356,
+    "ci_lo": -0.0081,
+    "ci_hi": 0.0818,
+    "n_pairs": 171,
+    "n_respondents": 155,
+    "n_items_support": 12
+   },
+   {
+    "battery": "denominational_identity",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0225,
+    "ci_lo": 0.0064,
+    "ci_hi": 0.0544,
+    "n_pairs": 185,
+    "n_respondents": 164,
+    "n_items_support": 12
+   },
+   {
+    "battery": "denominational_identity",
+    "column": "qwen3-max",
+    "delta_mae": -0.0001,
+    "ci_lo": -0.0207,
+    "ci_hi": 0.0121,
+    "n_pairs": 182,
+    "n_respondents": 162,
+    "n_items_support": 12
+   },
+   {
+    "battery": "denominational_identity",
+    "column": "random(combined)",
+    "delta_mae": 0.0132,
+    "ci_lo": -0.0001,
+    "ci_hi": 0.0277,
+    "n_pairs": 717,
+    "n_respondents": 643,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_religious_intensity",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.001,
+    "ci_lo": -0.0173,
+    "ci_hi": 0.0228,
+    "n_pairs": 195,
+    "n_respondents": 172,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_religious_intensity",
+    "column": "kimi-k2",
+    "delta_mae": 0.0164,
+    "ci_lo": -0.0224,
+    "ci_hi": 0.0568,
+    "n_pairs": 172,
+    "n_respondents": 156,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_religious_intensity",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0127,
+    "ci_lo": -0.0005,
+    "ci_hi": 0.0394,
+    "n_pairs": 175,
+    "n_respondents": 162,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_religious_intensity",
+    "column": "qwen3-max",
+    "delta_mae": 0.0152,
+    "ci_lo": -0.016,
+    "ci_hi": 0.0514,
+    "n_pairs": 176,
+    "n_respondents": 160,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_religious_intensity",
+    "column": "random(combined)",
+    "delta_mae": 0.011,
+    "ci_lo": -0.0032,
+    "ci_hi": 0.0259,
+    "n_pairs": 718,
+    "n_respondents": 650,
+    "n_items_support": 12
+   },
+   {
+    "battery": "national_priorities",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0046,
+    "ci_lo": -0.0199,
+    "ci_hi": 0.03,
+    "n_pairs": 193,
+    "n_respondents": 171,
+    "n_items_support": 12
+   },
+   {
+    "battery": "national_priorities",
+    "column": "kimi-k2",
+    "delta_mae": 0.0292,
+    "ci_lo": -0.009,
+    "ci_hi": 0.0763,
+    "n_pairs": 159,
+    "n_respondents": 147,
+    "n_items_support": 12
+   },
+   {
+    "battery": "national_priorities",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0051,
+    "ci_lo": -0.0152,
+    "ci_hi": 0.0295,
+    "n_pairs": 180,
+    "n_respondents": 166,
+    "n_items_support": 12
+   },
+   {
+    "battery": "national_priorities",
+    "column": "qwen3-max",
+    "delta_mae": 0.0049,
+    "ci_lo": -0.0254,
+    "ci_hi": 0.031,
+    "n_pairs": 171,
+    "n_respondents": 154,
+    "n_items_support": 12
+   },
+   {
+    "battery": "national_priorities",
+    "column": "random(combined)",
+    "delta_mae": 0.0103,
+    "ci_lo": -0.0042,
+    "ci_hi": 0.0252,
+    "n_pairs": 703,
+    "n_respondents": 638,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_geography",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.01,
+    "ci_lo": -0.0168,
+    "ci_hi": 0.0418,
+    "n_pairs": 172,
+    "n_respondents": 154,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_geography",
+    "column": "kimi-k2",
+    "delta_mae": 0.0392,
+    "ci_lo": 0.0098,
+    "ci_hi": 0.0746,
+    "n_pairs": 173,
+    "n_respondents": 156,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_geography",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0005,
+    "ci_lo": -0.0169,
+    "ci_hi": 0.0164,
+    "n_pairs": 185,
+    "n_respondents": 165,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_geography",
+    "column": "qwen3-max",
+    "delta_mae": -0.0059,
+    "ci_lo": -0.0245,
+    "ci_hi": 0.0116,
+    "n_pairs": 197,
+    "n_respondents": 176,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_geography",
+    "column": "random(combined)",
+    "delta_mae": 0.01,
+    "ci_lo": -0.0017,
+    "ci_hi": 0.0224,
+    "n_pairs": 727,
+    "n_respondents": 651,
+    "n_items_support": 12
+   },
+   {
+    "battery": "work_history",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0241,
+    "ci_lo": 0.0023,
+    "ci_hi": 0.0522,
+    "n_pairs": 175,
+    "n_respondents": 163,
+    "n_items_support": 12
+   },
+   {
+    "battery": "work_history",
+    "column": "kimi-k2",
+    "delta_mae": -0.0215,
+    "ci_lo": -0.0624,
+    "ci_hi": 0.0121,
+    "n_pairs": 156,
+    "n_respondents": 146,
+    "n_items_support": 12
+   },
+   {
+    "battery": "work_history",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0157,
+    "ci_lo": 0.0027,
+    "ci_hi": 0.0404,
+    "n_pairs": 186,
+    "n_respondents": 171,
+    "n_items_support": 12
+   },
+   {
+    "battery": "work_history",
+    "column": "qwen3-max",
+    "delta_mae": 0.0066,
+    "ci_lo": -0.0147,
+    "ci_hi": 0.0319,
+    "n_pairs": 180,
+    "n_respondents": 166,
+    "n_items_support": 12
+   },
+   {
+    "battery": "work_history",
+    "column": "random(combined)",
+    "delta_mae": 0.0071,
+    "ci_lo": -0.0058,
+    "ci_hi": 0.0201,
+    "n_pairs": 697,
+    "n_respondents": 646,
+    "n_items_support": 12
+   },
+   {
+    "battery": "own_education",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0398,
+    "ci_lo": 0.0125,
+    "ci_hi": 0.0696,
+    "n_pairs": 191,
+    "n_respondents": 170,
+    "n_items_support": 12
+   },
+   {
+    "battery": "own_education",
+    "column": "kimi-k2",
+    "delta_mae": -0.0416,
+    "ci_lo": -0.0869,
+    "ci_hi": -0.0023,
+    "n_pairs": 150,
+    "n_respondents": 140,
+    "n_items_support": 12
+   },
+   {
+    "battery": "own_education",
+    "column": "llama-4-mav",
+    "delta_mae": -0.008,
+    "ci_lo": -0.0306,
+    "ci_hi": 0.0095,
+    "n_pairs": 185,
+    "n_respondents": 163,
+    "n_items_support": 12
+   },
+   {
+    "battery": "own_education",
+    "column": "qwen3-max",
+    "delta_mae": 0.0265,
+    "ci_lo": 0.0095,
+    "ci_hi": 0.0558,
+    "n_pairs": 179,
+    "n_respondents": 162,
+    "n_items_support": 12
+   },
+   {
+    "battery": "own_education",
+    "column": "random(combined)",
+    "delta_mae": 0.0066,
+    "ci_lo": -0.0079,
+    "ci_hi": 0.0212,
+    "n_pairs": 705,
+    "n_respondents": 635,
+    "n_items_support": 12
+   },
+   {
+    "battery": "interpersonal_trust",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0262,
+    "ci_lo": -0.0028,
+    "ci_hi": 0.0619,
+    "n_pairs": 177,
+    "n_respondents": 157,
+    "n_items_support": 12
+   },
+   {
+    "battery": "interpersonal_trust",
+    "column": "kimi-k2",
+    "delta_mae": -0.0029,
+    "ci_lo": -0.0378,
+    "ci_hi": 0.0347,
+    "n_pairs": 162,
+    "n_respondents": 144,
+    "n_items_support": 12
+   },
+   {
+    "battery": "interpersonal_trust",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0044,
+    "ci_lo": -0.0252,
+    "ci_hi": 0.004,
+    "n_pairs": 184,
+    "n_respondents": 169,
+    "n_items_support": 12
+   },
+   {
+    "battery": "interpersonal_trust",
+    "column": "qwen3-max",
+    "delta_mae": 0.0004,
+    "ci_lo": -0.0182,
+    "ci_hi": 0.021,
+    "n_pairs": 196,
+    "n_respondents": 176,
+    "n_items_support": 12
+   },
+   {
+    "battery": "interpersonal_trust",
+    "column": "random(combined)",
+    "delta_mae": 0.0048,
+    "ci_lo": -0.0076,
+    "ci_hi": 0.0182,
+    "n_pairs": 719,
+    "n_respondents": 646,
+    "n_items_support": 12
+   },
+   {
+    "battery": "parental_education",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0025,
+    "ci_lo": -0.0259,
+    "ci_hi": 0.0271,
+    "n_pairs": 180,
+    "n_respondents": 152,
+    "n_items_support": 12
+   },
+   {
+    "battery": "parental_education",
+    "column": "kimi-k2",
+    "delta_mae": 0.0111,
+    "ci_lo": -0.027,
+    "ci_hi": 0.0487,
+    "n_pairs": 174,
+    "n_respondents": 153,
+    "n_items_support": 12
+   },
+   {
+    "battery": "parental_education",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0008,
+    "ci_lo": -0.0229,
+    "ci_hi": 0.0063,
+    "n_pairs": 184,
+    "n_respondents": 166,
+    "n_items_support": 12
+   },
+   {
+    "battery": "parental_education",
+    "column": "qwen3-max",
+    "delta_mae": 0.0063,
+    "ci_lo": -0.0119,
+    "ci_hi": 0.0246,
+    "n_pairs": 194,
+    "n_respondents": 172,
+    "n_items_support": 12
+   },
+   {
+    "battery": "parental_education",
+    "column": "random(combined)",
+    "delta_mae": 0.0035,
+    "ci_lo": -0.0091,
+    "ci_hi": 0.0161,
+    "n_pairs": 732,
+    "n_respondents": 643,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_employment",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.023,
+    "ci_lo": -0.0034,
+    "ci_hi": 0.0492,
+    "n_pairs": 197,
+    "n_respondents": 179,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_employment",
+    "column": "kimi-k2",
+    "delta_mae": -0.0131,
+    "ci_lo": -0.0463,
+    "ci_hi": 0.0221,
+    "n_pairs": 168,
+    "n_respondents": 155,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_employment",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0128,
+    "ci_lo": -0.0369,
+    "ci_hi": 0.0042,
+    "n_pairs": 203,
+    "n_respondents": 179,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_employment",
+    "column": "qwen3-max",
+    "delta_mae": 0.0135,
+    "ci_lo": 0.0022,
+    "ci_hi": 0.0366,
+    "n_pairs": 212,
+    "n_respondents": 184,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_employment",
+    "column": "random(combined)",
+    "delta_mae": 0.0033,
+    "ci_lo": -0.0086,
+    "ci_hi": 0.0153,
+    "n_pairs": 780,
+    "n_respondents": 697,
+    "n_items_support": 12
+   },
+   {
+    "battery": "economic_help",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0122,
+    "ci_lo": -0.013,
+    "ci_hi": 0.0336,
+    "n_pairs": 152,
+    "n_respondents": 144,
+    "n_items_support": 11
+   },
+   {
+    "battery": "economic_help",
+    "column": "kimi-k2",
+    "delta_mae": -0.0052,
+    "ci_lo": -0.0469,
+    "ci_hi": 0.0377,
+    "n_pairs": 150,
+    "n_respondents": 135,
+    "n_items_support": 11
+   },
+   {
+    "battery": "economic_help",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0081,
+    "ci_lo": -0.0356,
+    "ci_hi": -0.0009,
+    "n_pairs": 161,
+    "n_respondents": 145,
+    "n_items_support": 11
+   },
+   {
+    "battery": "economic_help",
+    "column": "qwen3-max",
+    "delta_mae": 0.009,
+    "ci_lo": -0.0173,
+    "ci_hi": 0.0315,
+    "n_pairs": 164,
+    "n_respondents": 149,
+    "n_items_support": 11
+   },
+   {
+    "battery": "economic_help",
+    "column": "random(combined)",
+    "delta_mae": 0.002,
+    "ci_lo": -0.0119,
+    "ci_hi": 0.0156,
+    "n_pairs": 627,
+    "n_respondents": 573,
+    "n_items_support": 11
+   },
+   {
+    "battery": "civil_lib_racists",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0025,
+    "ci_lo": -0.023,
+    "ci_hi": 0.0209,
+    "n_pairs": 198,
+    "n_respondents": 178,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_racists",
+    "column": "kimi-k2",
+    "delta_mae": -0.0155,
+    "ci_lo": -0.053,
+    "ci_hi": 0.0192,
+    "n_pairs": 172,
+    "n_respondents": 158,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_racists",
+    "column": "llama-4-mav",
+    "delta_mae": 0.011,
+    "ci_lo": 0.0001,
+    "ci_hi": 0.0334,
+    "n_pairs": 213,
+    "n_respondents": 183,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_racists",
+    "column": "qwen3-max",
+    "delta_mae": 0.0108,
+    "ci_lo": -0.0102,
+    "ci_hi": 0.0368,
+    "n_pairs": 196,
+    "n_respondents": 175,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_racists",
+    "column": "random(combined)",
+    "delta_mae": 0.0016,
+    "ci_lo": -0.0104,
+    "ci_hi": 0.0136,
+    "n_pairs": 779,
+    "n_respondents": 694,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_family_structure",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0001,
+    "ci_lo": -0.0268,
+    "ci_hi": 0.0278,
+    "n_pairs": 196,
+    "n_respondents": 173,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_family_structure",
+    "column": "kimi-k2",
+    "delta_mae": 0.0004,
+    "ci_lo": -0.0426,
+    "ci_hi": 0.0432,
+    "n_pairs": 181,
+    "n_respondents": 165,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_family_structure",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0073,
+    "ci_lo": -0.0267,
+    "ci_hi": 0.0005,
+    "n_pairs": 211,
+    "n_respondents": 187,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_family_structure",
+    "column": "qwen3-max",
+    "delta_mae": 0.0122,
+    "ci_lo": -0.0074,
+    "ci_hi": 0.0364,
+    "n_pairs": 214,
+    "n_respondents": 190,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_family_structure",
+    "column": "random(combined)",
+    "delta_mae": 0.0015,
+    "ci_lo": -0.0122,
+    "ci_hi": 0.015,
+    "n_pairs": 802,
+    "n_respondents": 715,
+    "n_items_support": 12
+   },
+   {
+    "battery": "subjective_wellbeing",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0045,
+    "ci_lo": -0.0305,
+    "ci_hi": 0.0199,
+    "n_pairs": 176,
+    "n_respondents": 161,
+    "n_items_support": 12
+   },
+   {
+    "battery": "subjective_wellbeing",
+    "column": "kimi-k2",
+    "delta_mae": -0.0304,
+    "ci_lo": -0.0869,
+    "ci_hi": 0.0218,
+    "n_pairs": 140,
+    "n_respondents": 126,
+    "n_items_support": 12
+   },
+   {
+    "battery": "subjective_wellbeing",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0083,
+    "ci_lo": -0.0028,
+    "ci_hi": 0.0294,
+    "n_pairs": 207,
+    "n_respondents": 182,
+    "n_items_support": 12
+   },
+   {
+    "battery": "subjective_wellbeing",
+    "column": "qwen3-max",
+    "delta_mae": 0.0235,
+    "ci_lo": -0.0017,
+    "ci_hi": 0.0525,
+    "n_pairs": 170,
+    "n_respondents": 151,
+    "n_items_support": 12
+   },
+   {
+    "battery": "subjective_wellbeing",
+    "column": "random(combined)",
+    "delta_mae": 0.001,
+    "ci_lo": -0.0144,
+    "ci_hi": 0.0157,
+    "n_pairs": 693,
+    "n_respondents": 620,
+    "n_items_support": 12
+   },
+   {
+    "battery": "gender_role_attitudes",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0096,
+    "ci_lo": -0.0149,
+    "ci_hi": 0.0359,
+    "n_pairs": 153,
+    "n_respondents": 141,
+    "n_items_support": 10
+   },
+   {
+    "battery": "gender_role_attitudes",
+    "column": "kimi-k2",
+    "delta_mae": 0.0139,
+    "ci_lo": -0.0372,
+    "ci_hi": 0.0699,
+    "n_pairs": 140,
+    "n_respondents": 134,
+    "n_items_support": 10
+   },
+   {
+    "battery": "gender_role_attitudes",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0088,
+    "ci_lo": -0.0368,
+    "ci_hi": 0.0047,
+    "n_pairs": 163,
+    "n_respondents": 149,
+    "n_items_support": 10
+   },
+   {
+    "battery": "gender_role_attitudes",
+    "column": "qwen3-max",
+    "delta_mae": -0.0107,
+    "ci_lo": -0.0358,
+    "ci_hi": 0.0005,
+    "n_pairs": 152,
+    "n_respondents": 147,
+    "n_items_support": 10
+   },
+   {
+    "battery": "gender_role_attitudes",
+    "column": "random(combined)",
+    "delta_mae": 0.0006,
+    "ci_lo": -0.015,
+    "ci_hi": 0.0163,
+    "n_pairs": 608,
+    "n_respondents": 571,
+    "n_items_support": 10
+   },
+   {
+    "battery": "traditional_media",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0087,
+    "ci_lo": -0.037,
+    "ci_hi": 0.0161,
+    "n_pairs": 192,
+    "n_respondents": 174,
+    "n_items_support": 12
+   },
+   {
+    "battery": "traditional_media",
+    "column": "kimi-k2",
+    "delta_mae": 0.0101,
+    "ci_lo": -0.0274,
+    "ci_hi": 0.0474,
+    "n_pairs": 173,
+    "n_respondents": 159,
+    "n_items_support": 12
+   },
+   {
+    "battery": "traditional_media",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0108,
+    "ci_lo": 0.0005,
+    "ci_hi": 0.0332,
+    "n_pairs": 203,
+    "n_respondents": 188,
+    "n_items_support": 12
+   },
+   {
+    "battery": "traditional_media",
+    "column": "qwen3-max",
+    "delta_mae": -0.018,
+    "ci_lo": -0.0434,
+    "ci_hi": -0.003,
+    "n_pairs": 190,
+    "n_respondents": 172,
+    "n_items_support": 12
+   },
+   {
+    "battery": "traditional_media",
+    "column": "random(combined)",
+    "delta_mae": -0.0015,
+    "ci_lo": -0.0142,
+    "ci_hi": 0.0108,
+    "n_pairs": 758,
+    "n_respondents": 693,
+    "n_items_support": 12
+   },
+   {
+    "battery": "gun_related",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0107,
+    "ci_lo": -0.0362,
+    "ci_hi": 0.0122,
+    "n_pairs": 192,
+    "n_respondents": 169,
+    "n_items_support": 12
+   },
+   {
+    "battery": "gun_related",
+    "column": "kimi-k2",
+    "delta_mae": -0.0091,
+    "ci_lo": -0.0401,
+    "ci_hi": 0.0173,
+    "n_pairs": 171,
+    "n_respondents": 154,
+    "n_items_support": 12
+   },
+   {
+    "battery": "gun_related",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0091,
+    "ci_lo": 0.0001,
+    "ci_hi": 0.0297,
+    "n_pairs": 211,
+    "n_respondents": 181,
+    "n_items_support": 12
+   },
+   {
+    "battery": "gun_related",
+    "column": "qwen3-max",
+    "delta_mae": -0.0018,
+    "ci_lo": -0.0192,
+    "ci_hi": 0.0155,
+    "n_pairs": 183,
+    "n_respondents": 165,
+    "n_items_support": 12
+   },
+   {
+    "battery": "gun_related",
+    "column": "random(combined)",
+    "delta_mae": -0.0027,
+    "ci_lo": -0.0131,
+    "ci_hi": 0.0078,
+    "n_pairs": 757,
+    "n_respondents": 669,
+    "n_items_support": 12
+   },
+   {
+    "battery": "moral_legalization",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0038,
+    "ci_lo": -0.0301,
+    "ci_hi": 0.02,
+    "n_pairs": 168,
+    "n_respondents": 153,
+    "n_items_support": 12
+   },
+   {
+    "battery": "moral_legalization",
+    "column": "kimi-k2",
+    "delta_mae": -0.0147,
+    "ci_lo": -0.0519,
+    "ci_hi": 0.0166,
+    "n_pairs": 170,
+    "n_respondents": 156,
+    "n_items_support": 12
+   },
+   {
+    "battery": "moral_legalization",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0052,
+    "ci_lo": -0.0125,
+    "ci_hi": 0.0238,
+    "n_pairs": 172,
+    "n_respondents": 152,
+    "n_items_support": 12
+   },
+   {
+    "battery": "moral_legalization",
+    "column": "qwen3-max",
+    "delta_mae": -0.0002,
+    "ci_lo": -0.0167,
+    "ci_hi": 0.0165,
+    "n_pairs": 193,
+    "n_respondents": 170,
+    "n_items_support": 12
+   },
+   {
+    "battery": "moral_legalization",
+    "column": "random(combined)",
+    "delta_mae": -0.0033,
+    "ci_lo": -0.0155,
+    "ci_hi": 0.0085,
+    "n_pairs": 703,
+    "n_respondents": 631,
+    "n_items_support": 12
+   },
+   {
+    "battery": "end_of_life",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0294,
+    "ci_lo": -0.0591,
+    "ci_hi": -0.009,
+    "n_pairs": 186,
+    "n_respondents": 168,
+    "n_items_support": 12
+   },
+   {
+    "battery": "end_of_life",
+    "column": "kimi-k2",
+    "delta_mae": -0.0076,
+    "ci_lo": -0.0538,
+    "ci_hi": 0.0373,
+    "n_pairs": 170,
+    "n_respondents": 157,
+    "n_items_support": 12
+   },
+   {
+    "battery": "end_of_life",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0096,
+    "ci_lo": 0.0014,
+    "ci_hi": 0.0329,
+    "n_pairs": 177,
+    "n_respondents": 162,
+    "n_items_support": 12
+   },
+   {
+    "battery": "end_of_life",
+    "column": "qwen3-max",
+    "delta_mae": 0.0166,
+    "ci_lo": -0.0115,
+    "ci_hi": 0.0494,
+    "n_pairs": 168,
+    "n_respondents": 152,
+    "n_items_support": 12
+   },
+   {
+    "battery": "end_of_life",
+    "column": "random(combined)",
+    "delta_mae": -0.0033,
+    "ci_lo": -0.0185,
+    "ci_hi": 0.0118,
+    "n_pairs": 701,
+    "n_respondents": 639,
+    "n_items_support": 12
+   },
+   {
+    "battery": "confidence_in_institutions",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.001,
+    "ci_lo": -0.028,
+    "ci_hi": 0.0322,
+    "n_pairs": 170,
+    "n_respondents": 153,
+    "n_items_support": 10
+   },
+   {
+    "battery": "confidence_in_institutions",
+    "column": "kimi-k2",
+    "delta_mae": -0.0011,
+    "ci_lo": -0.0328,
+    "ci_hi": 0.0344,
+    "n_pairs": 162,
+    "n_respondents": 147,
+    "n_items_support": 10
+   },
+   {
+    "battery": "confidence_in_institutions",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0207,
+    "ci_lo": -0.0564,
+    "ci_hi": 0.0055,
+    "n_pairs": 133,
+    "n_respondents": 124,
+    "n_items_support": 10
+   },
+   {
+    "battery": "confidence_in_institutions",
+    "column": "qwen3-max",
+    "delta_mae": 0.0028,
+    "ci_lo": -0.0204,
+    "ci_hi": 0.0259,
+    "n_pairs": 178,
+    "n_respondents": 163,
+    "n_items_support": 10
+   },
+   {
+    "battery": "confidence_in_institutions",
+    "column": "random(combined)",
+    "delta_mae": -0.0035,
+    "ci_lo": -0.0181,
+    "ci_hi": 0.0111,
+    "n_pairs": 643,
+    "n_respondents": 587,
+    "n_items_support": 10
+   },
+   {
+    "battery": "job_security_perception",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0264,
+    "ci_lo": 0.001,
+    "ci_hi": 0.059,
+    "n_pairs": 164,
+    "n_respondents": 153,
+    "n_items_support": 12
+   },
+   {
+    "battery": "job_security_perception",
+    "column": "kimi-k2",
+    "delta_mae": -0.0267,
+    "ci_lo": -0.0719,
+    "ci_hi": 0.0107,
+    "n_pairs": 179,
+    "n_respondents": 160,
+    "n_items_support": 12
+   },
+   {
+    "battery": "job_security_perception",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0027,
+    "ci_lo": -0.0153,
+    "ci_hi": 0.0212,
+    "n_pairs": 163,
+    "n_respondents": 152,
+    "n_items_support": 12
+   },
+   {
+    "battery": "job_security_perception",
+    "column": "qwen3-max",
+    "delta_mae": -0.0145,
+    "ci_lo": -0.0409,
+    "ci_hi": 0.007,
+    "n_pairs": 187,
+    "n_respondents": 165,
+    "n_items_support": 12
+   },
+   {
+    "battery": "job_security_perception",
+    "column": "random(combined)",
+    "delta_mae": -0.0039,
+    "ci_lo": -0.019,
+    "ci_hi": 0.0107,
+    "n_pairs": 693,
+    "n_respondents": 630,
+    "n_items_support": 12
+   },
+   {
+    "battery": "racial_inequality_perception",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0079,
+    "ci_lo": -0.0156,
+    "ci_hi": 0.0342,
+    "n_pairs": 174,
+    "n_respondents": 157,
+    "n_items_support": 11
+   },
+   {
+    "battery": "racial_inequality_perception",
+    "column": "kimi-k2",
+    "delta_mae": -0.0134,
+    "ci_lo": -0.0563,
+    "ci_hi": 0.0319,
+    "n_pairs": 145,
+    "n_respondents": 139,
+    "n_items_support": 11
+   },
+   {
+    "battery": "racial_inequality_perception",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0069,
+    "ci_lo": -0.0317,
+    "ci_hi": 0.0058,
+    "n_pairs": 194,
+    "n_respondents": 173,
+    "n_items_support": 11
+   },
+   {
+    "battery": "racial_inequality_perception",
+    "column": "qwen3-max",
+    "delta_mae": -0.0046,
+    "ci_lo": -0.0251,
+    "ci_hi": 0.0101,
+    "n_pairs": 191,
+    "n_respondents": 168,
+    "n_items_support": 11
+   },
+   {
+    "battery": "racial_inequality_perception",
+    "column": "random(combined)",
+    "delta_mae": -0.004,
+    "ci_lo": -0.017,
+    "ci_hi": 0.0087,
+    "n_pairs": 704,
+    "n_respondents": 637,
+    "n_items_support": 11
+   },
+   {
+    "battery": "religious_belief",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.006,
+    "ci_lo": -0.0295,
+    "ci_hi": 0.0132,
+    "n_pairs": 209,
+    "n_respondents": 184,
+    "n_items_support": 12
+   },
+   {
+    "battery": "religious_belief",
+    "column": "kimi-k2",
+    "delta_mae": -0.0195,
+    "ci_lo": -0.0618,
+    "ci_hi": 0.0233,
+    "n_pairs": 167,
+    "n_respondents": 152,
+    "n_items_support": 12
+   },
+   {
+    "battery": "religious_belief",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0031,
+    "ci_lo": -0.0154,
+    "ci_hi": 0.0212,
+    "n_pairs": 174,
+    "n_respondents": 156,
+    "n_items_support": 12
+   },
+   {
+    "battery": "religious_belief",
+    "column": "qwen3-max",
+    "delta_mae": 0.0033,
+    "ci_lo": -0.0199,
+    "ci_hi": 0.0243,
+    "n_pairs": 212,
+    "n_respondents": 187,
+    "n_items_support": 12
+   },
+   {
+    "battery": "religious_belief",
+    "column": "random(combined)",
+    "delta_mae": -0.0043,
+    "ci_lo": -0.0175,
+    "ci_hi": 0.0089,
+    "n_pairs": 762,
+    "n_respondents": 679,
+    "n_items_support": 12
+   },
+   {
+    "battery": "adolescent_sex_policy",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0076,
+    "ci_lo": -0.0231,
+    "ci_hi": 0.0385,
+    "n_pairs": 173,
+    "n_respondents": 164,
+    "n_items_support": 12
+   },
+   {
+    "battery": "adolescent_sex_policy",
+    "column": "kimi-k2",
+    "delta_mae": -0.0223,
+    "ci_lo": -0.0543,
+    "ci_hi": 0.0071,
+    "n_pairs": 171,
+    "n_respondents": 154,
+    "n_items_support": 12
+   },
+   {
+    "battery": "adolescent_sex_policy",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0086,
+    "ci_lo": -0.028,
+    "ci_hi": -0.0013,
+    "n_pairs": 194,
+    "n_respondents": 178,
+    "n_items_support": 12
+   },
+   {
+    "battery": "adolescent_sex_policy",
+    "column": "qwen3-max",
+    "delta_mae": 0.0028,
+    "ci_lo": -0.0181,
+    "ci_hi": 0.0247,
+    "n_pairs": 163,
+    "n_respondents": 148,
+    "n_items_support": 12
+   },
+   {
+    "battery": "adolescent_sex_policy",
+    "column": "random(combined)",
+    "delta_mae": -0.0053,
+    "ci_lo": -0.0176,
+    "ci_hi": 0.0066,
+    "n_pairs": 701,
+    "n_respondents": 644,
+    "n_items_support": 12
+   },
+   {
+    "battery": "sexual_morality",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0193,
+    "ci_lo": -0.0579,
+    "ci_hi": 0.002,
+    "n_pairs": 191,
+    "n_respondents": 175,
+    "n_items_support": 12
+   },
+   {
+    "battery": "sexual_morality",
+    "column": "kimi-k2",
+    "delta_mae": 0.0136,
+    "ci_lo": -0.0311,
+    "ci_hi": 0.0616,
+    "n_pairs": 168,
+    "n_respondents": 149,
+    "n_items_support": 12
+   },
+   {
+    "battery": "sexual_morality",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0085,
+    "ci_lo": -0.032,
+    "ci_hi": 0.0026,
+    "n_pairs": 194,
+    "n_respondents": 178,
+    "n_items_support": 12
+   },
+   {
+    "battery": "sexual_morality",
+    "column": "qwen3-max",
+    "delta_mae": -0.0052,
+    "ci_lo": -0.0369,
+    "ci_hi": 0.0214,
+    "n_pairs": 169,
+    "n_respondents": 149,
+    "n_items_support": 12
+   },
+   {
+    "battery": "sexual_morality",
+    "column": "random(combined)",
+    "delta_mae": -0.0054,
+    "ci_lo": -0.0212,
+    "ci_hi": 0.0089,
+    "n_pairs": 722,
+    "n_respondents": 651,
+    "n_items_support": 12
+   },
+   {
+    "battery": "marital_status",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0084,
+    "ci_lo": -0.0392,
+    "ci_hi": 0.0176,
+    "n_pairs": 184,
+    "n_respondents": 164,
+    "n_items_support": 12
+   },
+   {
+    "battery": "marital_status",
+    "column": "kimi-k2",
+    "delta_mae": 0.0026,
+    "ci_lo": -0.0295,
+    "ci_hi": 0.0319,
+    "n_pairs": 154,
+    "n_respondents": 142,
+    "n_items_support": 12
+   },
+   {
+    "battery": "marital_status",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0046,
+    "ci_lo": -0.0194,
+    "ci_hi": 0.0102,
+    "n_pairs": 211,
+    "n_respondents": 181,
+    "n_items_support": 12
+   },
+   {
+    "battery": "marital_status",
+    "column": "qwen3-max",
+    "delta_mae": -0.0109,
+    "ci_lo": -0.0374,
+    "ci_hi": 0.0129,
+    "n_pairs": 192,
+    "n_respondents": 173,
+    "n_items_support": 12
+   },
+   {
+    "battery": "marital_status",
+    "column": "random(combined)",
+    "delta_mae": -0.0057,
+    "ci_lo": -0.0183,
+    "ci_hi": 0.0065,
+    "n_pairs": 741,
+    "n_respondents": 660,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_turnout",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0168,
+    "ci_lo": -0.0436,
+    "ci_hi": 0.005,
+    "n_pairs": 162,
+    "n_respondents": 152,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_turnout",
+    "column": "kimi-k2",
+    "delta_mae": 0.0093,
+    "ci_lo": -0.0205,
+    "ci_hi": 0.0431,
+    "n_pairs": 167,
+    "n_respondents": 154,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_turnout",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0014,
+    "ci_lo": -0.0107,
+    "ci_hi": 0.005,
+    "n_pairs": 196,
+    "n_respondents": 173,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_turnout",
+    "column": "qwen3-max",
+    "delta_mae": -0.0155,
+    "ci_lo": -0.0454,
+    "ci_hi": 0.0104,
+    "n_pairs": 180,
+    "n_respondents": 161,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_turnout",
+    "column": "random(combined)",
+    "delta_mae": -0.006,
+    "ci_lo": -0.018,
+    "ci_hi": 0.0062,
+    "n_pairs": 705,
+    "n_respondents": 640,
+    "n_items_support": 12
+   },
+   {
+    "battery": "digital_media",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0128,
+    "ci_lo": -0.0394,
+    "ci_hi": 0.0087,
+    "n_pairs": 167,
+    "n_respondents": 158,
+    "n_items_support": 12
+   },
+   {
+    "battery": "digital_media",
+    "column": "kimi-k2",
+    "delta_mae": -0.0309,
+    "ci_lo": -0.0635,
+    "ci_hi": -0.0068,
+    "n_pairs": 157,
+    "n_respondents": 138,
+    "n_items_support": 12
+   },
+   {
+    "battery": "digital_media",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0108,
+    "ci_lo": -0.0086,
+    "ci_hi": 0.0376,
+    "n_pairs": 200,
+    "n_respondents": 173,
+    "n_items_support": 12
+   },
+   {
+    "battery": "digital_media",
+    "column": "qwen3-max",
+    "delta_mae": 0.0004,
+    "ci_lo": -0.0197,
+    "ci_hi": 0.0217,
+    "n_pairs": 178,
+    "n_respondents": 161,
+    "n_items_support": 12
+   },
+   {
+    "battery": "digital_media",
+    "column": "random(combined)",
+    "delta_mae": -0.0068,
+    "ci_lo": -0.0186,
+    "ci_hi": 0.0052,
+    "n_pairs": 702,
+    "n_respondents": 630,
+    "n_items_support": 12
+   },
+   {
+    "battery": "police_use_of_force",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0071,
+    "ci_lo": -0.0372,
+    "ci_hi": 0.0183,
+    "n_pairs": 197,
+    "n_respondents": 179,
+    "n_items_support": 12
+   },
+   {
+    "battery": "police_use_of_force",
+    "column": "kimi-k2",
+    "delta_mae": -0.023,
+    "ci_lo": -0.0619,
+    "ci_hi": 0.0077,
+    "n_pairs": 179,
+    "n_respondents": 160,
+    "n_items_support": 12
+   },
+   {
+    "battery": "police_use_of_force",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0021,
+    "ci_lo": -0.0026,
+    "ci_hi": 0.0139,
+    "n_pairs": 182,
+    "n_respondents": 165,
+    "n_items_support": 12
+   },
+   {
+    "battery": "police_use_of_force",
+    "column": "qwen3-max",
+    "delta_mae": -0.0025,
+    "ci_lo": -0.0248,
+    "ci_hi": 0.0214,
+    "n_pairs": 194,
+    "n_respondents": 171,
+    "n_items_support": 12
+   },
+   {
+    "battery": "police_use_of_force",
+    "column": "random(combined)",
+    "delta_mae": -0.0075,
+    "ci_lo": -0.021,
+    "ci_hi": 0.0044,
+    "n_pairs": 752,
+    "n_respondents": 675,
+    "n_items_support": 12
+   },
+   {
+    "battery": "family_of_origin_economic",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0076,
+    "ci_lo": -0.0372,
+    "ci_hi": 0.0209,
+    "n_pairs": 193,
+    "n_respondents": 175,
+    "n_items_support": 12
+   },
+   {
+    "battery": "family_of_origin_economic",
+    "column": "kimi-k2",
+    "delta_mae": -0.0323,
+    "ci_lo": -0.0679,
+    "ci_hi": -0.0058,
+    "n_pairs": 188,
+    "n_respondents": 163,
+    "n_items_support": 12
+   },
+   {
+    "battery": "family_of_origin_economic",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0037,
+    "ci_lo": -0.0238,
+    "ci_hi": 0.0045,
+    "n_pairs": 202,
+    "n_respondents": 174,
+    "n_items_support": 12
+   },
+   {
+    "battery": "family_of_origin_economic",
+    "column": "qwen3-max",
+    "delta_mae": -0.0004,
+    "ci_lo": -0.0247,
+    "ci_hi": 0.0211,
+    "n_pairs": 201,
+    "n_respondents": 181,
+    "n_items_support": 12
+   },
+   {
+    "battery": "family_of_origin_economic",
+    "column": "random(combined)",
+    "delta_mae": -0.0107,
+    "ci_lo": -0.0237,
+    "ci_hi": 0.0006,
+    "n_pairs": 784,
+    "n_respondents": 693,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_atheists",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0065,
+    "ci_lo": -0.0112,
+    "ci_hi": 0.027,
+    "n_pairs": 186,
+    "n_respondents": 169,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_atheists",
+    "column": "kimi-k2",
+    "delta_mae": -0.0495,
+    "ci_lo": -0.0922,
+    "ci_hi": -0.0171,
+    "n_pairs": 156,
+    "n_respondents": 139,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_atheists",
+    "column": "llama-4-mav",
+    "delta_mae": 0.009,
+    "ci_lo": 0.0017,
+    "ci_hi": 0.0311,
+    "n_pairs": 189,
+    "n_respondents": 163,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_atheists",
+    "column": "qwen3-max",
+    "delta_mae": -0.0161,
+    "ci_lo": -0.0443,
+    "ci_hi": -0.0008,
+    "n_pairs": 165,
+    "n_respondents": 150,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_atheists",
+    "column": "random(combined)",
+    "delta_mae": -0.0107,
+    "ci_lo": -0.0231,
+    "ci_hi": 0.0001,
+    "n_pairs": 696,
+    "n_respondents": 621,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_communists",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0139,
+    "ci_lo": -0.0473,
+    "ci_hi": 0.0144,
+    "n_pairs": 197,
+    "n_respondents": 173,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_communists",
+    "column": "kimi-k2",
+    "delta_mae": -0.041,
+    "ci_lo": -0.083,
+    "ci_hi": -0.0023,
+    "n_pairs": 176,
+    "n_respondents": 155,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_communists",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0048,
+    "ci_lo": -0.0301,
+    "ci_hi": 0.0121,
+    "n_pairs": 177,
+    "n_respondents": 163,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_communists",
+    "column": "qwen3-max",
+    "delta_mae": 0.0062,
+    "ci_lo": -0.0135,
+    "ci_hi": 0.0301,
+    "n_pairs": 191,
+    "n_respondents": 165,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_communists",
+    "column": "random(combined)",
+    "delta_mae": -0.013,
+    "ci_lo": -0.0279,
+    "ci_hi": 0.0017,
+    "n_pairs": 741,
+    "n_respondents": 656,
+    "n_items_support": 12
+   }
+  ],
+  "T5_parse_fail": [
+   {
+    "item": "ABANY",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.055,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "CAPPUN",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0512,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "CONFINAN",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0551,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "CONLEGIS",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.054,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "FECHLD",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0564,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "FEPOL",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0457,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "GUNLAW",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0462,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "HELPPOOR",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0444,
+    "llama-4-mav": 0.0003,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "PARTYID",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0502,
+    "llama-4-mav": 0.0067,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "POLVIEWS",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.041,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "RACDIF1",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0579,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "SATFIN",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0473,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   }
+  ],
+  "headline": {
+   "full_mae_conservative": 0.264,
+   "full_mae_optimistic": 0.2546,
+   "conservative_optimistic_gap": 0.0094
+  },
+  "T4_llm_vs_r2": [
+   {
+    "index": "ABANY",
+    "llm_full_mae": 0.342,
+    "r2_baseline_mae": 0.2631,
+    "llm_gain": -0.0789
+   },
+   {
+    "index": "CAPPUN",
+    "llm_full_mae": 0.375,
+    "r2_baseline_mae": 0.3435,
+    "llm_gain": -0.0315
+   },
+   {
+    "index": "CONFINAN",
+    "llm_full_mae": 0.2441,
+    "r2_baseline_mae": 0.238,
+    "llm_gain": -0.0061
+   },
+   {
+    "index": "CONLEGIS",
+    "llm_full_mae": 0.2874,
+    "r2_baseline_mae": 0.2284,
+    "llm_gain": -0.059
+   },
+   {
+    "index": "FECHLD",
+    "llm_full_mae": 0.2753,
+    "r2_baseline_mae": 0.2176,
+    "llm_gain": -0.0577
+   },
+   {
+    "index": "FEPOL",
+    "llm_full_mae": 0.2455,
+    "r2_baseline_mae": 0.2679,
+    "llm_gain": 0.0224
+   },
+   {
+    "index": "GUNLAW",
+    "llm_full_mae": 0.2998,
+    "r2_baseline_mae": 0.3067,
+    "llm_gain": 0.0069
+   },
+   {
+    "index": "HELPPOOR",
+    "llm_full_mae": 0.2641,
+    "r2_baseline_mae": 0.2175,
+    "llm_gain": -0.0466
+   },
+   {
+    "index": "PARTYID",
+    "llm_full_mae": 0.1698,
+    "r2_baseline_mae": 0.1471,
+    "llm_gain": -0.0227
+   },
+   {
+    "index": "POLVIEWS",
+    "llm_full_mae": 0.1974,
+    "r2_baseline_mae": 0.1437,
+    "llm_gain": -0.0537
+   },
+   {
+    "index": "RACDIF1",
+    "llm_full_mae": 0.3295,
+    "r2_baseline_mae": 0.3356,
+    "llm_gain": 0.0061
+   },
+   {
+    "index": "SATFIN",
+    "llm_full_mae": 0.2565,
+    "r2_baseline_mae": 0.2334,
+    "llm_gain": -0.0232
+   }
+  ]
+ },
+ "sensitivity_N3309": {
+  "cohort": "sensitivity_N3309",
+  "n_respondents": 3309,
+  "T0_raw": [
+   {
+    "item": "ABANY",
+    "condition": "Full",
+    "deepseek-v3.1": 0.3989,
+    "kimi-k2": 0.3011,
+    "llama-4-mav": 0.2879,
+    "qwen3-max": 0.3925,
+    "random(combined)": 0.3458
+   },
+   {
+    "item": "ABANY",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.343,
+    "kimi-k2": 0.3485,
+    "llama-4-mav": 0.3428,
+    "qwen3-max": 0.4189,
+    "random(combined)": 0.3631
+   },
+   {
+    "item": "ABANY",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.4495,
+    "kimi-k2": 0.2841,
+    "llama-4-mav": 0.3049,
+    "qwen3-max": 0.4,
+    "random(combined)": 0.3607
+   },
+   {
+    "item": "ABANY",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.3664,
+    "kimi-k2": 0.2784,
+    "llama-4-mav": 0.3011,
+    "qwen3-max": 0.3755,
+    "random(combined)": 0.3308
+   },
+   {
+    "item": "ABANY",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.4097,
+    "kimi-k2": 0.2898,
+    "llama-4-mav": 0.3011,
+    "qwen3-max": 0.3811,
+    "random(combined)": 0.3463
+   },
+   {
+    "item": "ABANY",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.417,
+    "kimi-k2": 0.286,
+    "llama-4-mav": 0.2917,
+    "qwen3-max": 0.3868,
+    "random(combined)": 0.3463
+   },
+   {
+    "item": "CAPPUN",
+    "condition": "Full",
+    "deepseek-v3.1": 0.374,
+    "kimi-k2": 0.4036,
+    "llama-4-mav": 0.3575,
+    "qwen3-max": 0.364,
+    "random(combined)": 0.3745
+   },
+   {
+    "item": "CAPPUN",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.3798,
+    "kimi-k2": 0.4155,
+    "llama-4-mav": 0.3762,
+    "qwen3-max": 0.3718,
+    "random(combined)": 0.3856
+   },
+   {
+    "item": "CAPPUN",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.3779,
+    "kimi-k2": 0.3837,
+    "llama-4-mav": 0.3762,
+    "qwen3-max": 0.3503,
+    "random(combined)": 0.372
+   },
+   {
+    "item": "CAPPUN",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.3721,
+    "kimi-k2": 0.3777,
+    "llama-4-mav": 0.3333,
+    "qwen3-max": 0.3796,
+    "random(combined)": 0.3653
+   },
+   {
+    "item": "CAPPUN",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.3721,
+    "kimi-k2": 0.3797,
+    "llama-4-mav": 0.378,
+    "qwen3-max": 0.3523,
+    "random(combined)": 0.3706
+   },
+   {
+    "item": "CAPPUN",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.3721,
+    "kimi-k2": 0.3738,
+    "llama-4-mav": 0.365,
+    "qwen3-max": 0.364,
+    "random(combined)": 0.3687
+   },
+   {
+    "item": "CONFINAN",
+    "condition": "Full",
+    "deepseek-v3.1": 0.2272,
+    "kimi-k2": 0.2871,
+    "llama-4-mav": 0.2119,
+    "qwen3-max": 0.2481,
+    "random(combined)": 0.2431
+   },
+   {
+    "item": "CONFINAN",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.2272,
+    "kimi-k2": 0.2852,
+    "llama-4-mav": 0.2119,
+    "qwen3-max": 0.2519,
+    "random(combined)": 0.2435
+   },
+   {
+    "item": "CONFINAN",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.2244,
+    "kimi-k2": 0.2805,
+    "llama-4-mav": 0.2119,
+    "qwen3-max": 0.2377,
+    "random(combined)": 0.2382
+   },
+   {
+    "item": "CONFINAN",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.2253,
+    "kimi-k2": 0.2917,
+    "llama-4-mav": 0.2119,
+    "qwen3-max": 0.2491,
+    "random(combined)": 0.244
+   },
+   {
+    "item": "CONFINAN",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.2281,
+    "kimi-k2": 0.2767,
+    "llama-4-mav": 0.2119,
+    "qwen3-max": 0.2292,
+    "random(combined)": 0.2361
+   },
+   {
+    "item": "CONFINAN",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.2253,
+    "kimi-k2": 0.2927,
+    "llama-4-mav": 0.2119,
+    "qwen3-max": 0.2528,
+    "random(combined)": 0.2451
+   },
+   {
+    "item": "CONLEGIS",
+    "condition": "Full",
+    "deepseek-v3.1": 0.2703,
+    "kimi-k2": 0.3086,
+    "llama-4-mav": 0.3212,
+    "qwen3-max": 0.2414,
+    "random(combined)": 0.2861
+   },
+   {
+    "item": "CONLEGIS",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.2807,
+    "kimi-k2": 0.2974,
+    "llama-4-mav": 0.3212,
+    "qwen3-max": 0.2414,
+    "random(combined)": 0.2858
+   },
+   {
+    "item": "CONLEGIS",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.2769,
+    "kimi-k2": 0.318,
+    "llama-4-mav": 0.3203,
+    "qwen3-max": 0.2414,
+    "random(combined)": 0.2898
+   },
+   {
+    "item": "CONLEGIS",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.2505,
+    "kimi-k2": 0.3077,
+    "llama-4-mav": 0.3185,
+    "qwen3-max": 0.2414,
+    "random(combined)": 0.2803
+   },
+   {
+    "item": "CONLEGIS",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.2647,
+    "kimi-k2": 0.2889,
+    "llama-4-mav": 0.3212,
+    "qwen3-max": 0.2414,
+    "random(combined)": 0.2798
+   },
+   {
+    "item": "CONLEGIS",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.2665,
+    "kimi-k2": 0.2983,
+    "llama-4-mav": 0.3212,
+    "qwen3-max": 0.2414,
+    "random(combined)": 0.2826
+   },
+   {
+    "item": "FECHLD",
+    "condition": "Full",
+    "deepseek-v3.1": 0.2459,
+    "kimi-k2": 0.3165,
+    "llama-4-mav": 0.2204,
+    "qwen3-max": 0.3187,
+    "random(combined)": 0.2752
+   },
+   {
+    "item": "FECHLD",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.3027,
+    "kimi-k2": 0.3208,
+    "llama-4-mav": 0.2101,
+    "qwen3-max": 0.2871,
+    "random(combined)": 0.2797
+   },
+   {
+    "item": "FECHLD",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.2516,
+    "kimi-k2": 0.2921,
+    "llama-4-mav": 0.2222,
+    "qwen3-max": 0.3011,
+    "random(combined)": 0.2666
+   },
+   {
+    "item": "FECHLD",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.2441,
+    "kimi-k2": 0.3352,
+    "llama-4-mav": 0.2313,
+    "qwen3-max": 0.3297,
+    "random(combined)": 0.2849
+   },
+   {
+    "item": "FECHLD",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.2534,
+    "kimi-k2": 0.3184,
+    "llama-4-mav": 0.2277,
+    "qwen3-max": 0.3315,
+    "random(combined)": 0.2826
+   },
+   {
+    "item": "FECHLD",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.2584,
+    "kimi-k2": 0.3121,
+    "llama-4-mav": 0.221,
+    "qwen3-max": 0.3279,
+    "random(combined)": 0.2797
+   },
+   {
+    "item": "FEPOL",
+    "condition": "Full",
+    "deepseek-v3.1": 0.1713,
+    "kimi-k2": 0.2692,
+    "llama-4-mav": 0.2333,
+    "qwen3-max": 0.2888,
+    "random(combined)": 0.2422
+   },
+   {
+    "item": "FEPOL",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.162,
+    "kimi-k2": 0.2692,
+    "llama-4-mav": 0.2,
+    "qwen3-max": 0.2629,
+    "random(combined)": 0.2253
+   },
+   {
+    "item": "FEPOL",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.1806,
+    "kimi-k2": 0.2222,
+    "llama-4-mav": 0.219,
+    "qwen3-max": 0.2888,
+    "random(combined)": 0.2287
+   },
+   {
+    "item": "FEPOL",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.1944,
+    "kimi-k2": 0.2692,
+    "llama-4-mav": 0.2429,
+    "qwen3-max": 0.2931,
+    "random(combined)": 0.2511
+   },
+   {
+    "item": "FEPOL",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.1759,
+    "kimi-k2": 0.2479,
+    "llama-4-mav": 0.2286,
+    "qwen3-max": 0.3103,
+    "random(combined)": 0.2422
+   },
+   {
+    "item": "FEPOL",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.1713,
+    "kimi-k2": 0.235,
+    "llama-4-mav": 0.2333,
+    "qwen3-max": 0.3233,
+    "random(combined)": 0.2422
+   },
+   {
+    "item": "GUNLAW",
+    "condition": "Full",
+    "deepseek-v3.1": 0.3345,
+    "kimi-k2": 0.3112,
+    "llama-4-mav": 0.2707,
+    "qwen3-max": 0.2875,
+    "random(combined)": 0.3012
+   },
+   {
+    "item": "GUNLAW",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.347,
+    "kimi-k2": 0.3002,
+    "llama-4-mav": 0.267,
+    "qwen3-max": 0.3333,
+    "random(combined)": 0.3122
+   },
+   {
+    "item": "GUNLAW",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.3453,
+    "kimi-k2": 0.3186,
+    "llama-4-mav": 0.2947,
+    "qwen3-max": 0.2875,
+    "random(combined)": 0.3117
+   },
+   {
+    "item": "GUNLAW",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.3345,
+    "kimi-k2": 0.3149,
+    "llama-4-mav": 0.2689,
+    "qwen3-max": 0.2949,
+    "random(combined)": 0.3035
+   },
+   {
+    "item": "GUNLAW",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.3309,
+    "kimi-k2": 0.2873,
+    "llama-4-mav": 0.2762,
+    "qwen3-max": 0.2949,
+    "random(combined)": 0.2976
+   },
+   {
+    "item": "GUNLAW",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.3363,
+    "kimi-k2": 0.3149,
+    "llama-4-mav": 0.2652,
+    "qwen3-max": 0.2857,
+    "random(combined)": 0.3008
+   },
+   {
+    "item": "HELPPOOR",
+    "condition": "Full",
+    "deepseek-v3.1": 0.2785,
+    "kimi-k2": 0.3121,
+    "llama-4-mav": 0.2162,
+    "qwen3-max": 0.2552,
+    "random(combined)": 0.2648
+   },
+   {
+    "item": "HELPPOOR",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.2733,
+    "kimi-k2": 0.3193,
+    "llama-4-mav": 0.2311,
+    "qwen3-max": 0.271,
+    "random(combined)": 0.273
+   },
+   {
+    "item": "HELPPOOR",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.2609,
+    "kimi-k2": 0.3031,
+    "llama-4-mav": 0.2257,
+    "qwen3-max": 0.2538,
+    "random(combined)": 0.2603
+   },
+   {
+    "item": "HELPPOOR",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.3123,
+    "kimi-k2": 0.3155,
+    "llama-4-mav": 0.2275,
+    "qwen3-max": 0.2557,
+    "random(combined)": 0.277
+   },
+   {
+    "item": "HELPPOOR",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.259,
+    "kimi-k2": 0.3203,
+    "llama-4-mav": 0.2189,
+    "qwen3-max": 0.2505,
+    "random(combined)": 0.2615
+   },
+   {
+    "item": "HELPPOOR",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.2799,
+    "kimi-k2": 0.3064,
+    "llama-4-mav": 0.2203,
+    "qwen3-max": 0.2552,
+    "random(combined)": 0.2648
+   },
+   {
+    "item": "PARTYID",
+    "condition": "Full",
+    "deepseek-v3.1": 0.1498,
+    "kimi-k2": 0.2041,
+    "llama-4-mav": 0.1592,
+    "qwen3-max": 0.1677,
+    "random(combined)": 0.17
+   },
+   {
+    "item": "PARTYID",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.146,
+    "kimi-k2": 0.2147,
+    "llama-4-mav": 0.1698,
+    "qwen3-max": 0.1619,
+    "random(combined)": 0.1729
+   },
+   {
+    "item": "PARTYID",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.2199,
+    "kimi-k2": 0.2348,
+    "llama-4-mav": 0.2139,
+    "qwen3-max": 0.2142,
+    "random(combined)": 0.2206
+   },
+   {
+    "item": "PARTYID",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.1547,
+    "kimi-k2": 0.1977,
+    "llama-4-mav": 0.1776,
+    "qwen3-max": 0.1716,
+    "random(combined)": 0.1753
+   },
+   {
+    "item": "PARTYID",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.1519,
+    "kimi-k2": 0.1966,
+    "llama-4-mav": 0.1662,
+    "qwen3-max": 0.1677,
+    "random(combined)": 0.1705
+   },
+   {
+    "item": "PARTYID",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.1573,
+    "kimi-k2": 0.1993,
+    "llama-4-mav": 0.1652,
+    "qwen3-max": 0.1712,
+    "random(combined)": 0.1731
+   },
+   {
+    "item": "POLVIEWS",
+    "condition": "Full",
+    "deepseek-v3.1": 0.1858,
+    "kimi-k2": 0.223,
+    "llama-4-mav": 0.1598,
+    "qwen3-max": 0.2198,
+    "random(combined)": 0.1968
+   },
+   {
+    "item": "POLVIEWS",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.196,
+    "kimi-k2": 0.2497,
+    "llama-4-mav": 0.1772,
+    "qwen3-max": 0.2483,
+    "random(combined)": 0.2175
+   },
+   {
+    "item": "POLVIEWS",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.1692,
+    "kimi-k2": 0.2079,
+    "llama-4-mav": 0.1737,
+    "qwen3-max": 0.1935,
+    "random(combined)": 0.186
+   },
+   {
+    "item": "POLVIEWS",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.204,
+    "kimi-k2": 0.2347,
+    "llama-4-mav": 0.1603,
+    "qwen3-max": 0.2265,
+    "random(combined)": 0.2061
+   },
+   {
+    "item": "POLVIEWS",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.1809,
+    "kimi-k2": 0.2096,
+    "llama-4-mav": 0.1615,
+    "qwen3-max": 0.2176,
+    "random(combined)": 0.1922
+   },
+   {
+    "item": "POLVIEWS",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.179,
+    "kimi-k2": 0.2339,
+    "llama-4-mav": 0.159,
+    "qwen3-max": 0.2195,
+    "random(combined)": 0.1976
+   },
+   {
+    "item": "RACDIF1",
+    "condition": "Full",
+    "deepseek-v3.1": 0.3862,
+    "kimi-k2": 0.3441,
+    "llama-4-mav": 0.3384,
+    "qwen3-max": 0.2885,
+    "random(combined)": 0.3386
+   },
+   {
+    "item": "RACDIF1",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.4187,
+    "kimi-k2": 0.3846,
+    "llama-4-mav": 0.3954,
+    "qwen3-max": 0.3423,
+    "random(combined)": 0.3848
+   },
+   {
+    "item": "RACDIF1",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.3902,
+    "kimi-k2": 0.3644,
+    "llama-4-mav": 0.346,
+    "qwen3-max": 0.3231,
+    "random(combined)": 0.3553
+   },
+   {
+    "item": "RACDIF1",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.439,
+    "kimi-k2": 0.3644,
+    "llama-4-mav": 0.3726,
+    "qwen3-max": 0.3269,
+    "random(combined)": 0.375
+   },
+   {
+    "item": "RACDIF1",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.3902,
+    "kimi-k2": 0.332,
+    "llama-4-mav": 0.3422,
+    "qwen3-max": 0.3,
+    "random(combined)": 0.3406
+   },
+   {
+    "item": "RACDIF1",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.3862,
+    "kimi-k2": 0.3522,
+    "llama-4-mav": 0.3384,
+    "qwen3-max": 0.3,
+    "random(combined)": 0.3435
+   },
+   {
+    "item": "SATFIN",
+    "condition": "Full",
+    "deepseek-v3.1": 0.243,
+    "kimi-k2": 0.2813,
+    "llama-4-mav": 0.2673,
+    "qwen3-max": 0.2396,
+    "random(combined)": 0.2578
+   },
+   {
+    "item": "SATFIN",
+    "condition": "drop_attitudinal",
+    "deepseek-v3.1": 0.2655,
+    "kimi-k2": 0.2807,
+    "llama-4-mav": 0.2679,
+    "qwen3-max": 0.2555,
+    "random(combined)": 0.2674
+   },
+   {
+    "item": "SATFIN",
+    "condition": "drop_behavioral",
+    "deepseek-v3.1": 0.2588,
+    "kimi-k2": 0.2875,
+    "llama-4-mav": 0.2625,
+    "qwen3-max": 0.2384,
+    "random(combined)": 0.2618
+   },
+   {
+    "item": "SATFIN",
+    "condition": "drop_demographic",
+    "deepseek-v3.1": 0.257,
+    "kimi-k2": 0.2869,
+    "llama-4-mav": 0.2637,
+    "qwen3-max": 0.2396,
+    "random(combined)": 0.2618
+   },
+   {
+    "item": "SATFIN",
+    "condition": "drop_psychological",
+    "deepseek-v3.1": 0.254,
+    "kimi-k2": 0.2948,
+    "llama-4-mav": 0.2726,
+    "qwen3-max": 0.2525,
+    "random(combined)": 0.2685
+   },
+   {
+    "item": "SATFIN",
+    "condition": "random_battery_drop",
+    "deepseek-v3.1": 0.246,
+    "kimi-k2": 0.2758,
+    "llama-4-mav": 0.2667,
+    "qwen3-max": 0.2433,
+    "random(combined)": 0.258
+   }
+  ],
+  "T1_full_baseline": [
+   {
+    "item": "ABANY",
+    "qwen3-max": 0.3925,
+    "deepseek-v3.1": 0.3989,
+    "llama-4-mav": 0.2879,
+    "kimi-k2": 0.3011,
+    "random(combined)": 0.3458,
+    "n_pairs(combined)": 2140
+   },
+   {
+    "item": "CAPPUN",
+    "qwen3-max": 0.364,
+    "deepseek-v3.1": 0.374,
+    "llama-4-mav": 0.3575,
+    "kimi-k2": 0.4036,
+    "random(combined)": 0.3745,
+    "n_pairs(combined)": 2067
+   },
+   {
+    "item": "CONFINAN",
+    "qwen3-max": 0.2481,
+    "deepseek-v3.1": 0.2272,
+    "llama-4-mav": 0.2119,
+    "kimi-k2": 0.2871,
+    "random(combined)": 0.2431,
+    "n_pairs(combined)": 2164
+   },
+   {
+    "item": "CONLEGIS",
+    "qwen3-max": 0.2414,
+    "deepseek-v3.1": 0.2703,
+    "llama-4-mav": 0.3212,
+    "kimi-k2": 0.3086,
+    "random(combined)": 0.2861,
+    "n_pairs(combined)": 2148
+   },
+   {
+    "item": "FECHLD",
+    "qwen3-max": 0.3187,
+    "deepseek-v3.1": 0.2459,
+    "llama-4-mav": 0.2204,
+    "kimi-k2": 0.3165,
+    "random(combined)": 0.2752,
+    "n_pairs(combined)": 2168
+   },
+   {
+    "item": "FEPOL",
+    "qwen3-max": 0.2888,
+    "deepseek-v3.1": 0.1713,
+    "llama-4-mav": 0.2333,
+    "kimi-k2": 0.2692,
+    "random(combined)": 0.2422,
+    "n_pairs(combined)": 892
+   },
+   {
+    "item": "GUNLAW",
+    "qwen3-max": 0.2875,
+    "deepseek-v3.1": 0.3345,
+    "llama-4-mav": 0.2707,
+    "kimi-k2": 0.3112,
+    "random(combined)": 0.3012,
+    "n_pairs(combined)": 2191
+   },
+   {
+    "item": "HELPPOOR",
+    "qwen3-max": 0.2552,
+    "deepseek-v3.1": 0.2785,
+    "llama-4-mav": 0.2162,
+    "kimi-k2": 0.3121,
+    "random(combined)": 0.2648,
+    "n_pairs(combined)": 2129
+   },
+   {
+    "item": "PARTYID",
+    "qwen3-max": 0.1677,
+    "deepseek-v3.1": 0.1498,
+    "llama-4-mav": 0.1592,
+    "kimi-k2": 0.2041,
+    "random(combined)": 0.17,
+    "n_pairs(combined)": 3268
+   },
+   {
+    "item": "POLVIEWS",
+    "qwen3-max": 0.2198,
+    "deepseek-v3.1": 0.1858,
+    "llama-4-mav": 0.1598,
+    "kimi-k2": 0.223,
+    "random(combined)": 0.1968,
+    "n_pairs(combined)": 3160
+   },
+   {
+    "item": "RACDIF1",
+    "qwen3-max": 0.2885,
+    "deepseek-v3.1": 0.3862,
+    "llama-4-mav": 0.3384,
+    "kimi-k2": 0.3441,
+    "random(combined)": 0.3386,
+    "n_pairs(combined)": 1016
+   },
+   {
+    "item": "SATFIN",
+    "qwen3-max": 0.2396,
+    "deepseek-v3.1": 0.243,
+    "llama-4-mav": 0.2673,
+    "kimi-k2": 0.2813,
+    "random(combined)": 0.2578,
+    "n_pairs(combined)": 3291
+   }
+  ],
+  "T2_bin_loo": [
+   {
+    "bin": "drop_demographic",
+    "column": "qwen3-max",
+    "delta_mae": 0.0038,
+    "ci_lo": -0.0009,
+    "ci_hi": 0.0089,
+    "p_boot": 0.1279,
+    "n_respondents": 822,
+    "p_holm": 0.3837
+   },
+   {
+    "bin": "drop_behavioral",
+    "column": "qwen3-max",
+    "delta_mae": 0.0003,
+    "ci_lo": -0.0055,
+    "ci_hi": 0.0063,
+    "p_boot": 0.9307,
+    "n_respondents": 822,
+    "p_holm": 1.0
+   },
+   {
+    "bin": "drop_psychological",
+    "column": "qwen3-max",
+    "delta_mae": 0.0012,
+    "ci_lo": -0.0028,
+    "ci_hi": 0.0055,
+    "p_boot": 0.5749,
+    "n_respondents": 822,
+    "p_holm": 1.0
+   },
+   {
+    "bin": "drop_attitudinal",
+    "column": "qwen3-max",
+    "delta_mae": 0.0109,
+    "ci_lo": 0.004,
+    "ci_hi": 0.0177,
+    "p_boot": 0.0007,
+    "n_respondents": 822,
+    "p_holm": 0.0028
+   },
+   {
+    "bin": "drop_demographic",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0062,
+    "ci_lo": 0.0005,
+    "ci_hi": 0.0118,
+    "p_boot": 0.0337,
+    "n_respondents": 829,
+    "p_holm": 0.0849
+   },
+   {
+    "bin": "drop_behavioral",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0149,
+    "ci_lo": 0.0097,
+    "ci_hi": 0.0204,
+    "p_boot": 0.0001,
+    "n_respondents": 829,
+    "p_holm": 0.0004
+   },
+   {
+    "bin": "drop_psychological",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0014,
+    "ci_lo": -0.0033,
+    "ci_hi": 0.0061,
+    "p_boot": 0.5731,
+    "n_respondents": 829,
+    "p_holm": 0.5731
+   },
+   {
+    "bin": "drop_attitudinal",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0068,
+    "ci_lo": 0.0009,
+    "ci_hi": 0.0129,
+    "p_boot": 0.0283,
+    "n_respondents": 829,
+    "p_holm": 0.0849
+   },
+   {
+    "bin": "drop_demographic",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0045,
+    "ci_lo": -0.0005,
+    "ci_hi": 0.0096,
+    "p_boot": 0.0787,
+    "n_respondents": 842,
+    "p_holm": 0.0787
+   },
+   {
+    "bin": "drop_behavioral",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0136,
+    "ci_lo": 0.0093,
+    "ci_hi": 0.0181,
+    "p_boot": 0.0001,
+    "n_respondents": 842,
+    "p_holm": 0.0004
+   },
+   {
+    "bin": "drop_psychological",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0056,
+    "ci_lo": 0.0025,
+    "ci_hi": 0.0087,
+    "p_boot": 0.0003,
+    "n_respondents": 842,
+    "p_holm": 0.0006
+   },
+   {
+    "bin": "drop_attitudinal",
+    "column": "llama-4-mav",
+    "delta_mae": 0.01,
+    "ci_lo": 0.0047,
+    "ci_hi": 0.0155,
+    "p_boot": 0.0001,
+    "n_respondents": 842,
+    "p_holm": 0.0004
+   },
+   {
+    "bin": "drop_demographic",
+    "column": "kimi-k2",
+    "delta_mae": 0.0002,
+    "ci_lo": -0.0089,
+    "ci_hi": 0.0095,
+    "p_boot": 0.9867,
+    "n_respondents": 816,
+    "p_holm": 0.9867
+   },
+   {
+    "bin": "drop_behavioral",
+    "column": "kimi-k2",
+    "delta_mae": -0.0042,
+    "ci_lo": -0.0133,
+    "ci_hi": 0.0048,
+    "p_boot": 0.3747,
+    "n_respondents": 816,
+    "p_holm": 0.7494
+   },
+   {
+    "bin": "drop_psychological",
+    "column": "kimi-k2",
+    "delta_mae": -0.0079,
+    "ci_lo": -0.0172,
+    "ci_hi": 0.0014,
+    "p_boot": 0.0891,
+    "n_respondents": 816,
+    "p_holm": 0.2673
+   },
+   {
+    "bin": "drop_attitudinal",
+    "column": "kimi-k2",
+    "delta_mae": 0.0095,
+    "ci_lo": -0.0003,
+    "ci_hi": 0.0195,
+    "p_boot": 0.0595,
+    "n_respondents": 816,
+    "p_holm": 0.238
+   },
+   {
+    "bin": "drop_demographic",
+    "column": "random(combined)",
+    "delta_mae": 0.0037,
+    "ci_lo": 0.0006,
+    "ci_hi": 0.0069,
+    "p_boot": 0.0245,
+    "n_respondents": 3309,
+    "p_holm": 0.049
+   },
+   {
+    "bin": "drop_behavioral",
+    "column": "random(combined)",
+    "delta_mae": 0.0063,
+    "ci_lo": 0.0031,
+    "ci_hi": 0.0095,
+    "p_boot": 0.0007,
+    "n_respondents": 3309,
+    "p_holm": 0.0021
+   },
+   {
+    "bin": "drop_psychological",
+    "column": "random(combined)",
+    "delta_mae": 0.0001,
+    "ci_lo": -0.0028,
+    "ci_hi": 0.003,
+    "p_boot": 0.9613,
+    "n_respondents": 3309,
+    "p_holm": 0.9613
+   },
+   {
+    "bin": "drop_attitudinal",
+    "column": "random(combined)",
+    "delta_mae": 0.0093,
+    "ci_lo": 0.0057,
+    "ci_hi": 0.0129,
+    "p_boot": 0.0001,
+    "n_respondents": 3309,
+    "p_holm": 0.0004
+   }
+  ],
+  "battery_missingness": {
+   "pairs_total": 26634,
+   "pairs_both_parse_ok": 25988,
+   "abl_only_fail": 313,
+   "full_only_fail": 314
+  },
+  "T3_battery_ablation": [
+   {
+    "battery": "racial_ethnic_origin",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.024,
+    "ci_lo": 0.0052,
+    "ci_hi": 0.0549,
+    "n_pairs": 203,
+    "n_respondents": 179,
+    "n_items_support": 12
+   },
+   {
+    "battery": "racial_ethnic_origin",
+    "column": "kimi-k2",
+    "delta_mae": 0.017,
+    "ci_lo": -0.0253,
+    "ci_hi": 0.0599,
+    "n_pairs": 198,
+    "n_respondents": 173,
+    "n_items_support": 12
+   },
+   {
+    "battery": "racial_ethnic_origin",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0016,
+    "ci_lo": -0.0176,
+    "ci_hi": 0.0146,
+    "n_pairs": 197,
+    "n_respondents": 182,
+    "n_items_support": 12
+   },
+   {
+    "battery": "racial_ethnic_origin",
+    "column": "qwen3-max",
+    "delta_mae": 0.0201,
+    "ci_lo": -0.0027,
+    "ci_hi": 0.0475,
+    "n_pairs": 222,
+    "n_respondents": 200,
+    "n_items_support": 12
+   },
+   {
+    "battery": "racial_ethnic_origin",
+    "column": "random(combined)",
+    "delta_mae": 0.0151,
+    "ci_lo": 0.0014,
+    "ci_hi": 0.0299,
+    "n_pairs": 820,
+    "n_respondents": 734,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_choice",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0099,
+    "ci_lo": -0.0154,
+    "ci_hi": 0.0363,
+    "n_pairs": 212,
+    "n_respondents": 195,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_choice",
+    "column": "kimi-k2",
+    "delta_mae": 0.0362,
+    "ci_lo": 0.0027,
+    "ci_hi": 0.0754,
+    "n_pairs": 183,
+    "n_respondents": 167,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_choice",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0017,
+    "ci_lo": -0.0211,
+    "ci_hi": 0.0173,
+    "n_pairs": 198,
+    "n_respondents": 178,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_choice",
+    "column": "qwen3-max",
+    "delta_mae": 0.0103,
+    "ci_lo": -0.0185,
+    "ci_hi": 0.0453,
+    "n_pairs": 176,
+    "n_respondents": 166,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_choice",
+    "column": "random(combined)",
+    "delta_mae": 0.0141,
+    "ci_lo": 0.0002,
+    "ci_hi": 0.0285,
+    "n_pairs": 769,
+    "n_respondents": 706,
+    "n_items_support": 12
+   },
+   {
+    "battery": "abortion",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0096,
+    "ci_lo": -0.0124,
+    "ci_hi": 0.0323,
+    "n_pairs": 186,
+    "n_respondents": 166,
+    "n_items_support": 11
+   },
+   {
+    "battery": "abortion",
+    "column": "kimi-k2",
+    "delta_mae": 0.0316,
+    "ci_lo": -0.0002,
+    "ci_hi": 0.0793,
+    "n_pairs": 148,
+    "n_respondents": 137,
+    "n_items_support": 11
+   },
+   {
+    "battery": "abortion",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0062,
+    "ci_lo": -0.0043,
+    "ci_hi": 0.0267,
+    "n_pairs": 180,
+    "n_respondents": 162,
+    "n_items_support": 11
+   },
+   {
+    "battery": "abortion",
+    "column": "qwen3-max",
+    "delta_mae": 0.01,
+    "ci_lo": -0.0089,
+    "ci_hi": 0.0303,
+    "n_pairs": 185,
+    "n_respondents": 160,
+    "n_items_support": 11
+   },
+   {
+    "battery": "abortion",
+    "column": "random(combined)",
+    "delta_mae": 0.0135,
+    "ci_lo": 0.0026,
+    "ci_hi": 0.027,
+    "n_pairs": 699,
+    "n_respondents": 625,
+    "n_items_support": 11
+   },
+   {
+    "battery": "denominational_identity",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0032,
+    "ci_lo": -0.0232,
+    "ci_hi": 0.0161,
+    "n_pairs": 195,
+    "n_respondents": 177,
+    "n_items_support": 12
+   },
+   {
+    "battery": "denominational_identity",
+    "column": "kimi-k2",
+    "delta_mae": 0.0281,
+    "ci_lo": -0.0129,
+    "ci_hi": 0.0753,
+    "n_pairs": 181,
+    "n_respondents": 164,
+    "n_items_support": 12
+   },
+   {
+    "battery": "denominational_identity",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0227,
+    "ci_lo": 0.0075,
+    "ci_hi": 0.0515,
+    "n_pairs": 202,
+    "n_respondents": 180,
+    "n_items_support": 12
+   },
+   {
+    "battery": "denominational_identity",
+    "column": "qwen3-max",
+    "delta_mae": -0.0001,
+    "ci_lo": -0.0203,
+    "ci_hi": 0.0116,
+    "n_pairs": 191,
+    "n_respondents": 171,
+    "n_items_support": 12
+   },
+   {
+    "battery": "denominational_identity",
+    "column": "random(combined)",
+    "delta_mae": 0.0117,
+    "ci_lo": -0.0012,
+    "ci_hi": 0.0253,
+    "n_pairs": 769,
+    "n_respondents": 692,
+    "n_items_support": 12
+   },
+   {
+    "battery": "national_priorities",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0082,
+    "ci_lo": -0.0154,
+    "ci_hi": 0.0324,
+    "n_pairs": 209,
+    "n_respondents": 185,
+    "n_items_support": 12
+   },
+   {
+    "battery": "national_priorities",
+    "column": "kimi-k2",
+    "delta_mae": 0.0298,
+    "ci_lo": -0.0064,
+    "ci_hi": 0.0756,
+    "n_pairs": 167,
+    "n_respondents": 154,
+    "n_items_support": 12
+   },
+   {
+    "battery": "national_priorities",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0047,
+    "ci_lo": -0.014,
+    "ci_hi": 0.0269,
+    "n_pairs": 195,
+    "n_respondents": 179,
+    "n_items_support": 12
+   },
+   {
+    "battery": "national_priorities",
+    "column": "qwen3-max",
+    "delta_mae": 0.0038,
+    "ci_lo": -0.0238,
+    "ci_hi": 0.0293,
+    "n_pairs": 183,
+    "n_respondents": 165,
+    "n_items_support": 12
+   },
+   {
+    "battery": "national_priorities",
+    "column": "random(combined)",
+    "delta_mae": 0.011,
+    "ci_lo": -0.0026,
+    "ci_hi": 0.0253,
+    "n_pairs": 754,
+    "n_respondents": 683,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_religious_intensity",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0025,
+    "ci_lo": -0.0153,
+    "ci_hi": 0.0233,
+    "n_pairs": 206,
+    "n_respondents": 182,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_religious_intensity",
+    "column": "kimi-k2",
+    "delta_mae": 0.0174,
+    "ci_lo": -0.0197,
+    "ci_hi": 0.0555,
+    "n_pairs": 183,
+    "n_respondents": 167,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_religious_intensity",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0107,
+    "ci_lo": -0.0019,
+    "ci_hi": 0.0357,
+    "n_pairs": 192,
+    "n_respondents": 178,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_religious_intensity",
+    "column": "qwen3-max",
+    "delta_mae": 0.0131,
+    "ci_lo": -0.0167,
+    "ci_hi": 0.0458,
+    "n_pairs": 185,
+    "n_respondents": 169,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_religious_intensity",
+    "column": "random(combined)",
+    "delta_mae": 0.0107,
+    "ci_lo": -0.0023,
+    "ci_hi": 0.0246,
+    "n_pairs": 766,
+    "n_respondents": 696,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_geography",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0057,
+    "ci_lo": -0.02,
+    "ci_hi": 0.0364,
+    "n_pairs": 185,
+    "n_respondents": 166,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_geography",
+    "column": "kimi-k2",
+    "delta_mae": 0.036,
+    "ci_lo": 0.0078,
+    "ci_hi": 0.0706,
+    "n_pairs": 181,
+    "n_respondents": 163,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_geography",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0004,
+    "ci_lo": -0.0154,
+    "ci_hi": 0.0148,
+    "n_pairs": 205,
+    "n_respondents": 183,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_geography",
+    "column": "qwen3-max",
+    "delta_mae": -0.002,
+    "ci_lo": -0.0203,
+    "ci_hi": 0.0152,
+    "n_pairs": 209,
+    "n_respondents": 186,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_geography",
+    "column": "random(combined)",
+    "delta_mae": 0.0091,
+    "ci_lo": -0.0018,
+    "ci_hi": 0.0211,
+    "n_pairs": 780,
+    "n_respondents": 698,
+    "n_items_support": 12
+   },
+   {
+    "battery": "own_education",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0403,
+    "ci_lo": 0.0144,
+    "ci_hi": 0.0693,
+    "n_pairs": 205,
+    "n_respondents": 184,
+    "n_items_support": 12
+   },
+   {
+    "battery": "own_education",
+    "column": "kimi-k2",
+    "delta_mae": -0.0376,
+    "ci_lo": -0.0812,
+    "ci_hi": 0.001,
+    "n_pairs": 157,
+    "n_respondents": 147,
+    "n_items_support": 12
+   },
+   {
+    "battery": "own_education",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0039,
+    "ci_lo": -0.025,
+    "ci_hi": 0.0135,
+    "n_pairs": 197,
+    "n_respondents": 175,
+    "n_items_support": 12
+   },
+   {
+    "battery": "own_education",
+    "column": "qwen3-max",
+    "delta_mae": 0.0248,
+    "ci_lo": 0.0092,
+    "ci_hi": 0.0529,
+    "n_pairs": 191,
+    "n_respondents": 172,
+    "n_items_support": 12
+   },
+   {
+    "battery": "own_education",
+    "column": "random(combined)",
+    "delta_mae": 0.0084,
+    "ci_lo": -0.0055,
+    "ci_hi": 0.0218,
+    "n_pairs": 750,
+    "n_respondents": 678,
+    "n_items_support": 12
+   },
+   {
+    "battery": "work_history",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0215,
+    "ci_lo": -0.001,
+    "ci_hi": 0.0506,
+    "n_pairs": 196,
+    "n_respondents": 180,
+    "n_items_support": 12
+   },
+   {
+    "battery": "work_history",
+    "column": "kimi-k2",
+    "delta_mae": -0.0269,
+    "ci_lo": -0.0685,
+    "ci_hi": 0.0071,
+    "n_pairs": 162,
+    "n_respondents": 152,
+    "n_items_support": 12
+   },
+   {
+    "battery": "work_history",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0151,
+    "ci_lo": 0.0032,
+    "ci_hi": 0.038,
+    "n_pairs": 203,
+    "n_respondents": 183,
+    "n_items_support": 12
+   },
+   {
+    "battery": "work_history",
+    "column": "qwen3-max",
+    "delta_mae": 0.0064,
+    "ci_lo": -0.0148,
+    "ci_hi": 0.031,
+    "n_pairs": 186,
+    "n_respondents": 172,
+    "n_items_support": 12
+   },
+   {
+    "battery": "work_history",
+    "column": "random(combined)",
+    "delta_mae": 0.0055,
+    "ci_lo": -0.0073,
+    "ci_hi": 0.0183,
+    "n_pairs": 747,
+    "n_respondents": 687,
+    "n_items_support": 12
+   },
+   {
+    "battery": "subjective_wellbeing",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0042,
+    "ci_lo": -0.0289,
+    "ci_hi": 0.0208,
+    "n_pairs": 188,
+    "n_respondents": 172,
+    "n_items_support": 12
+   },
+   {
+    "battery": "subjective_wellbeing",
+    "column": "kimi-k2",
+    "delta_mae": -0.0173,
+    "ci_lo": -0.0706,
+    "ci_hi": 0.0305,
+    "n_pairs": 153,
+    "n_respondents": 137,
+    "n_items_support": 12
+   },
+   {
+    "battery": "subjective_wellbeing",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0065,
+    "ci_lo": -0.0089,
+    "ci_hi": 0.0252,
+    "n_pairs": 226,
+    "n_respondents": 200,
+    "n_items_support": 12
+   },
+   {
+    "battery": "subjective_wellbeing",
+    "column": "qwen3-max",
+    "delta_mae": 0.0276,
+    "ci_lo": 0.0031,
+    "ci_hi": 0.0584,
+    "n_pairs": 181,
+    "n_respondents": 162,
+    "n_items_support": 12
+   },
+   {
+    "battery": "subjective_wellbeing",
+    "column": "random(combined)",
+    "delta_mae": 0.0041,
+    "ci_lo": -0.0109,
+    "ci_hi": 0.0188,
+    "n_pairs": 748,
+    "n_respondents": 671,
+    "n_items_support": 12
+   },
+   {
+    "battery": "parental_education",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0059,
+    "ci_lo": -0.0304,
+    "ci_hi": 0.0216,
+    "n_pairs": 195,
+    "n_respondents": 165,
+    "n_items_support": 12
+   },
+   {
+    "battery": "parental_education",
+    "column": "kimi-k2",
+    "delta_mae": 0.0092,
+    "ci_lo": -0.0278,
+    "ci_hi": 0.045,
+    "n_pairs": 183,
+    "n_respondents": 160,
+    "n_items_support": 12
+   },
+   {
+    "battery": "parental_education",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0043,
+    "ci_lo": -0.0108,
+    "ci_hi": 0.019,
+    "n_pairs": 198,
+    "n_respondents": 178,
+    "n_items_support": 12
+   },
+   {
+    "battery": "parental_education",
+    "column": "qwen3-max",
+    "delta_mae": 0.006,
+    "ci_lo": -0.011,
+    "ci_hi": 0.0231,
+    "n_pairs": 205,
+    "n_respondents": 182,
+    "n_items_support": 12
+   },
+   {
+    "battery": "parental_education",
+    "column": "random(combined)",
+    "delta_mae": 0.0034,
+    "ci_lo": -0.0087,
+    "ci_hi": 0.0158,
+    "n_pairs": 781,
+    "n_respondents": 685,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_family_structure",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.009,
+    "ci_lo": -0.0171,
+    "ci_hi": 0.0366,
+    "n_pairs": 216,
+    "n_respondents": 190,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_family_structure",
+    "column": "kimi-k2",
+    "delta_mae": -0.0022,
+    "ci_lo": -0.0439,
+    "ci_hi": 0.0398,
+    "n_pairs": 194,
+    "n_respondents": 176,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_family_structure",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0069,
+    "ci_lo": -0.0252,
+    "ci_hi": 0.0005,
+    "n_pairs": 223,
+    "n_respondents": 199,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_family_structure",
+    "column": "qwen3-max",
+    "delta_mae": 0.0119,
+    "ci_lo": -0.0074,
+    "ci_hi": 0.0344,
+    "n_pairs": 227,
+    "n_respondents": 202,
+    "n_items_support": 12
+   },
+   {
+    "battery": "growing_up_family_structure",
+    "column": "random(combined)",
+    "delta_mae": 0.0031,
+    "ci_lo": -0.0097,
+    "ci_hi": 0.0162,
+    "n_pairs": 860,
+    "n_respondents": 767,
+    "n_items_support": 12
+   },
+   {
+    "battery": "economic_help",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0162,
+    "ci_lo": -0.0078,
+    "ci_hi": 0.0407,
+    "n_pairs": 166,
+    "n_respondents": 157,
+    "n_items_support": 11
+   },
+   {
+    "battery": "economic_help",
+    "column": "kimi-k2",
+    "delta_mae": -0.0051,
+    "ci_lo": -0.0459,
+    "ci_hi": 0.0341,
+    "n_pairs": 160,
+    "n_respondents": 143,
+    "n_items_support": 11
+   },
+   {
+    "battery": "economic_help",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0077,
+    "ci_lo": -0.034,
+    "ci_hi": -0.0008,
+    "n_pairs": 169,
+    "n_respondents": 153,
+    "n_items_support": 11
+   },
+   {
+    "battery": "economic_help",
+    "column": "qwen3-max",
+    "delta_mae": 0.0084,
+    "ci_lo": -0.0156,
+    "ci_hi": 0.0302,
+    "n_pairs": 175,
+    "n_respondents": 160,
+    "n_items_support": 11
+   },
+   {
+    "battery": "economic_help",
+    "column": "random(combined)",
+    "delta_mae": 0.0031,
+    "ci_lo": -0.0104,
+    "ci_hi": 0.016,
+    "n_pairs": 670,
+    "n_respondents": 613,
+    "n_items_support": 11
+   },
+   {
+    "battery": "interpersonal_trust",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0223,
+    "ci_lo": -0.0069,
+    "ci_hi": 0.0567,
+    "n_pairs": 186,
+    "n_respondents": 166,
+    "n_items_support": 12
+   },
+   {
+    "battery": "interpersonal_trust",
+    "column": "kimi-k2",
+    "delta_mae": -0.0029,
+    "ci_lo": -0.0362,
+    "ci_hi": 0.0333,
+    "n_pairs": 170,
+    "n_respondents": 152,
+    "n_items_support": 12
+   },
+   {
+    "battery": "interpersonal_trust",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0098,
+    "ci_lo": -0.034,
+    "ci_hi": 0.0009,
+    "n_pairs": 201,
+    "n_respondents": 184,
+    "n_items_support": 12
+   },
+   {
+    "battery": "interpersonal_trust",
+    "column": "qwen3-max",
+    "delta_mae": 0.0004,
+    "ci_lo": -0.0172,
+    "ci_hi": 0.0198,
+    "n_pairs": 205,
+    "n_respondents": 183,
+    "n_items_support": 12
+   },
+   {
+    "battery": "interpersonal_trust",
+    "column": "random(combined)",
+    "delta_mae": 0.0023,
+    "ci_lo": -0.0097,
+    "ci_hi": 0.0155,
+    "n_pairs": 762,
+    "n_respondents": 685,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_racists",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0024,
+    "ci_lo": -0.0176,
+    "ci_hi": 0.0267,
+    "n_pairs": 212,
+    "n_respondents": 191,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_racists",
+    "column": "kimi-k2",
+    "delta_mae": -0.017,
+    "ci_lo": -0.0534,
+    "ci_hi": 0.0137,
+    "n_pairs": 186,
+    "n_respondents": 171,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_racists",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0104,
+    "ci_lo": 0.0002,
+    "ci_hi": 0.0321,
+    "n_pairs": 224,
+    "n_respondents": 194,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_racists",
+    "column": "qwen3-max",
+    "delta_mae": 0.0103,
+    "ci_lo": -0.0101,
+    "ci_hi": 0.0353,
+    "n_pairs": 204,
+    "n_respondents": 183,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_racists",
+    "column": "random(combined)",
+    "delta_mae": 0.0021,
+    "ci_lo": -0.0095,
+    "ci_hi": 0.0135,
+    "n_pairs": 826,
+    "n_respondents": 739,
+    "n_items_support": 12
+   },
+   {
+    "battery": "traditional_media",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0025,
+    "ci_lo": -0.0318,
+    "ci_hi": 0.0238,
+    "n_pairs": 204,
+    "n_respondents": 185,
+    "n_items_support": 12
+   },
+   {
+    "battery": "traditional_media",
+    "column": "kimi-k2",
+    "delta_mae": 0.0132,
+    "ci_lo": -0.0227,
+    "ci_hi": 0.0506,
+    "n_pairs": 183,
+    "n_respondents": 168,
+    "n_items_support": 12
+   },
+   {
+    "battery": "traditional_media",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0107,
+    "ci_lo": 0.0004,
+    "ci_hi": 0.0334,
+    "n_pairs": 206,
+    "n_respondents": 191,
+    "n_items_support": 12
+   },
+   {
+    "battery": "traditional_media",
+    "column": "qwen3-max",
+    "delta_mae": -0.0151,
+    "ci_lo": -0.0382,
+    "ci_hi": -0.0004,
+    "n_pairs": 204,
+    "n_respondents": 185,
+    "n_items_support": 12
+   },
+   {
+    "battery": "traditional_media",
+    "column": "random(combined)",
+    "delta_mae": 0.0013,
+    "ci_lo": -0.0114,
+    "ci_hi": 0.0135,
+    "n_pairs": 797,
+    "n_respondents": 729,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_employment",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0175,
+    "ci_lo": -0.0071,
+    "ci_hi": 0.0421,
+    "n_pairs": 212,
+    "n_respondents": 193,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_employment",
+    "column": "kimi-k2",
+    "delta_mae": -0.0161,
+    "ci_lo": -0.0487,
+    "ci_hi": 0.0181,
+    "n_pairs": 175,
+    "n_respondents": 161,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_employment",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0129,
+    "ci_lo": -0.0356,
+    "ci_hi": 0.0037,
+    "n_pairs": 215,
+    "n_respondents": 190,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_employment",
+    "column": "qwen3-max",
+    "delta_mae": 0.0132,
+    "ci_lo": 0.0023,
+    "ci_hi": 0.0354,
+    "n_pairs": 217,
+    "n_respondents": 188,
+    "n_items_support": 12
+   },
+   {
+    "battery": "current_employment",
+    "column": "random(combined)",
+    "delta_mae": 0.0012,
+    "ci_lo": -0.0104,
+    "ci_hi": 0.0129,
+    "n_pairs": 819,
+    "n_respondents": 732,
+    "n_items_support": 12
+   },
+   {
+    "battery": "gender_role_attitudes",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0049,
+    "ci_lo": -0.0202,
+    "ci_hi": 0.0296,
+    "n_pairs": 164,
+    "n_respondents": 152,
+    "n_items_support": 10
+   },
+   {
+    "battery": "gender_role_attitudes",
+    "column": "kimi-k2",
+    "delta_mae": 0.0143,
+    "ci_lo": -0.0341,
+    "ci_hi": 0.068,
+    "n_pairs": 146,
+    "n_respondents": 139,
+    "n_items_support": 10
+   },
+   {
+    "battery": "gender_role_attitudes",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0082,
+    "ci_lo": -0.0356,
+    "ci_hi": 0.0044,
+    "n_pairs": 176,
+    "n_respondents": 161,
+    "n_items_support": 10
+   },
+   {
+    "battery": "gender_role_attitudes",
+    "column": "qwen3-max",
+    "delta_mae": -0.0108,
+    "ci_lo": -0.0351,
+    "ci_hi": -0.0002,
+    "n_pairs": 166,
+    "n_respondents": 159,
+    "n_items_support": 10
+   },
+   {
+    "battery": "gender_role_attitudes",
+    "column": "random(combined)",
+    "delta_mae": -0.0005,
+    "ci_lo": -0.015,
+    "ci_hi": 0.0141,
+    "n_pairs": 652,
+    "n_respondents": 611,
+    "n_items_support": 10
+   },
+   {
+    "battery": "moral_legalization",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0,
+    "ci_lo": -0.0263,
+    "ci_hi": 0.0234,
+    "n_pairs": 178,
+    "n_respondents": 161,
+    "n_items_support": 12
+   },
+   {
+    "battery": "moral_legalization",
+    "column": "kimi-k2",
+    "delta_mae": -0.0137,
+    "ci_lo": -0.048,
+    "ci_hi": 0.0158,
+    "n_pairs": 182,
+    "n_respondents": 164,
+    "n_items_support": 12
+   },
+   {
+    "battery": "moral_legalization",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0049,
+    "ci_lo": -0.012,
+    "ci_hi": 0.0224,
+    "n_pairs": 183,
+    "n_respondents": 162,
+    "n_items_support": 12
+   },
+   {
+    "battery": "moral_legalization",
+    "column": "qwen3-max",
+    "delta_mae": -0.0002,
+    "ci_lo": -0.0159,
+    "ci_hi": 0.0154,
+    "n_pairs": 204,
+    "n_respondents": 179,
+    "n_items_support": 12
+   },
+   {
+    "battery": "moral_legalization",
+    "column": "random(combined)",
+    "delta_mae": -0.0022,
+    "ci_lo": -0.0143,
+    "ci_hi": 0.0089,
+    "n_pairs": 747,
+    "n_respondents": 666,
+    "n_items_support": 12
+   },
+   {
+    "battery": "gun_related",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0109,
+    "ci_lo": -0.0353,
+    "ci_hi": 0.0108,
+    "n_pairs": 205,
+    "n_respondents": 181,
+    "n_items_support": 12
+   },
+   {
+    "battery": "gun_related",
+    "column": "kimi-k2",
+    "delta_mae": -0.0077,
+    "ci_lo": -0.0361,
+    "ci_hi": 0.017,
+    "n_pairs": 180,
+    "n_respondents": 162,
+    "n_items_support": 12
+   },
+   {
+    "battery": "gun_related",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0093,
+    "ci_lo": 0.0007,
+    "ci_hi": 0.0293,
+    "n_pairs": 223,
+    "n_respondents": 193,
+    "n_items_support": 12
+   },
+   {
+    "battery": "gun_related",
+    "column": "qwen3-max",
+    "delta_mae": -0.0017,
+    "ci_lo": -0.0185,
+    "ci_hi": 0.0138,
+    "n_pairs": 198,
+    "n_respondents": 179,
+    "n_items_support": 12
+   },
+   {
+    "battery": "gun_related",
+    "column": "random(combined)",
+    "delta_mae": -0.0023,
+    "ci_lo": -0.0122,
+    "ci_hi": 0.0073,
+    "n_pairs": 806,
+    "n_respondents": 715,
+    "n_items_support": 12
+   },
+   {
+    "battery": "end_of_life",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0285,
+    "ci_lo": -0.0566,
+    "ci_hi": -0.0087,
+    "n_pairs": 197,
+    "n_respondents": 177,
+    "n_items_support": 12
+   },
+   {
+    "battery": "end_of_life",
+    "column": "kimi-k2",
+    "delta_mae": -0.0066,
+    "ci_lo": -0.0505,
+    "ci_hi": 0.0368,
+    "n_pairs": 174,
+    "n_respondents": 161,
+    "n_items_support": 12
+   },
+   {
+    "battery": "end_of_life",
+    "column": "llama-4-mav",
+    "delta_mae": 0.009,
+    "ci_lo": 0.0012,
+    "ci_hi": 0.0304,
+    "n_pairs": 187,
+    "n_respondents": 172,
+    "n_items_support": 12
+   },
+   {
+    "battery": "end_of_life",
+    "column": "qwen3-max",
+    "delta_mae": 0.0157,
+    "ci_lo": -0.0114,
+    "ci_hi": 0.0471,
+    "n_pairs": 178,
+    "n_respondents": 161,
+    "n_items_support": 12
+   },
+   {
+    "battery": "end_of_life",
+    "column": "random(combined)",
+    "delta_mae": -0.0031,
+    "ci_lo": -0.0171,
+    "ci_hi": 0.0113,
+    "n_pairs": 736,
+    "n_respondents": 671,
+    "n_items_support": 12
+   },
+   {
+    "battery": "job_security_perception",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0262,
+    "ci_lo": 0.0027,
+    "ci_hi": 0.0564,
+    "n_pairs": 176,
+    "n_respondents": 165,
+    "n_items_support": 12
+   },
+   {
+    "battery": "job_security_perception",
+    "column": "kimi-k2",
+    "delta_mae": -0.0269,
+    "ci_lo": -0.0698,
+    "ci_hi": 0.0108,
+    "n_pairs": 184,
+    "n_respondents": 165,
+    "n_items_support": 12
+   },
+   {
+    "battery": "job_security_perception",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0026,
+    "ci_lo": -0.0143,
+    "ci_hi": 0.0199,
+    "n_pairs": 172,
+    "n_respondents": 161,
+    "n_items_support": 12
+   },
+   {
+    "battery": "job_security_perception",
+    "column": "qwen3-max",
+    "delta_mae": -0.0139,
+    "ci_lo": -0.0408,
+    "ci_hi": 0.0066,
+    "n_pairs": 195,
+    "n_respondents": 172,
+    "n_items_support": 12
+   },
+   {
+    "battery": "job_security_perception",
+    "column": "random(combined)",
+    "delta_mae": -0.0036,
+    "ci_lo": -0.0181,
+    "ci_hi": 0.0103,
+    "n_pairs": 727,
+    "n_respondents": 663,
+    "n_items_support": 12
+   },
+   {
+    "battery": "religious_belief",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0037,
+    "ci_lo": -0.0266,
+    "ci_hi": 0.0146,
+    "n_pairs": 225,
+    "n_respondents": 199,
+    "n_items_support": 12
+   },
+   {
+    "battery": "religious_belief",
+    "column": "kimi-k2",
+    "delta_mae": -0.0171,
+    "ci_lo": -0.059,
+    "ci_hi": 0.023,
+    "n_pairs": 175,
+    "n_respondents": 158,
+    "n_items_support": 12
+   },
+   {
+    "battery": "religious_belief",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0011,
+    "ci_lo": -0.0158,
+    "ci_hi": 0.0186,
+    "n_pairs": 188,
+    "n_respondents": 169,
+    "n_items_support": 12
+   },
+   {
+    "battery": "religious_belief",
+    "column": "qwen3-max",
+    "delta_mae": 0.0023,
+    "ci_lo": -0.0189,
+    "ci_hi": 0.0235,
+    "n_pairs": 222,
+    "n_respondents": 196,
+    "n_items_support": 12
+   },
+   {
+    "battery": "religious_belief",
+    "column": "random(combined)",
+    "delta_mae": -0.0039,
+    "ci_lo": -0.0167,
+    "ci_hi": 0.0086,
+    "n_pairs": 810,
+    "n_respondents": 722,
+    "n_items_support": 12
+   },
+   {
+    "battery": "confidence_in_institutions",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0009,
+    "ci_lo": -0.0276,
+    "ci_hi": 0.0302,
+    "n_pairs": 186,
+    "n_respondents": 165,
+    "n_items_support": 10
+   },
+   {
+    "battery": "confidence_in_institutions",
+    "column": "kimi-k2",
+    "delta_mae": -0.0068,
+    "ci_lo": -0.0396,
+    "ci_hi": 0.0282,
+    "n_pairs": 174,
+    "n_respondents": 158,
+    "n_items_support": 10
+   },
+   {
+    "battery": "confidence_in_institutions",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0188,
+    "ci_lo": -0.051,
+    "ci_hi": 0.005,
+    "n_pairs": 146,
+    "n_respondents": 136,
+    "n_items_support": 10
+   },
+   {
+    "battery": "confidence_in_institutions",
+    "column": "qwen3-max",
+    "delta_mae": 0.0041,
+    "ci_lo": -0.0186,
+    "ci_hi": 0.0269,
+    "n_pairs": 182,
+    "n_respondents": 167,
+    "n_items_support": 10
+   },
+   {
+    "battery": "confidence_in_institutions",
+    "column": "random(combined)",
+    "delta_mae": -0.0044,
+    "ci_lo": -0.0186,
+    "ci_hi": 0.0102,
+    "n_pairs": 688,
+    "n_respondents": 626,
+    "n_items_support": 10
+   },
+   {
+    "battery": "racial_inequality_perception",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0047,
+    "ci_lo": -0.0172,
+    "ci_hi": 0.0299,
+    "n_pairs": 188,
+    "n_respondents": 171,
+    "n_items_support": 11
+   },
+   {
+    "battery": "racial_inequality_perception",
+    "column": "kimi-k2",
+    "delta_mae": -0.0146,
+    "ci_lo": -0.055,
+    "ci_hi": 0.0277,
+    "n_pairs": 153,
+    "n_respondents": 147,
+    "n_items_support": 11
+   },
+   {
+    "battery": "racial_inequality_perception",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0065,
+    "ci_lo": -0.0286,
+    "ci_hi": 0.0057,
+    "n_pairs": 207,
+    "n_respondents": 182,
+    "n_items_support": 11
+   },
+   {
+    "battery": "racial_inequality_perception",
+    "column": "qwen3-max",
+    "delta_mae": -0.005,
+    "ci_lo": -0.0243,
+    "ci_hi": 0.0092,
+    "n_pairs": 203,
+    "n_respondents": 179,
+    "n_items_support": 11
+   },
+   {
+    "battery": "racial_inequality_perception",
+    "column": "random(combined)",
+    "delta_mae": -0.0049,
+    "ci_lo": -0.0173,
+    "ci_hi": 0.0071,
+    "n_pairs": 751,
+    "n_respondents": 679,
+    "n_items_support": 11
+   },
+   {
+    "battery": "voting_turnout",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0158,
+    "ci_lo": -0.0422,
+    "ci_hi": 0.0047,
+    "n_pairs": 172,
+    "n_respondents": 162,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_turnout",
+    "column": "kimi-k2",
+    "delta_mae": 0.0088,
+    "ci_lo": -0.0199,
+    "ci_hi": 0.04,
+    "n_pairs": 175,
+    "n_respondents": 161,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_turnout",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0011,
+    "ci_lo": -0.0094,
+    "ci_hi": 0.018,
+    "n_pairs": 211,
+    "n_respondents": 186,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_turnout",
+    "column": "qwen3-max",
+    "delta_mae": -0.0148,
+    "ci_lo": -0.0434,
+    "ci_hi": 0.0102,
+    "n_pairs": 189,
+    "n_respondents": 168,
+    "n_items_support": 12
+   },
+   {
+    "battery": "voting_turnout",
+    "column": "random(combined)",
+    "delta_mae": -0.005,
+    "ci_lo": -0.0167,
+    "ci_hi": 0.0065,
+    "n_pairs": 747,
+    "n_respondents": 677,
+    "n_items_support": 12
+   },
+   {
+    "battery": "adolescent_sex_policy",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.007,
+    "ci_lo": -0.0202,
+    "ci_hi": 0.0357,
+    "n_pairs": 187,
+    "n_respondents": 177,
+    "n_items_support": 12
+   },
+   {
+    "battery": "adolescent_sex_policy",
+    "column": "kimi-k2",
+    "delta_mae": -0.0243,
+    "ci_lo": -0.0543,
+    "ci_hi": 0.0038,
+    "n_pairs": 178,
+    "n_respondents": 161,
+    "n_items_support": 12
+   },
+   {
+    "battery": "adolescent_sex_policy",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0071,
+    "ci_lo": -0.0256,
+    "ci_hi": -0.0003,
+    "n_pairs": 210,
+    "n_respondents": 193,
+    "n_items_support": 12
+   },
+   {
+    "battery": "adolescent_sex_policy",
+    "column": "qwen3-max",
+    "delta_mae": 0.0026,
+    "ci_lo": -0.017,
+    "ci_hi": 0.0231,
+    "n_pairs": 177,
+    "n_respondents": 159,
+    "n_items_support": 12
+   },
+   {
+    "battery": "adolescent_sex_policy",
+    "column": "random(combined)",
+    "delta_mae": -0.0054,
+    "ci_lo": -0.0167,
+    "ci_hi": 0.0057,
+    "n_pairs": 752,
+    "n_respondents": 690,
+    "n_items_support": 12
+   },
+   {
+    "battery": "sexual_morality",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0184,
+    "ci_lo": -0.0546,
+    "ci_hi": 0.0018,
+    "n_pairs": 201,
+    "n_respondents": 185,
+    "n_items_support": 12
+   },
+   {
+    "battery": "sexual_morality",
+    "column": "kimi-k2",
+    "delta_mae": 0.0098,
+    "ci_lo": -0.0347,
+    "ci_hi": 0.0533,
+    "n_pairs": 183,
+    "n_respondents": 164,
+    "n_items_support": 12
+   },
+   {
+    "battery": "sexual_morality",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0079,
+    "ci_lo": -0.0307,
+    "ci_hi": 0.0025,
+    "n_pairs": 207,
+    "n_respondents": 191,
+    "n_items_support": 12
+   },
+   {
+    "battery": "sexual_morality",
+    "column": "qwen3-max",
+    "delta_mae": -0.0044,
+    "ci_lo": -0.0344,
+    "ci_hi": 0.0213,
+    "n_pairs": 181,
+    "n_respondents": 160,
+    "n_items_support": 12
+   },
+   {
+    "battery": "sexual_morality",
+    "column": "random(combined)",
+    "delta_mae": -0.0056,
+    "ci_lo": -0.0207,
+    "ci_hi": 0.0082,
+    "n_pairs": 772,
+    "n_respondents": 700,
+    "n_items_support": 12
+   },
+   {
+    "battery": "police_use_of_force",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.006,
+    "ci_lo": -0.0356,
+    "ci_hi": 0.0172,
+    "n_pairs": 210,
+    "n_respondents": 191,
+    "n_items_support": 12
+   },
+   {
+    "battery": "police_use_of_force",
+    "column": "kimi-k2",
+    "delta_mae": -0.0221,
+    "ci_lo": -0.0598,
+    "ci_hi": 0.007,
+    "n_pairs": 186,
+    "n_respondents": 167,
+    "n_items_support": 12
+   },
+   {
+    "battery": "police_use_of_force",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0019,
+    "ci_lo": -0.0024,
+    "ci_hi": 0.0125,
+    "n_pairs": 200,
+    "n_respondents": 181,
+    "n_items_support": 12
+   },
+   {
+    "battery": "police_use_of_force",
+    "column": "qwen3-max",
+    "delta_mae": -0.0034,
+    "ci_lo": -0.0241,
+    "ci_hi": 0.0184,
+    "n_pairs": 211,
+    "n_respondents": 187,
+    "n_items_support": 12
+   },
+   {
+    "battery": "police_use_of_force",
+    "column": "random(combined)",
+    "delta_mae": -0.0071,
+    "ci_lo": -0.0192,
+    "ci_hi": 0.0043,
+    "n_pairs": 807,
+    "n_respondents": 726,
+    "n_items_support": 12
+   },
+   {
+    "battery": "marital_status",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0082,
+    "ci_lo": -0.0377,
+    "ci_hi": 0.0171,
+    "n_pairs": 188,
+    "n_respondents": 168,
+    "n_items_support": 12
+   },
+   {
+    "battery": "marital_status",
+    "column": "kimi-k2",
+    "delta_mae": -0.01,
+    "ci_lo": -0.0473,
+    "ci_hi": 0.0208,
+    "n_pairs": 166,
+    "n_respondents": 154,
+    "n_items_support": 12
+   },
+   {
+    "battery": "marital_status",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0037,
+    "ci_lo": -0.0179,
+    "ci_hi": 0.01,
+    "n_pairs": 227,
+    "n_respondents": 194,
+    "n_items_support": 12
+   },
+   {
+    "battery": "marital_status",
+    "column": "qwen3-max",
+    "delta_mae": -0.0096,
+    "ci_lo": -0.0354,
+    "ci_hi": 0.0133,
+    "n_pairs": 200,
+    "n_respondents": 180,
+    "n_items_support": 12
+   },
+   {
+    "battery": "marital_status",
+    "column": "random(combined)",
+    "delta_mae": -0.0077,
+    "ci_lo": -0.0201,
+    "ci_hi": 0.0041,
+    "n_pairs": 781,
+    "n_respondents": 696,
+    "n_items_support": 12
+   },
+   {
+    "battery": "digital_media",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0158,
+    "ci_lo": -0.0409,
+    "ci_hi": 0.0052,
+    "n_pairs": 178,
+    "n_respondents": 167,
+    "n_items_support": 12
+   },
+   {
+    "battery": "digital_media",
+    "column": "kimi-k2",
+    "delta_mae": -0.0349,
+    "ci_lo": -0.0673,
+    "ci_hi": -0.0106,
+    "n_pairs": 171,
+    "n_respondents": 152,
+    "n_items_support": 12
+   },
+   {
+    "battery": "digital_media",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0101,
+    "ci_lo": -0.008,
+    "ci_hi": 0.0361,
+    "n_pairs": 213,
+    "n_respondents": 184,
+    "n_items_support": 12
+   },
+   {
+    "battery": "digital_media",
+    "column": "qwen3-max",
+    "delta_mae": 0.0017,
+    "ci_lo": -0.0171,
+    "ci_hi": 0.0214,
+    "n_pairs": 191,
+    "n_respondents": 172,
+    "n_items_support": 12
+   },
+   {
+    "battery": "digital_media",
+    "column": "random(combined)",
+    "delta_mae": -0.0084,
+    "ci_lo": -0.0199,
+    "ci_hi": 0.003,
+    "n_pairs": 753,
+    "n_respondents": 675,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_atheists",
+    "column": "deepseek-v3.1",
+    "delta_mae": 0.0036,
+    "ci_lo": -0.0177,
+    "ci_hi": 0.0246,
+    "n_pairs": 197,
+    "n_respondents": 180,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_atheists",
+    "column": "kimi-k2",
+    "delta_mae": -0.0455,
+    "ci_lo": -0.0852,
+    "ci_hi": -0.0146,
+    "n_pairs": 166,
+    "n_respondents": 147,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_atheists",
+    "column": "llama-4-mav",
+    "delta_mae": 0.0093,
+    "ci_lo": 0.0023,
+    "ci_hi": 0.0298,
+    "n_pairs": 199,
+    "n_respondents": 171,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_atheists",
+    "column": "qwen3-max",
+    "delta_mae": -0.0153,
+    "ci_lo": -0.0419,
+    "ci_hi": -0.0004,
+    "n_pairs": 173,
+    "n_respondents": 156,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_atheists",
+    "column": "random(combined)",
+    "delta_mae": -0.0104,
+    "ci_lo": -0.0224,
+    "ci_hi": 0.0001,
+    "n_pairs": 735,
+    "n_respondents": 654,
+    "n_items_support": 12
+   },
+   {
+    "battery": "family_of_origin_economic",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0095,
+    "ci_lo": -0.0368,
+    "ci_hi": 0.0176,
+    "n_pairs": 207,
+    "n_respondents": 188,
+    "n_items_support": 12
+   },
+   {
+    "battery": "family_of_origin_economic",
+    "column": "kimi-k2",
+    "delta_mae": -0.0361,
+    "ci_lo": -0.0702,
+    "ci_hi": -0.0083,
+    "n_pairs": 196,
+    "n_respondents": 171,
+    "n_items_support": 12
+   },
+   {
+    "battery": "family_of_origin_economic",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0035,
+    "ci_lo": -0.0216,
+    "ci_hi": 0.0043,
+    "n_pairs": 213,
+    "n_respondents": 185,
+    "n_items_support": 12
+   },
+   {
+    "battery": "family_of_origin_economic",
+    "column": "qwen3-max",
+    "delta_mae": -0.0004,
+    "ci_lo": -0.0228,
+    "ci_hi": 0.0205,
+    "n_pairs": 210,
+    "n_respondents": 189,
+    "n_items_support": 12
+   },
+   {
+    "battery": "family_of_origin_economic",
+    "column": "random(combined)",
+    "delta_mae": -0.0119,
+    "ci_lo": -0.0242,
+    "ci_hi": -0.0005,
+    "n_pairs": 826,
+    "n_respondents": 733,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_communists",
+    "column": "deepseek-v3.1",
+    "delta_mae": -0.0123,
+    "ci_lo": -0.043,
+    "ci_hi": 0.0161,
+    "n_pairs": 209,
+    "n_respondents": 184,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_communists",
+    "column": "kimi-k2",
+    "delta_mae": -0.0389,
+    "ci_lo": -0.079,
+    "ci_hi": -0.002,
+    "n_pairs": 185,
+    "n_respondents": 164,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_communists",
+    "column": "llama-4-mav",
+    "delta_mae": -0.0045,
+    "ci_lo": -0.0272,
+    "ci_hi": 0.0117,
+    "n_pairs": 192,
+    "n_respondents": 177,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_communists",
+    "column": "qwen3-max",
+    "delta_mae": 0.0061,
+    "ci_lo": -0.0132,
+    "ci_hi": 0.0299,
+    "n_pairs": 195,
+    "n_respondents": 168,
+    "n_items_support": 12
+   },
+   {
+    "battery": "civil_lib_communists",
+    "column": "random(combined)",
+    "delta_mae": -0.0121,
+    "ci_lo": -0.0263,
+    "ci_hi": 0.0018,
+    "n_pairs": 781,
+    "n_respondents": 693,
+    "n_items_support": 12
+   }
+  ],
+  "T5_parse_fail": [
+   {
+    "item": "ABANY",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0546,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "CAPPUN",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0507,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "CONFINAN",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0538,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "CONLEGIS",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.055,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "FECHLD",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0574,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "FEPOL",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0442,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "GUNLAW",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0463,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "HELPPOOR",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0443,
+    "llama-4-mav": 0.0003,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "PARTYID",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0501,
+    "llama-4-mav": 0.0064,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "POLVIEWS",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0405,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "RACDIF1",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0587,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   },
+   {
+    "item": "SATFIN",
+    "deepseek-v3.1": 0.0,
+    "kimi-k2": 0.0463,
+    "llama-4-mav": 0.0,
+    "qwen3-max": 0.0
+   }
+  ],
+  "headline": {
+   "full_mae_conservative": 0.2646,
+   "full_mae_optimistic": 0.2553,
+   "conservative_optimistic_gap": 0.0094
+  }
+ }
+}

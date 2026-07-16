@@ -1,0 +1,261 @@
+{
+  "POLVIEWS": {
+    "mae": 0.8623,
+    "mae_per_fold": [
+      0.9367,
+      0.8418,
+      0.8323,
+      0.875,
+      0.8259
+    ],
+    "n_train": 3160,
+    "n_features_columns": 343,
+    "n_features_vars": 140,
+    "treatment": "ridge",
+    "excluded_vars": [
+      "POLVIEWS"
+    ]
+  },
+  "PARTYID": {
+    "mae": 1.03,
+    "mae_per_fold": [
+      1.0367,
+      1.0214,
+      1.0291,
+      1.023,
+      1.0398
+    ],
+    "n_train": 3268,
+    "n_features_columns": 342,
+    "n_features_vars": 140,
+    "treatment": "ridge",
+    "excluded_vars": [
+      "PARTYID"
+    ]
+  },
+  "ABANY": {
+    "mae": 0.2631,
+    "mae_per_fold": [
+      0.257,
+      0.2477,
+      0.3061,
+      0.2617,
+      0.243
+    ],
+    "n_train": 2140,
+    "n_features_columns": 331,
+    "n_features_vars": 134,
+    "treatment": "logistic",
+    "excluded_vars": [
+      "ABANY",
+      "ABDEFECT",
+      "ABHLTH",
+      "ABNOMORE",
+      "ABPOOR",
+      "ABRAPE",
+      "ABSINGLE"
+    ]
+  },
+  "CAPPUN": {
+    "mae": 0.3435,
+    "mae_per_fold": [
+      0.3502,
+      0.3043,
+      0.3414,
+      0.3777,
+      0.3438
+    ],
+    "n_train": 2067,
+    "n_features_columns": 336,
+    "n_features_vars": 140,
+    "treatment": "logistic",
+    "excluded_vars": [
+      "CAPPUN"
+    ]
+  },
+  "GUNLAW": {
+    "mae": 0.3067,
+    "mae_per_fold": [
+      0.3075,
+      0.3196,
+      0.3014,
+      0.2763,
+      0.3288
+    ],
+    "n_train": 2191,
+    "n_features_columns": 337,
+    "n_features_vars": 140,
+    "treatment": "logistic",
+    "excluded_vars": [
+      "GUNLAW"
+    ]
+  },
+  "FECHLD": {
+    "mae": 0.6527,
+    "mae_per_fold": [
+      0.6244,
+      0.6705,
+      0.6175,
+      0.679,
+      0.6721
+    ],
+    "n_train": 2168,
+    "n_features_columns": 335,
+    "n_features_vars": 137,
+    "treatment": "ridge",
+    "excluded_vars": [
+      "FECHLD",
+      "FEFAM",
+      "FEHIRE",
+      "FEPOL",
+      "FEPRESCH"
+    ]
+  },
+  "FEPOL": {
+    "mae": 0.2679,
+    "mae_per_fold": [
+      0.2793,
+      0.2793,
+      0.2247,
+      0.2697,
+      0.2865
+    ],
+    "n_train": 892,
+    "n_features_columns": 317,
+    "n_features_vars": 137,
+    "treatment": "logistic",
+    "excluded_vars": [
+      "FECHLD",
+      "FEFAM",
+      "FEHIRE",
+      "FEPOL",
+      "FEPRESCH"
+    ]
+  },
+  "RACDIF1": {
+    "mae": 0.3356,
+    "mae_per_fold": [
+      0.3284,
+      0.3596,
+      0.2956,
+      0.3153,
+      0.3793
+    ],
+    "n_train": 1016,
+    "n_features_columns": 289,
+    "n_features_vars": 131,
+    "treatment": "logistic",
+    "excluded_vars": [
+      "DISCAFF",
+      "DISCAFFM",
+      "DISCAFFW",
+      "RACDIF1",
+      "RACDIF2",
+      "RACDIF3",
+      "RACDIF4",
+      "WLTHBLKS",
+      "WLTHHSPS",
+      "WLTHWHTS"
+    ]
+  },
+  "CONFINAN": {
+    "mae": 0.476,
+    "mae_per_fold": [
+      0.4734,
+      0.4942,
+      0.4873,
+      0.4758,
+      0.4491
+    ],
+    "n_train": 2164,
+    "n_features_columns": 326,
+    "n_features_vars": 129,
+    "treatment": "ridge",
+    "excluded_vars": [
+      "CONARMY",
+      "CONBUS",
+      "CONCLERG",
+      "CONEDUC",
+      "CONFED",
+      "CONFINAN",
+      "CONJUDGE",
+      "CONLABOR",
+      "CONLEGIS",
+      "CONMEDIC",
+      "CONPRESS",
+      "CONSCI",
+      "CONTV"
+    ]
+  },
+  "CONLEGIS": {
+    "mae": 0.4567,
+    "mae_per_fold": [
+      0.4442,
+      0.4558,
+      0.4791,
+      0.4592,
+      0.4452
+    ],
+    "n_train": 2148,
+    "n_features_columns": 325,
+    "n_features_vars": 129,
+    "treatment": "ridge",
+    "excluded_vars": [
+      "CONARMY",
+      "CONBUS",
+      "CONCLERG",
+      "CONEDUC",
+      "CONFED",
+      "CONFINAN",
+      "CONJUDGE",
+      "CONLABOR",
+      "CONLEGIS",
+      "CONMEDIC",
+      "CONPRESS",
+      "CONSCI",
+      "CONTV"
+    ]
+  },
+  "HELPPOOR": {
+    "mae": 0.8699,
+    "mae_per_fold": [
+      0.9178,
+      0.8944,
+      0.7676,
+      0.8944,
+      0.8753
+    ],
+    "n_train": 2129,
+    "n_features_columns": 327,
+    "n_features_vars": 132,
+    "treatment": "ridge",
+    "excluded_vars": [
+      "EQWLTH",
+      "GETAHEAD",
+      "HELPBLK",
+      "HELPNOT",
+      "HELPPOOR",
+      "HELPSICK",
+      "KIDSSOL",
+      "PARSOL",
+      "TAX"
+    ]
+  },
+  "SATFIN": {
+    "mae": 0.4667,
+    "mae_per_fold": [
+      0.4476,
+      0.4924,
+      0.465,
+      0.4833,
+      0.4453
+    ],
+    "n_train": 3291,
+    "n_features_columns": 343,
+    "n_features_vars": 140,
+    "treatment": "ridge",
+    "excluded_vars": [
+      "SATFIN"
+    ]
+  }
+}
