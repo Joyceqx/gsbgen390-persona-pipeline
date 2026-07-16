@@ -75,6 +75,7 @@ import argparse
 import hashlib
 import json
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -347,6 +348,64 @@ def derive_sensitivity_item(varname: str) -> dict | None:
 # Per-respondent runners
 # ---------------------------------------------------------------------------
 
+# Per-model concurrency caps for parallel dispatch (2026-07-13). OpenRouter
+# enforces a demand-based account-level RPM cap on some models — observed:
+# qwen/qwen3-max capped at 20 requests/min (X-RateLimit-Limit: 20), which the
+# sequential run was ALSO hitting (47 retries in the 2026-07-12 night log).
+# Uncapped concurrency against a capped model just converts the cap into 429
+# retry storms and risks max_retries exhaustion → persisted provider_error
+# samples (respondents 12/14 in the sequential run). Gating qwen to 3
+# in-flight calls keeps it saturated at its cap without storming.
+_MODEL_CONCURRENCY_CAP: dict[str, int] = {
+    # qwen/qwen3-max moved to _MODEL_PACERS (2026-07-14): a concurrency
+    # semaphore is the wrong primitive for an RPM cap — permit holders sleep
+    # through 429 exponential backoff WHILE holding the permit, so under a
+    # pure-qwen respondent window (the Phase 1B tail) effective throughput
+    # collapsed far below the 20 rpm cap (observed: 3 h with zero respondent
+    # completions, retries exhausting into provider_error records).
+}
+_DEFAULT_MODEL_CONCURRENCY = 16
+
+
+class _ModelPacer:
+    """Global min-interval gate for RPM-capped models. Each wait() reserves
+    the next dispatch slot under a lock and sleeps OUTSIDE it, so aggregate
+    dispatch rate is exactly 1/min_interval regardless of how many threads
+    or respondents are in flight, and nobody blocks anyone else's backoff."""
+
+    def __init__(self, min_interval_s: float):
+        self._lock = threading.Lock()
+        self._min = min_interval_s
+        self._next_t = 0.0
+
+    def wait(self) -> None:
+        with self._lock:
+            now = time.monotonic()
+            t = max(now, self._next_t)
+            self._next_t = t + self._min
+        delay = t - now
+        if delay > 0:
+            time.sleep(delay)
+
+
+# 3.2 s spacing ≈ 18.75 rpm — just under OpenRouter's observed 20 rpm
+# account cap on qwen3-max, so steady-state 429s (and their backoff waste)
+# mostly disappear.
+_MODEL_PACERS: dict[str, _ModelPacer] = {
+    "qwen/qwen3-max": _ModelPacer(3.2),
+}
+
+_model_semaphores: dict[str, threading.BoundedSemaphore] = {}
+_model_semaphores_lock = threading.Lock()
+
+
+def _model_semaphore(model: str) -> threading.BoundedSemaphore:
+    with _model_semaphores_lock:
+        if model not in _model_semaphores:
+            cap = _MODEL_CONCURRENCY_CAP.get(model, _DEFAULT_MODEL_CONCURRENCY)
+            _model_semaphores[model] = threading.BoundedSemaphore(cap)
+        return _model_semaphores[model]
+
 def run_primary_one_respondent(
     respondent: pd.Series,
     taxonomy: dict,
@@ -357,6 +416,7 @@ def run_primary_one_respondent(
     temperature: float = 0.7,
     verbose: bool = True,
     conditions: list[tuple[str, str | None]] | None = None,
+    parallel: int = 1,
 ) -> list[dict]:
     """For one respondent: len(conditions) × on-ballot items × len(models)
     × n_samples calls. Returns a list of records, one per (condition, model).
@@ -384,6 +444,17 @@ def run_primary_one_respondent(
     Singleton items (PARTYID, POLVIEWS, CAPPUN, GUNLAW, SATFIN) get only the
     predicted item itself excluded (a no-op since primary_eval is already
     disjoint from feature bins per the validator).
+
+    parallel (2026-07-13, wall-clock only — no scientific change): the
+    (condition, item, model, sample) LLM calls within one respondent are
+    mutually independent; seeds come from `_derive_seed` (a pure hash of the
+    call coordinates, not of call order), prompts are built sequentially in
+    the main thread before any call is dispatched, and each sample is slotted
+    back into a pre-sized list by its s_idx. So executing the calls on a
+    thread pool (`parallel` > 1) yields byte-identical records to the
+    sequential path modulo provider-side nondeterminism, which exists at
+    parallel=1 too (seed is a hint — see call_llm docstring). Persistence
+    stays in run_phase1's main loop, per respondent, unchanged.
     """
     if conditions is None:
         conditions = CONDITIONS_PRIMARY
@@ -391,11 +462,17 @@ def run_primary_one_respondent(
     records: list[dict] = []
     battery_map = load_battery_map()
 
+    # -- Phase A: build every call spec sequentially in the main thread. -----
+    # per_cond_model_scores[cond][model][item_id] is pre-sized [None]*n_samples
+    # so pool completion order cannot reorder samples within an item.
+    per_cond_model_scores: dict[str, dict[str, dict[str, list]]] = {}
+    per_cond_prompt_stats: dict[str, dict[str, dict]] = {}
+    tasks: list[dict] = []
     for cond_name, drop_bin in conditions:
-        per_model_scores: dict[str, dict[str, list[dict]]] = {m: {} for m in models}
+        per_cond_model_scores[cond_name] = {m: {} for m in models}
         # Track per-item prompt stats for transparency (each item now has its
         # own battery-excluded prompt rather than a single shared prompt).
-        per_item_prompt_stats: dict[str, dict] = {}
+        per_cond_prompt_stats[cond_name] = {}
 
         for item in primary_eval_items:
             # Ballot-off filter: if this respondent's GSS ballot did not
@@ -437,7 +514,7 @@ def run_primary_one_respondent(
             # carries the same instruction text for every prompt variant; only
             # the persona section differs across cells.
             system = out["system_instruction"] + "\n\n" + out["persona_prompt"]
-            per_item_prompt_stats[item["id"]] = {
+            per_cond_prompt_stats[cond_name][item["id"]] = {
                 "prompt_id": out["metadata"]["prompt_id"],
                 "feature_count": out["metadata"]["feature_count"],
                 "char_count": out["metadata"]["char_count"],
@@ -451,51 +528,100 @@ def run_primary_one_respondent(
             # truth was already computed above (used for the ballot-off skip);
             # reuse it here without recomputing.
             for m in models:
-                samples: list[dict] = []
+                per_cond_model_scores[cond_name][m][item["id"]] = [None] * n_samples
                 for s_idx in range(n_samples):
                     seed = _derive_seed(rid, cond_name, item["id"], m, s_idx, prompt_id=prompt_id)
-                    call_meta: dict = {
-                        "model_returned": None, "system_fingerprint": None,
-                        "provider": None, "tokens_in": None, "tokens_out": None,
-                    }
-                    error_type = "ok"
-                    try:
-                        out_call = call_llm_meta(
-                            system, question, model=m,
-                            temperature=temperature, seed=seed,
-                        )
-                        raw = out_call["text"]
-                        for k in call_meta:
-                            call_meta[k] = out_call.get(k)
-                    except LLMError as e:
-                        raw = f"<<LLM_ERROR: {e}>>"
-                        error_type = "provider_error"
-                    score = score_item(
-                        item["id"], item["format"], meta["valid_codes"], raw, truth
-                    )
-                    score["seed"] = seed  # record for reproducibility audit
-                    # Random-ablation key: which battery was randomly dropped
-                    # for this (rid, item) — None outside the
-                    # random_battery_drop condition. Stamped per-sample so the
-                    # parquet writer can emit it as a column; the entire
-                    # absent-vs-present battery analysis joins on this field.
-                    score["random_dropped_battery"] = random_dropped_battery
-                    # error_type disentangles provider failures from parse
-                    # failures (Reviewer round-2 minor #2). At n_samples=1 these
-                    # were conflated in `parse_fail`; now error_type carries the
-                    # distinction even when parse_fail is True for both reasons.
-                    if error_type == "ok" and score.get("parse_fail"):
-                        error_type = "parse_fail"
-                    score["error_type"] = error_type
-                    # Provider / fingerprint / token-usage metadata per Reviewer
-                    # round-2 Q5 — written into every sample for post-hoc audit.
-                    score.update(call_meta)
-                    samples.append(score)
-                per_model_scores[m][item["id"]] = samples
-            if verbose:
-                print(f"    [{rid}/{cond_name}] item {item['id']:<10} done", flush=True)
+                    tasks.append({
+                        "cond_name": cond_name,
+                        "item_id": item["id"],
+                        "item_format": item["format"],
+                        "valid_codes": meta["valid_codes"],
+                        "system": system,
+                        "question": question,
+                        "truth": truth,
+                        "model": m,
+                        "s_idx": s_idx,
+                        "seed": seed,
+                        "random_dropped_battery": random_dropped_battery,
+                    })
 
-        for m, per_item in per_model_scores.items():
+    # -- Phase B: execute the calls (thread pool when parallel > 1). ---------
+    def _execute_call(t: dict) -> dict:
+        call_meta: dict = {
+            "model_returned": None, "system_fingerprint": None,
+            "provider": None, "tokens_in": None, "tokens_out": None,
+        }
+        error_type = "ok"
+        try:
+            pacer = _MODEL_PACERS.get(t["model"])
+            if pacer is not None:
+                pacer.wait()
+                out_call = call_llm_meta(
+                    t["system"], t["question"], model=t["model"],
+                    temperature=temperature, seed=t["seed"],
+                )
+            else:
+                with _model_semaphore(t["model"]):
+                    out_call = call_llm_meta(
+                        t["system"], t["question"], model=t["model"],
+                        temperature=temperature, seed=t["seed"],
+                    )
+            raw = out_call["text"]
+            for k in call_meta:
+                call_meta[k] = out_call.get(k)
+        except LLMError as e:
+            raw = f"<<LLM_ERROR: {e}>>"
+            error_type = "provider_error"
+        score = score_item(
+            t["item_id"], t["item_format"], t["valid_codes"], raw, t["truth"]
+        )
+        score["seed"] = t["seed"]  # record for reproducibility audit
+        # Random-ablation key: which battery was randomly dropped
+        # for this (rid, item) — None outside the
+        # random_battery_drop condition. Stamped per-sample so the
+        # parquet writer can emit it as a column; the entire
+        # absent-vs-present battery analysis joins on this field.
+        score["random_dropped_battery"] = t["random_dropped_battery"]
+        # error_type disentangles provider failures from parse
+        # failures (Reviewer round-2 minor #2). At n_samples=1 these
+        # were conflated in `parse_fail`; now error_type carries the
+        # distinction even when parse_fail is True for both reasons.
+        if error_type == "ok" and score.get("parse_fail"):
+            error_type = "parse_fail"
+        score["error_type"] = error_type
+        # Provider / fingerprint / token-usage metadata per Reviewer
+        # round-2 Q5 — written into every sample for post-hoc audit.
+        score.update(call_meta)
+        return score
+
+    # Per-(condition, item) outstanding-call counter so the familiar
+    # "item ... done" line prints exactly once, when the item's last
+    # sample completes (in any pool order).
+    pending: dict[tuple[str, str], int] = {}
+    for t in tasks:
+        key = (t["cond_name"], t["item_id"])
+        pending[key] = pending.get(key, 0) + 1
+
+    def _slot(t: dict, score: dict) -> None:
+        per_cond_model_scores[t["cond_name"]][t["model"]][t["item_id"]][t["s_idx"]] = score
+        key = (t["cond_name"], t["item_id"])
+        pending[key] -= 1
+        if verbose and pending[key] == 0:
+            print(f"    [{rid}/{t['cond_name']}] item {t['item_id']:<10} done", flush=True)
+
+    if parallel <= 1:
+        for t in tasks:
+            _slot(t, _execute_call(t))
+    else:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        with ThreadPoolExecutor(max_workers=parallel) as pool:
+            futures = {pool.submit(_execute_call, t): t for t in tasks}
+            for fut in as_completed(futures):
+                _slot(futures[fut], fut.result())
+
+    # -- Phase C: assemble records in the original condition order. ----------
+    for cond_name, drop_bin in conditions:
+        for m, per_item in per_cond_model_scores[cond_name].items():
             records.append({
                 "respondent_id": rid,
                 "condition": cond_name,
@@ -505,7 +631,7 @@ def run_primary_one_respondent(
                 "template_hash": TEMPLATE_HASH[:16],
                 "n_samples": n_samples,
                 "per_item_scores": per_item,
-                "per_item_prompt_stats": per_item_prompt_stats,
+                "per_item_prompt_stats": per_cond_prompt_stats[cond_name],
                 "r1_battery_exclusion": True,
             })
     return records
@@ -708,8 +834,13 @@ def run_phase1(
     verbose: bool = True,
     force_resume_partial: bool = False,
     conditions: list[tuple[str, str | None]] | None = None,
+    parallel: int = 1,
+    parallel_respondents: int = 1,
 ) -> Path:
-    """Top-level driver. Sequential calls; resumable.
+    """Top-level driver. Resumable. `parallel` > 1 fans the within-respondent
+    LLM calls onto a thread pool (see run_primary_one_respondent docstring —
+    wall-clock only, no scientific change; primary pass only, the sensitivity
+    pass keeps its sequential per-item persist contract).
 
     Writes records (list of dicts) to output_path as a JSON file. Each record
     is one (respondent, condition, model). Per-condition prompt + per-item
@@ -811,6 +942,83 @@ def run_phase1(
 
     all_records = list(existing)
     t0 = time.time()
+
+    # -- Across-respondent parallel path (2026-07-13, wall-clock only). ------
+    # Rationale: per-model RPM caps (see _MODEL_CONCURRENCY_CAP) make capped-
+    # model respondents ~10x slower than uncapped ones under random dispatch.
+    # Processing respondents strictly in sequence serializes the run behind
+    # the capped arm; a respondent window lets uncapped respondents flow at
+    # full speed while capped calls absorb their RPM budget continuously.
+    # Scientifically inert: per-respondent records are built exactly as in the
+    # sequential path (same prompts, same _derive_seed coordinates), dispatch
+    # is resolved deterministically per rid BEFORE submission, and only the
+    # main thread mutates all_records / done_keys / the artifact (records land
+    # in completion order — resume keys are set-based and order-free).
+    # Primary-only runs only: the sensitivity pass keeps its sequential
+    # per-item persist contract.
+    if parallel_respondents > 1 and do_primary and not do_sensitivity:
+        active_conditions = conditions or CONDITIONS_PRIMARY
+        todo: list[tuple[int, int, pd.Series, list[str]]] = []
+        for ri, respondent in sample.iterrows():
+            rid = int(respondent.get("ID_", -1))
+            if models == ["random"]:
+                effective_models = [_pick_random_model_for_phase1b(rid, prompt_id)]
+            else:
+                effective_models = models
+            need = any(
+                (rid, c, m, prompt_id) not in done_keys
+                for c, _ in active_conditions for m in effective_models
+            )
+            if need:
+                todo.append((ri, rid, respondent, effective_models))
+        # Uncapped-model respondents first (2026-07-14): paced models advance
+        # at a fixed global rate wherever they sit in the queue, so banking
+        # the fast respondents early costs the paced arm nothing and gets
+        # completions persisted sooner (smaller loss window on interruption).
+        todo.sort(key=lambda x: (any(m in _MODEL_PACERS for m in x[3]), x[0]))
+        n_skip = n - len(todo)
+        print(
+            f"[parallel-respondents={parallel_respondents}] {len(todo)} respondents "
+            f"to run ({n_skip} already complete in resume file); "
+            f"per-respondent call parallelism={parallel}; per-model caps: "
+            f"{_MODEL_CONCURRENCY_CAP} (default {_DEFAULT_MODEL_CONCURRENCY})",
+            flush=True,
+        )
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        with ThreadPoolExecutor(max_workers=parallel_respondents) as rpool:
+            futures = {}
+            for ri, rid, respondent, effective_models in todo:
+                if models == ["random"] and verbose:
+                    print(f"  [random dispatch] ID_={rid} → {effective_models[0].split('/')[-1]}", flush=True)
+                futures[rpool.submit(
+                    run_primary_one_respondent,
+                    respondent, taxonomy, primary_eval_items,
+                    models=effective_models, prompt_id=prompt_id,
+                    n_samples=n_samples, verbose=verbose,
+                    conditions=active_conditions,
+                    parallel=parallel,
+                )] = (ri, rid)
+            n_done = 0
+            for fut in as_completed(futures):
+                ri, rid = futures[fut]
+                records = fut.result()
+                new = [r for r in records if (r["respondent_id"], r["condition"], r["model"], r["prompt_id"]) not in done_keys]
+                all_records.extend(new)
+                done_keys.update((r["respondent_id"], r["condition"], r["model"], r["prompt_id"]) for r in new)
+                _persist(all_records, output_path)
+                n_done += 1
+                elapsed = time.time() - t0
+                rate = n_done / elapsed * 60
+                eta_h = (len(todo) - n_done) / rate / 60 if rate > 0 else float("inf")
+                print(
+                    f"=== respondent ID_={rid} done ({n_done}/{len(todo)} this run; "
+                    f"{len(all_records)} records persisted; {rate:.1f} resp/min; "
+                    f"ETA {eta_h:.1f}h) ===",
+                    flush=True,
+                )
+        print(f"\n✓ phase1 run complete: {len(all_records)} records written to {output_path}")
+        return output_path
+
     for ri, respondent in sample.iterrows():
         rid = int(respondent.get("ID_", -1))
         print(f"\n=== respondent {ri+1}/{n} (ID_={rid}, AGE={respondent.get('AGE')}) ===", flush=True)
@@ -845,6 +1053,7 @@ def run_phase1(
                     models=effective_models, prompt_id=prompt_id,
                     n_samples=n_samples, verbose=verbose,
                     conditions=active_conditions,
+                    parallel=parallel,
                 )
                 # Filter out any record that's already in done_keys (resume safety)
                 new = [r for r in records if (r["respondent_id"], r["condition"], r["model"], r["prompt_id"]) not in done_keys]
@@ -966,6 +1175,27 @@ def _cli():
                         "picker hash-identity vs parquet writer; battery "
                         "picker determinism / own-battery avoidance / "
                         "coverage). Free, no LLM calls.")
+
+    p.add_argument("--parallel", type=int, default=1,
+                   help="max concurrent LLM calls WITHIN one respondent (default 1 = "
+                        "sequential, the pre-2026-07-13 behavior). Calls are independent "
+                        "and seeds derive from call coordinates, not order, so records "
+                        "are identical either way; this is a wall-clock knob only. "
+                        "Per-respondent persistence and resume are unchanged. 8-12 is "
+                        "a sensible ceiling given OpenRouter provider rate limits "
+                        "(allow_fallbacks=False pins each call to one provider; 429s "
+                        "retry with exponential backoff).")
+    p.add_argument("--parallel-respondents", type=int, default=1,
+                   help="max respondents in flight at once (default 1 = sequential). "
+                        "Wall-clock knob only, primary-only runs: records are built "
+                        "per-respondent exactly as sequentially and persisted by the "
+                        "main thread in completion order (resume keys are set-based, "
+                        "order-free). Motivation: OpenRouter's per-model RPM caps "
+                        "(qwen3-max observed at 20 rpm) make ~25%% of random-dispatch "
+                        "respondents ~10x slower; a respondent window lets uncapped "
+                        "models flow while capped calls absorb their RPM budget "
+                        "continuously. Per-model in-flight caps in "
+                        "_MODEL_CONCURRENCY_CAP prevent 429 retry storms.")
 
     # Legacy / debugging flags (preserved).
     p.add_argument("--n", type=int, default=10, help="number of respondents to run")
@@ -1308,6 +1538,8 @@ if __name__ == "__main__":
             resume=not args.no_resume,
             force_resume_partial=args.force_resume_partial,
             conditions=active_conditions,
+            parallel=args.parallel,
+            parallel_respondents=args.parallel_respondents,
         )
 
     # After --phase1a (or --smoke, which mirrors --phase1a's shape on N=1)
