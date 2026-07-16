@@ -144,9 +144,14 @@ condition:
 
 | # | Condition | Persona contains |
 |---|---|---|
-| 1 | Full | all 140 features minus the predicted item's own battery (R1) |
-| 2 to 5 | Bin LOO × 4 | Full minus one entire bin (demographic / behavioral / psychological / attitudinal) |
-| 6 | Random battery drop | Full minus one additional battery drawn uniformly at random per (respondent, item), draw recorded |
+| 1 | Full | all 140 features, minus the held-out item's own battery (R1) |
+| 2 to 5 | Bin LOO × 4 | all 140 features, minus the held-out item's own battery (R1), minus one entire bin (demographic / behavioral / psychological / attitudinal) |
+| 6 | Random battery drop | all 140 features, minus the held-out item's own battery (R1), minus one additional battery drawn uniformly at random per (respondent, item), draw recorded |
+
+The R1 exclusion applies in every condition: the battery containing the
+held-out item is never shown to the model. Every ΔMAE below is therefore
+measured on top of that exclusion, on identical footing in both arms of
+each comparison.
 
 **Layer 1 (bins).** Each bin's contribution is the paired difference
 ΔMAE = MAE(bin dropped) minus MAE(Full), computed within respondent.
