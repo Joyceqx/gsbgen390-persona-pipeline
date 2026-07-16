@@ -21,13 +21,15 @@ inexpensive open-weight models to answer 12 held-out attitude questions
 each respondent. Prediction error was then re-measured under six ablation
 conditions that remove categories of profile information. Three results.
 First, accuracy is modest (normalized MAE 0.264) and statistically
-indistinguishable from what GPT-4o achieves. Second, the personas are
-remarkably insensitive to their inputs: deleting an entire feature category
-(all demographics, or all behavioral variables) worsens error by at most
-0.01, beneath our pre-registered threshold for a "small" effect, and what
-signal exists is concentrated in a handful of politically diagnostic
-variable groups (vote choice, race, abortion) rather than spread across
-categories. Third, a ridge/logistic regression trained on the same features
+indistinguishable from what GPT-4o achieves. Second, ablation recovers a
+consistent and interpretable importance ordering: across categories,
+attitudinal > behavioral > demographic > psychological (the last
+contributes nothing), and across variable groups the ranking is led by the
+politically diagnostic ones (vote choice, race, abortion). Yet the
+magnitudes are uniformly limited: deleting even an entire feature category
+worsens error by at most 0.01, beneath our pre-registered threshold for a
+"small" effect. The persona knows where its signal lives, but most of the
+profile is redundant to it. Third, a ridge/logistic regression trained on the same features
 matches or exceeds the LLM's accuracy on most items. The regression needs
 labeled data from the same population and the LLM does not, so the two are
 not substitutes; what the comparison shows is that on this task the LLM's
