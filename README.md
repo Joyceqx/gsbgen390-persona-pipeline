@@ -4,16 +4,18 @@ Stanford GSB master's thesis, Spring 2026. Lead: Joyce Yu. Advisor: Prof. Mohsen
 
 **What this is**: a methodological paper that estimates which categories of survey-collectible features (demographic / behavioral / psychological / attitudinal) drive LLM persona prediction of held-out GSS 2024 attitudes, benchmarked against Park et al. 2024 v2.
 
-## Status (2026-07-12)
+## Status (2026-07-15)
+
+**➡️ Phase 1B results: [PHASE1B_REPORT.md](PHASE1B_REPORT.md)**
 
 | Stage | Status |
 |---|---|
 | Phase 1A factorial (4 models × 3 prompts × N=200) | ✅ done → `outputs/phase1a_raw.parquet` |
 | GPT-4o anchors A (R1-OFF) + B (R1-ON), N=100 | ✅ done → `outputs/anchor_r1{off,on}_n100.json` |
 | §7 selector + §7.1 advisor decision | ✅ cell locked: **Random × P1** |
-| Phase 1B (N=3,309 × 6 conditions, ~$87) | ⏳ next — see "How to run" |
-| Layer-2 paired-difference analyzer | ⏳ pending (before Phase 1B analysis) |
-| Phase 1C (Battery LOO $481 / Shapley $38) | Battery LOO contingent on Layer-2 results |
+| Phase 1B (N=3,309 × 6 conditions, ~$87) | ✅ done 2026-07-14 → 19,854 records, all integrity checks pass |
+| §8 two-layer analysis (bin LOO + battery ablation) | ✅ done → [PHASE1B_REPORT.md](PHASE1B_REPORT.md), `outputs/phase1b_tables.xlsx` |
+| Phase 1C (Battery LOO $481 / Shapley $38) | pending advisor discussion of §8 results |
 
 ## Layout
 

@@ -542,13 +542,21 @@ python3 src/gss_driver.py --phase1b-anchor       # GPT-4o × P0 × N=100 (~$148)
 # 3. §7 joint (model, prompt) cell selector (free, <1 min)
 python3 src/select_phase1b_cell.py outputs/phase1a_raw.parquet
 
-# 4. Phase 1B (~$87, ~3-7 days) — cell locked 2026-07-12: Random × P1 (§7.1)
+# 4. Phase 1B (~$87, ~1.5 days wall) — cell locked 2026-07-12: Random × P1 (§7.1)
 #    Runs on full N=3,309 × 6 conditions (Full + 4 bin-LOO +
 #    random_battery_drop; §8). Headline aggregation excludes the §7 selector
 #    cohort (N=3,109 disjoint), full cohort (N=3,309) reported as sensitivity.
+#    --parallel / --parallel-respondents (added 2026-07-13) are wall-clock-only
+#    knobs: calls are independent, seeds derive from call coordinates (not
+#    order), records verified byte-identical to sequential under a stubbed
+#    router. Wall time is floored by OpenRouter's per-model RPM caps
+#    (qwen3-max observed at 20 rpm account-wide → the ~25% qwen respondents
+#    alone take ~33 h; _MODEL_CONCURRENCY_CAP throttles qwen to 3 in-flight
+#    calls to avoid 429 retry-exhaustion → provider_error records).
 python3 src/gss_driver.py --phase1b \
     --phase1b-model random \
-    --phase1b-prompt P1
+    --phase1b-prompt P1 \
+    --parallel 8 --parallel-respondents 8
 
 # 4b. R2 regression baseline (free, ~5 min) — report alongside Phase 1B headline
 #    Non-LLM Ridge (Likert) / multinomial Logistic (binary) baseline with the same

@@ -64,3 +64,6 @@ outputs/phase1c_*.parquet
 # Smoke artifacts not previously covered
 outputs/phase1a_run.log
 outputs/.archive_*
+outputs/phase1b_run.log
+outputs/phase1b_bayati_package.zip
+outputs/archive_pre_phase1a/
