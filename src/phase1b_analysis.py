@@ -289,7 +289,30 @@ def main() -> None:
         t4["llm_gain"] = t4["r2_baseline_mae"] - t4["llm_full_mae"]
         results["headline_N3109"]["T4_llm_vs_r2"] = t4.round(4).reset_index()
 
+    readme_rows = [
+        ("WORKBOOK GUIDE", ""),
+        ("", ""),
+        ("Sheet suffix _H", "Headline cohort, N = 3,109: the full GSS 2024 cross-section minus the 200 respondents Phase 1A used to select the model/prompt cell. Use these numbers."),
+        ("Sheet suffix _S", "Sensitivity cohort, N = 3,309: everyone included. Reported to show the selection-optimism gap (it is about 0.001)."),
+        ("", ""),
+        ("T0_raw", "Raw building block: per-item x per-condition normalized MAE, one column per model plus random(combined). No aggregation mixed in; every other sheet can be recomputed from the raw prediction file."),
+        ("T1_full_baseline", "Baseline accuracy: per-item normalized MAE in the Full condition (all features minus the held-out item's own battery). n_pairs = scored (respondent, item) pairs."),
+        ("T2_bin_loo", "Layer 1 result: for each of the 4 feature bins, delta_mae = MAE(bin dropped) minus MAE(Full), paired within respondent. Positive = dropping the bin hurts. ci_lo/ci_hi = 95% BCa bootstrap (B=10,000, respondent clusters); p_holm = Holm-corrected across the 4 bins."),
+        ("T3_battery_ablation", "Layer 2 result: for each of the 34 batteries, mean of err(ablated) minus err(Full) over the (respondent, item) pairs where that battery was randomly dropped, parse-ok in both arms. Sorted by the combined column. n_items_support: batteries owning primary items are evaluated on fewer items."),
+        ("T4_llm_vs_r2", "LLM (Full condition, combined column) vs a ridge/logistic regression trained on the same features under the same leakage rule, 5-fold CV. llm_gain = regression MAE minus LLM MAE; positive means the LLM is better. Headline cohort only."),
+        ("T5_parse_fail", "Data quality: share of calls per item x model where the answer did not parse to a valid code. Concentrated in Kimi-K2 (4.9%); all other models at or near zero."),
+        ("", ""),
+        ("Metric", "Normalized error = |predicted - true| / (item scale max - min), in [0, 1]. All sheets use the CONSERVATIVE policy: an unparsable answer counts as error 1.0. The optimistic variant (drop unparsed rows) shifts the headline by 0.0094 and changes no conclusion."),
+        ("Model columns", "Respondents are partitioned by which panel model answered them (seeded random dispatch, about 25% each). random(combined) = all respondents together; this is the headline column."),
+        ("Reproduction", "python3 src/phase1b_analysis.py regenerates this workbook from phase1b_raw.parquet (all randomness seeded, seed 42). Repo: github.com/Joyceqx/gsbgen390-persona-pipeline"),
+    ]
+    readme_df = pd.DataFrame(readme_rows, columns=["Sheet / topic", "What it shows"])
+
     with pd.ExcelWriter(args.xlsx) as xw:
+        readme_df.to_excel(xw, sheet_name="READ_ME", index=False)
+        ws = xw.sheets["READ_ME"]
+        ws.column_dimensions["A"].width = 24
+        ws.column_dimensions["B"].width = 130
         for cohort, tabs in results.items():
             for name, tab in tabs.items():
                 if isinstance(tab, pd.DataFrame):
